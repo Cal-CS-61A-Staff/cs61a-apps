@@ -8,6 +8,11 @@ export default React.createContext<{
   ...State,
   updateState: (State) => void,
 }>({
+  config: {
+    canStudentsChange: true,
+    canTutorsChange: true,
+    canTutorsReassign: true,
+  },
   currentUser: null,
   sections: [],
   taughtSections: [],

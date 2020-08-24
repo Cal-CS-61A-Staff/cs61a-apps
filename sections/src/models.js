@@ -8,6 +8,7 @@ export type Person = {
   email: string,
   backupURL: string,
   isStaff: boolean,
+  isAdmin: boolean,
 };
 
 export type ID = string;
@@ -50,11 +51,18 @@ export type SectionDetails = {
   sessions: Array<Session>,
 };
 
+export type CourseConfig = {
+  canStudentsChange: boolean,
+  canTutorsChange: boolean,
+  canTutorsReassign: boolean,
+};
+
 export type State = {
   enrolledSection: ?Section,
   sections: Array<Section>,
   taughtSections: Array<Section>,
   currentUser: ?Person,
+  config: CourseConfig,
 };
 
 export function sectionTitle(section: Section): React.MixedElement {

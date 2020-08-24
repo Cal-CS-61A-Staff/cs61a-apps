@@ -9,9 +9,12 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import { BrowserRouter as Router, Link, Route, Switch } from "react-router-dom";
+import AdminPage from "./AdminPage";
 import MainPage from "./MainPage";
 
 import "bootstrap/dist/css/bootstrap.css";
+import MessageContext from "./MessageContext";
+import Messages from "./Messages";
 import type { ID, State } from "./models";
 import SectionPage from "./SectionPage";
 import StateContext from "./StateContext";
@@ -19,6 +22,7 @@ import useAPI from "./useAPI";
 
 export default function App(): React.Node {
   const [state, setState] = useState<?State>(null);
+  const [messages, setMessages] = useState<Array<string>>([]);
 
   const updateState = (newState: State) => {
     // preserve ordering of sections, if possible
@@ -61,7 +65,9 @@ export default function App(): React.Node {
     <Router>
       <Navbar bg="info" variant="dark" expand="md">
         <Link to="/">
-          <Navbar.Brand>CS 61A Tutorials</Navbar.Brand>
+          <Navbar.Brand>
+            <b>CS 61A</b> Tutorials
+          </Navbar.Brand>
         </Link>
         <Navbar.Toggle aria-controls="navbar" />
         <Navbar.Collapse id="navbar">
@@ -86,7 +92,7 @@ export default function App(): React.Node {
             >
               Appointments
             </Nav.Link>
-            {state.currentUser?.isStaff && (
+            {state.currentUser?.isAdmin && (
               <Nav.Link href="/admin" active>
                 Admin
               </Nav.Link>
@@ -103,20 +109,30 @@ export default function App(): React.Node {
           </Nav>
         </Navbar.Collapse>
       </Navbar>
+      <Messages messages={messages} onChange={setMessages} />
       <StateContext.Provider value={{ ...state, updateState }}>
-        <Switch>
-          <Route exact path="/">
-            <MainPage />
-          </Route>
-          <Route path="/history">TODO: History</Route>
-          <Route path="/admin">TODO: Admin</Route>
-          <Route path="/section/:id">
-            {({ match }) => <SectionPage id={match.params.id} />}
-          </Route>
-          <Route path="*">
-            <Container>Error: Page not found</Container>
-          </Route>
-        </Switch>
+        <MessageContext.Provider
+          value={{
+            pushMessage: (message) =>
+              setMessages((currMessages) => currMessages.concat([message])),
+          }}
+        >
+          <Switch>
+            <Route exact path="/">
+              <MainPage />
+            </Route>
+            <Route path="/history">TODO: History</Route>
+            <Route path="/admin">
+              <AdminPage />
+            </Route>
+            <Route path="/section/:id">
+              {({ match }) => <SectionPage id={match.params.id} />}
+            </Route>
+            <Route path="*">
+              <Container>Error: Page not found</Container>
+            </Route>
+          </Switch>
+        </MessageContext.Provider>
       </StateContext.Provider>
     </Router>
   );

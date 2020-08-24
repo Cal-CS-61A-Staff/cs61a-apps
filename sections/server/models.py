@@ -6,7 +6,7 @@ import flask
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 
-from common.course_config import get_course_id
+from common.course_config import get_course_id, is_admin
 from common.db import database_url
 
 
@@ -142,5 +142,23 @@ class User(db.Model, UserMixin):
             "name": self.name,
             "email": self.email,
             "isStaff": self.is_staff,
+            "isAdmin": is_admin(self.email),
             "backupURL": f"https://okpy.org/admin/course/{get_course_id()}/{quote(self.email)}",
+        }
+
+
+class CourseConfig(db.Model):
+    id: int = db.Column(db.Integer, primary_key=True)
+    course: str = db.Column(db.String, index=True)
+
+    can_students_change = db.Column(db.Boolean, default=True)
+    can_tutors_change = db.Column(db.Boolean, default=True)
+    can_tutors_reassign = db.Column(db.Boolean, default=True)
+
+    @property
+    def json(self):
+        return {
+            "canStudentsChange": self.can_students_change,
+            "canTutorsChange": self.can_tutors_change,
+            "canTutorsReassign": self.can_tutors_reassign,
         }

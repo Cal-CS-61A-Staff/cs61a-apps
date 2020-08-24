@@ -1,12 +1,22 @@
-from datetime import datetime
 from functools import wraps
-from typing import Union
+from sys import stderr
+from typing import List, Union
 
 import flask
 from flask import jsonify, render_template, request
 from flask_login import current_user, login_required
 
-from models import Attendance, AttendanceStatus, Section, Session, User, db
+from common.course_config import get_course, is_admin
+from common.rpc.auth import read_spreadsheet
+from models import (
+    Attendance,
+    AttendanceStatus,
+    CourseConfig,
+    Section,
+    Session,
+    User,
+    db,
+)
 
 
 class Failure(Exception):
@@ -67,6 +77,11 @@ def create_state_client(app: flask.Flask):
     @api
     def refresh_state():
         if current_user.is_authenticated:
+            config = CourseConfig.query.filter_by(course=get_course()).one_or_none()
+            if config is None:
+                config = CourseConfig(course=get_course())
+                db.session.add(config)
+                db.session.commit()
             return {
                 "enrolledSection": current_user.sections[0].json
                 if current_user.sections
@@ -82,6 +97,7 @@ def create_state_client(app: flask.Flask):
                     for section in sorted(Section.query.all(), key=section_sorter)
                 ],
                 "currentUser": current_user.json,
+                "config": config.json,
             }
         else:
             return {"sections": []}
@@ -173,3 +189,56 @@ def create_state_client(app: flask.Flask):
         )
         db.session.commit()
         return fetch_section(section_id=session.section_id)
+
+    @api
+    @staff_required
+    def update_config(**kwargs):
+        if not is_admin(current_user.email):
+            raise Failure("Only course admins can perform this action.")
+        config: CourseConfig = CourseConfig.query.filter_by(course=get_course()).one()
+        for key, value in kwargs.items():
+            setattr(config, key, value)
+        db.session.commit()
+        return refresh_state()
+
+    @api
+    @staff_required
+    def import_sections(sheet_url):
+        if not is_admin(current_user.email):
+            raise Failure("Only course admins can perform this action.")
+        index = read_spreadsheet(course="cs61a", url=sheet_url, sheet_name="Index")
+        header = index[0][:4]
+        if header != ["Day", "Start Time", "End Time", "Sheet"]:
+            raise Failure("Invalid header for index sheet")
+        for day, start_time, end_time, sheet, *args in index[1:]:
+            print(sheet, file=stderr)
+            sheet: List[List[Union[str, int]]] = read_spreadsheet(
+                course="cs61a", url=sheet_url, sheet_name=sheet
+            )
+            header = sheet[0]
+            print(header, file=stderr)
+            name_col = header.index("Name")
+            email_col = header.index("Email")
+            for section in sheet[1:]:
+                tutor_name = section[name_col]
+                tutor_email = section[email_col]
+                tutor_user = User.query.filter_by(email=tutor_email).one_or_none()
+                if tutor_user is None:
+                    tutor_user = User(email=tutor_email, name=tutor_name, is_staff=True)
+                    db.session.add(tutor_user)
+                tutor_user.is_staff = True
+
+                capacity = sum(1 for col in header if "Student" in col)
+
+                db.session.add(
+                    Section(
+                        start_time=start_time,
+                        end_time=end_time,
+                        capacity=capacity,
+                        staff=tutor_user,
+                    )
+                )
+
+            db.session.commit()
+
+        return refresh_state()

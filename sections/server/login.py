@@ -6,7 +6,6 @@ from flask_login import LoginManager, login_user, logout_user
 
 from common.course_config import get_course
 from common.oauth_client import create_oauth_client, get_user, is_staff
-from common.rpc.secrets import get_secret
 from common.url_for import url_for
 from models import User, db
 
@@ -22,12 +21,11 @@ def create_login_client(app: flask.Flask):
         user = User.query.filter_by(email=user_data["email"]).one_or_none()
         if user is None:
             user = User(
-                email=user_data["email"],
-                name=user_data["name"],
-                is_staff=is_staff("cs61a" if dev else get_course()),
+                email=user_data["email"], name=user_data["name"], is_staff=False
             )
             db.session.add(user)
-            db.session.commit()
+        user.is_staff = is_staff("cs61a" if dev else get_course())
+        db.session.commit()
         login_user(user)
 
     create_oauth_client(app, "sections", success_callback=login)

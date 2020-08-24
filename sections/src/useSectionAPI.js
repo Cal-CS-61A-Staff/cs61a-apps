@@ -3,6 +3,7 @@
 import { useCallback, useContext } from "react";
 import type { SectionDetails } from "models";
 import post from "./common/post";
+import MessageContext from "./MessageContext";
 import SectionStateContext from "./SectionStateContext";
 
 export default function useSectionAPI(
@@ -10,17 +11,18 @@ export default function useSectionAPI(
   callback: ?(SectionDetails) => void
 ) {
   const { updateState } = useContext(SectionStateContext);
+  const { pushMessage } = useContext(MessageContext);
 
   return useCallback(
     async (args: { [key: string]: any } = {}) => {
-      const resp = await post(`/api/${method}`, args);
+      const resp = await post(`/api/${method}`, args, true);
       if (resp.success) {
         updateState(resp.data);
         if (callback) {
           callback(resp.data);
         }
       } else {
-        // TODO: display exception
+        pushMessage(resp.message ?? "Unknown error.");
       }
     },
     [method, callback, updateState]
