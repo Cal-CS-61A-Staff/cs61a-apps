@@ -1,0 +1,11 @@
+{
+    "services": {
+      "piazza": "Automatically preview Piazza links posted in chat.",
+      "golinks": "Automatically reformat golinks posted in chat.",
+      "emojify": "Include emoji of staff members when their names are mentioned.",
+      "groups": "Automatically tag particular groups (e.g. @heads) when mentioned.",
+      "claps": "Adds a \\clap command.",
+      "prlinks": "Automatically reformat PR links posted in chat.",
+      "issues": "Automatically hyperlink issues posted in chat."
+    }
+  }

@@ -1,0 +1,72 @@
+from typing import NamedTuple
+
+
+class StaffMember(NamedTuple):
+    firstName: str
+    lastName: str
+    emoji: str
+
+
+STAFF = [
+    StaffMember("Yichen", "Sun", ":yichen:"),
+    StaffMember("Yannan", "Tuo", ":yannan:"),
+    StaffMember("William", "Hsu", ":william:"),
+    StaffMember("Shreya", "Sahoo", ":shreya:"),
+    StaffMember("Sherry", "Luo", ":sherry:"),
+    StaffMember("Shayna", "Kothari", ":shayna:"),
+    StaffMember("Shaviv", "Hoffman-Lowitz", ":shaviv:"),
+    StaffMember("Sean", "O'Brien", ":sean:"),
+    StaffMember("Samy", "Cherfaoui", ":samy:"),
+    StaffMember("Risham", "Sidhu", ":risham:"),
+    StaffMember("Richard", "Roggenkemper", ":richard:"),
+    StaffMember("Paul", "Bitutsky", ":paul:"),
+    StaffMember("Patricia", "Ouyang", ":patricia:"),
+    StaffMember("Nancy", "Shaw", ":nancy:"),
+    StaffMember("Lillian", "Du", ":lillian:"),
+    StaffMember("Lauren", "Meier", ":lauren:"),
+    StaffMember("Kyle", "Tse", ":kyle:"),
+    StaffMember("Khalil", "Sarwari", ":khalil:"),
+    StaffMember("Kevin", "Yu", ":kevin:"),
+    StaffMember("Kelly", "Chen", ":kelly:"),
+    StaffMember("Kavi", "Gupta", ":kavi:"),
+    StaffMember("Katherine", "Liu", ":katherine:"),
+    StaffMember("Kartik", "Kapur", ":kartik:"),
+    StaffMember("Karthik", "Bharathala", ":karthik:"),
+    StaffMember("Jessica", "Yeh", ":jessica:"),
+    StaffMember("Jason", "Xu", ":jason-x:"),
+    StaffMember("Jason", "Zhou", ":jason-z:"),
+    StaffMember("Jade", "Singh", ":jade:"),
+    StaffMember("Jacqueline", "Yeung", ":jacqueline:"),
+    StaffMember("Jack", "Coyle", ":jack:"),
+    StaffMember("Imaani", "Choudhuri", ":imaani:"),
+    StaffMember("Griffin", "Prechter", ":griffin:"),
+    StaffMember("Evan", "Corriere", ":evan:"),
+    StaffMember("Erica", "Kong", ":erica:"),
+    StaffMember("Derrick", "Xiong", ":derrick:"),
+    StaffMember("Derek", "Wan", ":derek:"),
+    StaffMember("Danelle", "Nachum", ":danelle:"),
+    StaffMember("Dalton", "Omens", ":dalton:"),
+    StaffMember("Charles", "Sun", ":charles:"),
+    StaffMember("Chae", "Park", ":chae:"),
+    StaffMember("Cesar", "Plascencia Zuniga", ":cesar:"),
+    StaffMember("Catherine", "Cang", ":catherine:"),
+    StaffMember("Cameron", "Malloy", ":cameron:"),
+    StaffMember("Brian", "Lee", ":brian:"),
+    StaffMember("Brandon", "Fong", ":brandon:"),
+    StaffMember("Boren", "Tsai", ":boren:"),
+    StaffMember("Audrey", "Thompson", ":audrey:"),
+    StaffMember("Annie", "Tang", ":annie:"),
+    StaffMember("Anita", "Cu", ":anita:"),
+    StaffMember("Aman", "Shah", ":aman:"),
+    StaffMember("Alex", "Stennet", ":alex-s:"),
+    StaffMember("Alex", "Kassil", ":alex-k:"),
+    StaffMember("Albert", "Xu", ":albert:"),
+    StaffMember("Adam", "Loeffler", ":adam:"),
+    StaffMember("Abhinav", "Ashar", ":abhinav:"),
+    StaffMember("Aaron", "Chen", ":aaron:"),
+    StaffMember("John", "Denero", ":john:"),
+    StaffMember("DeNero", "Denero", ":john:"),
+    StaffMember("Rahul", "Arya", ":rahul-a:"),
+]
+
+STAFF_EMOJI = {x.emoji for x in STAFF}

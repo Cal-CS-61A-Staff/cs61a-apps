@@ -1,0 +1,24 @@
+click==6.7
+Flask==1.0.0
+Flask-Login==0.4.0
+Flask-Migrate==2.0.0
+Flask-Script==2.0.5
+Flask-SQLAlchemy==2.3.2
+itsdangerous==0.24
+Jinja2==2.10.1
+MarkupSafe==0.23
+oauthlib==2.0.1
+python-engineio==3.9.0
+python-socketio==1.7.1
+pytz==2016.10
+requests-oauthlib==0.8.0
+six==1.10.0
+flask-debugtoolbar==0.11.0
+webassets==0.12.1
+gunicorn==19.7.0
+eventlet==0.20.1
+names==0.3.0
+raven[flask]==6.0.0
+APScheduler==3.6.3
+
+-r common/requirements.txt

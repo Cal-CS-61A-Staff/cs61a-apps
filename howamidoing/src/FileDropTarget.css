@@ -1,0 +1,43 @@
+.FileDropTarget {
+    flex-grow: 1;
+    margin: 0 10px 0 10px;
+    text-align: center;
+}
+
+.FileDropTargetBox {
+    width: 100%;
+    height: 400px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border: 2px dotted black;
+    display: table;
+    text-align: center;
+}
+
+.FileDropTargetBox[hover=true] {
+    border-color: orange;
+}
+
+.FileDropTarget .centeredTextHolder {
+    display: table-cell;
+    vertical-align: middle;
+    line-height: normal;
+}
+
+.FileDropTarget .fileUploadButton {
+    width: 100%;
+    height: 40px;
+    border: 1px solid black;
+    text-align: center;
+}
+
+.FileDropTarget .fileUploadButton div {
+    width: 100%;
+    height: 100%;
+    display: table;
+}
+
+.FileDropTarget .fileUploadButton:hover {
+    background-color: lightblue;
+    cursor: pointer;
+}

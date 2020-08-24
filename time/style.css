@@ -1,0 +1,120 @@
+@charset "UTF-8";
+body {
+  font-family: "Roboto", sans-serif;
+  width: 1000px;
+  margin: 0 auto !important;
+  float: none !important;
+}
+
+h1 {
+  font-size: 3em;
+  font-family: "Roboto", sans-serif;
+  margin-top: 1em;
+  font-weight: lighter;
+  color: #0072c1;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid #eee;
+}
+
+.zone {
+    font-family: "Roboto", sans-serif;
+    font-size: 0.6em;
+    display:inline-block;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+.code {
+  font-family: "Courier", monospace;
+}
+
+.description {
+    font-size: 1.5em;
+    color: #888;
+}
+
+.value {
+    font-size: 1.5em;
+    color: #008;
+}
+
+.subhead {
+    font-size: 1.5em;
+    margin-bottom: 0.5em;
+    color: #88d;
+    font-style: italic;
+}
+
+.dateinput {
+  font-family: "Roboto", sans-serif;
+  padding: 1em;
+  font-size: 2em;
+  font-weight: lighter;
+}
+
+.dateform {
+  .dateinput;
+  font-family: "Roboto", sans-serif;
+  border-width:0px;
+  border:none;
+  color: #448;
+  background-color: #eef;
+  font-size: 1em;
+  font-weight: lighter;
+  text-align: center;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.fourwidth {
+    width: 3.5em;
+}
+
+.twowidth {
+    width: 2em;
+}
+
+.button {
+  font-family: "Roboto", sans-serif;
+  border-width:0px;
+  border:none;
+  color: #000;
+  background-color: #ccf;
+  font-size: 1em;
+  text-align: center;
+  font-weight: lighter;
+  vertical-align: center;
+}
+
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: #ccc;
+  opacity: 1; /* Firefox */
+}
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: #ccc;
+}
+
+a {
+  color: #88c;
+}
+
+.main .description{
+  width:50%;
+  display:inline-block;
+  box-sizing:border-box;
+  text-align:right;
+}
+
+.main .value{
+  text-align:left;
+  padding-left:10px;
+  width:50%;
+  display:inline-block;
+  box-sizing:border-box;
+}

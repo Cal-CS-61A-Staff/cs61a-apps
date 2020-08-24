@@ -1,0 +1,49 @@
+{
+  "name": "61a-grades",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:8000",
+  "dependencies": {
+    "concurrently": "^5.1.0",
+    "lodash": "latest",
+    "react": "^16.8.6",
+    "react-bootstrap": "^1.0.0-beta.17",
+    "react-dom": "^16.8.6",
+    "react-scripts": "3.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "yarn run react-scripts build && rm -rf deploy && mkdir deploy && cp -a server/. deploy/ && mv build deploy/static",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy": "cd deploy && rm -rf .git && git init && git add -A && git commit -m \"init\" && git remote add dokku dokku@apps.cs61a.org:howamidoing && git push --force dokku master",
+    "dev": "concurrently -n 'server, client' \"nodemon --exec python3 server/main.py\" \"yarn start\""
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@data-ui/histogram": "^0.0.81",
+    "@material-ui/core": "^4.9.13",
+    "bootstrap": "^4.3.1",
+    "eslint-config-airbnb": "^17.1.1",
+    "jquery": "^3.4.1",
+    "katex": "^0.11.1",
+    "nodemon": "^2.0.2",
+    "popper.js": "^1.15.0",
+    "react-latex": "^1.4.0",
+    "react-select2-wrapper": "^1.0.4-beta6",
+    "shipit-cli": "^5.0.0",
+    "shipit-deploy": "^5.0.0",
+    "react-bootstrap": "latest"
+  }
+}

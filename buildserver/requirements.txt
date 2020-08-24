@@ -1,0 +1,9 @@
+Flask==1.1.2
+PyGitHub==1.52
+gunicorn==20.0.4
+PyYAML==5.3.1
+google-cloud-storage==1.30.0
+certbot-dns-google==1.7.0
+python-dateutil==2.8.1
+requests==2.24.0
+-r common/requirements.txt

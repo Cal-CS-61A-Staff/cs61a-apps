@@ -1,0 +1,5 @@
+build_type: none
+deploy_type: flask
+first_party_domains:
+  - auth.cs61a.org
+  - auth.apps.cs61a.org # legacy, used for direct REST access

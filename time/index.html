@@ -1,0 +1,80 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="style.css">
+		<link rel="shortcut icon" href="favicon.png">
+		<title>In Your Timezone</title>
+	</head>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+
+	<body>
+		<center>
+			<h1>In Your Timezone</h1>
+			<div class="subhead">Distribute times easily</div>
+			<div align=left>
+				Current Timezone is a simple tool you can use to distribute
+				time information in such a way that it will automatically be
+				localized to the user's timezone. To use it just send the
+				link <span class="code">https://time.cs61a.org/t?1593730500</span>
+				where you can replace the part after the <span class="code">t?</span>
+				with the <a href="https://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a>
+				of the time you want to distribute.
+			</div>
+
+			<div class="dateinput">
+				<span id="zone" class="zone">(could not determine timezone)</span>
+				<br>
+				<input id="year" type="number" class="dateform fourwidth" placeholder="YYYY">
+				<span>-</span>
+				<input id="month" type="number" class="dateform twowidth" placeholder="MM" min="1" max="12">
+				<span>-</span>
+				<input id="day" type="number" class="dateform twowidth" placeholder="DD" min="1" max="31">
+				<span>&nbsp</span>
+				<input id="hour" type="number" class="dateform twowidth" placeholder="HH" min="1" max="12">
+				<span>:</span>
+				<input id="minute" type="number" class="dateform twowidth" placeholder="MM" min="0" max="59">
+				<span>:</span>
+				<input id="second" type="number" class="dateform twowidth" placeholder="SS" min="0" max="59">
+				<span>&nbsp</span>
+				<select id="ampm" type="text" class="dateform twowidth">
+					<option value="AM" class="dateform">AM</option>
+					<option value="PM" class="dateform">PM</option>
+				</select>
+			</div>
+			<p>
+			<button class="button" onclick="go()">Go</button>
+			<!-- <button class="button"><img src="link.png" alt="Link"/></button> -->
+		</center>
+	</body>
+	<script>
+		function setup() {
+			let m = moment();
+			document.getElementById("year").value = m.format("YYYY");
+			document.getElementById("month").value = m.format("M");
+			document.getElementById("day").value = m.format("D");
+			document.getElementById("hour").value = m.format("h");
+			document.getElementById("minute").value = m.format("mm");
+			document.getElementById("second").value = "00";
+			document.getElementById("ampm").value = m.format("a").toUpperCase();
+			document.getElementById("zone").innerHTML = "(" + Intl.DateTimeFormat().resolvedOptions().timeZone + ")";
+		}
+
+		function getNumericValue(id) {
+			return parseInt(document.getElementById(id).value, 10);
+		}
+
+		function go() {
+			let date = ["year", "month", "day", "hour", "minute", "second"].map(getNumericValue);
+			date[1] -= 1; // javascript nonsense
+			date[3] %= 12;
+			if (document.getElementById("ampm").value === "PM") {
+				date[3] += 12;
+			}
+			console.log(date);
+			let m = moment(date);
+			window.open("t?" + m.unix());
+		}
+
+		setup();
+	</script>
+</html>

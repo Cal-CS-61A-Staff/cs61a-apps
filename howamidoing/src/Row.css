@@ -1,0 +1,12 @@
+.Row.closed {
+    display: none;
+}
+
+.closeButton {
+    float: left;
+    margin-right: 15px;
+}
+
+.pointable {
+    cursor: pointer;
+}

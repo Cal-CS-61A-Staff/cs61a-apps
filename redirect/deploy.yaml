@@ -1,0 +1,25 @@
+build_type: none
+deploy_type: flask
+first_party_domains:
+  - tutor.cs61a.org
+  - ok.cs61a.org
+  - python.cs61a.org
+  - scheme.cs61a.org
+  - sql.cs61a.org
+  - book.cs61a.org
+  - wiki.cs61a.org
+  # domain redirects
+  - su20.cs61a.org
+  - sp20.cs61a.org
+  - fa19.cs61a.org
+  - su19.cs61a.org
+  - sp19.cs61a.org
+  - fa18.cs61a.org
+  - su18.cs61a.org
+  - sp18.cs61a.org
+  - fa17.cs61a.org
+  - su17.cs61a.org
+  - sp17.cs61a.org
+  - fa16.cs61a.org
+  - su16.cs61a.org
+  - sp16.cs61a.org
