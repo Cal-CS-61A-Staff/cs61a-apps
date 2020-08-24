@@ -43,6 +43,9 @@ secure boolean
 def index():
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
+    email = get_user()["email"]
+    if not is_admin(course="cs61a", email=email):
+        abort(401)
     with connect_db() as db:
         apps = db("SELECT app FROM services WHERE pr_number=0", []).fetchall()
     return f"""
@@ -65,6 +68,9 @@ def index():
 def deploy_prod_app():
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
+    email = get_user()["email"]
+    if not is_admin(course="cs61a", email=email):
+        abort(401)
     deploy_prod_app_sync(target_app=request.args["app"], noreply=True)
     return ""
 
@@ -88,6 +94,9 @@ def handle_deploy_prod_app_sync(app, is_staging, target_app):
 def trigger_build():
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
+    email = get_user()["email"]
+    if not is_admin(course="cs61a", email=email):
+        abort(401)
     trigger_build_sync(pr_number=int(request.args["pr_number"]), noreply=True)
     return ""
 
