@@ -4,6 +4,7 @@ from os import getenv
 
 import sqlalchemy.engine.url
 
+
 use_devdb = getenv("ENV", "DEV") in ("DEV", "TEST")
 
 if use_devdb:
