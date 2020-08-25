@@ -25,6 +25,7 @@ export default function AdminPage(): React.Node {
 
   const updateConfig = useAPI("update_config");
   const importSections = useAPI("import_sections");
+  const deleteAllSections = useAPI("delete_all_sections");
 
   if (!currentUser?.isStaff) {
     return <Redirect to="/" />;
@@ -113,7 +114,9 @@ export default function AdminPage(): React.Node {
                   .
                 </small>
               </p>
-              <Button variant="danger">Delete All</Button>
+              <Button variant="danger" onClick={() => deleteAllSections()}>
+                Delete All
+              </Button>
             </Tab>
           </Tabs>
         </Col>

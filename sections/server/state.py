@@ -1,8 +1,11 @@
+import calendar
+from datetime import datetime, timedelta
 from functools import wraps
 from sys import stderr
 from typing import List, Union
 
 import flask
+import pytz
 from flask import jsonify, render_template, request
 from flask_login import current_user, login_required
 
@@ -29,6 +32,17 @@ def staff_required(func):
     def wrapped(**kwargs):
         if not current_user.is_staff:
             raise Failure("Only staff can perform this action")
+        return func(**kwargs)
+
+    return wrapped
+
+
+def admin_required(func):
+    @wraps(func)
+    @staff_required
+    def wrapped(**kwargs):
+        if not is_admin(current_user.email):
+            raise Failure("Only course admins can perform this action.")
         return func(**kwargs)
 
     return wrapped
@@ -191,10 +205,8 @@ def create_state_client(app: flask.Flask):
         return fetch_section(section_id=session.section_id)
 
     @api
-    @staff_required
+    @admin_required
     def update_config(**kwargs):
-        if not is_admin(current_user.email):
-            raise Failure("Only course admins can perform this action.")
         config: CourseConfig = CourseConfig.query.filter_by(course=get_course()).one()
         for key, value in kwargs.items():
             setattr(config, key, value)
@@ -202,26 +214,45 @@ def create_state_client(app: flask.Flask):
         return refresh_state()
 
     @api
-    @staff_required
+    @admin_required
     def import_sections(sheet_url):
-        if not is_admin(current_user.email):
-            raise Failure("Only course admins can perform this action.")
         index = read_spreadsheet(course="cs61a", url=sheet_url, sheet_name="Index")
         header = index[0][:4]
         if header != ["Day", "Start Time", "End Time", "Sheet"]:
             raise Failure("Invalid header for index sheet")
         for day, start_time, end_time, sheet, *args in index[1:]:
-            print(sheet, file=stderr)
             sheet: List[List[Union[str, int]]] = read_spreadsheet(
-                course="cs61a", url=sheet_url, sheet_name=sheet
+                course="cs61a", url=sheet_url, sheet_name=repr(sheet)
             )
             header = sheet[0]
-            print(header, file=stderr)
             name_col = header.index("Name")
             email_col = header.index("Email")
+
+            day = list(calendar.day_name).index(day)
+
+            start_time = datetime.strptime(start_time, "%I:%M %p")
+            start_time = start_time.replace(
+                year=datetime.now().year,
+                month=datetime.now().month,
+                day=datetime.now().day,
+            )
+            while start_time.weekday() != day:
+                start_time += timedelta(days=1)
+
+            end_time = datetime.strptime(end_time, "%I:%M %p")
+            end_time = end_time.replace(
+                year=start_time.year, month=start_time.month, day=start_time.day
+            )
+
+            pst = pytz.timezone("US/Pacific")
+            start_time = pst.localize(start_time).timestamp()
+            end_time = pst.localize(end_time).timestamp()
+
             for section in sheet[1:]:
                 tutor_name = section[name_col]
                 tutor_email = section[email_col]
+                if not tutor_name or not tutor_email:
+                    continue
                 tutor_user = User.query.filter_by(email=tutor_email).one_or_none()
                 if tutor_user is None:
                     tutor_user = User(email=tutor_email, name=tutor_name, is_staff=True)
@@ -241,4 +272,11 @@ def create_state_client(app: flask.Flask):
 
             db.session.commit()
 
+        return refresh_state()
+
+    @api
+    @admin_required
+    def delete_all_sections():
+        Section.query.delete()
+        db.session.commit()
         return refresh_state()

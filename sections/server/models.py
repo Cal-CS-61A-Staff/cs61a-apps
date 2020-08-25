@@ -43,6 +43,15 @@ class Section(db.Model):
         backref=db.backref("sections", lazy="joined"),
         lazy="joined",
     )
+    tag_string: str = db.Column(db.String)  # comma separated list of tags
+
+    @property
+    def tags(self):
+        return self.tag_string.split(",")
+
+    @tags.setter
+    def tags(self, tags: List[str]):
+        self.tags = ",".join(tags)
 
     @property
     def json(self):
@@ -58,6 +67,7 @@ class Section(db.Model):
             "startTime": self.start_time,
             "endTime": self.end_time,
             "callLink": self.call_link,
+            "tags": self.tags,
         }
 
     @property

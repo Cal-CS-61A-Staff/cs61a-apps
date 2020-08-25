@@ -15,14 +15,18 @@ export default function useSectionAPI(
 
   return useCallback(
     async (args: { [key: string]: any } = {}) => {
-      const resp = await post(`/api/${method}`, args, true);
-      if (resp.success) {
-        updateState(resp.data);
-        if (callback) {
-          callback(resp.data);
+      try {
+        const resp = await post(`/api/${method}`, args, true);
+        if (resp.success) {
+          updateState(resp.data);
+          if (callback) {
+            callback(resp.data);
+          }
+        } else {
+          pushMessage(resp.message ?? "Unknown error.");
         }
-      } else {
-        pushMessage(resp.message ?? "Unknown error.");
+      } catch {
+        pushMessage("Something went wrong.");
       }
     },
     [method, callback, updateState]
