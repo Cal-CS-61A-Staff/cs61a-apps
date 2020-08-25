@@ -75,9 +75,9 @@ export default function App(): React.Node {
             <Link to="/" className="nav-link active">
               Home
             </Link>
-            <Link to="/history" className="nav-link active">
-              History
-            </Link>
+            {/*<Link to="/history" className="nav-link active">*/}
+            {/*  History*/}
+            {/*</Link>*/}
             <Nav.Link
               href="https://cs61a.org/tutors.html"
               target="_blank"

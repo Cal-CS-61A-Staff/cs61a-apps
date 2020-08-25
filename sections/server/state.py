@@ -65,6 +65,10 @@ def section_sorter(section: Section) -> int:
     return score
 
 
+def get_config() -> CourseConfig:
+    return CourseConfig.query.filter_by(course=get_course()).one()
+
+
 def create_state_client(app: flask.Flask):
     def api(handler):
         def wrapped():
@@ -126,6 +130,8 @@ def create_state_client(app: flask.Flask):
     @api
     @login_required
     def join_section(target_section_id: str):
+        if not get_config().can_students_change:
+            raise Failure("Students cannot add themselves themselves to sections!")
         target_section_id = int(target_section_id)
         # check if they can be added to the new section
         target_section: Section = Section.query.get(target_section_id)
@@ -139,6 +145,8 @@ def create_state_client(app: flask.Flask):
     @api
     @login_required
     def leave_section(section_id: str):
+        if not get_config().can_students_change:
+            raise Failure("Students cannot remove themselves from sections!")
         section_id = int(section_id)
         current_user.sections = [
             section for section in current_user.sections if section.id != section_id
@@ -149,8 +157,12 @@ def create_state_client(app: flask.Flask):
     @api
     @staff_required
     def claim_section(section_id: str):
+        if not get_config().can_tutors_change:
+            raise Failure("Tutors cannot add themselves to sections!")
         section_id = int(section_id)
         section = Section.query.get(section_id)
+        if section.staff:
+            raise Failure("Section is already claimed!")
         section.staff = current_user
         db.session.commit()
         return refresh_state()
@@ -160,6 +172,14 @@ def create_state_client(app: flask.Flask):
     def unassign_section(section_id: str):
         section_id = int(section_id)
         section = Section.query.get(section_id)
+        if section.staff is None:
+            raise Failure("Section is already unassigned!")
+        if section.staff.email == current_user.email:
+            if not get_config().can_tutors_change:
+                raise Failure("Tutors cannot remove themselves from sections!")
+        else:
+            if not get_config().can_tutors_reassign:
+                raise Failure("Tutors cannot remove other tutors from sections!")
         section.staff = None
         db.session.commit()
         return refresh_state()
@@ -207,7 +227,7 @@ def create_state_client(app: flask.Flask):
     @api
     @admin_required
     def update_config(**kwargs):
-        config: CourseConfig = CourseConfig.query.filter_by(course=get_course()).one()
+        config = get_config()
         for key, value in kwargs.items():
             setattr(config, key, value)
         db.session.commit()

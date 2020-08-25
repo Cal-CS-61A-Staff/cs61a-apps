@@ -179,18 +179,22 @@ export default function EnrolledSectionCard({ section }: Props) {
             )}
           </p>
         )}
-        <Button
-          variant="danger"
-          href={!isStaff ? section.callLink : undefined}
-          size="sm"
-          onClick={() =>
-            isStaff
-              ? abandonSection({ section_id: section.id })
-              : leaveSection({ section_id: section.id })
-          }
-        >
-          {isStaff ? "Abandon Tutorial" : "Leave Tutorial"}
-        </Button>
+        {(isStaff
+          ? state.config.canTutorsChange
+          : state.config.canStudentsChange) && (
+          <Button
+            variant="danger"
+            href={!isStaff ? section.callLink : undefined}
+            size="sm"
+            onClick={() =>
+              isStaff
+                ? abandonSection({ section_id: section.id })
+                : leaveSection({ section_id: section.id })
+            }
+          >
+            {isStaff ? "Abandon Tutorial" : "Leave Tutorial"}
+          </Button>
+        )}
       </Card.Body>
     </Card>
   );

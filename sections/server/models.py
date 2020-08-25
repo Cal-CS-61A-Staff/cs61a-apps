@@ -43,7 +43,9 @@ class Section(db.Model):
         backref=db.backref("sections", lazy="joined"),
         lazy="joined",
     )
-    tag_string: str = db.Column(db.String)  # comma separated list of tags
+    tag_string: str = db.Column(
+        db.String, nullable=False, default=""
+    )  # comma separated list of tags
 
     @property
     def tags(self):

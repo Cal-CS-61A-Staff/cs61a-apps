@@ -18,7 +18,7 @@ type Props = {
 export default function StudentSectionCard({
   section,
 }: Props): React.MixedElement {
-  const { currentUser, enrolledSection } = useContext(StateContext);
+  const { config, currentUser, enrolledSection } = useContext(StateContext);
   const hasSpace = section.capacity > section.students.length;
   const enrolledInThisSection = enrolledSection?.id === section.id;
 
@@ -40,24 +40,28 @@ export default function StudentSectionCard({
       <Card.Body>
         <Card.Title>
           {isStaff &&
-            (section.staff == null ? (
-              <Button
-                className="float-right"
-                size="sm"
-                onClick={() => claimSection({ section_id: section.id })}
-              >
-                Claim
-              </Button>
-            ) : (
-              <Button
-                className="float-right"
-                size="sm"
-                variant="danger"
-                onClick={() => unassignSection({ section_id: section.id })}
-              >
-                Unassign
-              </Button>
-            ))}
+            (section.staff == null
+              ? config.canTutorsChange && (
+                  <Button
+                    className="float-right"
+                    size="sm"
+                    onClick={() => claimSection({ section_id: section.id })}
+                  >
+                    Claim
+                  </Button>
+                )
+              : (section.staff.email === currentUser?.email
+                  ? config.canTutorsChange
+                  : config.canTutorsReassign) && (
+                  <Button
+                    className="float-right"
+                    size="sm"
+                    variant="danger"
+                    onClick={() => unassignSection({ section_id: section.id })}
+                  >
+                    Unassign
+                  </Button>
+                ))}
           {sectionTitle(section)}
         </Card.Title>
         <Card.Text>{section.description}</Card.Text>
@@ -69,7 +73,7 @@ export default function StudentSectionCard({
             {student.name}
           </ListGroup.Item>
         ))}
-        {hasSpace && !isStaff ? (
+        {hasSpace && !isStaff && config.canStudentsChange ? (
           <ListGroup.Item
             disabled={enrolledInThisSection}
             action={!enrolledInThisSection}
