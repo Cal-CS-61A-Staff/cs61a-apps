@@ -70,9 +70,8 @@ export default function StudentSectionCard({
       </Card.Body>
       <ListGroup variant="flush">
         {section.students.map((student, i) => (
-          // eslint-disable-next-line react/no-array-index-key
           <ListGroup.Item key={i} active={student.email === currentUser?.email}>
-            {student.name}
+            {enrolledInThisSection || isStaff ? student.name : "A student"}
           </ListGroup.Item>
         ))}
         {hasSpace && !isStaff && config.canStudentsChange ? (

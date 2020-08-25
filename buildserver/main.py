@@ -13,7 +13,7 @@ from deploy import delete_unused_services
 from github_utils import set_pr_comment
 from worker import land_commit
 
-GITHUB_REPO = "Cal-CS-61A-Staff/cs61a-apps"
+GITHUB_REPO = "Cal-CS-61A-Staff/cs61a-apps-DO_NOT_RELEASE"
 
 app = Flask(__name__)
 if __name__ == "__main__":
