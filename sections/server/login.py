@@ -24,6 +24,7 @@ def create_login_client(app: flask.Flask):
                 email=user_data["email"], name=user_data["name"], is_staff=False
             )
             db.session.add(user)
+        user.name = user_data["name"]
         user.is_staff = is_staff("cs61a" if dev else get_course())
         db.session.commit()
         login_user(user)
