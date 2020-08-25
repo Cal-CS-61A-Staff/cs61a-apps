@@ -56,11 +56,6 @@ export default function MainPage(): React.Node {
           <Row>
             <Col>
               <h1 className="display-4">CS 61A Tutorials</h1>
-              <p>
-                You can sign up for at most one weekly tutorial. Attendance is
-                mandatory - you may be removed from your tutorial if you are
-                absent without notifying the staff member in advance.
-              </p>
             </Col>
             {state.currentUser == null ? (
               <Col>
