@@ -2,7 +2,6 @@
 
 import { useContext } from "react";
 import * as React from "react";
-import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 
 import Card from "react-bootstrap/Card";

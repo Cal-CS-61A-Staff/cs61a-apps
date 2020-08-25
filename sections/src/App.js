@@ -1,7 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 // @flow strict
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as React from "react";
 import Container from "react-bootstrap/Container";
 
@@ -23,6 +23,11 @@ import useAPI from "./useAPI";
 export default function App(): React.Node {
   const [state, setState] = useState<?State>(null);
   const [messages, setMessages] = useState<Array<string>>([]);
+
+  const pushMessage = useCallback(
+    (message) => setMessages((currMessages) => currMessages.concat([message])),
+    []
+  );
 
   const updateState = (newState: State) => {
     // preserve ordering of sections, if possible
@@ -75,9 +80,9 @@ export default function App(): React.Node {
             <Link to="/" className="nav-link active">
               Home
             </Link>
-            {/*<Link to="/history" className="nav-link active">*/}
-            {/*  History*/}
-            {/*</Link>*/}
+            {/* <Link to="/history" className="nav-link active"> */}
+            {/*  History */}
+            {/* </Link> */}
             <Nav.Link
               href="https://cs61a.org/tutors.html"
               target="_blank"
@@ -111,12 +116,7 @@ export default function App(): React.Node {
       </Navbar>
       <Messages messages={messages} onChange={setMessages} />
       <StateContext.Provider value={{ ...state, updateState }}>
-        <MessageContext.Provider
-          value={{
-            pushMessage: (message) =>
-              setMessages((currMessages) => currMessages.concat([message])),
-          }}
-        >
+        <MessageContext.Provider value={{ pushMessage }}>
           <Switch>
             <Route exact path="/">
               <MainPage />

@@ -26,6 +26,6 @@ export default function useAPI(method: string, callback: ?(State) => mixed) {
         pushMessage("Something went wrong.");
       }
     },
-    [method, callback, updateState]
+    [method, callback, pushMessage, updateState]
   );
 }

@@ -29,6 +29,6 @@ export default function useSectionAPI(
         pushMessage("Something went wrong.");
       }
     },
-    [method, callback, updateState]
+    [method, callback, pushMessage, updateState]
   );
 }

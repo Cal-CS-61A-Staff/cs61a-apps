@@ -3,7 +3,6 @@
 
 import moment from "moment-timezone";
 import { useContext, useMemo, useState } from "react";
-import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import * as React from "react";
@@ -72,8 +71,8 @@ export default function EnrolledSectionCard({ section }: Props) {
   const updateSectionDescription = useAPI("update_section_description");
   const updateSectionCallLink = useAPI("update_section_call_link");
 
-  const [description, setDescription] = useState(section.description);
-  const [callLink, setCallLink] = useState(section.callLink);
+  const [description, setDescription] = useState(section.description ?? "");
+  const [callLink, setCallLink] = useState(section.callLink ?? "");
 
   return (
     <Card>
