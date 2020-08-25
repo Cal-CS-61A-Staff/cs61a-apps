@@ -186,7 +186,6 @@ export default function EnrolledSectionCard({ section }: Props) {
           : state.config.canStudentsChange) && (
           <Button
             variant="danger"
-            href={!isStaff ? section.callLink : undefined}
             size="sm"
             onClick={() =>
               isStaff
