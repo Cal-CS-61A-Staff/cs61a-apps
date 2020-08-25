@@ -2,6 +2,7 @@
 
 import { useContext } from "react";
 import * as React from "react";
+import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 
 import Card from "react-bootstrap/Card";
@@ -9,6 +10,7 @@ import ListGroup from "react-bootstrap/ListGroup";
 import { sectionTitle } from "./models";
 import type { Section } from "./models";
 import StateContext from "./StateContext";
+import Tags from "./Tags";
 import useAPI from "./useAPI";
 
 type Props = {
@@ -62,6 +64,7 @@ export default function StudentSectionCard({
                     Unassign
                   </Button>
                 ))}
+          {!isStaff && <Tags tags={section.tags} />}
           {sectionTitle(section)}
         </Card.Title>
         <Card.Text>{section.description}</Card.Text>

@@ -4,6 +4,7 @@
 import "bootstrap/dist/css/bootstrap.css";
 import { useContext, useEffect, useState } from "react";
 import * as React from "react";
+import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Tab from "react-bootstrap/Tab";
@@ -18,6 +19,7 @@ import SectionAttendance from "./SectionAttendance";
 import SectionRoster from "./SectionRoster";
 import SectionStateContext from "./SectionStateContext";
 import StateContext from "./StateContext";
+import Tags from "./Tags";
 import useSectionAPI from "./useSectionAPI";
 
 type Props = {
@@ -51,7 +53,10 @@ export default function SectionPage({ id }: Props): React.Node {
         <br />
         <Row>
           <Col>
-            <h1>Tutorial #{section.id}</h1>
+            <h1>
+              Tutorial #{section.id}
+              <Tags tags={section.tags} />
+            </h1>
             <p className="lead">{sectionInterval(section)}</p>
             {section.callLink != null && (
               <p>

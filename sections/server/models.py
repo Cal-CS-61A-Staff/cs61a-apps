@@ -53,7 +53,7 @@ class Section(db.Model):
 
     @tags.setter
     def tags(self, tags: List[str]):
-        self.tags = ",".join(tags)
+        self.tag_string = ",".join(tags)
 
     @property
     def json(self):

@@ -3,6 +3,7 @@
 
 import moment from "moment-timezone";
 import { useContext, useMemo, useState } from "react";
+import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import * as React from "react";
@@ -11,6 +12,7 @@ import { Link } from "react-router-dom";
 import { sectionInterval } from "./models";
 import type { Section } from "./models";
 import StateContext from "./StateContext";
+import Tags from "./Tags";
 import useAPI from "./useAPI";
 
 type Props = {
@@ -76,9 +78,10 @@ export default function EnrolledSectionCard({ section }: Props) {
   return (
     <Card>
       <Card.Header>
-        <b>
+        <h5 className="mb-n3">
           {sectionInterval(section)} (#{section.id})
-        </b>
+          <Tags tags={section.tags} />
+        </h5>
       </Card.Header>
       <Card.Body>
         {isStaff ? (

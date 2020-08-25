@@ -26,6 +26,7 @@ def seed():
                 end_time=(t + timedelta(minutes=30)).timestamp(),
                 capacity=5,
             )
+            section.tags = ["NPE"]
             sections.append(section)
             db.session.add(section)
 

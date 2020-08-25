@@ -23,6 +23,7 @@ export type Section = {
   startTime: Time,
   endTime: Time,
   callLink: ?string,
+  tags: Array<string>,
 };
 
 const AttendanceStatus = {

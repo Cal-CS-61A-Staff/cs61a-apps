@@ -17,5 +17,6 @@ export default React.createContext<{
   endTime: 0,
   callLink: null,
   sessions: [],
+  tags: [],
   updateState: () => {},
 });
