@@ -71,4 +71,5 @@ target/
 .idea/
 
 # Temporary files
+deploy/
 tmp/
