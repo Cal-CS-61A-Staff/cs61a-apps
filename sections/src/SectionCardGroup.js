@@ -59,12 +59,9 @@ export default function SectionCardGroup({
   const body = (
     <FlexLayout>
       {columns.map((columnSections, i) => (
-        // eslint-disable-next-line react/no-array-index-key
         <FlexColumn key={i}>
           {columnSections.map((section) => (
-            <CardHolder key={section.id}>
-              <StudentSectionCard section={section} />
-            </CardHolder>
+            <StudentSectionCard section={section} />
           ))}
         </FlexColumn>
       ))}

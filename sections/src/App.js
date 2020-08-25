@@ -98,9 +98,9 @@ export default function App(): React.Node {
               Appointments
             </Nav.Link>
             {state.currentUser?.isAdmin === true && (
-              <Nav.Link href="/admin" active>
+              <Link to="/admin" className="nav-link active">
                 Admin
-              </Nav.Link>
+              </Link>
             )}
           </Nav>
           <Nav className="mr-sm-2">

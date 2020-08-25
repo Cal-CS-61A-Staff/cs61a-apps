@@ -83,8 +83,10 @@ def create_state_client(app: flask.Flask):
 
         return handler
 
-    @app.route("/")
-    def index():
+    @app.route("/", endpoint="index")
+    @app.route("/admin/")
+    @app.route("/section/<path:path>")
+    def generic(**_):
         return render_template("index.html")
 
     @app.route("/debug")
