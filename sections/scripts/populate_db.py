@@ -28,14 +28,14 @@ with app.app_context():
         hour = int(hour)
         mins = int(mins)
         start_time = pst.localize(
-            datetime(year=2020, month=8, day=25, hour=hour, minute=mins)
+            datetime(year=2020, month=8, day=25, hour=hour + 12, minute=mins)
         )
         end_time = start_time + timedelta(minutes=30)
 
         section = Section(
             start_time=start_time.timestamp(),
             end_time=end_time.timestamp(),
-            capacity=6,
+            capacity=5,
             staff=User(email=email, name=name, is_staff=True),
         )
 

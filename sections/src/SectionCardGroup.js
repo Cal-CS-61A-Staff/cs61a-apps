@@ -61,7 +61,9 @@ export default function SectionCardGroup({
       {columns.map((columnSections, i) => (
         <FlexColumn key={i}>
           {columnSections.map((section) => (
-            <StudentSectionCard section={section} />
+            <CardHolder>
+              <StudentSectionCard section={section} />
+            </CardHolder>
           ))}
         </FlexColumn>
       ))}
