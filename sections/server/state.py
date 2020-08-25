@@ -114,7 +114,7 @@ def create_state_client(app: flask.Flask):
                     section.json
                     for section in sorted(Section.query.all(), key=section_sorter)
                 ],
-                "currentUser": current_user.json,
+                "currentUser": current_user.full_json,
                 "config": config.json,
             }
         else:

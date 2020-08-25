@@ -154,9 +154,12 @@ class User(db.Model, UserMixin):
             "name": self.name,
             "email": self.email,
             "isStaff": self.is_staff,
-            "isAdmin": is_admin(self.email),
             "backupURL": f"https://okpy.org/admin/course/{get_course_id()}/{quote(self.email)}",
         }
+
+    @property
+    def full_json(self):
+        return {**self.json, "isAdmin": is_admin(self.email)}
 
 
 class CourseConfig(db.Model):

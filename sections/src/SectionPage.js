@@ -4,7 +4,6 @@
 import "bootstrap/dist/css/bootstrap.css";
 import { useContext, useEffect, useState } from "react";
 import * as React from "react";
-import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Tab from "react-bootstrap/Tab";

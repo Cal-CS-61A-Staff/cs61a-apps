@@ -8,7 +8,7 @@ export type Person = {
   email: string,
   backupURL: string,
   isStaff: boolean,
-  isAdmin: boolean,
+  isAdmin?: boolean,
 };
 
 export type ID = string;
