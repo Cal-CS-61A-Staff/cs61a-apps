@@ -44,7 +44,7 @@ class Section(db.Model):
         lazy="joined",
     )
     tag_string: str = db.Column(
-        db.String, nullable=False, default=""
+        db.String(255), nullable=False, default=""
     )  # comma separated list of tags
 
     @property
@@ -161,7 +161,7 @@ class User(db.Model, UserMixin):
 
 class CourseConfig(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
-    course: str = db.Column(db.String, index=True)
+    course: str = db.Column(db.String(255), index=True)
 
     can_students_change = db.Column(db.Boolean, default=True)
     can_tutors_change = db.Column(db.Boolean, default=True)
