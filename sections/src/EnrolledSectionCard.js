@@ -77,7 +77,7 @@ export default function EnrolledSectionCard({ section }: Props) {
   return (
     <Card>
       <Card.Header>
-        <h5 className="mb-n3">
+        <h5 className="mb-n1">
           {sectionInterval(section)} (#{section.id})
           <Tags tags={section.tags} />
         </h5>
