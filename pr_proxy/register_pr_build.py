@@ -1,14 +1,10 @@
 import hmac
 import os
 import subprocess
-from time import sleep
 
 from flask import Flask, abort, request
 
 app = Flask(__name__)
-
-
-SECRET = "J1KX3V0WUES4DN51K96HJVOU53BE1L7QA0Q2D1JMRMQLQ502CY3XRUCLI8CGI2AS"
 
 
 # note: this can't be made a dependency, because pr_proxy does not use the standard build system
@@ -19,6 +15,7 @@ def sh(*args):
 @app.route("/create_subdomain", methods=["POST"])
 def create_subdomain():
     secret = request.json["secret"]
+    SECRET = os.getenv("SECRET")
     if not hmac.compare_digest(secret, SECRET):
         abort(403)
     app = request.json["app"]
