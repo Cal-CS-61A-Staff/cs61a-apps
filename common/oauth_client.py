@@ -1,6 +1,8 @@
 import os
 import urllib.parse
+from sys import stderr
 
+import flask
 import requests
 from flask import current_app, g, session, request, redirect, abort, jsonify
 from flask_oauthlib.client import OAuth
@@ -38,7 +40,9 @@ def is_staff(course):
         return False
 
 
-def create_oauth_client(app, consumer_key, secret_key=None):
+def create_oauth_client(
+    app: flask.Flask, consumer_key, secret_key=None, success_callback=None
+):
     oauth = OAuth(app)
 
     if os.getenv("ENV") == "prod":
@@ -100,6 +104,9 @@ def create_oauth_client(app, consumer_key, secret_key=None):
             return "Access denied: error=%s" % (request.args["error"])
         if isinstance(resp, dict) and "access_token" in resp:
             session["access_token"] = (resp["access_token"], "")
+
+        if success_callback:
+            success_callback()
 
         return redirect(url_for("index"))
 

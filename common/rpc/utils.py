@@ -29,7 +29,9 @@ def create_service(app: str):
                     except requests.exceptions.ReadTimeout:
                         pass
                 else:
-                    return requests.post(endpoint, json=kwargs).json()
+                    resp = requests.post(endpoint, json=kwargs)
+                    resp.raise_for_status()
+                    return resp.json()
 
             def bind(app: flask.Flask):
                 def decorator(func):
