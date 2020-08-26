@@ -78,10 +78,12 @@ export function sectionTitle(section: Section): React.MixedElement {
 }
 
 export function sectionInterval(section: Section): React.MixedElement {
+  const isPT = moment.tz.guess() === "America/Los_Angeles";
   return (
     <>
       {moment.unix(section.startTime).local().format("dddd h:mma")} &rarr;{" "}
       {moment.unix(section.endTime).local().format("h:mma")}
+      {!isPT && <> ({moment().tz(moment.tz.guess()).format("z")})</>}
     </>
   );
 }
