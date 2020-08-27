@@ -58,11 +58,8 @@ def land_commit(
             app for app in apps if app.config["deploy_type"] in WEB_DEPLOY_TYPES
         ]
         pr_builds_text = (
-            "\n\nDeployed PR builds are available at: \n"
-            + "\n".join(
-                f" * [{pr.number}.{app.name}.pr.cs61a.org](https://{pr.number}.{app.name}.pr.cs61a.org)"
-                for app in web_apps
-            )
+            "\n\nDeployed PR builds are available at: "
+            + "".join(f" - {pr.number}.{app.name}.pr.cs61a.org" for app in web_apps)
             if web_apps and pr is not None
             else ""
         )
