@@ -59,7 +59,7 @@ export default function EnrolledSectionCard({ section }: Props) {
     return [start, end];
   }, [section]);
 
-  const prevText = `The session started ${endTime.toNow()}`;
+  const prevText = `The session started ${endTime.fromNow()}`;
   const nextText = `The next session takes place ${startTime.fromNow()}.`;
 
   const state = useContext(StateContext);
