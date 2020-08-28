@@ -1075,7 +1075,7 @@ def assign_appointment(data):
             hour=0, minute=0, second=0, microsecond=0
         )
         week_start = start - datetime.timedelta(days=appointment.start_time.weekday())
-        week_end = start + datetime.timedelta(days=7)
+        week_end = week_start + datetime.timedelta(days=7)
         num_this_week = (
             AppointmentSignup.query.join(AppointmentSignup.appointment)
             .filter(
