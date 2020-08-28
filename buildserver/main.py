@@ -3,10 +3,15 @@ import hmac
 from flask import Flask, abort, redirect, request
 from github import Github
 
+import api
 from common.db import connect_db
 from common.oauth_client import create_oauth_client, get_user, is_staff
 from common.rpc.auth import is_admin
-from common.rpc.buildserver import deploy_prod_app_sync, trigger_build_sync
+from common.rpc.buildserver import (
+    deploy_prod_app_sync,
+    get_base_hostname,
+    trigger_build_sync,
+)
 from common.rpc.secrets import get_secret, validates_master_secret
 from common.url_for import url_for
 from deploy import delete_unused_services
@@ -178,6 +183,11 @@ def webhook():
             set_pr_comment("All PR builds shut down.", pr)
 
     return ""
+
+
+@get_base_hostname.bind(app)
+def get_base_hostname(app):
+    return api.get_base_hostname(app)
 
 
 if __name__ == "__main__":

@@ -21,22 +21,30 @@ def create_domain():
     if not hmac.compare_digest(secret, SECRET):
         abort(403)
     domain = request.json["domain"]
-    app = request.json["app"]
+    target = request.json["target"]
     conf = f"{domain}_autoconf.conf"
     existing_domains = os.listdir("/etc/nginx/conf.d")
     for existing_domain in existing_domains:
         if existing_domain == conf:
             return ""
 
+    if not os.path.isfile(f"etc/letsencrypt/live/{domain}/fullchain.pem"):
+        sh("certbot", "certonly", "--nginx", "-d", domain, "--non-interactive")
+        # will kill the request here, so a restart is required
+
     with open(f"/etc/nginx/conf.d/{conf}", "w+") as f:
         f.write(
             f"""
     server {{
       listen 443 ssl;
-      server_name {app}.cs61a.org;
+      server_name {domain};
+      ssl_certificate /etc/letsencrypt/live/{domain}/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/{domain}/privkey.pem;
+      include /etc/letsencrypt/options-ssl-nginx.conf;
+      ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
       location / {{
-        proxy_pass https://{app}.cs61a.org/;
-        proxy_set_header Host {app}.cs61a.org;
+        proxy_pass https://{target}/;
+        proxy_set_header Host {target};
         proxy_set_header X-Forwarded-For-Host {domain};
         proxy_read_timeout 1800;
         proxy_connect_timeout 1800;
@@ -46,5 +54,6 @@ def create_domain():
     }}"""
         )
 
-    sh("certbot", "--nginx", "-d", domain, "--non-interactive")
-    return ""  # certbot will automatically restart nginx
+    sh("systemctl", "restart", "nginx")
+
+    return ""

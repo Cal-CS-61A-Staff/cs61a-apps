@@ -13,3 +13,9 @@ def trigger_build_sync(*, pr_number: int):
 @service.route("/api/deploy_prod_app_sync")
 def deploy_prod_app_sync(*, target_app: str):
     ...
+
+
+@requires_master_secret
+@service.route("/api/get_base_hostname")
+def get_base_hostname(*, app: str) -> str:
+    ...
