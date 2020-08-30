@@ -4,7 +4,7 @@ import flask
 from flask import redirect
 from flask_login import LoginManager, login_user, logout_user
 
-from common.course_config import get_course
+from common.course_config import get_course, get_endpoint
 from common.oauth_client import create_oauth_client, get_user, is_staff
 from common.url_for import url_for
 from models import User, db
@@ -25,6 +25,13 @@ def create_login_client(app: flask.Flask):
             )
             db.session.add(user)
         user.name = user_data["name"] or user_data["email"]
+        for participation in user_data["participations"]:
+            if participation["course"]["offering"] == get_endpoint():
+                break
+        else:
+            if getenv("ENV") == "prod":
+                return
+
         user.is_staff = is_staff("cs61a" if dev else get_course())
         db.session.commit()
         login_user(user)
