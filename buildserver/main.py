@@ -186,8 +186,11 @@ def webhook():
 
 
 @get_base_hostname.bind(app)
-def get_base_hostname(app):
-    return api.get_base_hostname(app)
+@validates_master_secret
+def get_base_hostname(app, is_staging, target_app):
+    if app != "domains":
+        abort(403)
+    return api.get_base_hostname(target_app)
 
 
 if __name__ == "__main__":

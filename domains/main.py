@@ -124,7 +124,7 @@ def add_domain(app, is_staging, course, domain):
                 json=dict(
                     app=app,
                     domain=domain,
-                    target=get_base_hostname(app=app),
+                    target=get_base_hostname(target_app=app),
                     secret=get_secret(secret_name="DOMAIN_WEBHOOK_SECRET"),
                 ),
             ).raise_for_status()
