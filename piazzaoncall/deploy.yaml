@@ -3,4 +3,4 @@ deploy_type: flask
 memory_limit: 512M
 tasks:
   - name: ping_unread
-    schedule: every 10 mins
+    schedule: 0 * * * *
