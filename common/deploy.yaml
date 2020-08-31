@@ -1,2 +1,5 @@
 build_type: none
 deploy_type: none
+tasks:
+  - name: ping_unread
+    schedule: every 10 mins

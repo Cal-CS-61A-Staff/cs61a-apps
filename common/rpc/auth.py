@@ -101,3 +101,21 @@ def slack_workspace_name(*, course: str):
 @service.route("/slack/post_message")
 def post_slack_message(*, course: str, message: str, purpose: str):
     ...
+
+
+class PiazzaNetwork:
+    def __init__(self, course, is_test):
+        self.course = course
+        self.is_test = is_test
+
+    def __getattr__(self, method):
+        def bound_method(**kwargs):
+            return perform_piazza_action(
+                action=method,
+                course=self.course,
+                as_staff=self.is_staff,
+                is_test=self.is_test,
+                **kwargs
+            )
+
+        return bound_method
