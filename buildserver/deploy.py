@@ -168,9 +168,9 @@ def run_dockerfile_deploy(app: App, pr_number: int):
                 "jobs",
                 "create",
                 "http",
-                f"{app}-{job['job_name']}",
+                f"{app}-{job['name']}",
                 f"--schedule={job['schedule']}",
-                f"--uri=https://{app}.cs61a.org/jobs/{job['job_name']}",
+                f"--uri=https://{app}.cs61a.org/jobs/{job['name']}",
             )
 
 

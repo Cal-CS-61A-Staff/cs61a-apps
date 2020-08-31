@@ -14,11 +14,11 @@ class Config(TypedDict):
     memory_limit: str
     first_party_domains: List[str]
     concurrency: int
-    tasks: List["CronConfig"]
+    tasks: List["Task"]
 
 
-class CronConfig(TypedDict):
-    job_name: str
+class Task(TypedDict):
+    name: str
     schedule: str
 
 
