@@ -1,16 +1,7 @@
-import requests, os
+from common.rpc.auth import post_slack_message
 
 client_name = None
 
 
 def send(message, course):
-    requests.post(
-        "https://auth.apps.cs61a.org/slack/post_message",
-        json={
-            "client_name": os.environ["CLIENT_NAME"],
-            "secret": os.environ["SECRET"],
-            "message": message,
-            "purpose": "piazza-reminder",
-            "course": course,
-        },
-    ).raise_for_status()
+    post_slack_message(course=course, message=message, purpose="piazza-reminder")
