@@ -50,8 +50,8 @@ export default function MainPage(): React.Node {
     s1 < s2 || (s1 === s2 && e1 < e2) ? -1 : s1 === s2 && e1 === e2 ? 0 : 1
   );
 
-	var time = moment();
-	var aTime, bTime;
+  var time = moment();
+  var aTime, bTime;
 
   return (
     <>
@@ -73,10 +73,10 @@ export default function MainPage(): React.Node {
           </Row>
           {state.currentUser?.isStaff ? (
             state.taughtSections.sort((a, b) => (
-							(aTime = moment.unix(a.endTime).diff(time)) &&
-							(bTime = moment.unix(b.endTime).diff(time)) &&
-							(aTime > bTime ? 1 : -1) * (aTime * bTime))
-						).map((section, i) => (
+              (aTime = moment.unix(a.endTime).diff(time)) &&
+              (bTime = moment.unix(b.endTime).diff(time)) &&
+              (aTime > bTime ? 1 : -1) * (aTime * bTime))
+            ).map((section, i) => (
               <div key={section.id}>
                 {i !== 0 && <br />}
                 <EnrolledSectionCard section={section} />
