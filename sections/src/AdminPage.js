@@ -9,6 +9,7 @@ import Col from "react-bootstrap/Col";
 import Tab from "react-bootstrap/Tab";
 import Table from "react-bootstrap/Table";
 import Tabs from "react-bootstrap/Tabs";
+import Form from "react-bootstrap/Form";
 import FormControl from "react-bootstrap/FormControl";
 import InputGroup from "react-bootstrap/InputGroup";
 import Container from "react-bootstrap/Container";
@@ -22,10 +23,31 @@ export default function AdminPage(): React.Node {
   const { config, currentUser } = useContext(StateContext);
 
   const [sheetURL, setSheetURL] = useState("");
+  const [studentFile, setStudentFile] = useState(null);
+  const [tutorFile, setTutorFile] = useState(null);
+  const [importStatus, setImportStatus] = useState("Import");
 
   const updateConfig = useAPI("update_config");
-  const importSections = useAPI("import_sections");
+  const importSections = useAPI("import_sections", (data) => {
+    // If data is good
+    setImportStatus("Import");
+    // Else throw error
+  });
   const deleteAllSections = useAPI("delete_all_sections");
+  const importAssignments = useAPI("import_assignments");
+
+  const importAssignmentsFromFile = () => {
+    setImportStatus("Importing");
+    let args = {tutor_file: tutorFile, student_file: studentFile};
+    console.log(args);
+    importAssignments(args);
+    // Run populate_db.py with file
+    // Uploaded notif.
+  }
+
+  const exportToJSON = () => {
+
+  }
 
   if (!currentUser?.isStaff) {
     return <Redirect to="/" />;
@@ -117,6 +139,36 @@ export default function AdminPage(): React.Node {
               <Button variant="danger" onClick={() => deleteAllSections()}>
                 Delete All
               </Button>
+            </Tab>
+            <Tab eventKey="data" title="Data">
+              Import
+              <Form>
+                <Form.Group>
+                  <Form.File label="Student Assignments" onChange={(e) => {
+                    const read = new FileReader();
+                    read.readAsText(e.target.files[0]);
+                    read.onload = () => {
+                      setStudentFile(read.result);
+                    }
+                  }}/>
+                  <Form.File label="Tutor Assignments" onChange={(e) => {
+                    const read = new FileReader();
+                    /* Careful to ensure encoding is correct */
+                    read.readAsText(e.target.files[0]);
+                    read.onload = () => {
+                      setTutorFile(read.result);
+                    }
+                  }}/>
+                </Form.Group>
+                <Button onClick={importAssignmentsFromFile}>
+                  {importStatus}
+                </Button>
+              </Form>
+              <Form>
+                <Button onClick={exportToJSON}>
+                  Export
+                </Button>
+              </Form>
             </Tab>
           </Tabs>
         </Col>

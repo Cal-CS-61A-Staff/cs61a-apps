@@ -1,7 +1,7 @@
 import calendar
 from datetime import datetime, timedelta
 from functools import wraps
-from sys import stderr
+from sys import stderr, stdout
 from typing import List, Union
 
 import flask
@@ -21,6 +21,7 @@ from models import (
     db,
 )
 
+import csv
 
 class Failure(Exception):
     pass
@@ -235,6 +236,70 @@ def create_state_client(app: flask.Flask):
         db.session.commit()
         return refresh_state()
 
+    @api
+    @admin_required
+    def import_assignments(tutor_file, student_file):
+        print("Yay", flush=True)
+        # Instead check to see if there is any duplicates.
+        db.drop_all()
+        db.create_all()
+
+        # Consider making this a global variable?
+        pst = pytz.timezone("US/Pacific")
+
+        lookup = {}
+
+        # Load with existing users.
+        users = {}
+
+        reader = list(csv.reader(tutor_file.splitlines()))
+
+        # Validate Row 0
+        for row in reader[1:]:
+            print(row, flush=True)
+            name, email, time, group, is_npe = row
+            is_npe = is_npe == "TRUE"
+            hour, mins = time.split(":")
+            hour = int(hour)
+            mins = int(mins)
+            start_time = pst.localize(
+                # Hard Coded First day of sections.
+                datetime(year=2020, month=8, day=26, hour=hour + 12, minute=mins)
+            )
+            # replace 25 with length of tutorial.
+            end_time = start_time + timedelta(minutes=25)
+
+            if email not in users:
+                users[email] = User(email=email, name=name, is_staff=True)
+
+            section = Section(
+                start_time=start_time.timestamp(),
+                end_time=end_time.timestamp(),
+                capacity=5, # replace with desired capacity
+                staff=users[email],
+            )
+
+            if is_npe:
+                section.tags = ["NPE"]
+
+            lookup[time, group] = section
+
+            db.session.add(section)
+
+        reader = list(csv.reader(student_file.splitlines()))
+
+        # Is there a reason why this for loop is nested inside of the with statement?
+        for row in reader[1:]:
+            name, email, time, group = row
+            lookup[time, group].students.append(
+                User(email=email, name=name, is_staff=False)
+            )
+
+        db.session.commit()
+        
+        return refresh_state()
+
+    # Depreciated
     @api
     @admin_required
     def import_sections(sheet_url):

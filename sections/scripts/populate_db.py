@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath("../server"))
 from main import app
 from models import Section, User, db
 
+# Is there a reason why this with statement is so high up the file compared to the one for student_tutorials?
 with open("tutor_assignments.csv") as f:
     reader = list(csv.reader(f))
 
@@ -54,6 +55,7 @@ with app.app_context():
     with open("student_tutorials.csv") as f:
         reader = list(csv.reader(f))
 
+        # Is there a reason why this for loop is nested inside of the with statement?
         for row in reader[1:]:
             name, email, time, group = row
             lookup[time, group].students.append(

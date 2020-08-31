@@ -6,6 +6,14 @@ import post from "./common/post";
 import MessageContext from "./MessageContext";
 import StateContext from "./StateContext";
 
+/**
+ * Creates and handles a POST request to call the specified method on the server.
+ * 
+ * To add a new API endpoint, add a method to state.py on the server.
+ * 
+ * @param {string} method Method in state.py to call. 
+ * @param {*} callback 
+ */
 export default function useAPI(method: string, callback: ?(State) => mixed) {
   const { updateState } = useContext(StateContext);
   const { pushMessage } = useContext(MessageContext);
