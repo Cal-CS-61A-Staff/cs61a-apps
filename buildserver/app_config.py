@@ -14,6 +14,12 @@ class Config(TypedDict):
     memory_limit: str
     first_party_domains: List[str]
     concurrency: int
+    tasks: List["CronConfig"]
+
+
+class CronConfig(TypedDict):
+    job_name: str
+    schedule: str
 
 
 @dataclass
@@ -31,6 +37,7 @@ class App:
                     "first_party_domains", [f"{name}.cs61a.org"]
                 )
                 self.config["concurrency"] = self.config.get("concurrency", 80)
+                self.config["tasks"] = self.config.get("tasks", [])
 
     def __str__(self):
         return self.name
