@@ -7,6 +7,7 @@ import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import Jumbotron from "react-bootstrap/Jumbotron";
+import moment from "moment-timezone";
 import { useContext } from "react";
 import Row from "react-bootstrap/Row";
 import styles from "styled-components";
@@ -49,6 +50,9 @@ export default function MainPage(): React.Node {
     s1 < s2 || (s1 === s2 && e1 < e2) ? -1 : s1 === s2 && e1 === e2 ? 0 : 1
   );
 
+	var time = moment();
+	var aTime, bTime;
+
   return (
     <>
       <Jumbotron fluid>
@@ -68,7 +72,11 @@ export default function MainPage(): React.Node {
             ) : null}
           </Row>
           {state.currentUser?.isStaff ? (
-            state.taughtSections.map((section, i) => (
+            state.taughtSections.sort((a, b) => (
+							(aTime = moment.unix(a.endTime).diff(time)) &&
+							(bTime = moment.unix(b.endTime).diff(time)) &&
+							(aTime > bTime ? 1 : -1) * (aTime * bTime))
+						).map((section, i) => (
               <div key={section.id}>
                 {i !== 0 && <br />}
                 <EnrolledSectionCard section={section} />
