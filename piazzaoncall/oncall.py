@@ -27,13 +27,16 @@ with connect_db() as db:
     last_sent INTEGER
 )"""
     )
+    ret = db("SELECT last_sent FROM status").fetchone()
+    if ret is None:
+        db("INSERT INTO STATUS (last_sent) VALUES (0)")
 
 
 class Main:
     def __init__(self):
         with connect_db() as db:
             self.last_sent = datetime.datetime.fromtimestamp(
-                db("SELECT last_sent FROM status").fetchone() or 0, TIMEZONE
+                db("SELECT last_sent FROM status").fetchone()[0], TIMEZONE
             )
         self.rhtml = re.compile(r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});")
         self.roncall = re.compile(r"oncall:\s*(\S+)")  # '\[oncall: .*\]'
