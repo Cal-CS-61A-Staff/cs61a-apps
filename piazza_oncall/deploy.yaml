@@ -1,0 +1,5 @@
+build_type: none
+deploy_type: flask
+tasks:
+  - name: ping_unread
+    schedule: every 10 mins
