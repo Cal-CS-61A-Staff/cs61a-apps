@@ -104,8 +104,9 @@ def post_slack_message(*, course: str, message: str, purpose: str):
 
 
 class PiazzaNetwork:
-    def __init__(self, course, is_test):
+    def __init__(self, course, is_staff, is_test):
         self.course = course
+        self.is_staff = is_staff
         self.is_test = is_test
 
     def __getattr__(self, method):
@@ -115,7 +116,7 @@ class PiazzaNetwork:
                 course=self.course,
                 as_staff=self.is_staff,
                 is_test=self.is_test,
-                **kwargs
+                kwargs=kwargs,
             )
 
         return bound_method

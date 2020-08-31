@@ -45,4 +45,4 @@ class Network(PiazzaNetwork):
                 yield post
 
 
-network = Network("cs61a", False)
+network = Network("cs61a", True, False)
