@@ -145,6 +145,36 @@ def run_dockerfile_deploy(app: App, pr_number: int):
                     "--region",
                     "us-west1",
                 )
+        jobs = json.loads(
+            sh(
+                "gcloud",
+                "scheduler",
+                "jobs",
+                "list",
+                "-q",
+                "--format=json",
+                capture_output=True,
+            )
+        )
+        for job in jobs:
+            name = job.split("/")[-1]
+            if name.startswith(f"{app}-"):
+                sh("gcloud", "scheduler", "jobs", "delete", name, "-q")
+
+        for job in app.config["tasks"]:
+            sh(
+                "gcloud",
+                "beta",
+                "scheduler",
+                "jobs",
+                "create",
+                "http",
+                f"{app}-{job['name']}",
+                f"--schedule=\"{job['schedule']}\"",
+                f"--uri=https://{app}.cs61a.org/jobs/{job['name']}",
+                "--attempt-deadline=1200s",
+                "-q",
+            )
 
 
 def run_noop_deploy(_app: App, _pr_number: int):
