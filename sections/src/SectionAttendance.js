@@ -13,7 +13,7 @@ export default function SectionAttendance({ section }: Props) {
   return (
     <>
       <SessionAttendance section={section} />
-      {section.sessions.reverse().map((session) => (
+      {section.sessions.slice().reverse().map((session) => (
         <SessionAttendance
           key={session.startTime}
           session={session}
