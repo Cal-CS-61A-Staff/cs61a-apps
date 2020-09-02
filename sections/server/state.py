@@ -1,7 +1,6 @@
 import calendar
 from datetime import datetime, timedelta
 from functools import wraps
-from sys import stderr
 from typing import List, Union
 
 import flask
@@ -208,8 +207,12 @@ def create_state_client(app: flask.Flask):
     @staff_required
     def start_session(section_id: str, start_time: int):
         section_id = int(section_id)
-        db.session.add(Session(start_time=start_time, section_id=section_id))
-        db.session.commit()
+        existing_session = Session.query.filter_by(
+            start_time=start_time, section_id=section_id
+        ).first()
+        if existing_session is None:
+            db.session.add(Session(start_time=start_time, section_id=section_id))
+            db.session.commit()
         return fetch_section(section_id=section_id)
 
     @api
@@ -297,8 +300,12 @@ def create_state_client(app: flask.Flask):
         return refresh_state()
 
     @api
-    @admin_required
-    def delete_all_sections():
-        Section.query.delete()
+    @staff_required
+    def remove_student(student: str, section_id: str):
+        section_id = int(section_id)
+        student = User.query.filter_by(email=student).one()
+        student.sections = [
+            section for section in current_user.sections if section.id != section_id
+        ]
         db.session.commit()
-        return refresh_state()
+        return fetch_section(section_id=section_id)
