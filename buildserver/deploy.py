@@ -157,13 +157,14 @@ def run_dockerfile_deploy(app: App, pr_number: int):
             )
         )
         for job in jobs:
-            name = job.split("/")[-1]
+            name = job["name"].split("/")[-1]
             if name.startswith(f"{app}-"):
                 sh("gcloud", "scheduler", "jobs", "delete", name, "-q")
 
         for job in app.config["tasks"]:
             sh(
                 "gcloud",
+                "beta",
                 "scheduler",
                 "jobs",
                 "create",
@@ -171,6 +172,7 @@ def run_dockerfile_deploy(app: App, pr_number: int):
                 f"{app}-{job['name']}",
                 f"--schedule=\"{job['schedule']}\"",
                 f"--uri=https://{app}.cs61a.org/jobs/{job['name']}",
+                "--attempt-deadline=1200s",
                 "-q",
             )
 
