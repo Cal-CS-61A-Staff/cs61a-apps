@@ -38,11 +38,15 @@ class Network(PiazzaNetwork):
         for cid in cids:
             yield self.get_post(cid=cid)
 
-    def list_unresolved(self):  # new
+    def list_unresolved(self): # new
         """Returns a generator of all unresolved posts"""
-        for post in self.iter_all_posts1():
-            if post.get("no_answer", 0) or post.get("no_answer_followup", 0):
-                yield post
+        feed = self.get_feed(limit=999999, offset=0)
+        post_snippets = feed.get('feed')
+
+        for s in post_snippets:
+            if s.get('no_answer', False) or s.get('no_answer_followup', False):
+                cid = s['id']
+                yield self.get_post(cid=cid)
 
 
 network = Network("cs61a", True, False)
