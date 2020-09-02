@@ -76,14 +76,17 @@ class Main:
                     message += str
 
         if message:
-            starter = "Good morning! Here are today's piazza assignments. You will receive a daily reminder "
-            + "about your unresolved piazza posts. *If you do not know how to answer your post(s), post in general.*\n\n"
+            starter = (
+                "Good morning! Here are today's piazza assignments. You will receive a daily reminder "
+                + "about your unresolved piazza posts. *If you do not know how to answer your post(s), post in general.*\n\n"
+            )
             # print(starter + message)
             send(starter + message, course="cs61a")
         if high_priority:
-            starter = f"<!channel> These messages have been unanswered for {self.urgent_threshold} days. "
-            + "*If you were assigned one of these posts, reply to this message after you have resolved it.*\n\n"
-            # print(starter + high_priority)
+            starter = (
+                f"<!channel> These messages have been unanswered for {self.urgent_threshold} days. "
+                + "*If you were assigned one of these posts, reply to this message after you have resolved it.*\n\n"
+            )
             send(starter + high_priority, course="cs61a")
 
     def oncall(self, post):
@@ -181,7 +184,8 @@ class Main:
                     [datetime.datetime.today().timestamp()],
                 )
 
-if __name__ == '__main__':
-    print('in here')
+
+if __name__ == "__main__":
+    print("in here")
     run = Main()
     run.send_message()
