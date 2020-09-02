@@ -157,7 +157,7 @@ def run_dockerfile_deploy(app: App, pr_number: int):
             )
         )
         for job in jobs:
-            name = job.split("/")[-1]
+            name = job["name"].split("/")[-1]
             if name.startswith(f"{app}-"):
                 sh("gcloud", "scheduler", "jobs", "delete", name, "-q")
 
