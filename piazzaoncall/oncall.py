@@ -171,7 +171,7 @@ class Main:
             print(f"{tod_in_ca}: Skipping — weekend: {day}")
         elif tod_in_ca < MORNING:
             print(f"{tod_in_ca}: Skipping — before morning: {tod_in_ca}")
-        elif self.last_sent.date() == datetime.datetime.today().date():
+        elif self.last_sent.date() == datetime.datetime.now(tz=TIMEZONE).date():
             print(
                 f"{tod_in_ca}: Skipping — already sent today: {self.last_sent.date()}"
             )
