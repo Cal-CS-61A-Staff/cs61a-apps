@@ -1,9 +1,9 @@
 class DescriptionBox extends React.Component {
   render() {
-    let {locked, state, ticket, prompt, placeholder} = this.props;
+    let {editable, locked, state, ticket, prompt, placeholder} = this.props;
     let staff = isStaff(state);
 
-    if (staff || locked) {
+    if ((!editable && staff) || locked) {
       return (
         <p className="ticket-view-desc">{ticket.description ? ticket.description : <i>No description</i>}</p>
       );

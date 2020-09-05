@@ -52,7 +52,10 @@ function TicketLayout({ loadTicket, state, socket, match }) {
                                     ticket.user.name
                             }
                             <small
-                                className="clearfix">{assignment.name} {question} &middot; {location.name} </small>
+                                className="clearfix">
+                                {assignment.name} {question} &middot; {location.name}
+                                {location.link && ticket.call_url && ` (${ticket.call_url})`}
+                            </small>
                         </h2>
                         <p className="ticket-view-text text-center"> {ticketStatus(state, ticket)} </p>
                     </div>
