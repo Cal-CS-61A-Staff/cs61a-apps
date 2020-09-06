@@ -1,2 +1,3 @@
 build_type: oh_queue
 deploy_type: flask
+memory_limit: 1G
