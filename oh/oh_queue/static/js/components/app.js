@@ -88,6 +88,15 @@ class App extends React.Component {
       this.state.currentUser = data.current_user;
     }
     if (data.hasOwnProperty("appointments")) {
+      const appointmentIDMap = Object.fromEntries(
+        this.state.appointments.map((appointment) => [
+          appointment.id,
+          appointment,
+        ])
+      );
+      data.appointments.forEach((appointment) =>
+        setAppointment(this.state, appointment, null, appointmentIDMap)
+      );
       this.state.appointments = Array.from(data.appointments).sort(
         appointmentTimeComparator
       );
