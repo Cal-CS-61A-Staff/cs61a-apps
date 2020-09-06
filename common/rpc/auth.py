@@ -1,4 +1,5 @@
 from functools import wraps
+from typing import List, Union
 
 from common.rpc.secrets import get_secret
 from common.rpc.utils import cached, create_service
@@ -50,7 +51,12 @@ def read_spreadsheet(*, course: str, url: str, doc_id: str, sheet_name: str):
 @auth_endpoint
 @service.route("/google/write_spreadsheet")
 def write_spreadsheet(
-    *, course: str, url: str, doc_id: str, sheet_name: str, content: str
+    *,
+    course: str,
+    url: str,
+    doc_id: str,
+    sheet_name: str,
+    content: List[List[Union[str, float]]]
 ):
     ...
 
