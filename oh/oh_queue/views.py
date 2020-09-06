@@ -460,6 +460,8 @@ def socket_error(message, category="danger", ticket_id=None):
 
 
 def socket_redirect(**kwargs):
+    from flask import url_for
+
     redirect = url_for("index", **kwargs)
     return {"redirect": redirect}
 

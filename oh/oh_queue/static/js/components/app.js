@@ -95,7 +95,12 @@ class App extends React.Component {
         ])
       );
       data.appointments.forEach((appointment) =>
-        setAppointment(this.state, appointment, null, appointmentIDMap)
+        setAppointment(
+          this.state,
+          appointment,
+          () => this.router.history.push("/appointments/" + appointment.id),
+          appointmentIDMap
+        )
       );
       this.state.appointments = Array.from(data.appointments).sort(
         appointmentTimeComparator
@@ -127,32 +132,6 @@ class App extends React.Component {
   updateTicket(data) {
     setTicket(this.state, data.ticket);
     this.refresh();
-
-    var ticket = data.ticket;
-    switch (data.type) {
-      case "assign":
-      case "delete":
-      case "resolve":
-        if (isStaff(this.state)) {
-          cancelNotification(ticket.id + ".create");
-        }
-        break;
-      case "create":
-      case "describe":
-      case "unassign":
-      case "update_location":
-        if (isStaff(this.state) && ticket.status === "pending") {
-          var assignment = ticketAssignment(this.state, ticket);
-          var location = ticketLocation(this.state, ticket);
-          var question = ticketQuestion(this.state, ticket);
-          notifyUser(
-            "New request for " + assignment.name + " " + question,
-            location.name,
-            ticket.id + ".create"
-          );
-        }
-        break;
-    }
   }
 
   updateGroup(data) {

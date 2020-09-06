@@ -11,8 +11,10 @@ if ENV == "DEV_ON_PROD":
     ENV = "dev"
 
 if ENV == "dev":
+    DEBUG = True
     SECRET_KEY = "dev"
 else:
+    DEBUG = False
     SECRET_KEY = get_secret(secret_name="SESSION_COOKIE_SECRET")
 
 SQLALCHEMY_DATABASE_URI = database_url

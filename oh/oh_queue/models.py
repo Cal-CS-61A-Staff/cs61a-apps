@@ -112,7 +112,7 @@ class Ticket(db.Model):
     updated = db.Column(db.DateTime, onupdate=db.func.now())
     status = db.Column(EnumType(TicketStatus), nullable=False, index=True)
 
-    group = db.relationship("Group", back_populates="ticket")
+    group = db.relationship("Group", back_populates="ticket", uselist=False)
 
     rerequest_threshold = db.Column(
         db.DateTime
