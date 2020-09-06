@@ -90,6 +90,7 @@ function TicketLayout({ loadTicket, state, socket, match }) {
                             currentUser={state.currentUser}
                             socket={socket}
                             mode={group ? "group" : "ticket"}
+                            messages={group.messages}
                             id={group ? group.id : id}/>
                     </div>
                 </div>

@@ -32,7 +32,6 @@ class App extends React.Component {
       }
     });
     this.socket.on("event", (data) => this.updateTicket(data));
-    this.socket.on("presence", (data) => this.updatePresence(data));
     this.socket.on("appointment_event", (data) => this.updateAppointment(data));
     this.socket.on("group_event", (data) => this.updateGroup(data));
 
@@ -109,12 +108,10 @@ class App extends React.Component {
     if (data.hasOwnProperty("groups")) {
       this.state.groups = Array.from(data.groups).sort((x) => x.id);
     }
+    if (data.hasOwnProperty("presence")) {
+      this.state.presence = data.presence;
+    }
     this.state.loaded = true;
-    this.refresh();
-  }
-
-  updatePresence(data) {
-    this.state.presence = data;
     this.refresh();
   }
 

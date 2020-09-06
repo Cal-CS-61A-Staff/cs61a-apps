@@ -25,6 +25,7 @@ from common.course_config import (
 )
 from oh_queue.models import (
     Assignment,
+    ChatMessage,
     ConfigEntry,
     Location,
     Ticket,
@@ -68,6 +69,10 @@ def student_json(user):
     return user_json(user)
 
 
+def message_json(message: ChatMessage):
+    return {"user": user_json(message.user), "body": message.body}
+
+
 def ticket_json(ticket):
     group = ticket.group
     return {
@@ -88,6 +93,7 @@ def ticket_json(ticket):
         "call_url": ticket.call_url,
         "doc_url": ticket.doc_url,
         "group_id": group.id if group else None,
+        "messages": [message_json(message) for message in ticket.messages],
     }
 
 
@@ -151,6 +157,7 @@ def appointments_json(appointment: Appointment):
         "helper": appointment.helper and user_json(appointment.helper),
         "status": appointment.status.name,
         "description": appointment.description,
+        "messages": [message_json(message) for message in appointment.messages],
     }
 
 
@@ -182,6 +189,7 @@ def group_json(group: Group):
         "group_status": group.group_status.name,
         "call_url": group.call_url,
         "doc_url": group.doc_url,
+        "messages": [message_json(message) for message in group.messages],
     }
 
 
@@ -270,33 +278,37 @@ def emit_state(attrs):
         state["groups"] = [group_json(group) for group in groups]
     if "current_user" in attrs:
         state["current_user"] = student_json(current_user)
+    if "presence" in attrs:
+        out = dict(
+            students=User.query.filter(
+                User.heartbeat_time
+                > datetime.datetime.utcnow() - datetime.timedelta(seconds=30),
+                User.course == get_course(),
+                User.is_staff == False,
+            ).count()
+        )
+        active_staff = {
+            (t.helper.email, t.helper.name)
+            for t in Ticket.query.filter(
+                Ticket.status.in_(active_statuses),
+                Ticket.helper != None,
+                Ticket.course == get_course(),
+            ).all()
+        }
+        active_staff |= {
+            (user.email, user.name)
+            for user in User.query.filter(
+                User.heartbeat_time
+                > datetime.datetime.utcnow() - datetime.timedelta(seconds=30),
+                User.course == get_course(),
+                User.is_staff == True,
+            ).all()
+        }
+        out["staff"] = len(active_staff)
+        out["staff_list"] = list(active_staff)
+        state["presence"] = out
 
     add_response("state", state)
-
-
-def emit_presence(data):
-    out = {k: len(v) for k, v in data.items()}
-    active_staff = {
-        (t.helper.email, t.helper.name)
-        for t in Ticket.query.filter(
-            Ticket.status.in_(active_statuses),
-            Ticket.helper != None,
-            Ticket.course == get_course(),
-        ).all()
-    }
-    out["staff"] = len(data["staff"] | active_staff)
-    out["staff_list"] = list(data["staff"] | active_staff)
-    add_response("presence", out)
-
-
-def emit_message(message):
-    add_response("chat_message", message)
-
-
-# TODO: Remove this, or hook it up with the DB somehow - note that `disconnect` is not fired anymore
-user_presence = collections.defaultdict(
-    lambda: collections.defaultdict(set)
-)  # An in memory map of presence.
 
 
 def init_config():
@@ -542,12 +554,8 @@ def has_group_access(f):
 def connect():
     if not current_user.is_authenticated:
         pass
-    elif current_user.is_staff:
-        user_presence[get_course()]["staff"].add(
-            (current_user.email, current_user.name)
-        )
-    else:
-        user_presence[get_course()]["students"].add(current_user.email)
+
+    current_user.heartbeat_time = datetime.datetime.utcnow()
 
     emit_state(
         [
@@ -558,24 +566,9 @@ def connect():
             "locations",
             "current_user",
             "config",
+            "presence",
         ]
     )
-
-    emit_presence(user_presence[get_course()])
-
-
-@api("disconnect")
-def disconnect():
-    if not current_user.is_authenticated:
-        pass
-    elif current_user.is_staff:
-        user_presence[get_course()]["staff"].discard(
-            (current_user.email, current_user.name)
-        )
-    else:
-        user_presence[get_course()]["students"].discard(current_user.email)
-
-    emit_presence(user_presence[get_course()])
 
 
 def get_magic_word(mode=None, data=None, time_offset=0):
@@ -1383,7 +1376,7 @@ def send_chat_message(data):
     mode = data.get("mode")
     event_id = data["id"]
 
-    data["sender"] = user_json(current_user)
+    message = ChatMessage(user=current_user, course=get_course(), body=data["content"])
 
     if mode == "appointment":
         appointment = Appointment.query.filter_by(
@@ -1395,19 +1388,30 @@ def send_chat_message(data):
                     break
             else:
                 return socket_unauthorized()
-        emit_message(data)
+
+        message.appointment = appointment
 
     elif mode == "ticket":
         ticket = Ticket.query.filter_by(course=get_course(), id=event_id).one()
         if not current_user.is_staff and ticket.user_id != current_user.id:
             return socket_unauthorized()
-        emit_message(data)
+        message.ticket = ticket
 
     elif mode == "group":
         group = Group.query.filter_by(course=get_course(), id=event_id).one()
         if not current_user.is_staff and not is_member_of(group):
             return socket_unauthorized()
-        emit_message(data)
+        message.group = group
+
+    db.session.add(message)
+    db.session.commit()
+
+    if mode == "appointment":
+        emit_appointment_event(message.appointment, "message_sent")
+    elif mode == "ticket":
+        emit_event(message.ticket, TicketEventType.message_sent)
+    elif mode == "group":
+        emit_group_event(message.group, "message_sent")
 
 
 @api("bulk_appointment_action")
