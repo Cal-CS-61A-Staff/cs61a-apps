@@ -105,15 +105,10 @@ function AppointmentLayout({ state, match, loadAppointment, socket }) {
     }
 
     let onlineButtons = null;
-    if (state.locations[appointment.location_id].name === "Online" && appointment.status === "active") {
-        /*
-
-        makeButton('Join Call', 'success',
-              () => window.open(ticket.call_url || ticket.helper.call_url, "_blank"))
-          );
-         */
-        const callButton = appointment.helper.call_url && (
-            <AppointmentLayoutButton color="success" onClick={() => window.open(appointment.helper.call_url, "_blank")}>
+    if (state.locations[appointment.location_id].online && appointment.status === "active") {
+        const callURL = state.locations[appointment.location_id].link || appointment.helper.call_url;
+        const callButton = callURL && (
+            <AppointmentLayoutButton color="success" onClick={() => window.open(callURL, "_blank")}>
                 Join Call
             </AppointmentLayoutButton>
         );

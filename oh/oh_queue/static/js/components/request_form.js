@@ -1,9 +1,9 @@
-let RequestForm = (props) => {
+function RequestForm(props) {
     let state = props.state;
     const forceTicket = props.forceTicket;
-    const is_queue_open = JSON.parse(state.config.is_queue_open);
     const appointments = JSON.parse(state.config.appointments_open);
     let party_enabled = state.config.party_enabled && !forceTicket;
+    const is_queue_open = JSON.parse(state.config.is_queue_open) && (!party_enabled || state.config.allow_private_party_tickets);
     const disabled = !party_enabled && !is_queue_open;
     let descriptionRequired = state.config.description_required === "true";
 
@@ -84,7 +84,8 @@ let RequestForm = (props) => {
         setLocationID(e.target.value);
     };
 
-    const showOnlineInput = locationID && state.locations[locationID].name === "Online";
+    const showOnlineInput = locationID && state.locations[locationID].online;
+    const linkKnown = locationID && state.locations[locationID].link;
 
     return (
         <div>
@@ -105,13 +106,24 @@ let RequestForm = (props) => {
                                        disabled={disabled && !appointments}/>
                             </div>
                         </div>
-                        {(showOnlineInput || party_enabled) && (party_enabled || JSON.parse(state.config.students_set_online_link) || JSON.parse(state.config.students_set_online_doc)) && (
+                        {showOnlineInput && (
                             <React.Fragment>
-                                {(party_enabled || JSON.parse(state.config.students_set_online_link)) && (
+                                {(
+                                    party_enabled ||
+                                    state.locations[locationID].name !== "Online" ||
+                                    JSON.parse(state.config.students_set_online_link)
+                                ) && (
                                     <div className="form-group form-group-lg">
-                                        <label htmlFor="call-link">Video Call Link</label>
+                                        <label htmlFor="call-link">
+                                            {linkKnown ?
+                                                "Breakout Room (optional)" :
+                                                "Video Call Link"
+                                            }
+                                        </label>
                                         <input className="form-control" type="text" id="call-link"
-                                               name="call-link" title="Video Call Link" placeholder="meet.google.com/xyz" required
+                                               name="call-link" title="Video Call Link"
+                                               placeholder={linkKnown ? "Breakout Room 6" : "meet.google.com/xyz"}
+                                               required={!linkKnown}
                                                disabled={disabled && !appointments}
                                         />
                                     </div>

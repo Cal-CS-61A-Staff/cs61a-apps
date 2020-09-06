@@ -1,13 +1,15 @@
 import datetime
 import functools
 import collections
+import hmac
 
 import random
 import time
 from operator import or_
+from os import getenv
 from urllib.parse import urljoin
 
-from flask import render_template, g, request, jsonify
+from flask import abort, render_template, g, request, jsonify
 from flask_login import current_user
 from sqlalchemy import func, desc
 from sqlalchemy.orm import joinedload
@@ -94,7 +96,13 @@ def assignment_json(assignment):
 
 
 def location_json(location):
-    return {"id": location.id, "name": location.name, "visible": location.visible}
+    return {
+        "id": location.id,
+        "name": location.name,
+        "visible": location.visible,
+        "online": location.online,
+        "link": location.link,
+    }
 
 
 def get_online_location():
@@ -109,7 +117,11 @@ def get_online_location():
     )
     if online_location is None:
         online_location = Location(
-            name="Online", visible=online_visible, course=get_course()
+            name="Online",
+            visible=online_visible,
+            course=get_course(),
+            online=True,
+            link="",
         )
         db.session.add(online_location)
         db.session.commit()
@@ -215,6 +227,7 @@ def emit_state(attrs):
                 Ticket.status.in_(active_statuses), Ticket.course == get_course()
             )
             .options(joinedload(Ticket.user, innerjoin=True))
+            .options(joinedload(Ticket.helper))
             .options(joinedload(Ticket.group))
             .all()
         )
@@ -394,6 +407,14 @@ def init_config():
             key="party_enabled", value="false", public=True, course=get_course()
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="allow_private_party_tickets",
+            value="true",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 
@@ -483,9 +504,7 @@ def has_ticket_access(f):
         ticket = Ticket.query.filter_by(id=ticket_id, course=get_course()).one_or_none()
         if not ticket:
             return socket_error("Invalid ticket ID")
-        group = Group.query.filter_by(
-            ticket_id=ticket_id, course=get_course()
-        ).one_or_none()
+        group = ticket.group
         if group:
             if not (current_user.is_staff or is_member_of(group)):
                 return socket_unauthorized()
@@ -631,10 +650,27 @@ def create(form):
     """Stores a new ticket to the persistent database, and emits it to all
     connected clients.
     """
-    is_closed = ConfigEntry.query.filter_by(
-        course=get_course(), key="is_queue_open"
-    ).one()
-    if is_closed.value != "true":
+    is_open = (
+        ConfigEntry.query.filter_by(course=get_course(), key="is_queue_open")
+        .one()
+        .value
+        == "true"
+    )
+    party_enabled = (
+        ConfigEntry.query.filter_by(course=get_course(), key="party_enabled")
+        .one()
+        .value
+        == "true"
+    )
+    private_party_tickets_allowed = (
+        ConfigEntry.query.filter_by(
+            course=get_course(), key="allow_private_party_tickets"
+        )
+        .one()
+        .value
+        == "true"
+    )
+    if not is_open or (party_enabled and not private_party_tickets_allowed):
         return socket_error("The queue is closed", category="warning")
     if not check_magic_word(form.get("magic_word")):
         return socket_error("Invalid magic_word", category="warning")
@@ -653,8 +689,15 @@ def create(form):
     call_link = form.get("call-link", "")
     doc_link = form.get("doc-link", "")
 
-    if call_link:
-        call_link = urljoin("https://", call_link)
+    location = Location.query.filter_by(
+        course=get_course(), id=location_id
+    ).one_or_none()
+    if not location:
+        return socket_error(
+            "Unknown location (id: {})".format(location_id), category="warning"
+        )
+
+    call_link = process_call_link(call_link, location)
 
     if doc_link:
         doc_link = urljoin("https://", doc_link)
@@ -669,13 +712,6 @@ def create(form):
     if not assignment:
         return socket_error(
             "Unknown assignment (id: {})".format(assignment_id), category="warning"
-        )
-    location = Location.query.filter_by(
-        course=get_course(), id=location_id
-    ).one_or_none()
-    if not location:
-        return socket_error(
-            "Unknown location (id: {})".format(location_id), category="warning"
         )
 
     ticket = Ticket(
@@ -755,9 +791,7 @@ def is_member_of(group):
 def delete(ticket_ids):
     tickets = get_tickets(ticket_ids)
     for ticket in tickets:
-        ticket_group = Group.query.filter_by(
-            ticket_id=ticket.id, course=get_course()
-        ).one_or_none()
+        ticket_group = ticket.group
         if not (
             current_user.is_staff
             or ticket.user.id == current_user.id
@@ -960,7 +994,7 @@ def add_location(data):
     name = data["name"]
     if name == "Online":
         return
-    location = Location(name=name, course=get_course())
+    location = Location(name=name, course=get_course(), link="", online=False)
     db.session.add(location)
     db.session.commit()
 
@@ -977,6 +1011,13 @@ def update_location(data):
         location.name = data["name"]
     if "visible" in data:
         location.visible = data["visible"]
+    if "link" in data:
+        location.link = data["link"]
+    if "online" in data:
+        location.online = data["online"]
+    if location.link:
+        location.online = True
+    location.link = location.link and urljoin("https://", location.link)
     if location.name == "Online":
         return
     db.session.commit()
@@ -1044,6 +1085,10 @@ def assign_appointment(data):
             return socket_error("Email could not be found")
         user_id = user.id
 
+    old_signup = AppointmentSignup.query.filter_by(
+        appointment_id=data["appointment_id"], user_id=user_id, course=get_course()
+    ).one_or_none()
+
     appointment = Appointment.query.filter_by(
         id=data["appointment_id"], course=get_course()
     ).one()  # type = Appointment
@@ -1075,16 +1120,16 @@ def assign_appointment(data):
             hour=0, minute=0, second=0, microsecond=0
         )
         week_start = start - datetime.timedelta(days=appointment.start_time.weekday())
-        week_end = start + datetime.timedelta(days=7)
-        num_this_week = (
-            AppointmentSignup.query.join(AppointmentSignup.appointment)
-            .filter(
-                week_start < Appointment.start_time,
-                Appointment.start_time < week_end,
-                AppointmentSignup.user_id == current_user.id,
-                AppointmentSignup.attendance_status != AttendanceStatus.excused,
-            )
-            .count()
+        week_end = week_start + datetime.timedelta(days=7)
+        num_this_week = AppointmentSignup.query.join(
+            AppointmentSignup.appointment
+        ).filter(
+            week_start < Appointment.start_time,
+            Appointment.start_time < week_end,
+            AppointmentSignup.user_id == current_user.id,
+            AppointmentSignup.attendance_status != AttendanceStatus.excused,
+        ).count() - int(
+            bool(old_signup)
         )
         if num_this_week >= weekly_threshold:
             return socket_error(
@@ -1094,16 +1139,12 @@ def assign_appointment(data):
             )
 
         day_end = start + datetime.timedelta(days=1)
-        num_today = (
-            AppointmentSignup.query.join(AppointmentSignup.appointment)
-            .filter(
-                start < Appointment.start_time,
-                Appointment.start_time < day_end,
-                AppointmentSignup.user_id == current_user.id,
-                AppointmentSignup.attendance_status != AttendanceStatus.excused,
-            )
-            .count()
-        )
+        num_today = AppointmentSignup.query.join(AppointmentSignup.appointment).filter(
+            start < Appointment.start_time,
+            Appointment.start_time < day_end,
+            AppointmentSignup.user_id == current_user.id,
+            AppointmentSignup.attendance_status != AttendanceStatus.excused,
+        ).count() - int(bool(old_signup))
         if num_today >= daily_threshold:
             return socket_error(
                 "You have already signed up for {} OH slots for the same day".format(
@@ -1111,13 +1152,13 @@ def assign_appointment(data):
                 )
             )
 
-        num_pending = (
-            AppointmentSignup.query.join(AppointmentSignup.appointment)
-            .filter(
-                Appointment.status == AppointmentStatus.pending,
-                AppointmentSignup.user_id == current_user.id,
-            )
-            .count()
+        num_pending = AppointmentSignup.query.join(
+            AppointmentSignup.appointment
+        ).filter(
+            Appointment.status == AppointmentStatus.pending,
+            AppointmentSignup.user_id == current_user.id,
+        ).count() - int(
+            bool(old_signup)
         )
         if num_pending >= pending_threshold:
             return socket_error(
@@ -1125,10 +1166,6 @@ def assign_appointment(data):
                     pending_threshold
                 )
             )
-
-    old_signup = AppointmentSignup.query.filter_by(
-        appointment_id=data["appointment_id"], user_id=user_id, course=get_course()
-    ).one_or_none()
 
     old_attendance = (
         old_signup.attendance_status if old_signup else AttendanceStatus.unknown
@@ -1307,9 +1344,7 @@ def upload_appointments(data):
                 ),
                 capacity=int(row[header.index("Capacity")]),
                 location=get_location(row[header.index("Location")]),
-                status=AppointmentStatus.pending
-                if row[header.index("Email")]
-                else AppointmentStatus.hidden,
+                status=AppointmentStatus.hidden,
                 helper=get_helper(
                     row[header.index("Email")], row[header.index("Name")]
                 ),
@@ -1525,6 +1560,16 @@ def leave_current_groups():
             emit_group_event(prev_attendance.group, "group_left")
 
 
+def process_call_link(link, location):
+    if link:
+        if location.link:
+            if all(x.isdigit() for x in link):
+                return "Breakout Room " + link
+        else:
+            return urljoin("https://", link)
+    return link
+
+
 @api("create_group")
 @logged_in
 def create_group(form):
@@ -1541,8 +1586,15 @@ def create_group(form):
     call_link = form.get("call-link", "")
     doc_link = form.get("doc-link", "")
 
-    if call_link:
-        call_link = urljoin("https://", call_link)
+    location = Location.query.filter_by(
+        course=get_course(), id=location_id
+    ).one_or_none()
+    if not location:
+        return socket_error(
+            "Unknown location (id: {})".format(location_id), category="warning"
+        )
+
+    call_link = process_call_link(call_link, location)
 
     if doc_link:
         doc_link = urljoin("https://", doc_link)
@@ -1556,13 +1608,6 @@ def create_group(form):
     if not assignment:
         return socket_error(
             "Unknown assignment (id: {})".format(assignment_id), category="warning"
-        )
-    location = Location.query.filter_by(
-        course=get_course(), id=location_id
-    ).one_or_none()
-    if not location:
-        return socket_error(
-            "Unknown location (id: {})".format(location_id), category="warning"
         )
 
     if location.name == "Online" and not call_link:
@@ -1640,6 +1685,12 @@ def leave_group(group_id):
 def update_group(data, group):
     if "description" in data:
         group.description = data["description"]
+    if "assignment_id" in data:
+        group.assignment = Assignment.query.filter_by(
+            course=get_course(), id=data["assignment_id"]
+        ).one()
+    if "question" in data:
+        group.question = data["question"]
     if "location_id" in data:
         group.location = Location.query.filter_by(
             course=get_course(), id=data["location_id"]
@@ -1698,3 +1749,32 @@ def delete_group(group_id):
         group.ticket.status = TicketStatus.deleted
         emit_event(group.ticket, TicketEventType.delete)
     db.session.commit()
+
+
+@app.route("/api/set_online_call_link", methods=["POST"])
+def set_online_call_link():
+    if not hmac.compare_digest(getenv("SECRET_61C"), request.json["secret"]):
+        abort(401)
+    user = User.query.filter_by(course="cs61c", email=request.json["email"]).one()
+    user.call_url = str(request.json["call_url"])
+    db.session.commit()
+    return ""
+
+
+@app.route("/debug")
+def debug():
+    try:
+        emit_state(
+            [
+                "tickets",
+                "assignments",
+                "groups",
+                "locations",
+                "current_user",
+                "config",
+                "appointments",
+            ]
+        )
+    except AttributeError:
+        pass
+    return "<body></body>"

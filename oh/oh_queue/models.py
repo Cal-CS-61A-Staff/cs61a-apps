@@ -82,6 +82,8 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created = db.Column(db.DateTime, default=db.func.now())
     name = db.Column(db.String(255), nullable=False)
+    online = db.Column(db.Boolean, nullable=False)
+    link = db.Column(db.String(255), nullable=False)
     visible = db.Column(db.Boolean, default=False)
 
     course = db.Column(db.String(255), nullable=False, index=True)
@@ -255,9 +257,11 @@ class Group(db.Model):
     location = db.relationship(Location, foreign_keys=[location_id])
 
     ticket_id = db.Column(db.ForeignKey("ticket.id"), nullable=True, index=True)
-    ticket = db.relationship("Ticket", back_populates="group")
+    ticket = db.relationship(Ticket, back_populates="group", foreign_keys=[ticket_id])
 
-    attendees = db.relationship("GroupAttendance", back_populates="group")
+    attendees = db.relationship(
+        "GroupAttendance", back_populates="group", lazy="joined"
+    )
 
     group_status = db.Column(
         EnumType(GroupStatus), nullable=False, default=GroupStatus.active
@@ -280,7 +284,7 @@ class GroupAttendance(db.Model):
     group = db.relationship("Group", back_populates="attendees")
 
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
-    user = db.relationship(User, foreign_keys=[user_id])
+    user = db.relationship(User, foreign_keys=[user_id], lazy="joined")
 
     group_attendance_status = db.Column(
         EnumType(GroupAttendanceStatus),

@@ -120,9 +120,9 @@ class TicketButtons extends React.Component {
       }
     }
     if (ticket.status === 'assigned') {
-      if (!embedded && (ticket.call_url || ticket.helper.call_url)) {
+      if (!embedded && (ticketLocation(state, ticket).link || ticket.call_url || ticket.helper.call_url)) {
           onlineButtons.push(makeButton('Join Call', 'success',
-              () => window.open(ticket.call_url || ticket.helper.call_url, "_blank"))
+              () => window.open(ticketLocation(state, ticket).link || ticket.call_url || ticket.helper.call_url, "_blank"))
           );
       }
       if (!embedded && (ticket.doc_url || ticket.helper.doc_url)) {
