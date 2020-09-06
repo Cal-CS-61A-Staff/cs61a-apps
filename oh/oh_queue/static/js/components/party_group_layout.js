@@ -195,6 +195,7 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
                         currentUser={state.currentUser}
                         socket={socket}
                         id={group.id}
+                        messages={group.messages}
                         mode="group"
                     />
                 </div>

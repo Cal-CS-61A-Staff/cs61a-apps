@@ -179,6 +179,7 @@ function AppointmentLayout({ state, match, loadAppointment, socket }) {
                     currentUser={state.currentUser}
                     socket={socket}
                     id={appointment.id}
+                    messages={appointment.messages}
                     mode="appointment"
                 />
                 {state.config.ticket_prompt &&

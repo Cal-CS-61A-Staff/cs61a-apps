@@ -32,7 +32,6 @@ class App extends React.Component {
       }
     });
     this.socket.on("event", (data) => this.updateTicket(data));
-    this.socket.on("presence", (data) => this.updatePresence(data));
     this.socket.on("appointment_event", (data) => this.updateAppointment(data));
     this.socket.on("group_event", (data) => this.updateGroup(data));
 
@@ -88,6 +87,20 @@ class App extends React.Component {
       this.state.currentUser = data.current_user;
     }
     if (data.hasOwnProperty("appointments")) {
+      const appointmentIDMap = Object.fromEntries(
+        this.state.appointments.map((appointment) => [
+          appointment.id,
+          appointment,
+        ])
+      );
+      data.appointments.forEach((appointment) =>
+        setAppointment(
+          this.state,
+          appointment,
+          () => this.router.history.push("/appointments/" + appointment.id),
+          appointmentIDMap
+        )
+      );
       this.state.appointments = Array.from(data.appointments).sort(
         appointmentTimeComparator
       );
@@ -95,12 +108,10 @@ class App extends React.Component {
     if (data.hasOwnProperty("groups")) {
       this.state.groups = Array.from(data.groups).sort((x) => x.id);
     }
+    if (data.hasOwnProperty("presence")) {
+      this.state.presence = data.presence;
+    }
     this.state.loaded = true;
-    this.refresh();
-  }
-
-  updatePresence(data) {
-    this.state.presence = data;
     this.refresh();
   }
 
@@ -118,32 +129,6 @@ class App extends React.Component {
   updateTicket(data) {
     setTicket(this.state, data.ticket);
     this.refresh();
-
-    var ticket = data.ticket;
-    switch (data.type) {
-      case "assign":
-      case "delete":
-      case "resolve":
-        if (isStaff(this.state)) {
-          cancelNotification(ticket.id + ".create");
-        }
-        break;
-      case "create":
-      case "describe":
-      case "unassign":
-      case "update_location":
-        if (isStaff(this.state) && ticket.status === "pending") {
-          var assignment = ticketAssignment(this.state, ticket);
-          var location = ticketLocation(this.state, ticket);
-          var question = ticketQuestion(this.state, ticket);
-          notifyUser(
-            "New request for " + assignment.name + " " + question,
-            location.name,
-            ticket.id + ".create"
-          );
-        }
-        break;
-    }
   }
 
   updateGroup(data) {
