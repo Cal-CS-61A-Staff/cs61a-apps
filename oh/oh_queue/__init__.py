@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 # Initialize the application
 app = Flask(__name__)
 app.config.from_object("config")
+app.url_map.strict_slashes = False
 
 app.jinja_env.globals.update(
     {"TicketStatus": TicketStatus, "assets_env": assets.assets_env}
