@@ -43,6 +43,8 @@ class User(db.Model, UserMixin):
     call_url = db.Column(db.String(255))
     doc_url = db.Column(db.String(255))
 
+    heartbeat_time = db.Column(db.DateTime, default=db.func.now(), index=True)
+
     @property
     def short_name(self):
         first_name = self.name.split()[0] if self.name.split() else ""
@@ -82,6 +84,8 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created = db.Column(db.DateTime, default=db.func.now())
     name = db.Column(db.String(255), nullable=False)
+    online = db.Column(db.Boolean, nullable=False)
+    link = db.Column(db.String(255), nullable=False)
     visible = db.Column(db.Boolean, default=False)
 
     course = db.Column(db.String(255), nullable=False, index=True)
@@ -110,7 +114,7 @@ class Ticket(db.Model):
     updated = db.Column(db.DateTime, onupdate=db.func.now())
     status = db.Column(EnumType(TicketStatus), nullable=False, index=True)
 
-    group = db.relationship("Group", back_populates="ticket")
+    group = db.relationship("Group", back_populates="ticket", uselist=False)
 
     rerequest_threshold = db.Column(
         db.DateTime
@@ -162,7 +166,7 @@ class Ticket(db.Model):
 
 TicketEventType = enum.Enum(
     "TicketEventType",
-    "create assign unassign resolve delete update juggle rerequest return_to hold_released",
+    "create assign unassign resolve delete update juggle rerequest return_to hold_released message_sent",
 )
 
 
@@ -255,9 +259,11 @@ class Group(db.Model):
     location = db.relationship(Location, foreign_keys=[location_id])
 
     ticket_id = db.Column(db.ForeignKey("ticket.id"), nullable=True, index=True)
-    ticket = db.relationship("Ticket", back_populates="group")
+    ticket = db.relationship(Ticket, back_populates="group", foreign_keys=[ticket_id])
 
-    attendees = db.relationship("GroupAttendance", back_populates="group")
+    attendees = db.relationship(
+        "GroupAttendance", back_populates="group", lazy="joined"
+    )
 
     group_status = db.Column(
         EnumType(GroupStatus), nullable=False, default=GroupStatus.active
@@ -280,13 +286,39 @@ class GroupAttendance(db.Model):
     group = db.relationship("Group", back_populates="attendees")
 
     user_id = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
-    user = db.relationship(User, foreign_keys=[user_id])
+    user = db.relationship(User, foreign_keys=[user_id], lazy="joined")
 
     group_attendance_status = db.Column(
         EnumType(GroupAttendanceStatus),
         nullable=False,
         default=GroupAttendanceStatus.present,
     )
+
+    course = db.Column(db.String(255), nullable=False, index=True)
+
+
+class ChatMessage(db.Model):
+    __tablename__ = "chat_message"
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, default=db.func.now())
+
+    body = db.Column(db.String(255), nullable=False, default="")
+
+    user_id = db.Column(db.ForeignKey("user.id"), nullable=False, index=True)
+    user = db.relationship(User, foreign_keys=[user_id])
+
+    ticket_id = db.Column(db.ForeignKey("ticket.id"), nullable=True, index=True)
+    ticket = db.relationship("Ticket", backref=db.backref("messages", lazy="joined"))
+
+    appointment_id = db.Column(
+        db.ForeignKey("appointment.id"), nullable=True, index=True
+    )
+    appointment = db.relationship(
+        "Appointment", backref=db.backref("messages", lazy="joined")
+    )
+
+    group_id = db.Column(db.ForeignKey("group.id"), nullable=True, index=True)
+    group = db.relationship("Group", backref=db.backref("messages", lazy="joined"))
 
     course = db.Column(db.String(255), nullable=False, index=True)
 

@@ -7,6 +7,7 @@ import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import Jumbotron from "react-bootstrap/Jumbotron";
+import moment from "moment-timezone";
 import { useContext } from "react";
 import Row from "react-bootstrap/Row";
 import styles from "styled-components";
@@ -68,12 +69,19 @@ export default function MainPage(): React.Node {
             ) : null}
           </Row>
           {state.currentUser?.isStaff ? (
-            state.taughtSections.map((section, i) => (
-              <div key={section.id}>
-                {i !== 0 && <br />}
-                <EnrolledSectionCard section={section} />
-              </div>
-            ))
+            state.taughtSections
+              .sort(
+                (a, b) =>
+                  (a.endTime > b.endTime ? 1 : -1) *
+                  moment.unix(a.endTime).diff(moment()) *
+                  moment.unix(b.endTime).diff(moment())
+              )
+              .map((section, i) => (
+                <div key={section.id}>
+                  {i !== 0 && <br />}
+                  <EnrolledSectionCard section={section} />
+                </div>
+              ))
           ) : state.enrolledSection == null ? null : (
             <EnrolledSectionCard section={state.enrolledSection} />
           )}
@@ -96,3 +104,4 @@ export default function MainPage(): React.Node {
     </>
   );
 }
+

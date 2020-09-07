@@ -1,24 +1,23 @@
 import os
 
+from common.db import database_url
 from common.rpc.secrets import get_secret
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 ENV = os.getenv("ENV", "dev")
 
-if ENV in ("dev", "staging"):
-    DEBUG = True
-elif ENV == "prod":
-    DEBUG = False
+if ENV == "DEV_ON_PROD":
+    ENV = "dev"
 
 if ENV == "dev":
+    DEBUG = True
     SECRET_KEY = "dev"
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "app.db")
-    ).replace("mysql://", "mysql+pymysql://")
 else:
+    DEBUG = False
     SECRET_KEY = get_secret(secret_name="SESSION_COOKIE_SECRET")
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+
+SQLALCHEMY_DATABASE_URI = database_url
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 DATABASE_CONNECT_OPTIONS = {}

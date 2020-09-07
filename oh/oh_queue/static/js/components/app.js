@@ -21,20 +21,19 @@ class App extends React.Component {
     this.state = initialState;
     this.socket = new Socket();
 
-    this.socket.on('connect', () => {
+    this.socket.on("connect", () => {
       this.setOffline(false);
     });
-    this.socket.on('disconnect', () => this.setOffline(true));
-    this.socket.on('state', (data, callback) => {
-        this.updateState(data);
-        if (callback) {
-            callback();
-        }
+    this.socket.on("disconnect", () => this.setOffline(true));
+    this.socket.on("state", (data, callback) => {
+      this.updateState(data);
+      if (callback) {
+        callback();
+      }
     });
-    this.socket.on('event', (data) => this.updateTicket(data));
-    this.socket.on('presence', (data) => this.updatePresence(data));
-    this.socket.on('appointment_event', (data) => this.updateAppointment(data));
-    this.socket.on('group_event', (data) => this.updateGroup(data));
+    this.socket.on("event", (data) => this.updateTicket(data));
+    this.socket.on("appointment_event", (data) => this.updateAppointment(data));
+    this.socket.on("group_event", (data) => this.updateGroup(data));
 
     this.loadTicket = this.loadTicket.bind(this);
     this.loadAppointment = this.loadAppointment.bind(this);
@@ -68,77 +67,68 @@ class App extends React.Component {
         setTicket(this.state, ticket);
       }
     }
-    if (data.hasOwnProperty('config')) {
+    if (data.hasOwnProperty("config")) {
       this.state.config = data.config;
       for (const key of [
-          "daily_appointment_limit",
-          "weekly_appointment_limit",
-          "simul_appointment_limit",
-          "show_okpy_backups",
-          "slack_notif_long_queue",
-          "slack_notif_appt_summary",
-          "slack_notif_missed_appt",
-          "party_enabled",
+        "daily_appointment_limit",
+        "weekly_appointment_limit",
+        "simul_appointment_limit",
+        "show_okpy_backups",
+        "slack_notif_long_queue",
+        "slack_notif_appt_summary",
+        "slack_notif_missed_appt",
+        "party_enabled",
+        "allow_private_party_tickets",
       ]) {
-          this.state.config[key] = JSON.parse(this.state.config[key]);
+        this.state.config[key] = JSON.parse(this.state.config[key]);
       }
     }
-    if (data.hasOwnProperty('current_user')) {
+    if (data.hasOwnProperty("current_user")) {
       this.state.currentUser = data.current_user;
     }
-    if (data.hasOwnProperty('appointments')) {
-        this.state.appointments = Array.from(data.appointments).sort(appointmentTimeComparator);
+    if (data.hasOwnProperty("appointments")) {
+      const appointmentIDMap = Object.fromEntries(
+        this.state.appointments.map((appointment) => [
+          appointment.id,
+          appointment,
+        ])
+      );
+      data.appointments.forEach((appointment) =>
+        setAppointment(
+          this.state,
+          appointment,
+          () => this.router.history.push("/appointments/" + appointment.id),
+          appointmentIDMap
+        )
+      );
+      this.state.appointments = Array.from(data.appointments).sort(
+        appointmentTimeComparator
+      );
     }
-    if (data.hasOwnProperty('groups')) {
-        this.state.groups = Array.from(data.groups).sort(x => x.id);
+    if (data.hasOwnProperty("groups")) {
+      this.state.groups = Array.from(data.groups).sort((x) => x.id);
+    }
+    if (data.hasOwnProperty("presence")) {
+      this.state.presence = data.presence;
     }
     this.state.loaded = true;
     this.refresh();
   }
 
-  updatePresence(data) {
-    this.state.presence = data;
-    this.refresh();
-  }
-
   shouldNotify(ticket, type) {
-    return (isStaff(this.state) && type === 'create');
+    return isStaff(this.state) && type === "create";
   }
 
   updateAppointment({ appointment, type }) {
-      setAppointment(this.state, appointment, () => {
-          this.router.history.push("/appointments/" + appointment.id);
-      });
-      this.refresh();
+    setAppointment(this.state, appointment, () => {
+      this.router.history.push("/appointments/" + appointment.id);
+    });
+    this.refresh();
   }
 
   updateTicket(data) {
     setTicket(this.state, data.ticket);
     this.refresh();
-
-    var ticket = data.ticket;
-    switch(data.type) {
-      case 'assign':
-      case 'delete':
-      case 'resolve':
-        if (isStaff(this.state)) {
-          cancelNotification(ticket.id + ".create");
-        }
-        break;
-      case 'create':
-      case 'describe':
-      case 'unassign':
-      case 'update_location':
-        if (isStaff(this.state) && ticket.status === 'pending') {
-          var assignment = ticketAssignment(this.state, ticket);
-          var location = ticketLocation(this.state, ticket);
-          var question = ticketQuestion(this.state, ticket);
-          notifyUser('New request for ' + assignment.name + ' ' + question,
-                     location.name,
-                     ticket.id + '.create');
-        }
-        break;
-    }
   }
 
   updateGroup(data) {
@@ -149,7 +139,7 @@ class App extends React.Component {
   loadTicket(id) {
     loadTicket(this.state, id);
     this.refresh();
-    this.socket.emit('load_ticket', id, (ticket) => {
+    this.socket.emit("load_ticket", id, (ticket) => {
       receiveTicket(this.state, id, ticket);
       this.refresh();
     });
@@ -157,19 +147,19 @@ class App extends React.Component {
 
   loadAppointment(id) {
     if (isStaff(this.state)) {
-        this.socket.emit('load_appointment', id, (appointment) => {
-            setAppointment(this.state, appointment);
-            this.refresh();
-        });
+      this.socket.emit("load_appointment", id, (appointment) => {
+        setAppointment(this.state, appointment);
+        this.refresh();
+      });
     }
   }
 
   loadGroup(id) {
     if (isStaff(this.state)) {
-        this.socket.emit('load_group', id, (group) => {
-            setGroup(this.state, group);
-            this.refresh();
-        });
+      this.socket.emit("load_group", id, (group) => {
+        setGroup(this.state, group);
+        this.refresh();
+      });
     }
   }
 
@@ -194,7 +184,7 @@ class App extends React.Component {
     this.refresh();
   }
 
-  makeRequest(eventType, request, follow_redirect=false, callback) {
+  makeRequest(eventType, request, follow_redirect = false, callback) {
     if (typeof request === "function") {
       follow_redirect = request;
       request = undefined;
@@ -231,23 +221,92 @@ class App extends React.Component {
     const Root = isPartyRoot(state) ? Party : Home;
 
     return (
-      <BrowserRouter ref={(router) => this.router = router}>
+      <BrowserRouter ref={(router) => (this.router = router)}>
         <div>
           <Switch>
-            <Route exact path="/" render={(props) => (<Root state={state} {...props} />)} />
-            <Route exact path="/party" render={(props) => (<Party state={state} {...props} />)} />
-            <Route exact path="/queue" render={(props) => (<Home state={state} {...props} />)} />
-            <Route exact path="/appointments" render={(props) => (<Appointments state={state} {...props} />)} />
-            <Route exact path="/online_setup" render={(props) => (<StaffOnlineSetup state={state} {...props} />)} />
-            <Route path="/admin" render={(props) => (<AdminLayout state={state} {...props} />)} />
-            <Route path="/activity_log" render={(props) => (<ActivityLogLayout state={state} {...props} />)} />
-            <Route path="/error" render={(props) => (<ErrorView state={state} {...props} />)} />
-            <Route path="/presence" render={(props) => (<PresenceIndicator state={state} {...props} />)} />
-            <Route path="/tickets/:id" render={(props) => (<TicketLayout state={state} socket={this.socket} loadTicket={this.loadTicket} {...props} />)} />
-            <Route path="/appointments/:id" render={(props) => (<AppointmentLayout state={state} socket={this.socket} loadAppointment={this.loadAppointment} {...props} />)} />
-            <Route path="/groups/:id" render={(props) => (<PartyGroupLayout state={state} socket={this.socket} loadGroup={this.loadGroup} {...props} />)} />
-            <Route path="/user/:id" render={(props) => (<UserLayout state={state} {...props} />)} />
-            <Route render={(props) => (<ErrorView state={state} {...props} message="Page Not Found" />)} />
+            <Route
+              exact
+              path="/"
+              render={(props) => <Root state={state} {...props} />}
+            />
+            <Route
+              exact
+              path="/party"
+              render={(props) => <Party state={state} {...props} />}
+            />
+            <Route
+              exact
+              path="/queue"
+              render={(props) => <Home state={state} {...props} />}
+            />
+            <Route
+              exact
+              path="/appointments"
+              render={(props) => <Appointments state={state} {...props} />}
+            />
+            <Route
+              exact
+              path="/online_setup"
+              render={(props) => <StaffOnlineSetup state={state} {...props} />}
+            />
+            <Route
+              path="/admin"
+              render={(props) => <AdminLayout state={state} {...props} />}
+            />
+            <Route
+              path="/activity_log"
+              render={(props) => <ActivityLogLayout state={state} {...props} />}
+            />
+            <Route
+              path="/error"
+              render={(props) => <ErrorView state={state} {...props} />}
+            />
+            <Route
+              path="/presence"
+              render={(props) => <PresenceIndicator state={state} {...props} />}
+            />
+            <Route
+              path="/tickets/:id"
+              render={(props) => (
+                <TicketLayout
+                  state={state}
+                  socket={this.socket}
+                  loadTicket={this.loadTicket}
+                  {...props}
+                />
+              )}
+            />
+            <Route
+              path="/appointments/:id"
+              render={(props) => (
+                <AppointmentLayout
+                  state={state}
+                  socket={this.socket}
+                  loadAppointment={this.loadAppointment}
+                  {...props}
+                />
+              )}
+            />
+            <Route
+              path="/groups/:id"
+              render={(props) => (
+                <PartyGroupLayout
+                  state={state}
+                  socket={this.socket}
+                  loadGroup={this.loadGroup}
+                  {...props}
+                />
+              )}
+            />
+            <Route
+              path="/user/:id"
+              render={(props) => <UserLayout state={state} {...props} />}
+            />
+            <Route
+              render={(props) => (
+                <ErrorView state={state} {...props} message="Page Not Found" />
+              )}
+            />
           </Switch>
         </div>
       </BrowserRouter>

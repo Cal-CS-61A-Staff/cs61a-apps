@@ -1,7 +1,7 @@
 let Queue = ({state}) => {
   let staff = isStaff(state);
   let myTicket = getMyTicket(state);
-  let canAddTicket = !staff && !myTicket;
+  let canAddTicket = !staff && !myTicket && (!state.config.party_enabled || state.config.allow_private_party_tickets);
   let showJumbotron = canAddTicket && !state.config.party_enabled;
   const myAssignedTickets = getTickets(state, 'assigned').filter(ticket => isTicketHelper(state, ticket));
   let pendingTickets = [].concat(...getTickets(state, "rerequested").filter(ticket => isTicketHelper(state, ticket) || !ticket.helper))

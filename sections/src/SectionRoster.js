@@ -5,6 +5,7 @@ import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import styled from "styled-components";
 import type { SectionDetails } from "./models";
+import useSectionAPI from "./useSectionAPI";
 
 const FlexLayout = styled.div`
   display: flex;
@@ -21,6 +22,8 @@ type Props = {
 };
 
 export default function SectionRoster({ section }: Props) {
+  const removeStudent = useSectionAPI("remove_student");
+
   return (
     <FlexLayout>
       {section.students.map((student) => (
@@ -39,7 +42,16 @@ export default function SectionRoster({ section }: Props) {
               >
                 View Backups
               </Button>{" "}
-              <Button variant="danger" size="sm">
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() =>
+                  removeStudent({
+                    student: student.email,
+                    section_id: section.id,
+                  })
+                }
+              >
                 Remove
               </Button>
             </Card.Body>

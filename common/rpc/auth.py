@@ -1,4 +1,5 @@
 from functools import wraps
+from typing import List, Union
 
 from common.rpc.secrets import get_secret
 from common.rpc.utils import cached, create_service
@@ -50,7 +51,12 @@ def read_spreadsheet(*, course: str, url: str, doc_id: str, sheet_name: str):
 @auth_endpoint
 @service.route("/google/write_spreadsheet")
 def write_spreadsheet(
-    *, course: str, url: str, doc_id: str, sheet_name: str, content: str
+    *,
+    course: str,
+    url: str,
+    doc_id: str,
+    sheet_name: str,
+    content: List[List[Union[str, float]]]
 ):
     ...
 
@@ -101,3 +107,22 @@ def slack_workspace_name(*, course: str):
 @service.route("/slack/post_message")
 def post_slack_message(*, course: str, message: str, purpose: str):
     ...
+
+
+class PiazzaNetwork:
+    def __init__(self, course, is_staff, is_test):
+        self.course = course
+        self.is_staff = is_staff
+        self.is_test = is_test
+
+    def __getattr__(self, method):
+        def bound_method(**kwargs):
+            return perform_piazza_action(
+                action=method,
+                course=self.course,
+                as_staff=self.is_staff,
+                is_test=self.is_test,
+                kwargs=kwargs,
+            )
+
+        return bound_method

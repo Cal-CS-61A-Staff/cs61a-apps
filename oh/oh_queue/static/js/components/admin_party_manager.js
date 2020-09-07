@@ -11,6 +11,15 @@ function AdminPartyManager({ state }) {
                         />
                     </td>
                 </tr>
+                <tr>
+                    <td>Should students be able to create individual tickets during HW Party?</td>
+                    <td className="col-md-1">
+                        <ConfigLinkedToggle
+                            config={state.config}
+                            configKey="allow_private_party_tickets"
+                        />
+                    </td>
+                </tr>
             </AdminOptionsManager>
         </React.Fragment>
     );
