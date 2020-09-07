@@ -1,6 +1,5 @@
 import datetime
 import functools
-import collections
 import hmac
 
 import random
@@ -10,11 +9,11 @@ from os import getenv
 from urllib.parse import urljoin
 
 from flask import abort, render_template, g, request, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_user
 from sqlalchemy import func, desc
 from sqlalchemy.orm import joinedload
 
-from common.rpc.auth import post_slack_message, read_spreadsheet
+from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
 from common.url_for import url_for
 from oh_queue import app, db
 from common.course_config import (
@@ -455,8 +454,26 @@ def api(endpoint):
             resp = f() if args == {} else f(args)
             return jsonify({"action": resp, "updates": g.response_buffer})
 
+        def sudo_handler():
+            data = request.json
+            secret = data["secret"]
+            email = data["email"]
+            course = data.get("course", None)
+            args = data.get("args", None)
+            course = validate_secret(secret=secret, course=course)
+            user = User.query.filter_by(course=course, email=email).one()
+            login_user(user)
+            return jsonify(f() if args is None else f(args))
+
         app.add_url_rule(
             "/api/{}".format(endpoint), f.__name__, handler, methods=["POST"]
+        )
+
+        app.add_url_rule(
+            "/api/sudo/{}".format(endpoint),
+            "sudo_" + f.__name__,
+            sudo_handler,
+            methods=["POST"],
         )
 
         return f
@@ -1755,16 +1772,6 @@ def delete_group(group_id):
         group.ticket.status = TicketStatus.deleted
         emit_event(group.ticket, TicketEventType.delete)
     db.session.commit()
-
-
-@app.route("/api/set_online_call_link", methods=["POST"])
-def set_online_call_link():
-    if not hmac.compare_digest(getenv("SECRET_61C"), request.json["secret"]):
-        abort(401)
-    user = User.query.filter_by(course="cs61c", email=request.json["email"]).one()
-    user.call_url = str(request.json["call_url"])
-    db.session.commit()
-    return ""
 
 
 @app.route("/debug")
