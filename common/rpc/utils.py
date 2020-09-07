@@ -22,9 +22,10 @@ def create_service(app: str):
             @wraps(func)
             def wrapped(**kwargs):
                 noreply = kwargs.pop("noreply", False)
+                proxied_host = request.headers.get("X-Forwarded-For-Host")
                 endpoints = []
-                if has_request_context() and not noreply:
-                    parts = request.headers.get("X-Forwarded-For-Host").split(".")
+                if has_request_context() and proxied_host and not noreply:
+                    parts = proxied_host.split(".")
                     if "pr" in parts:
                         pr = parts[0]
                         endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
