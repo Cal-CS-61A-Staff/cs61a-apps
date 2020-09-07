@@ -13,7 +13,7 @@ from flask_login import current_user, login_user
 from sqlalchemy import func, desc
 from sqlalchemy.orm import joinedload
 
-from common.rpc.auth import post_slack_message, read_spreadsheet
+from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
 from common.url_for import url_for
 from oh_queue import app, db
 from common.course_config import (
@@ -44,7 +44,6 @@ from oh_queue.models import (
     GroupStatus,
 )
 from oh_queue.slack import send_appointment_summary
-from common.rpc.secrets import validates_master_secret
 
 COURSE_BOTS = {"lancet": "cs61"}
 
@@ -457,9 +456,8 @@ def api(endpoint):
             resp = f() if args == {} else f(args)
             return jsonify({"action": resp, "updates": g.response_buffer})
 
-        @validates_master_secret
-        def authorized_handler(app, is_staging, email, args=None):
-            course = app[COURSE_BOTS]
+        def authorized_handler(secret, email, course=None, args=None):
+            course = validate_secret(secret=secret, course=course)
             user = User.query.filter_by(course=course, email=email).one()
             login_user(user)
             return jsonify(f() if args is None else f(args))
