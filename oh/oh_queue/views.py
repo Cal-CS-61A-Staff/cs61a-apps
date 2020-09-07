@@ -454,7 +454,12 @@ def api(endpoint):
             resp = f() if args == {} else f(args)
             return jsonify({"action": resp, "updates": g.response_buffer})
 
-        def sudo_handler(secret, email, course=None, args=None):
+        def sudo_handler():
+            data = request.json
+            secret = data["secret"]
+            email = data["email"]
+            course = data.get("course", None)
+            args = data.get("args", None)
             course = validate_secret(secret=secret, course=course)
             user = User.query.filter_by(course=course, email=email).one()
             login_user(user)
