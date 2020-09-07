@@ -1,6 +1,5 @@
 import datetime
 import functools
-import collections
 import hmac
 
 import random
@@ -10,7 +9,7 @@ from os import getenv
 from urllib.parse import urljoin
 
 from flask import abort, render_template, g, request, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_user
 from sqlalchemy import func, desc
 from sqlalchemy.orm import joinedload
 
@@ -45,6 +44,9 @@ from oh_queue.models import (
     GroupStatus,
 )
 from oh_queue.slack import send_appointment_summary
+from common.rpc.secrets import validates_master_secret
+
+COURSE_BOTS = {"lancet": "cs61"}
 
 
 def user_json(user):
@@ -455,8 +457,22 @@ def api(endpoint):
             resp = f() if args == {} else f(args)
             return jsonify({"action": resp, "updates": g.response_buffer})
 
+        @validates_master_secret
+        def authorized_handler(app, is_staging, email, args=None):
+            course = app[COURSE_BOTS]
+            user = User.query.filter_by(course=course, email=email).one()
+            login_user(user)
+            return jsonify(f() if args is None else f(args))
+
         app.add_url_rule(
             "/api/{}".format(endpoint), f.__name__, handler, methods=["POST"]
+        )
+
+        app.add_url_rule(
+            "/s2s/api/{}".format(endpoint),
+            f.__name__,
+            authorized_handler,
+            methods=["POST"],
         )
 
         return f
