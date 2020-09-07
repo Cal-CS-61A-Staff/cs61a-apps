@@ -88,7 +88,7 @@ def handle_deploy_prod_app_sync(app, is_staging, target_app):
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     land_commit(
-        repo.get_branch(repo.master_branch).commit.sha,
+        repo.get_branch(repo.default_branch).commit.sha,
         repo,
         None,
         [f"{target_app}/main.py"],
