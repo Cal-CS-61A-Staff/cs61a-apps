@@ -35,6 +35,7 @@ class Socket {
   constructor() {
     setInterval(() => this.emit("connect"), 10000);
     this.handlers = new Map();
+    this.jobs = [];
     this.emit("connect");
   }
 
@@ -55,12 +56,25 @@ class Socket {
     this.handlers.delete(eventType);
   }
 
-  emit(event, params = {}, callback = null) {
+  emit(...args) {
+    const processQueue = () => {
+      if (this.jobs.length > 0) {
+        const args = this.jobs[0];
+        this.actuallyEmit(...args).finally(this.jobs.shift.bind(this.jobs)).then(processQueue);
+      }
+    };
+    this.jobs.push(args);
+    if (this.jobs.length === 1) {
+      processQueue();
+    }
+  }
+
+  actuallyEmit(event, params = {}, callback = null) {
     if (callback == null && typeof params === "function") {
       callback = params;
       params = {};
     }
-    post(`/api/${event}`, params)
+    return post(`/api/${event}`, params)
       .then(({ action, updates }) => {
         this.trigger("connect");
         for (const [event, payload] of updates) {
