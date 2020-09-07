@@ -45,8 +45,6 @@ from oh_queue.models import (
 )
 from oh_queue.slack import send_appointment_summary
 
-COURSE_BOTS = {"lancet": "cs61"}
-
 
 def user_json(user):
     return {
@@ -456,7 +454,7 @@ def api(endpoint):
             resp = f() if args == {} else f(args)
             return jsonify({"action": resp, "updates": g.response_buffer})
 
-        def authorized_handler(secret, email, course=None, args=None):
+        def sudo_handler(secret, email, course=None, args=None):
             course = validate_secret(secret=secret, course=course)
             user = User.query.filter_by(course=course, email=email).one()
             login_user(user)
@@ -467,9 +465,9 @@ def api(endpoint):
         )
 
         app.add_url_rule(
-            "/s2s/api/{}".format(endpoint),
-            f.__name__,
-            authorized_handler,
+            "/api/sudo/{}".format(endpoint),
+            "sudo_" + f.__name__,
+            sudo_handler,
             methods=["POST"],
         )
 
@@ -1769,16 +1767,6 @@ def delete_group(group_id):
         group.ticket.status = TicketStatus.deleted
         emit_event(group.ticket, TicketEventType.delete)
     db.session.commit()
-
-
-@app.route("/api/set_online_call_link", methods=["POST"])
-def set_online_call_link():
-    if not hmac.compare_digest(getenv("SECRET_61C"), request.json["secret"]):
-        abort(401)
-    user = User.query.filter_by(course="cs61c", email=request.json["email"]).one()
-    user.call_url = str(request.json["call_url"])
-    db.session.commit()
-    return ""
 
 
 @app.route("/debug")
