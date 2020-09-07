@@ -24,7 +24,7 @@ def create_service(app: str):
                 noreply = kwargs.pop("noreply", False)
                 endpoints = []
                 if has_request_context() and not noreply:
-                    parts = request.host.split(".")
+                    parts = request.headers.get("X-Forwarded-For-Host").split(".")
                     if "pr" in parts:
                         pr = parts[0]
                         endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
