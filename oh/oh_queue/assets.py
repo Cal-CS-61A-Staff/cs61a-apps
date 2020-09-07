@@ -25,7 +25,7 @@ def glob_assets(pattern):
 
 assets_env.config["BABEL_EXTRA_ARGS"] = ["--plugins", "preval"]
 
-if getenv("ENV", "dev") == "dev":
+if getenv("ENV", "dev") != "prod":
     assets_env.register(
         "common.js",
         *glob_assets("js/components/*.js"),

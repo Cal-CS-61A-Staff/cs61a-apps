@@ -15,7 +15,7 @@ COURSE_DOMAINS = {"ok": "oh.cs61a.org"}
 
 def get_course(domain=None):
     if getenv("ENV") != "prod":
-        return "ok"
+        return "cs61a"
     if not domain:
         domain = request.headers.get("X-Forwarded-For-Host") or request.headers["HOST"]
     if "pr" in domain:
@@ -28,7 +28,7 @@ def get_course(domain=None):
 
 def get_endpoint(course=None):
     if getenv("ENV") != "prod":
-        return "ok/test/su16"
+        return "cal/cs61a/fa20"
     if not course:
         course = get_course()
     if course not in COURSE_ENDPOINTS:

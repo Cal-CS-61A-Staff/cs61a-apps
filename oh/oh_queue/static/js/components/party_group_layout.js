@@ -9,6 +9,7 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
     }
     const group = getGroup(state, groupID);
     const ticket = getTicket(state, group.ticket_id);
+    const location = state.locations[group.location_id];
     const ticketActive = ticket && !["resolved", "deleted"].includes(ticket.status);
 
     const inGroup = groupIsMine(state, group);
@@ -74,9 +75,9 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
     );
 
     let onlineButtons = null;
-    if (state.locations[group.location_id].name === "Online" && group.group_status === "active" && inGroup) {
-        const callButton = group.call_url && (
-            <PartyGroupLayoutButton color="success" onClick={() => window.open(group.call_url, "_blank")}>
+    if (location.online && group.group_status === "active" && inGroup) {
+        const callButton = (location.link || group.call_url) && (
+            <PartyGroupLayoutButton color="success" onClick={() => window.open(location.link || group.call_url, "_blank")}>
                 Join Call
             </PartyGroupLayoutButton>
         );
@@ -121,7 +122,8 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
                         {" "}
                         &middot;
                         {" "}
-                        {state.locations[group.location_id].name}
+                        {location.name}
+                        {location.link && group.call_url && ` (${group.call_url})`}
                     </small>
                     <p className="ticket-view-text text-center">Created {ticketTimeAgo(group)}.</p>
                     </h2>
@@ -129,6 +131,7 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
                         <div className="col-xs-12 col-md-6 col-md-offset-3">
                             <hr/>
                             <DescriptionBox
+                                editable
                                 locked={!inGroup}
                                 state={state}
                                 ticket={group}
@@ -138,6 +141,11 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
                                 onChange={setDescription}
                                 onSubmit={handleDescriptionSubmit}
                             />
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-xs-12 col-md-6 col-md-offset-3">
+                            <UpdateAssignmentBox state={state} group={group} />
                         </div>
                     </div>
                     <hr />
@@ -187,6 +195,7 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
                         currentUser={state.currentUser}
                         socket={socket}
                         id={group.id}
+                        messages={group.messages}
                         mode="group"
                     />
                 </div>

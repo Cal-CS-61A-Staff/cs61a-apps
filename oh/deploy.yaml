@@ -1,2 +1,4 @@
 build_type: oh_queue
 deploy_type: flask
+memory_limit: 1G
+concurrency: 30 # let's play it safe

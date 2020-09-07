@@ -147,6 +147,7 @@ class User(db.Model, UserMixin):
     email: str = db.Column(db.String(255), index=True)
     name: str = db.Column(db.String(255))
     is_staff: bool = db.Column(db.Boolean)
+    sections: List[Section]
 
     @property
     def json(self):

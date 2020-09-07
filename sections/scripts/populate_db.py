@@ -1,3 +1,5 @@
+assert False  # don't run this!
+
 import csv
 import os
 import sys

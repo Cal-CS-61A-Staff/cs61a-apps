@@ -2,3 +2,4 @@ build_type: create_react_app
 deploy_type: flask
 first_party_domains:
   - tutorials.cs61a.org
+memory_limit: 512M
