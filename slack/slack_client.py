@@ -22,6 +22,7 @@ from emoji_integration import EmojiIntegration
 from golink_integration import GoLinkIntegration
 from group_integration import GroupIntegration
 from integration import combine_integrations
+from lgtm_integration import LGTMIntegration
 from piazza_integration import PiazzaIntegration
 from prlink_integration import PRLinkIntegration
 from issue_integration import IssueIntegration
@@ -164,9 +165,11 @@ def create_slack_client(app):
                 integrations.append(PRLinkIntegration)
             if "issues" in active_services:
                 integrations.append(IssueIntegration)
+            if "lgtm" in active_services:
+                integrations.append(LGTMIntegration)
 
             combined_integration = combine_integrations(integrations)(
-                event["text"], token if token is not UNABLE else None, team_id
+                event["text"], token if token is not UNABLE else None, team_id, event
             )
 
             if combined_integration.responses:

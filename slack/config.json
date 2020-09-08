@@ -6,6 +6,7 @@
       "groups": "Automatically tag particular groups (e.g. @heads) when mentioned.",
       "claps": "Adds a \\clap command.",
       "prlinks": "Automatically reformat PR links posted in chat.",
-      "issues": "Automatically hyperlink issues posted in chat."
+      "issues": "Automatically hyperlink issues posted in chat.",
+      "lgtm": "Automatically approve or request changes on PRs from chat."
     }
   }
