@@ -24,7 +24,7 @@ TRIGGER_WORDS = {
 
 
 class LGTMIntegration(Integration):
-    reply = ""
+    reply = None
 
     def _process(self):
         for trigger_word, event in TRIGGER_WORDS.items():
@@ -91,4 +91,7 @@ class LGTMIntegration(Integration):
 
     @property
     def message(self):
-        return self._message + "\n\n" + self.reply
+        if self.reply:
+            return self._message + "\n\n" + self.reply
+        else:
+            return self._message
