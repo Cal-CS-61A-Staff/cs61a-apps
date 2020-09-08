@@ -73,9 +73,11 @@ class LGTMIntegration(Integration):
         if sender_email == github_email:
             return
 
+        action = "approved" if event == "APPROVE" else "requested changes on"
+
         pr.create_review(
-            body="{} approved this PR via the Slackbot!".format(
-                member["profile"].get("real_name_normalized")
+            body="{} {} this PR via the Slackbot!".format(
+                member["profile"].get("real_name_normalized"), action
             ),
             event=event,
         )
