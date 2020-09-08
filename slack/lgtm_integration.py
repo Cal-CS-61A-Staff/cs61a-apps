@@ -55,7 +55,7 @@ class LGTMIntegration(Integration):
         repo = g.get_repo(repo)
         pr = repo.get_pull(pr)
 
-        github_email = pr.user.list
+        github_email = pr.user.email
 
         for member in users["members"]:
             if member["profile"].get("email") == github_email:
