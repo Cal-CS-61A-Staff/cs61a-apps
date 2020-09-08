@@ -58,12 +58,6 @@ class LGTMIntegration(Integration):
         github_email = pr.user.email
 
         for member in users["members"]:
-            if member["profile"].get("email") == github_email:
-                break
-        else:
-            return
-
-        for member in users["members"]:
             if member["id"] == self._event["user"]:
                 sender_email = member["profile"].get("email")
                 break
