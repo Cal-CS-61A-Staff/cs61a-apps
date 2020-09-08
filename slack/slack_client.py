@@ -121,7 +121,7 @@ def create_slack_client(app):
     def message_send():
         d = request.json
         try:
-            if "challenge" in d:
+            if "challenge" in d or request.headers.get("X-Slack-Retry-Reason"):
                 return
             team_id = d["team_id"]
             course, bot_token = get_team_data(team_id)
