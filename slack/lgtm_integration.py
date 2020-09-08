@@ -26,7 +26,7 @@ TRIGGER_WORDS = {
 class LGTMIntegration(Integration):
     reply = ""
 
-    def process(self):
+    def _process(self):
         for trigger_word, event in TRIGGER_WORDS.items():
             if trigger_word in self._message.lower():
                 break
