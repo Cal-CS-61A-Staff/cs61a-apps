@@ -38,10 +38,15 @@ def create_service(app: str):
                         except requests.exceptions.ReadTimeout:
                             pass
                     else:
-                        resp = requests.post(endpoint, json=kwargs)
-                        if i != len(endpoints) - 1 and resp.status_code == 404:
-                            # on a PR build, try the main endpoint next
-                            continue
+                        try:
+                            resp = requests.post(endpoint, json=kwargs)
+                            resp.raise_for_status()
+                        except:
+                            if i != len(endpoints) - 1:
+                                # on a PR build, try the main endpoint next
+                                continue
+                            else:
+                                raise
                         resp.raise_for_status()
                         return resp.json()
 

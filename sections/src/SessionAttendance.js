@@ -5,7 +5,12 @@ import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import Table from "react-bootstrap/Table";
 import styled from "styled-components";
-import type { AttendanceStatusType, SectionDetails, Session } from "./models";
+import type {
+  AttendanceStatusType,
+  Person,
+  SectionDetails,
+  Session,
+} from "./models";
 import useSectionAPI from "./useSectionAPI";
 
 import { AttendanceStatus } from "./models";
@@ -49,13 +54,26 @@ export default function SectionAttendance({ section, session }: Props) {
     return time;
   }, [section]);
 
-  if (
-    session == null &&
-    mostRecentSession != null &&
-    moment().isBefore(moment.unix(mostRecentSession.startTime).add(3, "days"))
-  ) {
+  const notStartedSectionExists =
+    mostRecentSession == null ||
+    moment().isAfter(moment.unix(mostRecentSession.startTime).add(3, "days"));
+
+  if (session == null && !notStartedSectionExists) {
     return null;
   }
+
+  const sessionStudents: Array<Person> =
+    session?.attendances.map((attendance) => attendance.student) ?? [];
+
+  const students = Array.from(
+    new Map(
+      (session == null ||
+      (session?.id === mostRecentSession?.id && !notStartedSectionExists)
+        ? section.students.concat(sessionStudents)
+        : sessionStudents
+      ).map((student) => [student.email, student])
+    ).values()
+  ).sort((a, b) => a.name.localeCompare(b.name));
 
   const getStudentAttendanceStatus = (email: string): ?AttendanceStatusType => {
     if (session == null) {
@@ -101,7 +119,7 @@ export default function SectionAttendance({ section, session }: Props) {
         <TableHolder>
           <Table>
             <tbody>
-              {section.students.map((student) => (
+              {students.map((student) => (
                 <tr key={student.email} className="text-center">
                   <td className="align-middle">{student.name}</td>
                   <td>
