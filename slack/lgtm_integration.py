@@ -14,7 +14,7 @@ REGEX_TEMPLATE = (
     fr"(https?://)?github\.com/{REPO_REGEX}/pull/{PATH_REGEX}/?(\|[^\s|]+)?"
 )
 
-COURSE_ORGS = {"Cal-CS-61A-Staff": "cs61a"}
+COURSE_ORGS = {"Cal-CS-61A-Staff": "cs61a", "61c-teach": "cs61c"}
 
 TRIGGER_WORDS = {
     "lgtm": "APPROVE",
