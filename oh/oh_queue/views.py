@@ -463,7 +463,8 @@ def api(endpoint):
             course = validate_secret(secret=secret, course=course)
             user = User.query.filter_by(course=course, email=email).one()
             login_user(user)
-            return jsonify(f() if args is None else f(args))
+            resp = f() if args is None else f(args)
+            return jsonify({"action": resp, "updates": g.response_buffer})
 
         app.add_url_rule(
             "/api/{}".format(endpoint), f.__name__, handler, methods=["POST"]
