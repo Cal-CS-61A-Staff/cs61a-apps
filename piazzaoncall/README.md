@@ -4,7 +4,7 @@
 Piazza-Oncall monitors piazza and pings the staff Slack to help with unanswered questions. It assigns a staff member to each question (with individual staff members for each followup) and sends out a daily reminder for all unresolved questions and followups. 
 
 ## Setup
-All packages are detailed in requirements.txt. Include a .csv file named staff_roster.csv in the program directory. The staff roster should minimally contain an email, name, and Weight column and extraneous columns will be ignored. Name/email will indicate the staff member to tag in slack while the weight indicates their probability of being selected for a random post/followup
+All packages are detailed in requirements.txt. Include a .csv file named staff_roster.csv in the program directory. The staff roster should minimally contain `email`, `name`, and `Weight` columns; extraneous columns will be ignored. Name/email will indicate the staff member to tag in slack while the `Weight` indicates their probability of being selected for a random post/followup — note that `Weight` is capitalized. 
 
 ## High Priority Messages
 
