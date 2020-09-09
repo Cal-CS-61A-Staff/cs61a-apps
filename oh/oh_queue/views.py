@@ -1480,7 +1480,7 @@ def bulk_appointment_action(action):
 
 @api("list_users")
 @is_staff
-def list_users(_):
+def list_users():
     return [user_json(user) for user in User.query.filter_by(course=get_course()).all()]
 
 
