@@ -426,6 +426,9 @@ def init_config():
             course=get_course(),
         )
     )
+    db.session.add(
+        ConfigEntry(key="recommend_appointments", value="true", public=True, course=get_course())
+    )
     db.session.commit()
 
 

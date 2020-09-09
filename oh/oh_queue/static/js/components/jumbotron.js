@@ -1,6 +1,6 @@
 let Jumbotron = ({ state }) => {
     var isQueueOpen = state.config && JSON.parse(state.config.is_queue_open);
-    const appointments = JSON.parse(state.config.appointments_open);
+    const appointments = JSON.parse(state.config.appointments_open) && JSON.parse(state.config.recommend_appointments);
     const party_enabled = state.config.party_enabled;
     if (!state.currentUser) {
         var titleText = 'Hi! Please sign in';
