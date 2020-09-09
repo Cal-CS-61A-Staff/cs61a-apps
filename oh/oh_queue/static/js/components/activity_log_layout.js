@@ -13,7 +13,7 @@ function ActivityLogLayout({ state }) {
 
     if (app && !isLoading && userList.length === 0) {
         setIsLoading(true);
-        app.makeRequest("list_users", null, false, (users) => {
+        app.makeRequest("list_users", (users) => {
             setUserList(users);
         })
     }
