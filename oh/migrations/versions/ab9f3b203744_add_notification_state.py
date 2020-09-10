@@ -1,13 +1,13 @@
 """Add notification state
 
-Revision ID: 556a3a710d7b
+Revision ID: ab9f3b203744
 Revises: 00aea7233ef8
-Create Date: 2020-09-09 13:14:15.282965
+Create Date: 2020-09-09 17:49:06.161756
 
 """
 
 # revision identifiers, used by Alembic.
-revision = "556a3a710d7b"
+revision = "ab9f3b203744"
 down_revision = "00aea7233ef8"
 
 from alembic import op
@@ -23,6 +23,7 @@ def upgrade():
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("last_queue_ping", sa.DateTime(), nullable=False),
         sa.Column("last_appointment_notif", sa.DateTime(), nullable=False),
+        sa.Column("domain", sa.String(length=255), nullable=False),
         sa.Column("course", sa.String(length=255), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
