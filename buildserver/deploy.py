@@ -17,7 +17,7 @@ from common.rpc.secrets import create_master_secret, get_secret
 from shell_utils import sh, tmp_directory
 
 
-DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps"
+DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
 
 
 def gen_env_variables(app: App, pr_number: int):
