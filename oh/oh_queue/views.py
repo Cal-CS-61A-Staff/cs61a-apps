@@ -1556,6 +1556,9 @@ def get_user(user_id):
             Ticket.course == get_course(),
         )
         .order_by(desc(Ticket.created))
+        .options(joinedload(Ticket.user, innerjoin=True))
+        .options(joinedload(Ticket.helper))
+        .options(joinedload(Ticket.group))
         .all()
     )
     appointments = (
@@ -1563,12 +1566,23 @@ def get_user(user_id):
             Appointment.helper_id == user.id, Appointment.course == get_course()
         )
         .order_by(desc(Appointment.start_time))
+        .options(joinedload(Appointment.helper))
+        .options(
+            joinedload(Appointment.signups).joinedload(
+                AppointmentSignup.user, innerjoin=True
+            )
+        )
         .all()
     )
     signups = (
         AppointmentSignup.query.join(AppointmentSignup.appointment)
         .filter(
             AppointmentSignup.user_id == user.id, Appointment.course == get_course()
+        )
+        .options(
+            joinedload(AppointmentSignup.appointment).options(
+                joinedload(Appointment.helper)
+            )
         )
         .order_by(desc(Appointment.start_time))
         .all()
