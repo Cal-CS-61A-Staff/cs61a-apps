@@ -6,7 +6,7 @@ import random
 import time
 from operator import or_
 from os import getenv
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from flask import abort, render_template, g, request, jsonify
 from flask_login import current_user, login_user
@@ -227,7 +227,7 @@ def emit_group_event(group, event_type):
     add_response("group_event", {"type": event_type, "group": group_json(group)})
 
 
-def emit_state(attrs):
+def emit_state(attrs, entity=None):
     state = {}
     if "tickets" in attrs:
         tickets = (
@@ -239,6 +239,9 @@ def emit_state(attrs):
             .options(joinedload(Ticket.group))
             .all()
         )
+        if isinstance(entity, Ticket):
+            if has_ticket_access(entity):
+                tickets.append(entity)
         state["tickets"] = [ticket_json(ticket) for ticket in tickets]
     if "assignments" in attrs:
         assignments = Assignment.query.filter_by(course=get_course()).all()
@@ -268,6 +271,12 @@ def emit_state(attrs):
             )
             .all()
         )
+        if isinstance(entity, Appointment):
+            if current_user.is_staff or current_user.id in [
+                signup.user.id for signup in entity.signups
+            ]:
+                appointments.append(entity)
+
         state["appointments"] = [
             appointments_json(appointment) for appointment in appointments
         ]
@@ -275,6 +284,9 @@ def emit_state(attrs):
         groups = Group.query.filter(
             Group.group_status == GroupStatus.active, Group.course == get_course()
         ).all()
+        if isinstance(entity, Group):
+            if has_group_access(entity):
+                groups.append(entity)
         state["groups"] = [group_json(group) for group in groups]
     if "current_user" in attrs:
         state["current_user"] = student_json(current_user)
@@ -537,23 +549,27 @@ def is_staff(f):
     return wrapper
 
 
-def has_ticket_access(f):
+def has_ticket_access(ticket: Ticket):
+    if not current_user.is_authenticated:
+        return False
+    group = ticket.group
+    if group:
+        if not (current_user.is_staff or is_member_of(group)):
+            return False
+    elif not (current_user.is_staff or ticket.user.id == current_user.id):
+        return False
+    return True
+
+
+def requires_ticket_access(f):
     @functools.wraps(f)
     def wrapper(*args, **kwds):
-        if not current_user.is_authenticated:
-            return socket_unauthorized()
         data = args[0]
         ticket_id = data.get("id")
         if not ticket_id:
             return socket_error("Invalid ticket ID")
         ticket = Ticket.query.filter_by(id=ticket_id, course=get_course()).one_or_none()
-        if not ticket:
-            return socket_error("Invalid ticket ID")
-        group = ticket.group
-        if group:
-            if not (current_user.is_staff or is_member_of(group)):
-                return socket_unauthorized()
-        elif not (current_user.is_staff or ticket.user.id == current_user.id):
+        if not has_ticket_access(ticket):
             return socket_unauthorized()
         kwds["ticket"] = ticket
         return f(*args, **kwds)
@@ -561,7 +577,15 @@ def has_ticket_access(f):
     return wrapper
 
 
-def has_group_access(f):
+def has_group_access(group: Group):
+    if not group:
+        return False
+    if not (current_user.is_staff or is_member_of(group)):
+        return False
+    return True
+
+
+def requires_group_access(f):
     @functools.wraps(f)
     def wrapper(*args, **kwds):
         if not current_user.is_authenticated:
@@ -571,9 +595,7 @@ def has_group_access(f):
         if not group_id:
             return socket_error("Invalid group ID")
         group = Group.query.filter_by(id=group_id, course=get_course()).one_or_none()
-        if not group:
-            return socket_error("Invalid group ID")
-        if not (current_user.is_staff or is_member_of(group)):
+        if not has_group_access(group):
             return socket_unauthorized()
         kwds["group"] = group
         return f(*args, **kwds)
@@ -582,11 +604,34 @@ def has_group_access(f):
 
 
 @api("connect")
-def connect():
+def connect(data=None):
     if not current_user.is_authenticated:
         pass
 
     current_user.heartbeat_time = datetime.datetime.utcnow()
+
+    entity_type = None
+
+    if data:
+        url = data["url"]
+        path = urlparse(url).path
+        path = path.strip("/")
+        parts = path.split("/")
+        if len(parts) == 2:
+            if parts[1].isdigit():
+                entity_type = parts[0]
+                entity_id = int(parts[1])
+
+    if entity_type == "tickets":
+        entity = Ticket.query.filter_by(course=get_course(), id=entity_id).one_or_none()
+    elif entity_type == "appointments":
+        entity = Appointment.query.filter_by(
+            course=get_course(), id=entity_id
+        ).one_or_none()
+    elif entity_type == "groups":
+        entity = Group.query.filter_by(course=get_course(), id=entity_id).one_or_none()
+    else:
+        entity = None
 
     emit_state(
         [
@@ -598,7 +643,8 @@ def connect():
             "current_user",
             "config",
             "presence",
-        ]
+        ],
+        entity,
     )
 
 
@@ -974,7 +1020,7 @@ def load_ticket(ticket_id):
 
 
 @api("update_ticket")
-@has_ticket_access
+@requires_ticket_access
 def update_ticket(data, ticket):
     if "description" in data:
         ticket.description = data["description"]
@@ -1720,7 +1766,7 @@ def leave_group(group_id):
 
 
 @api("update_group")
-@has_group_access
+@requires_group_access
 def update_group(data, group):
     if "description" in data:
         group.description = data["description"]
@@ -1740,7 +1786,7 @@ def update_group(data, group):
 
 
 @api("create_group_ticket")
-@has_group_access
+@requires_group_access
 def create_group_ticket(data, group):
     is_queue_open = ConfigEntry.query.filter_by(
         course=get_course(), key="is_queue_open"
