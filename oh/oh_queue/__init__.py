@@ -1,7 +1,8 @@
 import logging
 
 # Flask-related stuff
-from flask import Flask, request
+from flask import Flask
+from flask_compress import Compress
 
 from common.jobs import job
 from oh_queue import auth, assets
@@ -37,3 +38,6 @@ def after_request(response):
     cache_control = "no-store"
     response.headers.add("Cache-Control", cache_control)
     return response
+
+
+Compress(app)
