@@ -198,6 +198,8 @@ class Appointment(db.Model):
     duration = db.Column(db.Interval, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
 
+    num_reminders_sent = db.Column(db.Integer, nullable=False, default=0)
+
     description = db.Column(db.String(255), nullable=False, default="")
 
     location_id = db.Column(db.ForeignKey("location.id"), nullable=False, index=True)
@@ -320,6 +322,15 @@ class ChatMessage(db.Model):
     group_id = db.Column(db.ForeignKey("group.id"), nullable=True, index=True)
     group = db.relationship("Group", backref=db.backref("messages", lazy="joined"))
 
+    course = db.Column(db.String(255), nullable=False, index=True)
+
+
+class CourseNotificationState(db.Model):
+    __tablename__ = "notification_state"
+    id = db.Column(db.Integer, primary_key=True)
+    last_queue_ping = db.Column(db.DateTime, nullable=False)
+    last_appointment_notif = db.Column(db.DateTime, nullable=False)
+    domain = db.Column(db.String(255), nullable=False)
     course = db.Column(db.String(255), nullable=False, index=True)
 
 

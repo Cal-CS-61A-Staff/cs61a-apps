@@ -10,20 +10,21 @@ DOMAIN_COURSES = TTLCache(1000, 1800)
 COURSE_ENDPOINTS = TTLCache(1000, 1800)
 ENDPOINT_ID = TTLCache(1000, 1800)
 
-COURSE_DOMAINS = {"ok": "oh.cs61a.org"}
-
 
 def get_course(domain=None):
     if getenv("ENV") != "prod":
         return "cs61a"
     if not domain:
-        domain = request.headers.get("X-Forwarded-For-Host") or request.headers["HOST"]
+        domain = get_domain()
     if "pr" in domain:
         DOMAIN_COURSES[domain] = "cs61a"
     if domain not in DOMAIN_COURSES:
         DOMAIN_COURSES[domain] = rpc.auth.get_course(domain=domain)
-    COURSE_DOMAINS[DOMAIN_COURSES[domain]] = domain
     return DOMAIN_COURSES[domain]
+
+
+def get_domain():
+    return request.headers.get("X-Forwarded-For-Host") or request.headers["HOST"]
 
 
 def get_endpoint(course=None):

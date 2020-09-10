@@ -63,8 +63,16 @@ class App extends React.Component {
       }
     }
     if (Array.isArray(data.tickets)) {
+      const ticketIDs = new Set();
       for (var ticket of data.tickets) {
         setTicket(this.state, ticket);
+        ticketIDs.add(ticket.id);
+      }
+      const oldTicketIDs = this.state.tickets.keys();
+      for (const oldTicketID of oldTicketIDs) {
+        if (!ticketIDs.has(oldTicketID)) {
+          this.state.tickets.delete(oldTicketID);
+        }
       }
     }
     if (data.hasOwnProperty("config")) {

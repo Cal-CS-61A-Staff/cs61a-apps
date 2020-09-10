@@ -33,10 +33,13 @@ async function post(endpoint, data, skipTimeout) {
 
 class Socket {
   constructor() {
-    setInterval(() => this.emit("connect"), 10000);
+    setInterval(
+      () => this.emit("connect", { url: window.location.href }),
+      10000
+    );
     this.handlers = new Map();
     this.jobs = [];
-    this.emit("connect");
+    this.emit("connect", { url: window.location.href });
   }
 
   on(event, handler) {
@@ -60,7 +63,9 @@ class Socket {
     const processQueue = () => {
       if (this.jobs.length > 0) {
         const args = this.jobs[0];
-        this.actuallyEmit(...args).finally(this.jobs.shift.bind(this.jobs)).then(processQueue);
+        this.actuallyEmit(...args)
+          .finally(this.jobs.shift.bind(this.jobs))
+          .then(processQueue);
       }
     };
     this.jobs.push(args);
