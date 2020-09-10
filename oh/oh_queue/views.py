@@ -239,7 +239,7 @@ def emit_state(attrs, entity=None):
             .options(joinedload(Ticket.group))
             .all()
         )
-        if isinstance(entity, Ticket):
+        if entity not in tickets and isinstance(entity, Ticket):
             if has_ticket_access(entity):
                 tickets.append(entity)
         state["tickets"] = [ticket_json(ticket) for ticket in tickets]
@@ -271,7 +271,7 @@ def emit_state(attrs, entity=None):
             )
             .all()
         )
-        if isinstance(entity, Appointment):
+        if entity not in appointments and isinstance(entity, Appointment):
             if current_user.is_staff or current_user.id in [
                 signup.user.id for signup in entity.signups
             ]:
@@ -284,7 +284,7 @@ def emit_state(attrs, entity=None):
         groups = Group.query.filter(
             Group.group_status == GroupStatus.active, Group.course == get_course()
         ).all()
-        if isinstance(entity, Group):
+        if entity not in groups and isinstance(entity, Group):
             if has_group_access(entity):
                 groups.append(entity)
         state["groups"] = [group_json(group) for group in groups]
