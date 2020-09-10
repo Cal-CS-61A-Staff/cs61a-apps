@@ -4,6 +4,7 @@ from flask_oauthlib.client import OAuth, OAuthException
 
 from werkzeug import security
 
+from common.course_config import get_course
 from common.url_for import url_for
 from oh_queue.models import db, User
 
@@ -40,7 +41,7 @@ login_manager = LoginManager()
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(user_id)
+    return User.query.filter_by(id=user_id, course=get_course()).one_or_none()
 
 
 @login_manager.unauthorized_handler
@@ -51,9 +52,7 @@ def unauthorized():
 
 def authorize_user(user):
     login_user(user, remember=True)
-    after_login = session.pop("after_login", None) or url_for("index")
-    # TODO validate after_login URL
-    return redirect(after_login)
+    return redirect(url_for("index"))
 
 
 def user_from_email(name, email, is_staff):

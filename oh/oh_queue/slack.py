@@ -17,7 +17,9 @@ from oh_queue.models import (
 
 def make_send(course):
     def send(message):
-        post_slack_message(course=course, message=message, purpose="oh-queue")
+        post_slack_message(
+            course=course, message=message, purpose="oh-queue", noreply=True
+        )
 
     return send
 
