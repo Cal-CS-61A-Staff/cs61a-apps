@@ -578,6 +578,8 @@ def requires_ticket_access(f):
 
 
 def has_group_access(group: Group):
+    if not current_user.is_authenticated:
+        return socket_unauthorized()
     if not group:
         return False
     if not (current_user.is_staff or is_member_of(group)):
@@ -588,8 +590,6 @@ def has_group_access(group: Group):
 def requires_group_access(f):
     @functools.wraps(f)
     def wrapper(*args, **kwds):
-        if not current_user.is_authenticated:
-            return socket_unauthorized()
         data = args[0]
         group_id = data.get("id")
         if not group_id:
