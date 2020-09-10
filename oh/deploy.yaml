@@ -1,7 +1,7 @@
 build_type: oh_queue
-deploy_type: flask
-memory_limit: 512M
-concurrency: 12 # let's play it safe
+deploy_type: docker
+memory_limit: 1G
+concurrency: 24
 tasks:
   - name: slack_notify
     schedule: "* * * * *"
