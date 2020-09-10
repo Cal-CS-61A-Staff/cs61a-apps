@@ -57,6 +57,9 @@ class LGTMIntegration(Integration):
 
         github_email = pr.user.email
 
+        if not github_email:
+            return
+
         for member in users["members"]:
             if member["profile"].get("email") == github_email:
                 break
