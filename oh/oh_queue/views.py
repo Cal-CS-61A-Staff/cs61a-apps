@@ -489,7 +489,8 @@ def api(endpoint):
             course = validate_secret(secret=secret, course=course)
             user = User.query.filter_by(course=course, email=email).one()
             login_user(user)
-            return jsonify(f() if args is None else f(args))
+            resp = f() if args is None else f(args)
+            return jsonify({"action": resp, "updates": g.response_buffer})
 
         app.add_url_rule(
             "/api/{}".format(endpoint), f.__name__, handler, methods=["POST"]
@@ -1433,12 +1434,14 @@ def upload_appointments(data):
 @api("update_staff_online_setup")
 @is_staff
 def update_staff_online_setup(data):
-    current_user.call_url = data["staff-call-link"] and urljoin(
-        "https://", data["staff-call-link"]
-    )
-    current_user.doc_url = data["staff-doc-link"] and urljoin(
-        "https://", data["staff-doc-link"]
-    )
+    if "staff-call-link" in data:
+        current_user.call_url = data["staff-call-link"] and urljoin(
+            "https://", data["staff-call-link"]
+        )
+    if "staff-doc-link" in data:
+        current_user.doc_url = data["staff-doc-link"] and urljoin(
+            "https://", data["staff-doc-link"]
+        )
     db.session.add(current_user)
 
     db.session.commit()
