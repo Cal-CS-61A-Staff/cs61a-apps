@@ -6,4 +6,4 @@ COPY . ./
 
 RUN pip install -r requirements.txt
 
-CMD gunicorn -k eventlet -b :$PORT -w 1 main:app -t 3000
+CMD gunicorn -k eventlet -b :$PORT -w 4 main:app -t 3000
