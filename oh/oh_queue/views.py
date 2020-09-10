@@ -20,12 +20,13 @@ from common.course_config import (
     get_course,
     format_coursecode,
     get_course_id,
-    COURSE_DOMAINS,
+    get_domain,
 )
 from oh_queue.models import (
     Assignment,
     ChatMessage,
     ConfigEntry,
+    CourseNotificationState,
     Location,
     Ticket,
     TicketEvent,
@@ -438,6 +439,19 @@ def index(*args, **kwargs):
     check = db.session.query(ConfigEntry).filter_by(course=get_course()).first()
     if not check:
         init_config()
+    notif_state = CourseNotificationState.query.filter_by(
+        course=get_course()
+    ).one_or_none()
+    if not notif_state:
+        notif_state = CourseNotificationState(
+            course=get_course(),
+            domain=get_domain(),
+            last_queue_ping=datetime.datetime.now(),
+            last_appointment_notif=get_current_time(),
+        )
+        db.session.add(notif_state)
+    db.session.commit()
+
     return render_template("index.html", course_name=format_coursecode(get_course()))
 
 
@@ -1539,11 +1553,13 @@ def update_appointment(data):
 @api("test_slack")
 @is_staff
 def test_slack():
-    domain = COURSE_DOMAINS[get_course()]
+    notif_config: CourseNotificationState = CourseNotificationState.query.filter_by(
+        course=get_course()
+    ).one()
     post_slack_message(
         message="This is a test message from the OH queue! Your default queue domain is {}. This channel will "
         "be used for all future notifications. To change the channel, visit auth.cs61a.org and "
-        "update the channel associated with `oh-queue`.".format(domain),
+        "update the channel associated with `oh-queue`.".format(notif_config.domain),
         purpose="oh-queue",
         course=get_course(),
     )
@@ -1552,7 +1568,7 @@ def test_slack():
 @api("appointment_summary")
 @is_staff
 def appointment_summary():
-    send_appointment_summary(app, get_course())
+    send_appointment_summary(get_course())
 
 
 def leave_current_groups():

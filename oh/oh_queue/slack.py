@@ -1,14 +1,10 @@
-import atexit
-import threading
 from collections import defaultdict, namedtuple
 from datetime import timedelta, datetime
+from typing import List
 
-import requests
-from apscheduler.schedulers.background import BackgroundScheduler
-
-from common.course_config import COURSE_DOMAINS
 from common.rpc.auth import post_slack_message
 from oh_queue.models import (
+    CourseNotificationState,
     Ticket,
     TicketStatus,
     Appointment,
@@ -17,12 +13,6 @@ from oh_queue.models import (
     db,
     ConfigEntry,
 )
-
-pinged_appointments = set()
-alerted_appointments = set()
-last_queue_ping = {}
-
-last_appointment_notif = {}
 
 
 def make_send(course):
@@ -34,8 +24,12 @@ def make_send(course):
 
 def worker(app):
     with app.app_context():
-        for course, domain in COURSE_DOMAINS.items():
-            queue_url = "https://{}".format(domain)
+        course_notif_states: List[
+            CourseNotificationState
+        ] = CourseNotificationState.query.all()
+        for notif_state in course_notif_states:
+            queue_url = "https://{}".format(notif_state.domain)
+            course = notif_state.course
             send = make_send(course)
 
             if (
@@ -45,9 +39,7 @@ def worker(app):
                 == "true"
             ):
                 # check for overlong queue
-                if course not in last_queue_ping or datetime.now() - last_queue_ping[
-                    course
-                ] > timedelta(hours=8):
+                if datetime.now() - notif_state.last_queue_ping > timedelta(hours=8):
                     queue_len = Ticket.query.filter_by(
                         course=course, status=TicketStatus.pending
                     ).count()
@@ -58,7 +50,7 @@ def worker(app):
                                 queue_len, queue_url
                             )
                         )
-                        last_queue_ping[course] = datetime.now()
+                        notif_state.last_queue_ping = datetime.now()
 
             if (
                 ConfigEntry.query.filter_by(
@@ -76,14 +68,14 @@ def worker(app):
                 ).all()
 
                 for appointment in appointments:
-                    if appointment.id in alerted_appointments:
+                    if appointment.num_reminders_sent == 2:
                         continue
                     if len(appointment.signups) > 0:
                         appointment_url = "{}/appointments/{}".format(
                             queue_url, appointment.id
                         )
                         if appointment.helper:
-                            if appointment.id not in pinged_appointments:
+                            if appointment.num_reminders_sent == 0:
                                 send(
                                     "<!{email}> You have an appointment right now that hasn't started, and students are "
                                     "waiting! Your appointment is {location}. Go to the <{appointment_url}|OH Queue> to see more "
@@ -97,7 +89,6 @@ def worker(app):
                                         appointment_url=appointment_url,
                                     )
                                 )
-                                pinged_appointments.add(appointment.id)
                             else:
                                 send(
                                     "<!here> {name}'s appointment is right now but hasn't started, and students are "
@@ -112,7 +103,6 @@ def worker(app):
                                         appointment_url=appointment_url,
                                     )
                                 )
-                                alerted_appointments.add(appointment.id)
                         else:
                             send(
                                 "<!here> An appointment is scheduled for right now that hasn't started, and students "
@@ -124,7 +114,6 @@ def worker(app):
                                     appointment_url=appointment_url,
                                 )
                             )
-                            alerted_appointments.add(appointment.id)
                     else:
                         if not appointment.helper:
                             send(
@@ -134,6 +123,7 @@ def worker(app):
                                 "wasn't hidden."
                             )
                         appointment.status = AppointmentStatus.resolved
+                    appointment.num_reminders_sent += 1
 
             if (
                 ConfigEntry.query.filter_by(
@@ -143,20 +133,15 @@ def worker(app):
                 .value
                 == "true"
             ):
-                if (
-                    course in last_appointment_notif
-                    and last_appointment_notif[course].day != get_current_time().day
-                ):
+                if notif_state.last_appointment_notif.day != get_current_time().day:
                     # send appointment summary
-                    last_appointment_notif[course] = get_current_time()
-                    send_appointment_summary(app, course)
-                elif course not in last_appointment_notif:
-                    last_appointment_notif[course] = get_current_time()
+                    notif_state.last_appointment_notif = get_current_time()
+                    send_appointment_summary(course)
 
         db.session.commit()
 
 
-def send_appointment_summary(app, course):
+def send_appointment_summary(course):
     appointments = Appointment.query.filter(
         get_current_time() < Appointment.start_time,
         Appointment.start_time < get_current_time() + timedelta(days=1),
@@ -223,14 +208,3 @@ def send_appointment_summary(app, course):
             },
         ]
     )
-
-
-def fire_thread(app):
-    threading.Thread(target=worker, args=(app,)).start()
-
-
-def start_flask_job(app):
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=fire_thread, args=(app,), trigger="interval", minutes=1)
-    scheduler.start()
-    atexit.register(lambda: scheduler.shutdown())
