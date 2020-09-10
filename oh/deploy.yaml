@@ -4,4 +4,4 @@ memory_limit: 512M
 concurrency: 12 # let's play it safe
 tasks:
   - name: slack_notify
-    schedule: * * * * *
+    schedule: "* * * * *"
