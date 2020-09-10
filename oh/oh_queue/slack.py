@@ -68,7 +68,7 @@ def worker(app):
                 ).all()
 
                 for appointment in appointments:
-                    if appointment.num_reminders_sent == 2:
+                    if appointment.num_reminders_sent >= 2:
                         continue
                     if len(appointment.signups) > 0:
                         appointment_url = "{}/appointments/{}".format(
