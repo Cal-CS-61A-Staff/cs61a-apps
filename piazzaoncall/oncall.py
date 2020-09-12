@@ -84,7 +84,7 @@ class Main:
             send(starter + message, course="cs61a")
         if high_priority:
             starter = (
-                f"<!channel> These messages have been unanswered for {self.urgent_threshold} days. "
+                f"<These messages have been unanswered for {self.urgent_threshold} days. "
                 + "*If you were assigned one of these posts, reply to this message after you have resolved it.*\n\n"
             )
             send(starter + high_priority, course="cs61a")
@@ -127,7 +127,7 @@ class Main:
             if not child.get("no_answer"):
                 continue
             f_id = post_id + "_f" + str(id)
-            ret_lst.append([self.pick_staff(f_id), f_id, self.is_urgent(post)])
+            ret_lst.append([self.pick_staff(f_id), f_id, self.is_urgent(child)])
         return ret_lst
 
     def pick_staff(self, post_id):
@@ -156,7 +156,7 @@ class Main:
                     children[-1].get("created", "2001-08-27T04:53:21Z")
                 ).date()
             else:
-                newest = post.get("created", "2001-08-27T04:53:21Z").date()
+                newest = parse(post.get("created", "2001-08-27T04:53:21Z")).date()
         else:
             print("Unknown post type: " + post.get("type"))
             newest = parse("2001-08-27T04:53:21Z").date()
