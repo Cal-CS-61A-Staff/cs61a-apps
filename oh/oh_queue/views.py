@@ -1244,6 +1244,9 @@ def assign_appointment(data):
         old_signup.attendance_status if old_signup else AttendanceStatus.unknown
     )
 
+    if appointment.status != AppointmentStatus.pending:
+        return socket_error("Appointment is not pending")
+
     if old_signup:
         db.session.delete(old_signup)
         db.session.commit()
@@ -1254,9 +1257,6 @@ def assign_appointment(data):
         and not old_signup
     ):
         return socket_error("Appointment is at full capacity")
-
-    if appointment.status != AppointmentStatus.pending:
-        return socket_error("Appointment is not pending")
 
     signup = AppointmentSignup(
         appointment_id=data["appointment_id"],
