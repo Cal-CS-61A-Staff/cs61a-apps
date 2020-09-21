@@ -13,6 +13,16 @@ from common.rpc.secrets import get_secret, validates_master_secret
 from common.url_for import url_for
 from common.rpc.domains import add_domain
 
+APP_LOOKUP = {
+    "oh": "oh",
+    "hwparty": "oh",
+    "joinme": "oh",
+    "lab": "oh",
+    "howamidoing": "howamidoing",
+    "status": "howamidoing",
+    "seating": "seating",
+}
+
 
 class Status(Enum):
     VALIDATING = "VALIDATING"
@@ -92,7 +102,7 @@ def add_domain(app, is_staging, course, domain):
         if app != "auth":
             abort(401)
 
-        app = domain.split(".")[0]
+        app = APP_LOOKUP[domain.split(".")[0]]
 
         with connect_db() as db:
             status = db(
