@@ -25,6 +25,9 @@ APP_LOOKUP = {
     "me100": "oh",
     "csenrolltest": "oh",
     "cs169-oh": "oh",
+    "cs188-oh": "oh",
+    "cs186-oh": "oh",
+    "stat140-oh": "oh",
 }
 
 
