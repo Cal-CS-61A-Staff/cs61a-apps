@@ -18,6 +18,7 @@ APP_LOOKUP = {
     "hwparty": "oh",
     "joinme": "oh",
     "lab": "oh",
+    "me100": "oh",
     "howamidoing": "howamidoing",
     "status": "howamidoing",
     "seating": "seating",
