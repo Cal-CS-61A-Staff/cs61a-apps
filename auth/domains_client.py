@@ -38,8 +38,10 @@ def create_domains_client(app):
                 <input type="submit">
             </form>
 
-            View the status of your domain setup at 
-            <a href="https://domains.cs61a.org/">domains.cs61a.org</a>
+            <p>
+                View the status of your domain setup at 
+                <a href="https://domains.cs61a.org/">domains.cs61a.org</a>
+            </p>
         """
         return "<h3>Domains</h3>" + register_domain + "<p>".join(client_names)
 
