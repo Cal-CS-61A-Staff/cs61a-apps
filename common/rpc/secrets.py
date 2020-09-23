@@ -1,14 +1,19 @@
 from functools import wraps
+from os import getenv
 
 from common.rpc.utils import cached, create_service, requires_master_secret
 
 service = create_service(__name__)
 
 
+def get_secret(*, secret_name):
+    return getenv(secret_name) or get_secret_from_server(secret_name=secret_name)
+
+
 @cached()
 @requires_master_secret
 @service.route("/api/get_secret")
-def get_secret(*, secret_name):
+def get_secret_from_server(*, secret_name):
     ...
 
 
