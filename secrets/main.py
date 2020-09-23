@@ -88,7 +88,7 @@ def load_all_secrets(app, is_staging, created_app_name):
     with connect_db() as db:
         return dict(
             db(
-                "SELECT public_value, staging_value FROM secrets WHERE app=%s",
+                "SELECT name, public_value FROM secrets WHERE app=%s",
                 [created_app_name],
             ).fetchall()
         )
