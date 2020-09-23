@@ -38,7 +38,7 @@ def gen_env_variables(app: App, pr_number: int):
         DATABASE_URL=database_url,
         INSTANCE_CONNECTION_NAME=DB_INSTANCE_NAME,
         APP_MASTER_SECRET=master_secret,
-        **(load_all_secrets(created_app_name="oh") if pr_number == 0 else {}),
+        **(load_all_secrets(created_app_name=app.name) if pr_number == 0 else {}),
     )
 
 
