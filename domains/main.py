@@ -18,10 +18,17 @@ APP_LOOKUP = {
     "hwparty": "oh",
     "joinme": "oh",
     "lab": "oh",
-    "me100": "oh",
     "howamidoing": "howamidoing",
     "status": "howamidoing",
     "seating": "seating",
+    # legacy prefixes
+    "me100": "oh",
+    "csenrolltest": "oh",
+    "cs162-oh": "oh",
+    "cs169-oh": "oh",
+    "cs188-oh": "oh",
+    "cs186-oh": "oh",
+    "stat140-oh": "oh",
 }
 
 

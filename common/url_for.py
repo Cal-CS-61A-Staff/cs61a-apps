@@ -7,4 +7,4 @@ def url_for(*args, **kwargs) -> str:
     host = request.headers.get("X-Forwarded-For-Host") or request.headers.get("Host")
     redirect_url = urlparse(flask_url_for(*args, **kwargs))
     # noinspection PyProtectedMember
-    return redirect_url._replace(netloc=host).geturl()
+    return redirect_url._replace(netloc=host, scheme="https").geturl()
