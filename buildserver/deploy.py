@@ -13,7 +13,7 @@ from build import gen_working_dir
 from app_config import App, WEB_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
-from common.rpc.secrets import create_master_secret, get_secret
+from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
 from shell_utils import sh, tmp_directory
 
 
@@ -38,6 +38,7 @@ def gen_env_variables(app: App, pr_number: int):
         DATABASE_URL=database_url,
         INSTANCE_CONNECTION_NAME=DB_INSTANCE_NAME,
         APP_MASTER_SECRET=master_secret,
+        **(load_all_secrets(created_app_name=app.name) if pr_number == 0 else {}),
     )
 
 

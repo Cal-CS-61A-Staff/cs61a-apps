@@ -17,6 +17,12 @@ def get_secret_from_server(*, secret_name):
     ...
 
 
+@requires_master_secret
+@service.route("/api/load_all_secrets")
+def load_all_secrets(*, created_app_name):
+    ...
+
+
 def validates_master_secret(func):
     @wraps(func)
     def wrapped(*, master_secret, **kwargs):
