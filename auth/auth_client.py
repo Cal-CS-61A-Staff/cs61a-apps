@@ -60,7 +60,7 @@ def create_auth_client(app):
                 <input type="submit">
             </form>
         """
-        return "<h3>Clients</h3>" + create_client + "<br />".join(client_names)
+        return "<h3>Clients</h3>" + create_client + "".join(client_names)
 
     app.help_info.add(client_data)
 

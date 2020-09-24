@@ -78,7 +78,7 @@ class Data:
         self.callbacks.append(callback)
 
     def render(self, *args):
-        return "<br />".join(callback(*args) for callback in self.callbacks)
+        return "".join(f"<p>{callback(*args)}</p>" for callback in self.callbacks)
 
 
 def create_management_client(app):
@@ -115,7 +115,7 @@ def create_management_client(app):
                 <input name="endpoint" type="text" placeholder="OKPy endpoint">
                 <input type="submit">
             </form>
-        """ + "<br />".join(
+        """ + "".join(
             courses
         )
 
@@ -145,7 +145,7 @@ def create_management_client(app):
                 <input name="client_name" type="text" placeholder="client_name">
                 <input type="submit">
             </form>
-        """ + "<br />".join(
+        """ + "".join(
             super_client_names
         )
 

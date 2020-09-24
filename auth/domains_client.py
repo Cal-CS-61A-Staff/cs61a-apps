@@ -43,7 +43,7 @@ def create_domains_client(app):
                 <a href="https://domains.cs61a.org/">domains.cs61a.org</a>
             </p>
         """
-        return "<h3>Domains</h3>" + register_domain + "<br />".join(client_names)
+        return "<h3>Domains</h3>" + register_domain + "".join(client_names)
 
     app.help_info.add(domains_help)
 

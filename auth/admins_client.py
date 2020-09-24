@@ -43,7 +43,7 @@ def create_admins_client(app):
                 <input type="submit">
             </form>
         """
-        return "<h3>Admins</h3>" + create_client + "<br />".join(admin_names)
+        return "<h3>Admins</h3>" + create_client + "".join(admin_names)
 
     app.help_info.add(client_data)
 

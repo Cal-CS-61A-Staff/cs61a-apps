@@ -66,7 +66,7 @@ def create_slack_client(app):
                 </form>
             """
 
-        registered_channels_list = "<br />".join(
+        registered_channels_list = "".join(
             make_row(
                 f"{purpose} associated with #{channel} (id: {channel_id})",
                 url_for("remove_channel", course=course, purpose=purpose),
