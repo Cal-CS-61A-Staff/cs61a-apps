@@ -15,7 +15,7 @@ let Navbar = ({ state, mode }) => {
     const defaultMode = partyAsRoot ? "party" : "queue";
 
     return (
-        <nav className="navbar navbar-default navbar-fixed-top">
+        <nav className="navbar navbar-default">
             <div className="container">
                 <div className="navbar-header">
                     <button type="button" className="navbar-toggle collapsed" data-toggle="collapse"
