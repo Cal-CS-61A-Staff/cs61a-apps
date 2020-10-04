@@ -13,6 +13,8 @@ from flask import render_template
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
+
+from common.course_config import get_course
 from oh_queue import app
 from oh_queue.models import (
     db,
@@ -51,11 +53,11 @@ def seed_data():
     print("Seeding...")
 
     assignments = [
-        Assignment(name=name, course="ok", visible=True)
+        Assignment(name=name, course=get_course(), visible=True)
         for name in ["Hog", "Maps", "Ants", "Scheme"]
     ]
     locations = [
-        Location(name=name, course="ok", visible=True, online=False, link="")
+        Location(name=name, course=get_course(), visible=True, online=False, link="")
         for name in ["109 Morgan", "241 Cory", "247 Cory"]
     ]
     questions = list(range(1, 16)) + ["Other", "EC", "Checkoff"]
@@ -69,7 +71,7 @@ def seed_data():
             location=random.choice(locations),
             capacity=5,
             status=AppointmentStatus.pending,
-            course="ok",
+            course=get_course(),
         )
         for _ in range(70)
     ]
@@ -95,7 +97,7 @@ def seed_data():
         )
         student = User.query.filter_by(email=email).one_or_none()
         if not student:
-            student = User(name=real_name, email=email, course="ok")
+            student = User(name=real_name, email=email, course=get_course())
             students.append(student)
             db.session.add(student)
             db.session.commit()
@@ -109,7 +111,7 @@ def seed_data():
             location=random.choice(locations),
             question=random.choice(questions),
             description=random.choice(descriptions),
-            course="ok",
+            course=get_course(),
         )
         db.session.add(ticket)
 
@@ -120,7 +122,7 @@ def seed_data():
             assignment=random.choice(assignments),
             question=random.choice(questions),
             description=random.choice(descriptions),
-            course="ok",
+            course=get_course(),
         )
         for _ in range(120)
     ]

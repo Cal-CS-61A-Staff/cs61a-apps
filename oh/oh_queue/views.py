@@ -1023,9 +1023,7 @@ def load_ticket(ticket_id):
 def apply_ticket_update(data, ticket=None):
     if not ticket:
         ticket_id = data["id"]
-        ticket = Ticket.query.filter_by(
-            id=ticket_id, course=get_course()
-        ).one()
+        ticket = Ticket.query.filter_by(id=ticket_id, course=get_course()).one()
     if "description" in data:
         ticket.description = data["description"]
     if "location_id" in data:
@@ -1519,13 +1517,20 @@ def send_chat_message(data):
 
 @api("bulk_appointment_action")
 @is_staff
-def bulk_appointment_action(action):
+def bulk_appointment_action(data):
+    action = data["action"]
+    ids = data.get("ids", None)
     if action == "open_all_assigned":
-        Appointment.query.filter(
+        appointments = Appointment.query.filter(
             Appointment.course == get_course(),
             Appointment.helper_id != None,
             Appointment.status == AppointmentStatus.hidden,
-        ).update({Appointment.status: AppointmentStatus.pending})
+        )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        appointments.update(
+            {Appointment.status: AppointmentStatus.pending}, synchronize_session=False
+        )
     elif action == "resolve_all_past":
         appointments = (
             Appointment.query.filter(
@@ -1537,15 +1542,14 @@ def bulk_appointment_action(action):
             .outerjoin(Appointment.signups)
             .group_by(Appointment)
             .having(func.count(AppointmentSignup.id) == 0)
-            .all()
         )
-        (
-            Appointment.query.filter(
-                Appointment.id.in_({x.id for x in appointments})
-            ).update(
-                {Appointment.status: AppointmentStatus.resolved},
-                synchronize_session=False,
-            )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        appointments = appointments.all()
+        Appointment.query.filter(
+            Appointment.id.in_({x.id for x in appointments})
+        ).update(
+            {Appointment.status: AppointmentStatus.resolved}, synchronize_session=False
         )
     elif action == "remove_all_unassigned":
         appointments = (
@@ -1555,8 +1559,10 @@ def bulk_appointment_action(action):
             .outerjoin(Appointment.signups)
             .group_by(Appointment)
             .having(func.count(AppointmentSignup.id) == 0)
-            .all()
         )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        appointments = appointments.all()
         Appointment.query.filter(
             Appointment.id.in_({x.id for x in appointments})
         ).delete(False)
@@ -1839,9 +1845,7 @@ def leave_group(group_id):
 def apply_group_update(data, group=None):
     if not group:
         group_id = data["id"]
-        group = Group.query.filter_by(
-            id=group_id, course=get_course()
-        ).one()
+        group = Group.query.filter_by(id=group_id, course=get_course()).one()
     if "description" in data:
         group.description = data["description"]
     if "assignment_id" in data:
