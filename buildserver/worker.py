@@ -34,7 +34,7 @@ def land_commit(
         targets = determine_targets(files)
         target_list = "\n".join(f" * {target}" for target in targets)
         set_pr_comment(
-            f"Building commit: {sha}. View logs at [https://logs.cs61a.org](logs.cs61a.org).\n"
+            f"Building commit: {sha}. View logs at [logs.cs61a.org](https://logs.cs61a.org).\n"
             f"Targets: \n{target_list}",
             pr,
         )
@@ -51,7 +51,7 @@ def land_commit(
             "Pusher",
         )
         set_pr_comment(
-            "Builds failed. View logs at [https://logs.cs61a.org](logs.cs61a.org).", pr
+            "Builds failed. View logs at [logs.cs61a.org](https://logs.cs61a.org).", pr
         )
         raise
     else:
@@ -74,7 +74,7 @@ def land_commit(
             else ""
         )
         set_pr_comment(
-            "Builds completed! View logs at [https://logs.cs61a.org](logs.cs61a.org)."
+            "Builds completed! View logs at [logs.cs61a.org](https://logs.cs61a.org)."
             + pr_builds_text,
             pr,
         )

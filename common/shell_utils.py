@@ -20,9 +20,9 @@ def tmp_directory(*, clean=False):
     main_dir = os.getcwd()
     if clean:
         sh("rm", "-rf", "tmp")
-        os.mkdir("../tmp")
+        os.mkdir("tmp")
     try:
-        os.chdir("../tmp")
+        os.chdir("tmp")
         yield None
     finally:
         os.chdir(main_dir)
