@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import List, Literal, Optional, TypedDict
+from typing import List, Literal, TypedDict
 
 import yaml
 
-from shell_utils import tmp_directory
+from common.shell_utils import tmp_directory
 
 WEB_DEPLOY_TYPES = {"flask", "docker"}
 

@@ -1,12 +1,11 @@
 import os
-from glob import glob
 from shutil import copytree, rmtree
 from urllib.parse import urlparse
 
 from app_config import App
 from common.db import connect_db
 from common.rpc.secrets import get_secret
-from shell_utils import sh, tmp_directory
+from common.shell_utils import sh, tmp_directory
 
 
 def gen_working_dir(app: App):

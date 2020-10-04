@@ -32,7 +32,12 @@ def land_commit(
             "Pusher",
         )
         targets = determine_targets(files)
-        set_pr_comment(f"Building commit: {sha}. Targets: {targets}", pr)
+        target_list = "\n".join(f" * {target}" for target in targets)
+        set_pr_comment(
+            f"Building commit: {sha}. View logs at [https://logs.cs61a.org](logs.cs61a.org).\n"
+            f"Targets: \n{target_list}",
+            pr,
+        )
         clone_commit(repo.clone_url, sha)
         apps = [App(target) for target in targets]
         for app in apps:
@@ -45,7 +50,9 @@ def land_commit(
             "Pusher failed to rebuild all modified services",
             "Pusher",
         )
-        set_pr_comment("Builds failed " + repr(e), pr)
+        set_pr_comment(
+            "Builds failed. View logs at [https://logs.cs61a.org](logs.cs61a.org).", pr
+        )
         raise
     else:
         repo.get_commit(sha).create_status(
@@ -66,4 +73,8 @@ def land_commit(
             if web_apps and pr is not None
             else ""
         )
-        set_pr_comment("Builds completed!" + pr_builds_text, pr)
+        set_pr_comment(
+            "Builds completed! View logs at [https://logs.cs61a.org](logs.cs61a.org)."
+            + pr_builds_text,
+            pr,
+        )

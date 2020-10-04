@@ -14,7 +14,7 @@ from app_config import App, WEB_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
 from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
-from shell_utils import sh, tmp_directory
+from common.shell_utils import sh, tmp_directory
 
 
 DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
