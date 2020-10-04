@@ -6,7 +6,10 @@ import post from "./common/post";
 import MessageContext from "./MessageContext";
 import StateContext from "./StateContext";
 
-export default function useAPI(method: string, callback: ?(State) => mixed) {
+export default function useAPI(
+  method: string,
+  callback: ?({ ...State, custom: { [string]: ?string } }) => mixed
+) {
   const { updateState } = useContext(StateContext);
   const { pushMessage } = useContext(MessageContext);
 
@@ -22,7 +25,8 @@ export default function useAPI(method: string, callback: ?(State) => mixed) {
         } else {
           pushMessage(resp.message ?? "Unknown error.");
         }
-      } catch {
+      } catch (e) {
+        console.error(e);
         pushMessage("Something went wrong.");
       }
     },
