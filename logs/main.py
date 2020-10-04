@@ -1,9 +1,10 @@
 from json import loads
 
-from flask import Flask, abort, redirect, url_for
+from flask import Flask, abort, redirect
 
 from common.oauth_client import create_oauth_client, is_staff
 from common.shell_utils import sh
+from common.url_for import url_for
 
 app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
