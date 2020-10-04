@@ -1020,18 +1020,41 @@ def load_ticket(ticket_id):
         return ticket_json(ticket)
 
 
-@api("update_ticket")
-@requires_ticket_access
-def update_ticket(data, ticket):
+def apply_ticket_update(data, ticket=None):
+    if not ticket:
+        ticket_id = data["id"]
+        ticket = Ticket.query.filter_by(
+            id=ticket_id, course=get_course()
+        ).one()
     if "description" in data:
         ticket.description = data["description"]
     if "location_id" in data:
         ticket.location = Location.query.filter_by(
             course=get_course(), id=data["location_id"]
-        ).one_or_none()
-    emit_event(ticket, TicketEventType.update)
+        ).one()
+
+
+@api("update_ticket")
+@requires_ticket_access
+def update_ticket(data, ticket):
+    apply_ticket_update(data, ticket)
     db.session.commit()
+    emit_event(ticket, TicketEventType.update)
     return ticket_json(ticket)
+
+
+@api("update_tickets")
+@is_staff
+def update_tickets(arr):
+    ticket_ids = [data["id"] for data in arr]
+    tickets = Ticket.query.filter(
+        Ticket.id.in_(ticket_ids), Ticket.course == get_course()
+    ).all()
+    ticket_dict = {ticket.id: ticket for ticket in tickets}
+    for data in arr:
+        apply_ticket_update(data, ticket_dict[data["id"]])
+    db.session.commit()
+    return emit_state(["tickets"])
 
 
 @api("add_assignment")
@@ -1601,14 +1624,45 @@ def get_user(user_id):
     }
 
 
+def apply_appointment_update(data, appointment=None):
+    if not appointment:
+        appointment_id = data["id"]
+        appointment = Appointment.query.filter_by(
+            id=appointment_id, course=get_course()
+        ).one()
+    if "description" in data:
+        appointment.description = data["description"]
+    if "location_id" in data:
+        appointment.location = Location.query.filter_by(
+            course=get_course(), id=data["location_id"]
+        ).one()
+    if "helper_id" in data:
+        if data["helper_id"] is None:
+            appointment.helper = None
+        else:
+            appointment.helper = User.query.filter_by(
+                course=get_course(), id=data["helper_id"]
+            ).one()
+
+
 @api("update_appointment")
 @is_staff
 def update_appointment(data):
-    appointment_id = data["id"]
-    description = data["description"]
-    Appointment.query.filter_by(
-        id=appointment_id, course=get_course()
-    ).one().description = description
+    apply_appointment_update(data)
+    db.session.commit()
+    return emit_state(["appointments"])
+
+
+@api("update_appointments")
+@is_staff
+def update_appointments(arr):
+    appointment_ids = [data["id"] for data in arr]
+    appointments = Appointment.query.filter(
+        Appointment.id.in_(appointment_ids), Appointment.course == get_course()
+    ).all()
+    appointment_dict = {appointment.id: appointment for appointment in appointments}
+    for data in arr:
+        apply_appointment_update(data, appointment_dict[data["id"]])
     db.session.commit()
     return emit_state(["appointments"])
 
@@ -1782,9 +1836,12 @@ def leave_group(group_id):
     return socket_redirect()
 
 
-@api("update_group")
-@requires_group_access
-def update_group(data, group):
+def apply_group_update(data, group=None):
+    if not group:
+        group_id = data["id"]
+        group = Group.query.filter_by(
+            id=group_id, course=get_course()
+        ).one()
     if "description" in data:
         group.description = data["description"]
     if "assignment_id" in data:
@@ -1796,10 +1853,30 @@ def update_group(data, group):
     if "location_id" in data:
         group.location = Location.query.filter_by(
             course=get_course(), id=data["location_id"]
-        ).one_or_none()
+        ).one()
+
+
+@api("update_group")
+@requires_group_access
+def update_group(data, group):
+    apply_group_update(data, group)
     db.session.commit()
     emit_group_event(group, "update_group")
     return group_json(group)
+
+
+@api("update_groups")
+@is_staff
+def update_groups(arr):
+    group_ids = [data["id"] for data in arr]
+    groups = Group.query.filter(
+        Group.id.in_(group_ids), Group.course == get_course()
+    ).all()
+    group_dict = {group.id: group for group in groups}
+    for data in arr:
+        apply_group_update(data, group_dict[data["id"]])
+    db.session.commit()
+    return emit_state(["groups"])
 
 
 @api("create_group_ticket")
