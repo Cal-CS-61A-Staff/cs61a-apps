@@ -6,6 +6,7 @@ from flask import request, redirect, jsonify
 
 from common.db import connect_db
 from auth_utils import (
+    key_secure,
     oauth_secure,
     admin_oauth_secure,
     course_oauth_secure,
@@ -14,7 +15,7 @@ from auth_utils import (
     get_name,
     get_user,
 )
-from common.rpc.auth import get_endpoint, get_endpoint_id, list_courses
+from common.rpc.auth import get_endpoint, get_endpoint_id, list_courses, validate_secret
 from common.url_for import url_for
 from html_utils import make_row
 
@@ -244,6 +245,12 @@ def create_management_client(app):
             ).fetchone()
         if endpoint:
             return endpoint[0]
+        raise KeyError
+
+    @validate_secret.bind(app)
+    @key_secure
+    def handle_validate_secret(course):
+        return course
 
     @app.route("/api/<course>/set_endpoint", methods=["POST"])
     @course_oauth_secure()

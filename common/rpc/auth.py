@@ -80,6 +80,12 @@ def get_endpoint_id(*, course: str):
 
 
 @cached()
+@service.route("/api/validate_secret")
+def validate_secret(*, secret: str, course: str):
+    ...
+
+
+@cached()
 @auth_endpoint
 @service.route("/piazza/perform_action")
 def perform_piazza_action(

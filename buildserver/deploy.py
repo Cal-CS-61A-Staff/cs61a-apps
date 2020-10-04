@@ -13,11 +13,11 @@ from build import gen_working_dir
 from app_config import App, WEB_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
-from common.rpc.secrets import create_master_secret, get_secret
+from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
 from shell_utils import sh, tmp_directory
 
 
-DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps"
+DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
 
 
 def gen_env_variables(app: App, pr_number: int):
@@ -38,6 +38,7 @@ def gen_env_variables(app: App, pr_number: int):
         DATABASE_URL=database_url,
         INSTANCE_CONNECTION_NAME=DB_INSTANCE_NAME,
         APP_MASTER_SECRET=master_secret,
+        **(load_all_secrets(created_app_name=app.name) if pr_number == 0 else {}),
     )
 
 
@@ -210,9 +211,12 @@ def delete_unused_services(pr_number: int = None):
         gen_service_name(app, pr_number) for app, pr_number in active_services
     )
 
+    # examtool is not managed by cs61a-apps
+    active_service_names.add("staff-exam-server")
+
     for service in services:
         if service["metadata"]["name"] not in active_service_names:
-            if pr_number is None:
+            if "pr" not in service["metadata"]["name"]:
                 post_slack_message(
                     course="cs61a",
                     message=f"<!channel> Service f{service['metadata']['name']} was not detected in master, and the "

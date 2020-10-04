@@ -3,6 +3,7 @@ from flask import redirect, request
 from auth_utils import course_oauth_secure
 from common.db import connect_db
 from common.rpc.auth import get_course
+from common.rpc.domains import add_domain
 from common.url_for import url_for
 from html_utils import make_row
 
@@ -36,6 +37,9 @@ def create_domains_client(app):
                 <input name="domain_name" type="text" placeholder="seating.cs61a.org">
                 <input type="submit">
             </form>
+
+            View the status of your domain setup at 
+            <a href="https://domains.cs61a.org/">domains.cs61a.org</a>
         """
         return "<h3>Domains</h3>" + register_domain + "<p>".join(client_names)
 
@@ -52,6 +56,9 @@ def create_domains_client(app):
             if ret:
                 return "domain already registered", 409
             db("INSERT INTO domains_config VALUES (%s, %s)", [domain_name, course])
+
+        add_domain(course=course, domain=domain_name, noreply=True)
+
         return redirect("/")
 
     @app.route("/domains/<course>/remove_domain", methods=["POST"])

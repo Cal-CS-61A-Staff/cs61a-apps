@@ -55,7 +55,7 @@ def seed_data():
         for name in ["Hog", "Maps", "Ants", "Scheme"]
     ]
     locations = [
-        Location(name=name, course="ok", visible=True)
+        Location(name=name, course="ok", visible=True, online=False, link="")
         for name in ["109 Morgan", "241 Cory", "247 Cory"]
     ]
     questions = list(range(1, 16)) + ["Other", "EC", "Checkoff"]

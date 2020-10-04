@@ -1,16 +1,20 @@
 import logging
 
 # Flask-related stuff
-from flask import Flask, request
+from flask import Flask
+from flask_compress import Compress
 
+from common.jobs import job
 from oh_queue import auth, assets
 from oh_queue.models import db, TicketStatus
+from oh_queue.slack import worker
 
 logging.basicConfig(level=logging.INFO)
 
 # Initialize the application
 app = Flask(__name__)
 app.config.from_object("config")
+app.url_map.strict_slashes = False
 
 app.jinja_env.globals.update(
     {"TicketStatus": TicketStatus, "assets_env": assets.assets_env}
@@ -22,9 +26,11 @@ auth.init_app(app)
 # Import views
 import oh_queue.views
 
-# Start slack cron job
-# import oh_queue.slack
-# oh_queue.slack.start_flask_job(app)
+
+@job(app, "slack_notify")
+def slack_poll():
+    worker(app)
+
 
 # Caching
 @app.after_request
@@ -32,3 +38,6 @@ def after_request(response):
     cache_control = "no-store"
     response.headers.add("Cache-Control", cache_control)
     return response
+
+
+Compress(app)

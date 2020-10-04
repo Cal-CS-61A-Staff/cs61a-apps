@@ -4,7 +4,7 @@ from functools import wraps
 import flask
 import requests
 from cachetools import TTLCache
-from flask import jsonify, request
+from flask import has_request_context, jsonify, request
 
 from common.secrets import get_master_secret
 
@@ -19,19 +19,36 @@ def create_service(app: str):
 
     def route(path):
         def decorator(func):
-            endpoint = f"https://{app}.cs61a.org{path}"
-
             @wraps(func)
             def wrapped(**kwargs):
-                if kwargs.pop("noreply", False):
-                    try:
-                        requests.post(endpoint, json=kwargs, timeout=1)
-                    except requests.exceptions.ReadTimeout:
-                        pass
-                else:
-                    resp = requests.post(endpoint, json=kwargs)
-                    resp.raise_for_status()
-                    return resp.json()
+                noreply = kwargs.pop("noreply", False)
+                endpoints = []
+                if has_request_context() and not noreply:
+                    proxied_host = request.headers.get("X-Forwarded-For-Host")
+                    if proxied_host:
+                        parts = proxied_host.split(".")
+                        if "pr" in parts:
+                            pr = parts[0]
+                            endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
+                endpoints.append(f"https://{app}.cs61a.org{path}")
+                for i, endpoint in enumerate(endpoints):
+                    if noreply:
+                        try:
+                            requests.post(endpoint, json=kwargs, timeout=1)
+                        except requests.exceptions.ReadTimeout:
+                            pass
+                    else:
+                        try:
+                            resp = requests.post(endpoint, json=kwargs)
+                            resp.raise_for_status()
+                        except:
+                            if i != len(endpoints) - 1:
+                                # on a PR build, try the main endpoint next
+                                continue
+                            else:
+                                raise
+                        resp.raise_for_status()
+                        return resp.json()
 
             def bind(app: flask.Flask):
                 def decorator(func):

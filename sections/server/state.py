@@ -309,3 +309,27 @@ def create_state_client(app: flask.Flask):
         ]
         db.session.commit()
         return fetch_section(section_id=section_id)
+
+    @api
+    @staff_required
+    def add_student(email: str, section_id: str):
+        section_id = int(section_id)
+        section = Section.query.get(section_id)
+        student = User.query.filter_by(email=email).one_or_none()
+        if student is None:
+            student = User(email=email, name=email, is_staff=False)
+        student.sections = [section]
+        db.session.commit()
+        return fetch_section(section_id=section_id)
+
+    @api
+    @admin_required
+    def delete_section(section_id: str):
+        section_id = int(section_id)
+        section = Section.query.filter_by(id=section_id).one()
+        if section.students:
+            raise Failure("Cannot delete an empty section")
+        db.session.delete(section)
+        db.session.commit()
+
+        return refresh_state()
