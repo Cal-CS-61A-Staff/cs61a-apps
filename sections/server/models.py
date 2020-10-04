@@ -92,6 +92,7 @@ class Session(db.Model):
     section: Section = db.relationship(
         "Section", backref=db.backref("sessions"), lazy="joined", innerjoin=True
     )
+    attendances: List["Attendance"]
 
     @property
     def json(self):
@@ -148,6 +149,7 @@ class User(db.Model, UserMixin):
     name: str = db.Column(db.String(255))
     is_staff: bool = db.Column(db.Boolean)
     sections: List[Section]
+    attendances: List[Attendance]
 
     @property
     def json(self):

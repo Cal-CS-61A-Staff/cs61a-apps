@@ -1,6 +1,10 @@
 import calendar
+import csv
+
+from io import StringIO
 from datetime import datetime, timedelta
 from functools import wraps
+from json import dumps
 from typing import List, Union
 
 import flask
@@ -117,6 +121,7 @@ def create_state_client(app: flask.Flask):
                 ],
                 "currentUser": current_user.full_json,
                 "config": config.json,
+                "custom": None,
             }
         else:
             return {"sections": []}
@@ -333,3 +338,44 @@ def create_state_client(app: flask.Flask):
         db.session.commit()
 
         return refresh_state()
+
+    @api
+    @admin_required
+    def export_attendance(full):
+        if full:
+            stringify = dumps
+        else:
+
+            def stringify(data):
+                buff = StringIO()
+                writer = csv.writer(buff)
+                for student, attendance in data.items():
+                    writer.writerow([student, attendance])
+                return buff.getvalue()
+
+        return {
+            **refresh_state(),
+            "custom": {
+                "fileName": "attendances.json" if full else "attendance_scores.csv",
+                "attendances": stringify(
+                    {
+                        user.email: [
+                            {
+                                "section_id": attendance.session.section_id,
+                                "start_time": attendance.session.start_time,
+                            }
+                            for attendance in user.attendances
+                        ]
+                        if full
+                        else len(
+                            set(
+                                attendance.session.start_time
+                                - attendance.session.start_time % (60 * 60 * 24 * 7)
+                                for attendance in user.attendances
+                            )
+                        )
+                        for user in User.query.filter_by(is_staff=False).all()
+                    }
+                ),
+            },
+        }
