@@ -1,6 +1,6 @@
 from json import loads
 
-from flask import Flask, redirect, url_for
+from flask import Flask, abort, redirect, url_for
 
 from common.oauth_client import create_oauth_client, is_staff
 from common.shell_utils import sh
@@ -17,8 +17,15 @@ create_oauth_client(app, "61a-logs")
 def index():
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
-    return """
+
+    service_list = "\n".join(
+        f"<p /><a href={url_for('create_secret', service=service)}>{service}</a>"
+        for service in list_services()
+    )
+
+    return f"""
     <h1>Log Viewer</h1>
+    {service_list}
     """
 
 
@@ -26,6 +33,9 @@ def index():
 def create_secret(service):
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
+
+    if service not in list_services():
+        abort(404)
 
     out = [
         entry["textPayload"]
@@ -46,6 +56,28 @@ def create_secret(service):
     ]
 
     return "<pre>" + "\n".join(map(str, out)) + "</pre>"
+
+
+def list_services():
+    return [
+        service["metadata"]["name"]
+        for service in loads(
+            sh(
+                "gcloud",
+                "run",
+                "services",
+                "list",
+                "--platform",
+                "managed",
+                "--region",
+                "us-west1",
+                "--format",
+                "json",
+                "-q",
+                capture_output=True,
+            )
+        )
+    ]
 
 
 if __name__ == "__main__":
