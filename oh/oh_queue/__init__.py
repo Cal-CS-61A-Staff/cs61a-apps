@@ -54,7 +54,7 @@ def clear_inactive_groups():
             ):
                 break
         else:
-            group.group_status = GroupStatus.resolved
+            oh_queue.views.delete_group_worker(group, emit=False)
     db.session.commit()
 
 

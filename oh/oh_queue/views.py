@@ -1924,14 +1924,20 @@ def create_group_ticket(data, group):
 @is_staff
 def delete_group(group_id):
     group = Group.query.filter_by(id=group_id, course=get_course()).one()
+    delete_group_worker(group, emit=True)
+    db.session.commit()
+
+
+def delete_group_worker(group, *, emit):
     group.group_status = GroupStatus.resolved
     for attendance in group.attendees:
         attendance.group_attendance_status = GroupAttendanceStatus.gone
-    emit_group_event(group, "group_closed")
+    if emit:
+        emit_group_event(group, "group_closed")
     if group.ticket:
         group.ticket.status = TicketStatus.deleted
-        emit_event(group.ticket, TicketEventType.delete)
-    db.session.commit()
+        if emit:
+            emit_event(group.ticket, TicketEventType.delete)
 
 
 @app.route("/debug")
