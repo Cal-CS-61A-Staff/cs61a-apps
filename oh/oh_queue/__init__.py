@@ -1,12 +1,14 @@
 import logging
 
 # Flask-related stuff
+from datetime import datetime, timedelta
+
 from flask import Flask
 from flask_compress import Compress
 
 from common.jobs import job
 from oh_queue import auth, assets
-from oh_queue.models import db, TicketStatus
+from oh_queue.models import Group, GroupAttendance, GroupStatus, db, TicketStatus
 from oh_queue.slack import worker
 
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +32,20 @@ import oh_queue.views
 @job(app, "slack_notify")
 def slack_poll():
     worker(app)
+
+
+@job(app, "clear_inactive_groups")
+def clear_inactive_groups():
+    active_groups = Group.query.filter(group_status=GroupStatus.active).all()
+    for group in active_groups:
+        for attendance in group.attendees:
+            if attendance.user.heartbeat_time > datetime.utcnow() - timedelta(
+                minutes=3
+            ):
+                break
+        else:
+            group.group_status = GroupStatus.resolved
+    db.session.commit()
 
 
 # Caching
