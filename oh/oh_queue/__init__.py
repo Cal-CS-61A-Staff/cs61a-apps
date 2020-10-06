@@ -36,7 +36,7 @@ def slack_poll():
 
 @job(app, "clear_inactive_groups")
 def clear_inactive_groups():
-    active_groups = Group.query.filter(group_status=GroupStatus.active).all()
+    active_groups = Group.query.filter_by(group_status=GroupStatus.active).all()
     for group in active_groups:
         for attendance in group.attendees:
             if attendance.user.heartbeat_time > datetime.utcnow() - timedelta(
