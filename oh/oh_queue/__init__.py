@@ -39,7 +39,7 @@ def clear_inactive_groups():
     active_groups = Group.query.filter_by(group_status=GroupStatus.active).all()
     for group in active_groups:
         for attendance in group.attendees:
-            if attendance.user.heartbeat_time > datetime.utcnow() - timedelta(
+            if attendance.user.heartbeat_time and attendance.user.heartbeat_time > datetime.utcnow() - timedelta(
                 minutes=3
             ):
                 break
