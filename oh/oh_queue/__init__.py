@@ -8,7 +8,14 @@ from flask_compress import Compress
 
 from common.jobs import job
 from oh_queue import auth, assets
-from oh_queue.models import Group, GroupAttendance, GroupStatus, db, TicketStatus
+from oh_queue.models import (
+    Group,
+    GroupAttendance,
+    GroupAttendanceStatus,
+    GroupStatus,
+    db,
+    TicketStatus,
+)
 from oh_queue.slack import worker
 
 logging.basicConfig(level=logging.INFO)
@@ -39,8 +46,11 @@ def clear_inactive_groups():
     active_groups = Group.query.filter_by(group_status=GroupStatus.active).all()
     for group in active_groups:
         for attendance in group.attendees:
-            if attendance.user.heartbeat_time and attendance.user.heartbeat_time > datetime.utcnow() - timedelta(
-                minutes=3
+            if (
+                attendance.group_attendance_status == GroupAttendanceStatus.present
+                and attendance.user.heartbeat_time
+                and attendance.user.heartbeat_time
+                > datetime.utcnow() - timedelta(minutes=3)
             ):
                 break
         else:
