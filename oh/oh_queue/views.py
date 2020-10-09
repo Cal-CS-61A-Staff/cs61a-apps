@@ -992,8 +992,9 @@ def release_holds(data):
     to_me = data.get("to_me")
     tickets = get_tickets(ticket_ids)
     for ticket in tickets:
-        ticket.helper_id = current_user.id if to_me else None
-        emit_event(ticket, TicketEventType.hold_released)
+        if ticket.status in [TicketStatus.juggled, TicketStatus.rerequested]:
+            ticket.helper_id = current_user.id if to_me else None
+            emit_event(ticket, TicketEventType.hold_released)
     db.session.commit()
 
     return socket_redirect()
