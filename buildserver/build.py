@@ -12,9 +12,10 @@ def gen_working_dir(app: App):
     return f"{app}_deploy_DO_NOT_USE"
 
 
-def clone_commit(remote: str, sha: str):
+def clone_commit(remote: str, sha: str, *, in_place=False):
     path = urlparse(remote).path
-    with tmp_directory(clean=True):
+
+    def clone():
         sh("git", "init")
         sh(
             "git",
@@ -24,6 +25,12 @@ def clone_commit(remote: str, sha: str):
             sha,
         )
         sh("git", "checkout", "FETCH_HEAD")
+
+    if in_place:
+        clone()
+    else:
+        with tmp_directory(clean=True):
+            clone()
 
 
 def build(app: App, pr_number: int = 0):

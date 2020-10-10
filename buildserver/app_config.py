@@ -15,11 +15,18 @@ class Config(TypedDict):
     first_party_domains: List[str]
     concurrency: int
     tasks: List["Task"]
+    dependencies: List["Dependency"]
 
 
 class Task(TypedDict):
     name: str
     schedule: str
+
+
+class Dependency(TypedDict):
+    repo: str
+    src: str
+    dest: str
 
 
 @dataclass
@@ -38,6 +45,7 @@ class App:
                 )
                 self.config["concurrency"] = self.config.get("concurrency", 80)
                 self.config["tasks"] = self.config.get("tasks", [])
+                self.config["dependencies"] = self.config.get("dependencies", [])
 
     def __str__(self):
         return self.name

@@ -6,6 +6,7 @@ from github.Repository import Repository
 
 from app_config import App, WEB_DEPLOY_TYPES
 from build import build, clone_commit
+from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
 from github_utils import set_pr_comment
 from lock import service_lock
@@ -14,6 +15,7 @@ from target_determinator import determine_targets
 
 def land_app(app: App, pr_number: int = 0):
     with service_lock(app, pr_number):
+        load_dependencies(app)
         build(app, pr_number)
         deploy_commit(app, pr_number)
 
