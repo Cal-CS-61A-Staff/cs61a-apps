@@ -4,7 +4,9 @@ import React, { useMemo } from "react";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import Table from "react-bootstrap/Table";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
+import AttendanceRow from "./AttendanceRow";
 import type {
   AttendanceStatusType,
   Person,
@@ -34,12 +36,6 @@ type Props = {
 export default function SectionAttendance({ section, session }: Props) {
   const startSession = useSectionAPI("start_session");
   const setAttendance = useSectionAPI("set_attendance");
-
-  const buttonColorMap = {
-    present: "success",
-    excused: "warning",
-    absent: "danger",
-  };
 
   const mostRecentSession =
     section.sessions.length > 0
@@ -121,31 +117,22 @@ export default function SectionAttendance({ section, session }: Props) {
             <tbody>
               {students.map((student) => (
                 <tr key={student.email} className="text-center">
-                  <td className="align-middle">{student.name}</td>
+                  <td className="align-middle">
+                    <Link to={`/user/${student.id}`}>{student.name}</Link>
+                  </td>
                   <td>
-                    {Object.entries(AttendanceStatus).map(([status, text]) => (
-                      <span key={status}>
-                        <Button
-                          size="sm"
-                          variant={
-                            getStudentAttendanceStatus(student.email) === status
-                              ? buttonColorMap[status]
-                              : `outline-${buttonColorMap[status]}`
-                          }
-                          disabled={session == null}
-                          onClick={() =>
-                            session != null &&
-                            setAttendance({
-                              session_id: session.id,
-                              student: student.email,
-                              status,
-                            })
-                          }
-                        >
-                          {text}
-                        </Button>{" "}
-                      </span>
-                    ))}
+                    <AttendanceRow
+                      editable={session != null}
+                      status={getStudentAttendanceStatus(student.email)}
+                      onClick={(status) => {
+                        if (session != null)
+                          setAttendance({
+                            session_id: session.id,
+                            student: student.email,
+                            status,
+                          });
+                      }}
+                    />
                   </td>
                 </tr>
               ))}

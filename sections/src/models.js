@@ -3,16 +3,23 @@
 import moment from "moment-timezone";
 import * as React from "react";
 
+export type ID = string;
+export type Time = number;
+
 export type Person = {
+  id: ID,
   name: string,
   email: string,
   backupURL: string,
   isStaff: boolean,
-  isAdmin?: boolean,
 };
 
-export type ID = string;
-export type Time = number;
+export type PersonDetails = {
+  ...Person,
+  isAdmin?: boolean,
+  // eslint-disable-next-line no-use-before-define
+  attendanceHistory: Array<AttendanceDetails>,
+};
 
 export type Section = {
   id: ID,
@@ -47,6 +54,12 @@ export type Session = {
   attendances: Array<Attendance>,
 };
 
+type AttendanceDetails = {
+  ...Attendance,
+  section: ?Section,
+  session: Session,
+};
+
 export type SectionDetails = {
   ...Section,
   sessions: Array<Session>,
@@ -62,12 +75,14 @@ export type State = {
   enrolledSection: ?Section,
   sections: Array<Section>,
   taughtSections: Array<Section>,
-  currentUser: ?Person,
+  currentUser: ?PersonDetails,
   config: CourseConfig,
 };
 
-export function sectionTitle(section: Section): React.MixedElement {
-  return (
+export function sectionTitle(section: ?Section): React.MixedElement {
+  return section == null ? (
+    <>Deleted Section</>
+  ) : (
     <>
       {section.staff == null
         ? "Unknown Tutor"

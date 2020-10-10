@@ -1,14 +1,14 @@
 // @flow strict
 
 import { useCallback, useContext } from "react";
-import type { SectionDetails } from "./models";
-import SectionStateContext from "./SectionStateContext";
+import type { State } from "./models";
+import StateContext from "./StateContext";
 import useAPI from "./useAPI";
 
-type Callback = (SectionDetails) => void;
+type Callback = ({ ...State, custom: { [string]: ?string } }) => mixed;
 
 export default function useStateAPI(method: string, callback: ?Callback) {
-  const { updateState } = useContext(SectionStateContext);
+  const { updateState } = useContext(StateContext);
 
   const wrappedCallback = useCallback(
     (state) => {

@@ -16,7 +16,7 @@ import Row from "react-bootstrap/Row";
 import { Redirect } from "react-router-dom";
 import StateContext from "./StateContext";
 import ToggleSwitch from "./ToggleSwitch";
-import useAPI from "./useAPI";
+import useAPI from "./useStateAPI";
 
 export default function AdminPage(): React.Node {
   const { config, currentUser } = useContext(StateContext);

@@ -3,12 +3,12 @@
 import React, { useContext, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
-import { Redirect } from "react-router-dom";
+import { Link, Redirect } from "react-router-dom";
 import styled from "styled-components";
 import AddStudentModal from "./AddStudentModal";
 import type { SectionDetails } from "./models";
 import StateContext from "./StateContext";
-import useAPI from "./useAPI";
+import useAPI from "./useStateAPI";
 import useSectionAPI from "./useSectionAPI";
 
 const FlexLayout = styled.div`
@@ -66,7 +66,9 @@ export default function SectionRoster({ section }: Props) {
           <CardHolder key={student.email}>
             <Card>
               <Card.Body>
-                <Card.Title>{student.name}</Card.Title>
+                <Card.Title>
+                  <Link to={`/user/${student.id}`}>{student.name}</Link>
+                </Card.Title>
                 <Card.Text>
                   <a href={`mailto:${student.email}`}>{student.email}</a>
                 </Card.Text>

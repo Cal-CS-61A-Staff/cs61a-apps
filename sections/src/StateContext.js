@@ -15,6 +15,7 @@ export default React.createContext<{
   },
   currentUser: null,
   sections: [],
+  history: [],
   taughtSections: [],
   enrolledSection: null,
   updateState: () => {},

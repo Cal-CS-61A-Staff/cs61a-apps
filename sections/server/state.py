@@ -11,6 +11,7 @@ import flask
 import pytz
 from flask import jsonify, render_template, request
 from flask_login import current_user, login_required
+from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course, is_admin
 from common.rpc.auth import read_spreadsheet
@@ -95,7 +96,7 @@ def create_state_client(app: flask.Flask):
     @app.route("/debug")
     def debug():
         refresh_state()
-        return render_template("index.html")
+        return "<body></body>"
 
     @api
     def refresh_state():
@@ -105,6 +106,7 @@ def create_state_client(app: flask.Flask):
                 config = CourseConfig(course=get_course())
                 db.session.add(config)
                 db.session.commit()
+
             return {
                 "enrolledSection": current_user.sections[0].json
                 if current_user.sections
@@ -341,7 +343,7 @@ def create_state_client(app: flask.Flask):
 
     @api
     @admin_required
-    def export_attendance(full):
+    def export_attendance(full: bool):
         if full:
             stringify = dumps
         else:
@@ -379,3 +381,10 @@ def create_state_client(app: flask.Flask):
                 ),
             },
         }
+
+    @api
+    @staff_required
+    def fetch_user(user_id: str):
+        user_id = int(user_id)
+        user = User.query.filter_by(id=user_id).one_or_none()
+        return user.full_json
