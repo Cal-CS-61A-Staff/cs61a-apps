@@ -88,8 +88,10 @@ def create_state_client(app: flask.Flask):
         return handler
 
     @app.route("/", endpoint="index")
+    @app.route("/history/")
     @app.route("/admin/")
     @app.route("/section/<path:path>")
+    @app.route("/user/<path:path>")
     def generic(**_):
         return render_template("index.html")
 

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 // @flow strict
 
 import "bootstrap/dist/css/bootstrap.css";
@@ -64,7 +65,6 @@ export default function HistoryPage({ userID }: Props): React.Node {
             </thead>
             <tbody>
               {user.attendanceHistory.map(({ section, session, status }, i) => (
-                // eslint-disable-next-line react/no-array-index-key
                 <tr key={i} className="text-center">
                   <td className="align-middle">
                     <b>{moment.unix(session.startTime).format("MMMM D")}</b>
