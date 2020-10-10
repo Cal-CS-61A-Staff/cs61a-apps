@@ -70,7 +70,7 @@ export default function HistoryPage({ userID }: Props): React.Node {
                     <b>{moment.unix(session.startTime).format("MMMM D")}</b>
                   </td>
                   <td className="align-middle">
-                    {section != null && user.isStaff ? (
+                    {section != null && currentUser.isStaff ? (
                       <Link to={`/section/${section.id}`}>
                         {sectionTitle(section)}
                       </Link>
