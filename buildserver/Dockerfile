@@ -12,6 +12,8 @@ RUN rm -rf /var/lib/apt/lists/*
 
 RUN wget https://www.openssl.org/source/openssl-1.0.2g.tar.gz -O - | tar -xzpip
 
+ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
 RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
 RUN mkdir -p /usr/local/gcloud \
   && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
