@@ -25,4 +25,7 @@ def load_dependencies(app: App):
                 chdir(folder_name)
                 clone_commit(repo.clone_url, sha, in_place=True)
                 chdir("..")
-            copyfile(os.path.join(folder_name, dependency["src"]), dependency["dest"])
+            copyfile(
+                os.path.join(folder_name, dependency["src"]),
+                os.path.join(app.name, dependency["dest"]),
+            )
