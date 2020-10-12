@@ -32,11 +32,26 @@ function ChatBox({ currentUser, id, mode, messages }) {
 
   React.useEffect(scrollDown, [messages]);
 
-  const body = messages.map(({ user, body }, i) => {
+  function formatTooltip(message, omitUsername = false) {
+    if(!message.created) return message.user.name;
+    let time = moment.utc(message.created).local().format("ddd hh:mmA");
+    if(omitUsername) return time;
+    return `${message.user.name} | ${time}`;
+  }
+
+  const body = messages.map((message, i) => {
+    const { user, body } = message;
     if (user.id === currentUser.id) {
       return (
         <div className="my-chat-bubble">
-          <div className="chat-text">{body}</div>
+          <div
+            className="chat-text"
+            data-toggle="tooltip"
+            data-placement="right"
+            title={formatTooltip(message, true)}
+          >
+            {body}
+          </div>
         </div>
       );
     } else if (messages[i + 1] && user.id === messages[i + 1].user.id) {
@@ -47,7 +62,7 @@ function ChatBox({ currentUser, id, mode, messages }) {
             className="chat-text"
             data-toggle="tooltip"
             data-placement="right"
-            title={user.name}
+            title={formatTooltip(message)}
           >
             {body}
           </div>
@@ -61,7 +76,7 @@ function ChatBox({ currentUser, id, mode, messages }) {
             className="chat-text"
             data-toggle="tooltip"
             data-placement="right"
-            title={user.name}
+            title={formatTooltip(message)}
           >
             {body}
           </div>

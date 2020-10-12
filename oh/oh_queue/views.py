@@ -70,7 +70,11 @@ def student_json(user):
 
 
 def message_json(message: ChatMessage):
-    return {"user": user_json(message.user), "body": message.body}
+    return {
+        "user": user_json(message.user),
+        "body": message.body,
+        "created": message.created.isoformat(),
+    }
 
 
 def ticket_json(ticket):
