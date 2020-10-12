@@ -15,7 +15,7 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
     const inGroup = groupIsMine(state, group);
 
     const handleAssignmentSubmit = (args) => {
-        app.makeRequest("update_group", {...args, id: groupID});
+        app.makeRequest("update_group", Object.assign(args, {id: groupID}));
     };
 
     const handleLeaveGroup = () => {

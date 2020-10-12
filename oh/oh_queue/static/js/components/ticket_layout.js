@@ -13,7 +13,7 @@ function TicketLayout({ loadTicket, state, socket, match }) {
     React.useEffect(() => {if (ticket) setDescription(ticket.description)}, [ticket && ticket.description]);
 
     const handleAssignmentSubmit = (args) => {
-        app.makeRequest("update_ticket", {...args, id});
+        app.makeRequest("update_ticket", Object.assign(args, {id}));
     };
 
     const handleDescriptionSubmit = () => {
