@@ -7,7 +7,6 @@ RUN wget -qO- https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 RUN apt-get update
 RUN apt-get install -yqq nodejs yarn
 RUN pip install -U pip && pip install pipenv
-RUN npm i -g npm@^6
 RUN rm -rf /var/lib/apt/lists/*
 
 RUN wget https://www.openssl.org/source/openssl-1.0.2g.tar.gz -O - | tar -xzpip

@@ -66,7 +66,7 @@ def run_oh_queue_build():
     sh("python", "-m", "venv", "env")
     sh("env/bin/pip", "freeze")
     sh("env/bin/pip", "install", "-r", "requirements.txt")
-    sh("npm", "install")
+    sh("yarn")
     sh("env/bin/python", "./manage.py", "build")
 
 
