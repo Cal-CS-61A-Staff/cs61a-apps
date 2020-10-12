@@ -1031,6 +1031,12 @@ def apply_ticket_update(data, ticket=None):
         ticket.location = Location.query.filter_by(
             course=get_course(), id=data["location_id"]
         ).one()
+    if "assignment_id" in data:
+        ticket.assignment = Assignment.query.filter_by(
+            course=get_course(), id=data["assignment_id"]
+        ).one()
+    if "question" in data:
+        ticket.question = data["question"]
 
 
 @api("update_ticket")
