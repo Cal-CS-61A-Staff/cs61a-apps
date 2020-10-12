@@ -23,6 +23,6 @@ def load_dependencies(app: App):
                 sha = repo.get_branch(repo.default_branch).commit.sha
                 mkdir(folder_name)
                 chdir(folder_name)
-                clone_commit(dependency["repo"], sha, in_place=True)
+                clone_commit(repo.clone_url, sha, in_place=True)
                 chdir("..")
             copyfile(os.path.join(folder_name, dependency["src"]), dependency["dest"])
