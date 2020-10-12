@@ -14,6 +14,10 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
 
     const inGroup = groupIsMine(state, group);
 
+    const handleAssignmentSubmit = (args) => {
+        app.makeRequest("update_group", {...args, id: groupID});
+    };
+
     const handleLeaveGroup = () => {
         const leave = () => app.makeRequest("leave_group", group.id, true);
 
@@ -145,7 +149,7 @@ function PartyGroupLayout({ state, match, loadGroup, socket }) {
                     </div>
                     <div className="row">
                         <div className="col-xs-12 col-md-6 col-md-offset-3">
-                            <UpdateAssignmentBox state={state} group={group} />
+                            <UpdateAssignmentBox state={state} elem={group} onSubmit={handleAssignmentSubmit} />
                         </div>
                     </div>
                     <hr />

@@ -12,6 +12,10 @@ function TicketLayout({ loadTicket, state, socket, match }) {
 
     React.useEffect(() => {if (ticket) setDescription(ticket.description)}, [ticket && ticket.description]);
 
+    const handleAssignmentSubmit = (args) => {
+        app.makeRequest("update_ticket", {...args, id});
+    };
+
     const handleDescriptionSubmit = () => {
         app.makeRequest('update_ticket', {
             id,
@@ -75,6 +79,12 @@ function TicketLayout({ loadTicket, state, socket, match }) {
                         />
                     </div>
                 </div>
+                {!ticket.group_id && <div className="row">
+                    <div className="col-xs-12 col-md-6 col-md-offset-3">
+                        <hr/>
+                        <UpdateAssignmentBox state={state} elem={ticket} onSubmit={handleAssignmentSubmit}/>
+                    </div>
+                </div>}
                 {!ticket.group_id && <div className="row">
                     <div className="col-xs-12 col-md-6 col-md-offset-3">
                         <hr/>
