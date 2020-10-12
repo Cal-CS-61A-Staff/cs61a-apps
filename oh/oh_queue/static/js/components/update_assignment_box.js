@@ -23,7 +23,7 @@ function UpdateAssignmentBox({state, elem, onSubmit}: {state: State, elem: Group
             </div>
           {assignment_id !== elem.assignment_id || question !== elem.question ? (
               <button
-                  onClick={onSubmit({assignment_id, question})}
+                  onClick={() => onSubmit({assignment_id, question})}
                   className="description-button btn btn-default btn-lg btn-block"
               >
                   {" "}Update Assignment{" "}
