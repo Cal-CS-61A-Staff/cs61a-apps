@@ -22,8 +22,8 @@ db = SQLAlchemy()
 user_section_junction = db.Table(
     "user_section_junction",
     db.Model.metadata,
-    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
-    db.Column("section_id", db.Integer, db.ForeignKey("section.id")),
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"), index=True),
+    db.Column("section_id", db.Integer, db.ForeignKey("section.id"), index=True),
 )
 
 
@@ -131,10 +131,7 @@ class Attendance(db.Model):
     )
     student_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     student: "User" = db.relationship(
-        "User",
-        backref=db.backref("attendances", lazy="joined"),
-        lazy="joined",
-        innerjoin=True,
+        "User", backref=db.backref("attendances"), lazy="joined", innerjoin=True
     )
 
     @property

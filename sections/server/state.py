@@ -11,7 +11,6 @@ import flask
 import pytz
 from flask import jsonify, render_template, request
 from flask_login import current_user, login_required
-from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course, is_admin
 from common.rpc.auth import read_spreadsheet
