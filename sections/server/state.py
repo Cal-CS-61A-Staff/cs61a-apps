@@ -11,6 +11,7 @@ import flask
 import pytz
 from flask import jsonify, render_template, request
 from flask_login import current_user, login_required
+from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course, is_admin
 from common.rpc.auth import read_spreadsheet
@@ -377,7 +378,11 @@ def create_state_client(app: flask.Flask):
                                 for attendance in user.attendances
                             )
                         )
-                        for user in User.query.filter_by(is_staff=False).all()
+                        for user in User.query.filter_by(is_staff=False)
+                        .options(
+                            joinedload(User.attendances).joinedload(Attendance.session)
+                        )
+                        .all()
                     }
                 ),
             },
