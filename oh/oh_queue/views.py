@@ -838,6 +838,13 @@ def get_next_ticket(location=None):
         ticket = ticket.first()
     if not ticket:
         ticket = Ticket.query.filter(
+            Ticket.status == TicketStatus.rerequested,
+            Ticket.helper_id == None,
+            Ticket.course == get_course(),
+        )
+        ticket = ticket.first()
+    if not ticket:
+        ticket = Ticket.query.filter(
             Ticket.status == TicketStatus.pending, Ticket.course == get_course()
         )
         if location:
