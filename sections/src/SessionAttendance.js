@@ -1,11 +1,12 @@
 // @flow strict
 import moment from "moment";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import Table from "react-bootstrap/Table";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import AddStudentModal from "./AddStudentModal";
 import AttendanceRow from "./AttendanceRow";
 import type {
   AttendanceStatusType,
@@ -36,6 +37,8 @@ type Props = {
 export default function SectionAttendance({ section, session }: Props) {
   const startSession = useSectionAPI("start_session");
   const setAttendance = useSectionAPI("set_attendance");
+
+  const [adding, setAdding] = useState(false);
 
   const mostRecentSession =
     section.sessions.length > 0
@@ -96,7 +99,7 @@ export default function SectionAttendance({ section, session }: Props) {
               ).format("MMMM D")}
               {session == null && " (not started)"}
             </b>
-            {session == null && (
+            {session == null ? (
               <Button
                 variant="primary"
                 size="sm"
@@ -108,6 +111,14 @@ export default function SectionAttendance({ section, session }: Props) {
                 }
               >
                 Start Session
+              </Button>
+            ) : (
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setAdding(true)}
+              >
+                Add Student
               </Button>
             )}
           </CardHeader>
@@ -140,6 +151,19 @@ export default function SectionAttendance({ section, session }: Props) {
           </Table>
         </TableHolder>
       </Card>
+      {session != null && (
+        <AddStudentModal
+          show={adding}
+          onAdd={(student) =>
+            setAttendance({
+              session_id: session.id,
+              student,
+              status: ("present": AttendanceStatusType),
+            })
+          }
+          onClose={() => setAdding(false)}
+        />
+      )}
     </>
   );
 }

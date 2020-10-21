@@ -5,7 +5,7 @@ from io import StringIO
 from datetime import datetime, timedelta
 from functools import wraps
 from json import dumps
-from typing import List, Union
+from typing import List, Optional, Union
 
 import flask
 import pytz
@@ -226,15 +226,16 @@ def create_state_client(app: flask.Flask):
 
     @api
     @staff_required
-    def set_attendance(session_id: str, student: str, status: str):
+    def set_attendance(session_id: str, student: str, status: Optional[str]):
         session_id = int(session_id)
         session = Session.query.get(session_id)
         status = AttendanceStatus[status]
         student = User.query.filter_by(email=student).one()
         Attendance.query.filter_by(session_id=session_id, student=student).delete()
-        db.session.add(
-            Attendance(status=status, session_id=session_id, student=student)
-        )
+        if status is not None:
+            db.session.add(
+                Attendance(status=status, session_id=session_id, student=student)
+            )
         db.session.commit()
         return fetch_section(section_id=session.section_id)
 

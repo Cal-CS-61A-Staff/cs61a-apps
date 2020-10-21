@@ -29,6 +29,7 @@ export default function SectionRoster({ section }: Props) {
   const { currentUser } = useContext(StateContext);
 
   const deleteSection = useAPI("delete_section");
+  const addStudent = useSectionAPI("add_student");
   const removeStudent = useSectionAPI("remove_student");
 
   const [adding, setAdding] = useState(false);
@@ -112,7 +113,13 @@ export default function SectionRoster({ section }: Props) {
           </Card>
         </CardHolder>
       </FlexLayout>
-      <AddStudentModal show={adding} onClose={() => setAdding(false)} />
+      <AddStudentModal
+        show={adding}
+        onAdd={(email) =>
+          addStudent({ section_id: section.id, email })
+        }
+        onClose={() => setAdding(false)}
+      />
     </>
   );
 }

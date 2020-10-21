@@ -58,7 +58,7 @@ export default function HistoryPage({ userID }: Props): React.Node {
           <Table hover>
             <thead>
               <tr className="text-center">
-                <th>Time</th>
+                <th>Date</th>
                 <th>Section</th>
                 <th>Attendance</th>
               </tr>
