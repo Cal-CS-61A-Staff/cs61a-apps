@@ -25,6 +25,8 @@ from models import (
     db,
 )
 
+FIRST_WEEK_START = datetime(year=2020, month=9, day=1).timestamp()
+
 
 class Failure(Exception):
     pass
@@ -368,15 +370,18 @@ def create_state_client(app: flask.Flask):
                             {
                                 "section_id": attendance.session.section_id,
                                 "start_time": attendance.session.start_time,
+                                "status": attendance.status,
                             }
                             for attendance in user.attendances
                         ]
                         if full
                         else len(
                             set(
-                                attendance.session.start_time
-                                - attendance.session.start_time % (60 * 60 * 24 * 7)
+                                (attendance.session.start_time - FIRST_WEEK_START)
+                                // (60 * 60 * 24 * 7)
                                 for attendance in user.attendances
+                                if attendance.session.start_time >= FIRST_WEEK_START
+                                and attendance.status == AttendanceStatus.present
                             )
                         )
                         for user in User.query.filter_by(is_staff=False)
