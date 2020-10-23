@@ -58,6 +58,7 @@ def build(app: App, pr_number: int = 0):
         {
             "oh_queue": run_oh_queue_build,
             "create_react_app": run_create_react_app_build,
+            "webpack": run_webpack_build,
             "none": run_noop_build,
         }[app.config["build_type"]]()
 
@@ -83,6 +84,11 @@ def run_create_react_app_build():
 
     copytree("deploy", ".", dirs_exist_ok=True)
     rmtree("deploy")
+
+
+def run_webpack_build():
+    sh("yarn")
+    sh("yarn", "run", "webpack")
 
 
 def run_noop_build():
