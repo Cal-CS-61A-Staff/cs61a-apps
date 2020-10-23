@@ -15,7 +15,7 @@ from common.db import connect_db
 from common.rpc.auth import post_slack_message
 from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
 from common.shell_utils import sh, tmp_directory
-
+from pypi_utils import update_setup_py
 
 DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
 
@@ -62,6 +62,7 @@ def deploy_commit(app: App, pr_number: int):
         {
             "flask": run_flask_deploy,
             "docker": run_dockerfile_deploy,
+            "pypi": run_pypi_deploy,
             "none": run_noop_deploy,
         }[app.config["deploy_type"]](app, pr_number)
 
@@ -176,6 +177,23 @@ def run_dockerfile_deploy(app: App, pr_number: int):
                 "--attempt-deadline=1200s",
                 "-q",
             )
+
+
+def run_pypi_deploy(app: App, pr_number: int):
+    sh("python", "-m", "venv", "env")
+    update_setup_py(app, pr_number)
+    sh("env/bin/pip", "install", "setuptools")
+    sh("env/bin/pip", "install", "wheel")
+    sh("env/bin/python", "setup.py", "sdist", "bdist_wheel")
+    sh(
+        "twine",
+        "upload",
+        *(f"dist/{file}" for file in os.listdir("dist")),
+        env=dict(
+            TWINE_USERNAME="__token__",
+            TWINE_PASSWORD=get_secret(secret_name="PYPI_PASSWORD"),
+        ),
+    )
 
 
 def run_noop_deploy(_app: App, _pr_number: int):

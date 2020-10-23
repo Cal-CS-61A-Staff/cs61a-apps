@@ -16,6 +16,7 @@ class Config(TypedDict):
     concurrency: int
     tasks: List["Task"]
     dependencies: List["Dependency"]
+    package_name: str
 
 
 class Task(TypedDict):
@@ -46,6 +47,7 @@ class App:
                 self.config["concurrency"] = self.config.get("concurrency", 80)
                 self.config["tasks"] = self.config.get("tasks", [])
                 self.config["dependencies"] = self.config.get("dependencies", [])
+                self.config["package_name"] = self.config.get("package_name", name)
 
     def __str__(self):
         return self.name
