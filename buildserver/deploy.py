@@ -63,6 +63,7 @@ def deploy_commit(app: App, pr_number: int):
             "flask": run_flask_deploy,
             "docker": run_dockerfile_deploy,
             "pypi": run_pypi_deploy,
+            "cloud_function": run_cloud_function_deploy,
             "none": run_noop_deploy,
         }[app.config["deploy_type"]](app, pr_number)
 
@@ -195,6 +196,23 @@ def run_pypi_deploy(app: App, pr_number: int):
             TWINE_USERNAME="__token__",
             TWINE_PASSWORD=get_secret(secret_name="PYPI_PASSWORD"),
         ),
+    )
+
+
+def run_cloud_function_deploy(app: App, pr_number: int):
+    if pr_number != 0:
+        return
+    sh(
+        "gcloud",
+        "functions",
+        "deploy",
+        app.name,
+        "--runtime",
+        "python37",
+        "--trigger-http",
+        "--entry-point",
+        "index",
+        "--timeout 500",
     )
 
 
