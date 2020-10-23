@@ -18,7 +18,7 @@ export default function Timer({ target, onLock, onEnd }) {
     setTimeString(
       `${hours.toString().padStart(2, "0")}:${minutes
         .toString()
-        .padStart(2, "0")}` + `:${seconds.toString().padStart(2, "0")}`
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
     );
 
     if (target - time < 0 && target - time >= -60) {

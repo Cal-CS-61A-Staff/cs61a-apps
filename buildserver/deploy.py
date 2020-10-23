@@ -231,9 +231,6 @@ def delete_unused_services(pr_number: int = None):
         gen_service_name(app, pr_number) for app, pr_number in active_services
     )
 
-    # examtool is not managed by cs61a-apps
-    active_service_names.add("staff-exam-server")
-
     for service in services:
         if service["metadata"]["name"] not in active_service_names:
             if "pr" not in service["metadata"]["name"]:

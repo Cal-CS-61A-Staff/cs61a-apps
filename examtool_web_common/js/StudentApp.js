@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 import React, { useEffect, useState } from "react";
 import { Col, Container, Form, Navbar, Row } from "react-bootstrap";
 import EndModal from "./EndModal";
@@ -69,7 +70,6 @@ export default function StudentApp() {
   };
 
   const handleReceiveExam = ({
-    // eslint-disable-next-line no-shadow
     exam,
     publicGroup,
     privateGroups,
