@@ -89,6 +89,7 @@ def run_create_react_app_build():
 def run_webpack_build():
     sh("yarn")
     sh("yarn", "run", "webpack")
+    sh("rm", "-rf", "node_modules")
 
 
 def run_noop_build():

@@ -50,6 +50,7 @@ def gen_url(app_name: str, pr_number: int):
 
 
 def gen_service_name(app_name: str, pr_number: int):
+    app_name = app_name.replace("_", "-")
     if pr_number == 0:
         return app_name
     else:
