@@ -2,4 +2,4 @@
 Flask
 gunicorn
 pypandoc
-examtool[cli,admin]>=2.0.8
+-e ./examtool[cli,admin]
