@@ -25,7 +25,7 @@ def gen_env_variables(app: App, pr_number: int):
         drivername="mysql+pymysql",
         username="root",
         password=get_secret(secret_name="ROOT_DATABASE_PW"),
-        database=app.name,
+        database=app.name.replace("-", "_"),
         query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
     ).__to_string__(hide_password=False)
 
@@ -50,7 +50,6 @@ def gen_url(app_name: str, pr_number: int):
 
 
 def gen_service_name(app_name: str, pr_number: int):
-    app_name = app_name.replace("_", "-")
     if pr_number == 0:
         return app_name
     else:
