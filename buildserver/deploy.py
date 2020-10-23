@@ -212,7 +212,8 @@ def run_cloud_function_deploy(app: App, pr_number: int):
         "--trigger-http",
         "--entry-point",
         "index",
-        "--timeout 500",
+        "--timeout",
+        "500",
     )
 
 
