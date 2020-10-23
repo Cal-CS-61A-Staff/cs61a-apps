@@ -76,14 +76,15 @@ def run_dockerfile_deploy(app: App, pr_number: int):
     for f in os.listdir("../../deploy_files"):
         shutil.copyfile(f"../../deploy_files/{f}", f"./{f}")
     service_name = gen_service_name(app.name, pr_number)
-    sh(
-        "gcloud",
-        "builds",
-        "submit",
-        "-q",
-        "--tag",
-        f"gcr.io/cs61a-140900/{service_name}",
-    )
+    prod_service_name = gen_service_name(app.name, 0)
+    with open("cloudbuild.yaml", "a+") as f:
+        f.seek(0)
+        contents = f.read()
+        contents = contents.replace("SERVICE_NAME", service_name)
+        contents = contents.replace("PROD_SERVICE_NAME", prod_service_name)
+        f.truncate()
+        f.write(contents)
+    sh("gcloud", "builds", "submit", "-q", "--config", "cloudbuild.yaml")
     sh(
         "gcloud",
         "run",
