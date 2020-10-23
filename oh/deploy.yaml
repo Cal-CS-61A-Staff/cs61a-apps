@@ -7,3 +7,5 @@ tasks:
     schedule: "* * * * *"
   - name: clear_inactive_groups
     schedule: "* * * * *"
+  - name: release_inactive_holds
+    schedule: "* * * * *"
