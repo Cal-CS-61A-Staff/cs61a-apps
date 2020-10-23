@@ -201,8 +201,11 @@ def create_slack_client(app):
                             "as_user": True,
                             "blocks": [
                                 {
-                                    "type": "mrkdwn",
-                                    "text": combined_integration.message,
+                                    "type": "section",
+                                    "text": {
+                                        "type": "mrkdwn",
+                                        "text": combined_integration.message,
+                                    },
                                 }
                             ],
                             "attachments": combined_integration.attachments,
