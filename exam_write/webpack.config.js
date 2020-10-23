@@ -2,7 +2,6 @@ module.exports = {
   entry: {
     write: "./staffIndex.js",
   },
-  watch: true,
   output: {
     filename: "static/main.js",
     path: __dirname,
