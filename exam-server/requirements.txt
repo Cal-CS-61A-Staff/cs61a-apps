@@ -1,5 +1,5 @@
 # my deps
 google-cloud-firestore==1.9.0
 google-auth==1.22.1
-examtool>=2.0.11
+-e ./examtool
 cryptography==3.1.1
