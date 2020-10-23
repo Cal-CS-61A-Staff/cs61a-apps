@@ -82,6 +82,7 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         contents = f.read()
         contents = contents.replace("SERVICE_NAME", service_name)
         contents = contents.replace("PROD_SERVICE_NAME", prod_service_name)
+        f.seek(0)
         f.truncate()
         f.write(contents)
     sh("gcloud", "builds", "submit", "-q", "--config", "cloudbuild.yaml")
