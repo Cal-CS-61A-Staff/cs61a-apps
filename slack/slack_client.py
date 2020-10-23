@@ -184,6 +184,7 @@ def create_slack_client(app):
                                 else {}
                             ),
                             "text": response,
+                            "unfurl_links": False,
                         },
                         headers={"Authorization": "Bearer {}".format(bot_token)},
                     )
