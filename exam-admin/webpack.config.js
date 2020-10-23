@@ -1,6 +1,6 @@
 module.exports = {
   entry: {
-    student: "./studentIndex.js",
+    admin: "./adminIndex.js",
   },
   output: {
     filename: "static/main.js",
