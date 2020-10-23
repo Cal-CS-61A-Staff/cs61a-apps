@@ -1,2 +1,2 @@
 build_type: webpack
-deploy_type: none
+deploy_type: cloud_function
