@@ -65,8 +65,9 @@ def section_sorter(section: Section) -> int:
         or current_user.id in [student.id for student in section.students]
     ):
         score -= big * 10
-    if section.capacity > len(section.students):
-        score -= big
+    spare_capacity = max(0, section.capacity - len(section.students))
+    if spare_capacity:
+        score -= big * spare_capacity
     score += section.id
     return score
 
