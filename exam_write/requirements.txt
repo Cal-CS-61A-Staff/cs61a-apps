@@ -1,0 +1,5 @@
+# my deps
+Flask
+gunicorn
+pypandoc
+examtool[cli,admin]>=2.0.8
