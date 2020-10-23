@@ -10,6 +10,7 @@ from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
 from github_utils import set_pr_comment
 from lock import service_lock
+from pypi_utils import get_latest_version
 from target_determinator import determine_targets
 
 
@@ -75,6 +76,20 @@ def land_commit(
             if web_apps and pr is not None
             else ""
         )
+        if pr is not None:
+            pypi_apps = [app for app in apps if app.config["deploy_type"] == "pypi"]
+            pypi_app_details = [
+                (app.config["package_name"], get_latest_version(app, pr.number)[1])
+                for app in apps
+            ]
+            if pypi_apps:
+                pr_builds_text += (
+                    "\n\nPre-release builds of PyPI packages are available at: \n"
+                ) + "\n".join(
+                    f" * [pypi.org/project/{package_name}/{version}]"
+                    f"(https://pypi.org/project/{package_name}/{version}/)"
+                    for package_name, version in pypi_app_details
+                )
         set_pr_comment(
             "Builds completed! View logs at [logs.cs61a.org](https://logs.cs61a.org)."
             + pr_builds_text,
