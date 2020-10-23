@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Literal, TypedDict
+from typing import List, Literal, Optional, TypedDict
 
 import yaml
 
@@ -35,8 +35,12 @@ class App:
     name: str
     config: Config
 
+    # updated by deploy.py, since PyPI takes a while to update
+    deployed_pypi_version: Optional[str]
+
     def __init__(self, name: str):
         self.name = name
+        self.deployed_pypi_version = None
         with tmp_directory():
             with open(f"{name}/deploy.yaml") as f:
                 self.config = Config(**yaml.safe_load(f))

@@ -80,3 +80,5 @@ def update_setup_py(app: App, pr_number: int):
         f.seek(0)
         f.truncate()
         f.write(re.sub(VERSION_REGEX, f'version="{next_version}"', setup_contents))
+
+        app.deployed_pypi_version = str(next_version)

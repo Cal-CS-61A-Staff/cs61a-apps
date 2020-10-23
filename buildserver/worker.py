@@ -79,8 +79,8 @@ def land_commit(
         if pr is not None:
             pypi_apps = [app for app in apps if app.config["deploy_type"] == "pypi"]
             pypi_app_details = [
-                (app.config["package_name"], get_latest_version(app, pr.number)[1])
-                for app in apps
+                (app.config["package_name"], app.deployed_pypi_version)
+                for app in pypi_apps
             ]
             if pypi_apps:
                 pr_builds_text += (
