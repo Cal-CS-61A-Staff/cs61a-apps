@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Badge,
+  Button,
   Card,
   Col,
   Container,
@@ -8,7 +9,6 @@ import {
   ListGroup,
   Row,
 } from "react-bootstrap";
-import Button from "react-bootstrap";
 import AlertsContext from "./AlertsContext";
 import { getToken } from "./auth";
 import ConnectAlertButton from "./ConnectAlertButton";
