@@ -1,14 +1,14 @@
 ## Overview
-This is the CLI for the 61A `examtool`. To edit the various web apps, see the `examtool-web` repo.
+This is the CLI for the 61A `examtool`. To edit the various web apps, see the other `exam-*` folders in the `cs61a-apps` repo.
 
-To install, run `pip install examtool[cli]`. To develop, create a virtualenv and run `pip install -e .`.
+To install, run `pip install examtool[cli]`. To develop, create a virtualenv and run `pip install -e .[cli]`.
 
-The CLI also requires `pdflatex` to be installed and in your PATH.
+The CLI also requires `wget` and `pdflatex` to be installed and in your PATH.
 
 To deploy exams to the server, you must be registered as an admin for your course at https://auth.apps.cs61a.org.
 
 ## Workflow
-First, visit https://write.final.cs61a.org to write your exam, following instructions in the README of `examtool-web/apps/write` folder. When your exam is ready, export it as a JSON and place the JSON in a folder.
+First, visit https://write.final.cs61a.org to write your exam, following [these instructions](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/exam-write/README.md). When your exam is ready, export it as a JSON and place the JSON in a folder.
 
 In that folder, run `examtool deploy` and select that JSON along with a roster CSV. When deployed, the exam will be accessible at https://exam.cs61a.org.
 
