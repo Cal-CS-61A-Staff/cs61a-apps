@@ -184,8 +184,6 @@ def create_slack_client(app):
                                 else {}
                             ),
                             "text": response,
-                            "unfurl_links": False,
-                            "unfurl_media": False,
                         },
                         headers={"Authorization": "Bearer {}".format(bot_token)},
                     )
@@ -203,6 +201,7 @@ def create_slack_client(app):
                             "as_user": True,
                             "text": combined_integration.message,
                             "attachments": combined_integration.attachments,
+                            "unfurl_links": False,
                         },
                         headers={"Authorization": "Bearer {}".format(token)},
                     ).json()
