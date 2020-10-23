@@ -202,6 +202,7 @@ def create_slack_client(app):
                             "text": combined_integration.message,
                             "attachments": combined_integration.attachments,
                             "unfurl_links": False,
+                            "unfurl_media": False,
                         },
                         headers={"Authorization": "Bearer {}".format(token)},
                     ).json()
