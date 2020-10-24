@@ -2,7 +2,6 @@ import time
 from os import getenv
 
 from flask import jsonify, abort
-from google.cloud import firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests as g_requests
 
@@ -14,9 +13,9 @@ from api import (
     generate_audio,
 )
 
-from examtool.api.database import valid
-
 # this can be public
+from examtool_web_common.safe_firestore import SafeFirestore
+
 CLIENT_ID = "713452892775-59gliacuhbfho8qvn4ctngtp3858fgf9.apps.googleusercontent.com"
 
 DEV_EMAIL = getenv("DEV_EMAIL", "exam-test@berkeley.edu")
@@ -54,7 +53,7 @@ def index(request):
         if getenv("ENV") == "dev":
             update_cache()
 
-        db = firestore.Client()
+        db = SafeFirestore()
 
         if request.path.endswith("main.js"):
             return main_js
@@ -70,7 +69,7 @@ def index(request):
         if request.path == "/" or request.json is None:
             return main_html
 
-        exam = valid(request.json["exam"])
+        exam = request.json["exam"]
         course = exam.split("-")[0]
 
         if request.path.endswith("fetch_data"):
@@ -78,15 +77,15 @@ def index(request):
             email = get_email(request)
             student_data = (
                 db.collection("exam-alerts")
-                .document(valid(exam))
+                .document(exam)
                 .collection("students")
-                .document(valid(email))
+                .document(email)
                 .get()
                 .to_dict()
             )
             announcements = list(
                 db.collection("exam-alerts")
-                .document(valid(exam))
+                .document(exam)
                 .collection("announcements")
                 .stream()
             )
@@ -111,9 +110,9 @@ def index(request):
                         received_audio,
                         lambda x: (
                             db.collection("exam-alerts")
-                            .document(valid(exam))
+                            .document(exam)
                             .collection("announcement_audio")
-                            .document(valid(x))
+                            .document(x)
                             .get()
                             .to_dict()
                             or {}
@@ -121,6 +120,20 @@ def index(request):
                     ),
                 }
             )
+
+        if request.path.endswith("ask_question"):
+            email = get_email(request)
+            student_exists = (
+                db.collection("exam-alerts")
+                .document(exam)
+                .collection("students")
+                .document(email)
+                .get()
+                .exists
+            )
+            if not student_exists:
+                abort(403)
+            db.collection("exam-alerts").document(exam).collection()
 
         # only staff endpoints from here onwards
         email = (
@@ -138,7 +151,7 @@ def index(request):
             announcement["timestamp"] = time.time()
             ref = (
                 db.collection("exam-alerts")
-                .document(valid(exam))
+                .document(exam)
                 .collection("announcements")
                 .document()
             )
@@ -147,38 +160,36 @@ def index(request):
 
             if spoken_message:
                 audio = generate_audio(spoken_message)
-                db.collection("exam-alerts").document(valid(exam)).collection(
+                db.collection("exam-alerts").document(exam).collection(
                     "announcement_audio"
-                ).document(valid(ref.id)).set({"audio": audio})
+                ).document(ref.id).set({"audio": audio})
 
         elif request.path.endswith("clear_announcements"):
             clear_collection(
                 db,
-                db.collection("exam-alerts")
-                .document(valid(exam))
-                .collection("announcements"),
+                db.collection("exam-alerts").document(exam).collection("announcements"),
             )
             clear_collection(
                 db,
                 db.collection("exam-alerts")
-                .document(valid(exam))
+                .document(exam)
                 .collection("announcement_audio"),
             )
         elif request.path.endswith("delete_announcement"):
             target = request.json["id"]
-            db.collection("exam-alerts").document(valid(exam)).collection(
+            db.collection("exam-alerts").document(exam).collection(
                 "announcements"
-            ).document(valid(target)).delete()
+            ).document(target).delete()
         else:
             abort(404)
 
         # all staff endpoints return an updated state
-        exam_data = db.collection("exam-alerts").document(valid(exam)).get().to_dict()
+        exam_data = db.collection("exam-alerts").document(exam).get().to_dict()
         announcements = sorted(
             (
                 {"id": announcement.id, **announcement.to_dict()}
                 for announcement in db.collection("exam-alerts")
-                .document(valid(exam))
+                .document(exam)
                 .collection("announcements")
                 .stream()
             ),

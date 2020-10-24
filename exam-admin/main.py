@@ -7,9 +7,9 @@ from google.oauth2 import id_token
 
 from api import handle_api_call, is_admin
 
-from examtool.api.database import valid
-
 # this can be public
+from examtool_web_common.safe_firestore import SafeFirestore
+
 CLIENT_ID = "713452892775-59gliacuhbfho8qvn4ctngtp3858fgf9.apps.googleusercontent.com"
 
 DEV_EMAIL = getenv("DEV_EMAIL", "exam-test@berkeley.edu")
@@ -47,7 +47,7 @@ def index(request):
         if getenv("ENV") == "dev":
             update_cache()
 
-        db = firestore.Client()
+        db = SafeFirestore()
 
         if request.path.endswith("main.js"):
             return main_js
@@ -77,7 +77,7 @@ def index(request):
             exam = request.json["exam"]
             if not exam.startswith(course):
                 abort(401)
-            exam_json = db.collection("exams").document(valid(exam)).get().to_dict()
+            exam_json = db.collection("exams").document(exam).get().to_dict()
             secret = exam_json.pop("secret")
             return jsonify(
                 {

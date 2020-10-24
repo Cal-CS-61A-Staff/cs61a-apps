@@ -4,14 +4,14 @@ from examtool.api.server_delegate import server_only
 from examtool.api.utils import as_list
 
 if getenv("ENV") == "SERVER":
-    from google.cloud import firestore
+    from examtool_web_common.safe_firestore import SafeFirestore
     from google.cloud.exceptions import NotFound
 
 BATCH_SIZE = 400
 assert BATCH_SIZE < 500
 
 
-def clear_collection(db: "firestore.Client", ref):
+def clear_collection(db, ref):
     batch = db.batch()
     cnt = 0
     for document in ref.stream():
@@ -24,17 +24,11 @@ def clear_collection(db: "firestore.Client", ref):
     batch.commit()
 
 
-def valid(id: str):
-    if "/" in id or ".." in id:
-        raise Exception("Invalid id!")
-    return id
-
-
 @server_only
 def get_exam(*, exam):
     try:
-        db = firestore.Client()
-        out = db.collection("exams").document(valid(exam)).get().to_dict()
+        db = SafeFirestore()
+        out = db.collection("exams").document(exam).get().to_dict()
         if "secret" in out and isinstance(out["secret"], bytes):
             out["secret"] = out["secret"].decode("utf-8")
         return out
@@ -44,8 +38,8 @@ def get_exam(*, exam):
 
 @server_only
 def set_exam(*, exam, json):
-    db = firestore.Client()
-    db.collection("exams").document(valid(exam)).set(json)
+    db = SafeFirestore()
+    db.collection("exams").document(exam).set(json)
 
     ref = db.collection("exams").document("all")
     data = ref.get().to_dict()
@@ -57,18 +51,18 @@ def set_exam(*, exam, json):
 @server_only
 @as_list
 def get_roster(*, exam):
-    db = firestore.Client()
+    db = SafeFirestore()
     for student in (
-        db.collection("roster").document(valid(exam)).collection("deadline").stream()
+        db.collection("roster").document(exam).collection("deadline").stream()
     ):
         yield student.id, student.to_dict()["deadline"]
 
 
 @server_only
 def set_roster(*, exam, roster):
-    db = firestore.Client()
+    db = SafeFirestore()
 
-    ref = db.collection("roster").document(valid(exam)).collection("deadline")
+    ref = db.collection("roster").document(exam).collection("deadline")
 
     batch = db.batch()
     cnt = 0
@@ -84,7 +78,7 @@ def set_roster(*, exam, roster):
     batch = db.batch()
     cnt = 0
     for email, deadline in roster:
-        doc_ref = ref.document(valid(email))
+        doc_ref = ref.document(email)
         batch.set(doc_ref, {"deadline": int(deadline)})
         cnt += 1
         if cnt > 400:
@@ -97,20 +91,18 @@ def set_roster(*, exam, roster):
 @server_only
 @as_list
 def get_submissions(*, exam):
-    db = firestore.Client()
+    db = SafeFirestore()
 
-    for ref in db.collection(valid(exam)).stream():
+    for ref in db.collection(exam).stream():
         yield ref.id, ref.to_dict()
 
 
 @server_only
 @as_list
 def get_logs(*, exam, email):
-    db = firestore.Client()
+    db = SafeFirestore()
 
-    for ref in (
-        db.collection(valid(exam)).document(valid(email)).collection("log").stream()
-    ):
+    for ref in db.collection(exam).document(email).collection("log").stream():
         yield ref.to_dict()
 
 
@@ -140,19 +132,17 @@ def process_ok_exam_upload(*, exam, data, clear=True):
         ],
     }
     """
-    db = firestore.Client()
+    db = SafeFirestore()
 
-    db.collection("exam-alerts").document(valid(exam)).set(
-        {"questions": data["questions"]}
-    )
-    ref = db.collection("exam-alerts").document(valid(exam)).collection("students")
+    db.collection("exam-alerts").document(exam).set({"questions": data["questions"]})
+    ref = db.collection("exam-alerts").document(exam).collection("students")
     if clear:
         clear_collection(db, ref)
 
     batch = db.batch()
     cnt = 0
     for student in data["students"]:
-        doc_ref = ref.document(valid(student["email"]))
+        doc_ref = ref.document(student["email"])
         batch.set(doc_ref, student)
         cnt += 1
         if cnt > BATCH_SIZE:

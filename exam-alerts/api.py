@@ -35,7 +35,7 @@ def is_admin(email, course):
     ).json()
 
 
-def clear_collection(db: "firestore.Client", ref):
+def clear_collection(db, ref):
     batch = db.batch()
     cnt = 0
     for document in ref.stream():
