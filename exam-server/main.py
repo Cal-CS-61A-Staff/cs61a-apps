@@ -9,6 +9,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from google.cloud.exceptions import NotFound
 
+from examtool.api.database import valid
 from examtool.api.scramble import scramble
 
 # this can be public
@@ -45,11 +46,16 @@ def get_email(request):
 
 
 def get_exam_dict(exam, db):
-    return db.collection("exams").document(exam).get().to_dict()
+    return db.collection("exams").document(valid(exam)).get().to_dict()
 
 
 def get_deadline(exam, email, db):
-    ref = db.collection("roster").document(exam).collection("deadline").document(email)
+    ref = (
+        db.collection("roster")
+        .document(valid(exam))
+        .collection("deadline")
+        .document(valid(email))
+    )
     try:
         data = ref.get().to_dict()
         if data:
@@ -64,7 +70,7 @@ def get_deadline(exam, email, db):
         # log unexpected access
         ref = (
             db.collection("roster")
-            .document(exam)
+            .document(valid(exam))
             .collection("unexpected_access_log")
             .document()
         )
@@ -100,7 +106,7 @@ def index(request):
         if request.path.endswith("get_exam"):
             exam = request.json["exam"]
             email = get_email(request)
-            ref = db.collection(exam).document(email)
+            ref = db.collection(valid(exam)).document(valid(email))
             try:
                 answers = ref.get().to_dict() or {}
             except NotFound:
@@ -144,7 +150,9 @@ def index(request):
             sent_time = request.json.get("sentTime", 0)
             email = get_email(request)
 
-            db.collection(exam).document(email).collection("log").document().set(
+            db.collection(valid(exam)).document(valid(email)).collection(
+                "log"
+            ).document().set(
                 {"timestamp": time.time(), "sentTime": sent_time, question_id: value}
             )
 
@@ -155,10 +163,10 @@ def index(request):
                 return
 
             recency_ref = (
-                db.collection(exam)
-                .document(email)
+                db.collection(valid(exam))
+                .document(valid(email))
                 .collection("recency")
-                .document(question_id)
+                .document(valid(question_id))
             )
             try:
                 recency = recency_ref.get().to_dict() or {}
@@ -173,7 +181,9 @@ def index(request):
 
             recency_ref.set({"sentTime": sent_time})
 
-            db.collection(exam).document(email).set({question_id: value}, merge=True)
+            db.collection(valid(exam)).document(valid(email)).set(
+                {question_id: value}, merge=True
+            )
             return jsonify({"success": True})
 
         if getenv("ENV") == "dev" and request.path.endswith("alerts/fetch_data"):

@@ -7,13 +7,14 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as g_requests
 
 from api import (
-    process_ok_exam_upload,
     is_admin,
     clear_collection,
     get_announcements,
     get_email_from_secret,
     generate_audio,
 )
+
+from examtool.api.database import valid
 
 # this can be public
 CLIENT_ID = "713452892775-59gliacuhbfho8qvn4ctngtp3858fgf9.apps.googleusercontent.com"
@@ -69,11 +70,7 @@ def index(request):
         if request.path == "/" or request.json is None:
             return main_html
 
-        if request.path.endswith("upload_ok_exam"):
-            process_ok_exam_upload(db, request.json["data"], request.json["secret"])
-            return jsonify({"success": True})
-
-        exam = request.json["exam"]
+        exam = valid(request.json["exam"])
         course = exam.split("-")[0]
 
         if request.path.endswith("fetch_data"):
@@ -81,15 +78,15 @@ def index(request):
             email = get_email(request)
             student_data = (
                 db.collection("exam-alerts")
-                .document(exam)
+                .document(valid(exam))
                 .collection("students")
-                .document(email)
+                .document(valid(email))
                 .get()
                 .to_dict()
             )
             announcements = list(
                 db.collection("exam-alerts")
-                .document(exam)
+                .document(valid(exam))
                 .collection("announcements")
                 .stream()
             )
@@ -114,9 +111,9 @@ def index(request):
                         received_audio,
                         lambda x: (
                             db.collection("exam-alerts")
-                            .document(exam)
+                            .document(valid(exam))
                             .collection("announcement_audio")
-                            .document(x)
+                            .document(valid(x))
                             .get()
                             .to_dict()
                             or {}
@@ -141,7 +138,7 @@ def index(request):
             announcement["timestamp"] = time.time()
             ref = (
                 db.collection("exam-alerts")
-                .document(exam)
+                .document(valid(exam))
                 .collection("announcements")
                 .document()
             )
@@ -150,36 +147,38 @@ def index(request):
 
             if spoken_message:
                 audio = generate_audio(spoken_message)
-                db.collection("exam-alerts").document(exam).collection(
+                db.collection("exam-alerts").document(valid(exam)).collection(
                     "announcement_audio"
-                ).document(ref.id).set({"audio": audio})
+                ).document(valid(ref.id)).set({"audio": audio})
 
         elif request.path.endswith("clear_announcements"):
             clear_collection(
                 db,
-                db.collection("exam-alerts").document(exam).collection("announcements"),
+                db.collection("exam-alerts")
+                .document(valid(exam))
+                .collection("announcements"),
             )
             clear_collection(
                 db,
                 db.collection("exam-alerts")
-                .document(exam)
+                .document(valid(exam))
                 .collection("announcement_audio"),
             )
         elif request.path.endswith("delete_announcement"):
             target = request.json["id"]
-            db.collection("exam-alerts").document(exam).collection(
+            db.collection("exam-alerts").document(valid(exam)).collection(
                 "announcements"
-            ).document(target).delete()
+            ).document(valid(target)).delete()
         else:
             abort(404)
 
         # all staff endpoints return an updated state
-        exam_data = db.collection("exam-alerts").document(exam).get().to_dict()
+        exam_data = db.collection("exam-alerts").document(valid(exam)).get().to_dict()
         announcements = sorted(
             (
                 {"id": announcement.id, **announcement.to_dict()}
                 for announcement in db.collection("exam-alerts")
-                .document(exam)
+                .document(valid(exam))
                 .collection("announcements")
                 .stream()
             ),

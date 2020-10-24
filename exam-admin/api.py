@@ -9,7 +9,7 @@ import examtool.api.email as mail
 
 
 def handle_api_call(method, kwargs):
-    target = kwargs["exam"]
+    target = db.valid(kwargs["exam"])
     token = kwargs.pop("token")
     course = target.split("-")[0]
     ret = requests.get("https://okpy.org/api/v3/user/", params={"access_token": token})
