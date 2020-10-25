@@ -250,7 +250,7 @@ export default function Question({ question, number }) {
               href="#"
               onClick={toggleStarred}
               className="badge badge-light"
-              style={{ float: "right", "font-size": "100%", color: starColor }}
+              style={{ float: "right", fontSize: "100%", color: starColor }}
             >
               {starBody}
             </a>

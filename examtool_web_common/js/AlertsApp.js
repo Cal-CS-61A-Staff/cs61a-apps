@@ -1,22 +1,17 @@
 import React, { useEffect, useState } from "react";
-import {
-  Badge,
-  Button,
-  Card,
-  Col,
-  Container,
-  Form,
-  ListGroup,
-  Row,
-} from "react-bootstrap";
+import { Col, Container, Form, Row } from "react-bootstrap";
 import AlertsContext from "./AlertsContext";
+import AskQuestion from "./AskQuestion";
 import { getToken } from "./auth";
 import ConnectAlertButton from "./ConnectAlertButton";
 import CreateAnnouncement from "./CreateAnnouncement";
 import GoogleSignInButton from "./GoogleSignInButton";
 import post from "./post";
+import StaffAlertsList from "./StaffAlertsList";
+import StaffMessagesList from "./StaffMessagesList";
+import StudentMessagesList from "./StudentMessagesList";
+import StudentAlertsList from "./StudentAlertsList";
 import TimerBanner from "./TimerBanner";
-import { timeDeltaMinutesString } from "./timeUtils";
 import useInterval from "./useInterval";
 import useTick from "./useTick";
 
@@ -68,26 +63,32 @@ export default function Alerts() {
   }, [stale]);
 
   useInterval(async () => {
-    if (examData) {
+    if (examData || staffData) {
       try {
-        const resp = await post("fetch_data", {
+        const resp = await post(examData ? "fetch_data" : "fetch_staff_data", {
           token: getToken(),
           exam: selectedExam,
-          receivedAudio: examData.announcements.map((x) => x.id),
+          receivedAudio: examData
+            ? examData.announcements.map((x) => x.id)
+            : null,
         });
         if (resp.ok) {
           const data = await resp.json();
           if (data.success) {
-            setExamData(data);
             setStale(false);
-            const newAudio = [];
-            for (const { audio } of data.announcements) {
-              if (audio) {
-                newAudio.push(audio);
+            if (examData) {
+              setExamData(data);
+              const newAudio = [];
+              for (const { audio } of data.announcements) {
+                if (audio) {
+                  newAudio.push(audio);
+                }
               }
+              newAudio.reverse();
+              setAudioQueue((queue) => queue.concat(newAudio));
+            } else {
+              setStaffData(data);
             }
-            newAudio.reverse();
-            setAudioQueue((queue) => queue.concat(newAudio));
           }
         }
       } catch (e) {
@@ -96,22 +97,6 @@ export default function Alerts() {
       }
     }
   }, 10000);
-
-  const deleteAnnouncement = (id) => {
-    (async () => {
-      const resp = await post("/delete_announcement", {
-        id,
-        exam: selectedExam,
-        token: getToken(),
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.success) {
-          setStaffData(data);
-        }
-      }
-    })();
-  };
 
   return (
     <AlertsContext.Provider value={{ time, examData, stale }}>
@@ -144,7 +129,7 @@ export default function Alerts() {
                       Select an exam
                     </option>
                     {examList.map((exam) => (
-                      <option>{exam}</option>
+                      <option key={exam}>{exam}</option>
                     ))}
                   </Form.Control>
                 </Form.Group>
@@ -187,96 +172,47 @@ export default function Alerts() {
           </Row>
         )}
         {examData && (
-          <>
-            <Row>
-              <Col>
-                <TimerBanner data={examData} />
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Card>
-                  <Card.Header>
-                    Announcements
-                    {stale && (
-                      <Badge style={{ float: "right" }} variant="danger">
-                        Disconnected
-                      </Badge>
-                    )}
-                  </Card.Header>
-                  <ListGroup variant="flush">
-                    {examData.announcements.map(
-                      ({ id, message, question, time: announcementTime }) => (
-                        <ListGroup.Item
-                          key={id}
-                          style={{ whiteSpace: "pre-wrap" }}
-                        >
-                          <b>[{question}]</b> {message} (
-                          {timeDeltaMinutesString(time - announcementTime)})
-                        </ListGroup.Item>
-                      )
-                    )}
-                  </ListGroup>
-                </Card>
-              </Col>
-            </Row>
-          </>
-        )}
-        {staffData && (
           <Row>
             <Col>
-              <CreateAnnouncement
-                key={
-                  staffData.announcements[0] && staffData.announcements[0].id
-                }
-                exam={selectedExam}
-                staffData={staffData}
-                onUpdate={setStaffData}
-              />
-              <br />
+              <TimerBanner data={examData} />
             </Col>
           </Row>
         )}
-        {staffData &&
-          staffData.announcements.map(
-            ({
-              base,
-              id,
-              offset,
-              canonical_question_name: questionName,
-              message,
-              spoken_message: spokenMessage,
-            }) => (
-              <Row key={id}>
-                <Col>
-                  <Card>
-                    <Card.Header>
-                      Announcement for {questionName || "the overall exam"}{" "}
-                      {offset && `(${base}+${offset})`}
-                      <Button
-                        style={{ float: "right" }}
-                        variant="primary"
-                        onClick={() => deleteAnnouncement(id)}
-                        size="sm"
-                      >
-                        Delete
-                      </Button>
-                    </Card.Header>
-                    <Card.Body>
-                      {message}
-                      {/* eslint-disable-next-line no-nested-ternary */}
-                      {spokenMessage === "" ? (
-                        <i> [Silent]</i>
-                      ) : spokenMessage == null ? null : (
-                        <i> [Audio Override: {spokenMessage}]</i>
-                      )}
-                    </Card.Body>
-                  </Card>
-                  <br />
-                </Col>
-              </Row>
-            )
-          )}
+        {examData && (
+          <Row>
+            <Col>
+              <StudentAlertsList />
+            </Col>
+            <Col>
+              <AskQuestion onUpdate={setExamData} exam={selectedExam} />
+              <StudentMessagesList />
+            </Col>
+          </Row>
+        )}
+        <CreateAnnouncement
+          exam={selectedExam}
+          staffData={staffData}
+          onUpdate={setStaffData}
+        />
+        {staffData && (
+          <Row>
+            <Col>
+              <StaffAlertsList
+                selectedExam={selectedExam}
+                staffData={staffData}
+                onUpdate={setStaffData}
+              />
+            </Col>
+            <Col>
+              <StaffMessagesList
+                selectedExam={selectedExam}
+                staffData={staffData}
+                onUpdate={setStaffData}
+              />
+            </Col>
+          </Row>
+        )}
+        <br />
       </Container>
     </AlertsContext.Provider>
   );

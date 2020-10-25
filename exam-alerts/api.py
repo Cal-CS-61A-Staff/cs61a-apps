@@ -1,14 +1,10 @@
 import base64
 import time
 from os import getenv
-from typing import TYPE_CHECKING
 from google.cloud import texttospeech
 
 import requests
 from flask import abort
-
-if TYPE_CHECKING:
-    from google.cloud import firestore
 
 BATCH_SIZE = 400
 assert BATCH_SIZE < 500
@@ -19,6 +15,21 @@ def get_email_from_secret(secret):
     if ret.status_code != 200:
         abort(401)
     return ret.json()["data"]["email"]
+
+
+def get_student_question_name(student_data, canonical_question_name):
+    for question in student_data["questions"]:
+        if (
+            question["canonical_question_name"].strip()
+            == canonical_question_name.strip()
+        ):
+            return question["student_question_name"]
+
+
+def get_canonical_question_name(student_data, student_question_name):
+    for question in student_data["questions"]:
+        if question["student_question_name"].strip() == student_question_name.strip():
+            return question["canonical_question_name"]
 
 
 def is_admin(email, course):
@@ -48,7 +59,7 @@ def clear_collection(db, ref):
     batch.commit()
 
 
-def get_announcements(student_data, announcements, received_audio, get_audio):
+def get_announcements(student_data, announcements, messages, received_audio, get_audio):
     """
     Announcements are of the form
     {
@@ -79,6 +90,7 @@ def get_announcements(student_data, announcements, received_audio, get_audio):
                     "time": time,
                     "message": announcement["message"],
                     "question": announcement.get("question", "Overall Exam"),
+                    "private": False,
                 }
             )
             if received_audio is not None and announcement_id not in received_audio:
@@ -110,13 +122,27 @@ def get_announcements(student_data, announcements, received_audio, get_audio):
             if request_time >= threshold:
                 include_it(threshold)
 
+    for message in messages:
+        for response in message["responses"]:
+            to_send.append(
+                {
+                    "id": response["id"],
+                    "time": response["timestamp"],
+                    "message": response["message"],
+                    "question": message["question"] or "Overall Exam",
+                    "private": True,
+                }
+            )
+            if received_audio is not None and response["id"] not in received_audio:
+                to_send[-1]["audio"] = get_audio(response["id"])
+
     to_send.sort(key=lambda x: x["time"])
     to_send.reverse()
     return to_send
 
 
-def generate_audio(message):
-    message = "Attention students. " + message
+def generate_audio(message, prefix="Attention students. "):
+    message = prefix + message
 
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.SynthesisInput({"text": message})

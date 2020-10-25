@@ -1,11 +1,16 @@
 import time
+from collections import defaultdict
+from json import dumps, loads
 from os import getenv
+from sys import stderr
 
 from flask import jsonify, abort
 from google.oauth2 import id_token
 from google.auth.transport import requests as g_requests
 
 from api import (
+    get_canonical_question_name,
+    get_student_question_name,
     is_admin,
     clear_collection,
     get_announcements,
@@ -14,6 +19,9 @@ from api import (
 )
 
 # this can be public
+from examtool.api.extract_questions import extract_questions
+from examtool.api.scramble import scramble
+from examtool.cli.deploy import get_name
 from examtool_web_common.safe_firestore import SafeFirestore
 
 CLIENT_ID = "713452892775-59gliacuhbfho8qvn4ctngtp3858fgf9.apps.googleusercontent.com"
@@ -48,6 +56,22 @@ def get_email(request):
     return id_info["email"]
 
 
+def group_messages(message_list):
+    students = defaultdict(list)
+    messages = {}
+    for message in message_list:
+        if "reply_to" not in message:
+            message = {**message, "responses": []}
+            students[message["email"]].append(message)
+            messages[message["id"]] = message
+    for message in message_list:
+        if "reply_to" in message:
+            messages[message["reply_to"]]["responses"].append(message)
+    for message in messages.values():
+        message["responses"].sort(key=lambda response: response["timestamp"])
+    return students
+
+
 def index(request):
     try:
         if getenv("ENV") == "dev":
@@ -72,7 +96,44 @@ def index(request):
         exam = request.json["exam"]
         course = exam.split("-")[0]
 
-        if request.path.endswith("fetch_data"):
+        student_reply = False
+
+        if request.path.endswith("ask_question"):
+            email = get_email(request)
+            student_question_name = request.json["question"]
+            message = request.json["message"]
+
+            student_data = (
+                db.collection("exam-alerts")
+                .document(exam)
+                .collection("students")
+                .document(email)
+                .get()
+                .to_dict()
+            )
+
+            if student_question_name is not None:
+                canonical_question_name = get_canonical_question_name(
+                    student_data, student_question_name
+                )
+                if canonical_question_name is None:
+                    return abort(400)
+            else:
+                canonical_question_name = None
+
+            db.collection("exam-alerts").document(exam).collection(
+                "messages"
+            ).document().set(
+                dict(
+                    question=canonical_question_name,
+                    message=message,
+                    email=email,
+                    timestamp=time.time(),
+                )
+            )
+            student_reply = True
+
+        if request.path.endswith("fetch_data") or student_reply:
             received_audio = request.json.get("receivedAudio")
             email = get_email(request)
             student_data = (
@@ -89,24 +150,41 @@ def index(request):
                 .collection("announcements")
                 .stream()
             )
+            messages = [
+                {**message.to_dict(), "id": message.id}
+                for message in (
+                    db.collection("exam-alerts")
+                    .document(exam)
+                    .collection("messages")
+                    .stream()
+                )
+                if message.to_dict()["email"] == email
+            ]
+
+            messages = group_messages(messages)[email]
+
+            for message in messages:
+                if message["question"] is not None:
+                    message["question"] = get_student_question_name(
+                        student_data, message["question"]
+                    )
+
             return jsonify(
                 {
                     "success": True,
                     "exam_type": "ok-exam",
-                    "questions": [],
                     "startTime": student_data["start_time"],
                     "endTime": student_data["end_time"],
-                    # "questions": [
-                    #     {
-                    #         "questionName": question["student_question_name"],
-                    #         "startTime": question["start_time"],
-                    #         "endTime": question["end_time"],
-                    #     }
-                    #     for question in student_data["questions"]
-                    # ],
+                    "questions": [
+                        question["student_question_name"]
+                        for question in student_data["questions"]
+                    ]
+                    if time.time() > student_data["start_time"]
+                    else [],
                     "announcements": get_announcements(
                         student_data,
                         announcements,
+                        messages,
                         received_audio,
                         lambda x: (
                             db.collection("exam-alerts")
@@ -118,22 +196,22 @@ def index(request):
                             or {}
                         ).get("audio"),
                     ),
+                    "messages": sorted(
+                        [
+                            {
+                                "id": message["id"],
+                                "message": message["message"],
+                                "time": message["timestamp"],
+                                "question": message["question"] or "Overall Exam",
+                                "responses": message["responses"],
+                            }
+                            for message in messages
+                        ],
+                        key=lambda message: message["time"],
+                        reverse=True,
+                    ),
                 }
             )
-
-        if request.path.endswith("ask_question"):
-            email = get_email(request)
-            student_exists = (
-                db.collection("exam-alerts")
-                .document(exam)
-                .collection("students")
-                .document(email)
-                .get()
-                .exists
-            )
-            if not student_exists:
-                abort(403)
-            db.collection("exam-alerts").document(exam).collection()
 
         # only staff endpoints from here onwards
         email = (
@@ -180,10 +258,49 @@ def index(request):
             db.collection("exam-alerts").document(exam).collection(
                 "announcements"
             ).document(target).delete()
+        elif request.path.endswith("send_response"):
+            message_id = request.json["id"]
+            reply = request.json["reply"]
+            message = (
+                db.collection("exam-alerts")
+                .document(exam)
+                .collection("messages")
+                .document(message_id)
+                .get()
+            )
+            ref = (
+                db.collection("exam-alerts")
+                .document(exam)
+                .collection("messages")
+                .document()
+            )
+            ref.set(
+                {
+                    "timestamp": time.time(),
+                    "email": message.to_dict()["email"],
+                    "reply_to": message.id,
+                    "message": reply,
+                }
+            )
+            audio = generate_audio(
+                reply, prefix="A staff member sent the following reply: "
+            )
+            db.collection("exam-alerts").document(exam).collection(
+                "announcement_audio"
+            ).document(ref.id).set({"audio": audio})
+        elif request.path.endswith("get_question"):
+            question_title = request.json["id"]
+            student = request.json["student"]
+            exam = db.collection("exams").document(exam).get().to_dict()
+            questions = extract_questions(scramble(student, exam), include_groups=True)
+            for question in questions:
+                if get_name(question).strip() == question_title.strip():
+                    return jsonify({"success": True, "question": question})
+            abort(400)
         else:
             abort(404)
 
-        # all staff endpoints return an updated state
+        # (almost) all staff endpoints return an updated state
         exam_data = db.collection("exam-alerts").document(exam).get().to_dict()
         announcements = sorted(
             (
@@ -196,8 +313,38 @@ def index(request):
             key=lambda announcement: announcement["timestamp"],
             reverse=True,
         )
+        messages = sorted(
+            [
+                {
+                    "email": email,
+                    "messages": sorted(
+                        messages, key=lambda x: x["timestamp"], reverse=True
+                    ),
+                }
+                for email, messages in group_messages(
+                    [
+                        {**message.to_dict(), "id": message.id}
+                        for message in db.collection("exam-alerts")
+                        .document(exam)
+                        .collection("messages")
+                        .stream()
+                    ]
+                ).items()
+            ],
+            key=lambda x: (
+                all(len(message["responses"]) > 0 for message in x["messages"]),
+                -x["messages"][-1]["timestamp"],
+                x["email"],
+            ),
+        )
+
         return jsonify(
-            {"success": True, "exam": exam_data, "announcements": announcements}
+            {
+                "success": True,
+                "exam": exam_data,
+                "announcements": announcements,
+                "messages": messages,
+            }
         )
 
     except Exception as e:
