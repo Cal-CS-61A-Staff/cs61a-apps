@@ -32,7 +32,7 @@ export default function StaffAlertsList({ selectedExam, staffData, onUpdate }) {
           message,
           spoken_message: spokenMessage,
         }) => (
-          <div id={id}>
+          <div key={id}>
             <Card>
               <Card.Header>
                 Announcement for {questionName || "the overall exam"}{" "}

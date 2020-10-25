@@ -15,11 +15,9 @@ export default function StaffMessagesList({
   const time = useTime();
 
   const [showModal, setShowModal] = useState(false);
-  const [openedQuestion, setOpenedQuestion] = useState(null);
   const [questionData, setQuestionData] = useState(null);
 
   const loadQuestion = async (id, student) => {
-    setOpenedQuestion(id);
     setQuestionData(null);
     setShowModal(true);
     try {
@@ -112,10 +110,8 @@ export default function StaffMessagesList({
         <Modal.Body>
           {questionData != null &&
             {
-              question: (
-                <Question question={questionData} number={openedQuestion} />
-              ),
-              group: <Group group={questionData} number={openedQuestion} />,
+              question: <Question question={questionData} number="" />,
+              group: <Group group={questionData} number="" />,
             }[questionData.type]}
         </Modal.Body>
         <Modal.Footer>

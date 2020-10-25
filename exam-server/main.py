@@ -191,7 +191,7 @@ def index(request):
             db.collection(exam).document(email).set({question_id: value}, merge=True)
             return jsonify({"success": True})
 
-        if getenv("ENV") == "dev" and request.path.endswith("alerts/fetch_data"):
+        if getenv("ENV") == "dev" and "alerts" in request.path:
             from alerts import index as alerts_index
 
             return alerts_index(request)

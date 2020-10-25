@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React, { useEffect } from "react";
 import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
@@ -41,7 +42,9 @@ export default function Exam({ groups, publicGroup, ended }) {
           {!ended && publicGroup && <Group group={publicGroup} number={0} />}
           {!ended &&
             groups &&
-            groups.map((group, i) => <Group group={group} number={i + 1} />)}
+            groups.map((group, i) => (
+              <Group key={i} group={group} number={i + 1} />
+            ))}
           {groups && (
             <Jumbotron>
               {/* eslint-disable-next-line jsx-a11y/accessible-emoji */}
@@ -79,9 +82,18 @@ export function Group({ group, number, small }) {
         <div dangerouslySetInnerHTML={{ __html: group.html }} />
         {group.elements.map((element, i) =>
           element.type === "group" ? (
-            <Group group={element} number={`${number}.${i + 1}`} small />
+            <Group
+              key={i}
+              group={element}
+              number={`${number}.${i + 1}`}
+              small
+            />
           ) : (
-            <Question question={element} number={`${number}.${i + 1}`} />
+            <Question
+              key={i}
+              question={element}
+              number={`${number}.${i + 1}`}
+            />
           )
         )}
       </div>

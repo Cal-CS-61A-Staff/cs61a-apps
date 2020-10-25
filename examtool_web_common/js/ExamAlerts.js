@@ -188,13 +188,15 @@ export default function ExamAlerts({ exam }) {
           </Modal.Body>
         </Modal>
       )}
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>Ask a question</Modal.Header>
-        <Modal.Body>
-          <AskQuestion exam={examData} onUpdate={setExamData} />
-          <StudentMessagesList />
-        </Modal.Body>
-      </Modal>
+      {examData && (
+        <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+          <Modal.Header closeButton>Ask a question</Modal.Header>
+          <Modal.Body>
+            <AskQuestion exam={exam} onUpdate={setExamData} />
+            <StudentMessagesList />
+          </Modal.Body>
+        </Modal>
+      )}
     </AlertsContext.Provider>
   );
 }

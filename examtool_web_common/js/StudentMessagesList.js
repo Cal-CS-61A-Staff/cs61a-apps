@@ -16,7 +16,7 @@ export default function StudentMessagesList() {
       <Col>
         {examData.messages.map(
           ({ id, message, question, time: messageTime, responses }) => (
-            <>
+            <div key={id}>
               <Card>
                 <Card.Header>
                   <b>
@@ -50,7 +50,7 @@ export default function StudentMessagesList() {
                 </ListGroup>
               </Card>
               <br />
-            </>
+            </div>
           )
         )}
       </Col>

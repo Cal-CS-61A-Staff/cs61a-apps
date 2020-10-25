@@ -16,7 +16,7 @@ export default function AskQuestion({ exam, onUpdate }) {
   const submit = async () => {
     setIsLoading(true);
     try {
-      const resp = await post("ask_question", {
+      const resp = await post("alerts/ask_question", {
         exam,
         question: question === "Overall Exam" ? null : question,
         message,
