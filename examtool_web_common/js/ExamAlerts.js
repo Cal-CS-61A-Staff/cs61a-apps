@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Modal } from "react-bootstrap";
+import { Col, Modal } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Toast from "react-bootstrap/Toast";
+import AlertsContext from "./AlertsContext";
+import AskQuestion from "./AskQuestion";
 import { getToken } from "./auth";
 import post from "./post";
+import StudentMessagesList from "./StudentMessagesList";
 import { timeDeltaMinutesString } from "./timeUtils";
 import useInterval from "./useInterval";
 import useTick from "./useTick";
@@ -17,6 +20,7 @@ export default function ExamAlerts({ exam }) {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const [show, setShow] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   const time = useTick();
 
@@ -35,18 +39,22 @@ export default function ExamAlerts({ exam }) {
 
   useEffect(() => {
     (async () => {
-      const resp = await post("/alerts/fetch_data", {
-        token: getToken(),
-        exam,
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.success) {
-          setExamData(data);
+      try {
+        const resp = await post("/alerts/fetch_data", {
+          token: getToken(),
+          exam,
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.success) {
+            setExamData(data);
+          } else {
+            setFail(true);
+          }
         } else {
           setFail(true);
         }
-      } else {
+      } catch {
         setFail(true);
       }
     })();
@@ -88,7 +96,7 @@ export default function ExamAlerts({ exam }) {
   }, 10000);
 
   return (
-    <>
+    <AlertsContext.Provider value={{ time, examData, stale }}>
       <div
         style={{
           position: "fixed",
@@ -104,21 +112,33 @@ export default function ExamAlerts({ exam }) {
           examData.announcements
             .slice()
             .reverse()
-            .map(({ id, message, question, time: announcementTime }) => (
-              <Toast key={id}>
-                <Toast.Header closeButton={false}>
-                  <strong className="mr-auto">
-                    Announcement for {question}
-                  </strong>
-                  <small>
-                    {timeDeltaMinutesString(time - announcementTime)}
-                  </small>
-                </Toast.Header>
-                <Toast.Body>
-                  <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
-                </Toast.Body>
-              </Toast>
-            ))}
+            .map(
+              ({
+                id,
+                message,
+                question,
+                time: announcementTime,
+                private: isPrivate,
+              }) => (
+                <Toast key={id}>
+                  <Toast.Header closeButton={false}>
+                    <strong className="mr-auto">
+                      {isPrivate ? (
+                        "Staff Reply"
+                      ) : (
+                        <>Announcement for {question}</>
+                      )}
+                    </strong>
+                    <small>
+                      {timeDeltaMinutesString(time - announcementTime)}
+                    </small>
+                  </Toast.Header>
+                  <Toast.Body>
+                    <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+                  </Toast.Body>
+                </Toast>
+              )
+            )}
       </div>
       <div
         style={{
@@ -126,6 +146,7 @@ export default function ExamAlerts({ exam }) {
           bottom: 32,
           right: 32,
           width: 350,
+          background: "white",
         }}
       >
         <Button
@@ -136,6 +157,23 @@ export default function ExamAlerts({ exam }) {
           {show ? "Hide Announcements" : "Show Announcements"}
           {stale ? " (Offline)" : ""}
           {examData ? "" : " (Loading...)"}
+        </Button>
+      </div>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 32,
+          left: 32,
+          width: 200,
+          background: "white",
+        }}
+      >
+        <Button
+          block
+          onClick={() => setShowModal(true)}
+          variant="outline-secondary"
+        >
+          Clarifications
         </Button>
       </div>
       {fail && (
@@ -150,6 +188,13 @@ export default function ExamAlerts({ exam }) {
           </Modal.Body>
         </Modal>
       )}
-    </>
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+        <Modal.Header closeButton>Ask a question</Modal.Header>
+        <Modal.Body>
+          <AskQuestion exam={examData} onUpdate={setExamData} />
+          <StudentMessagesList />
+        </Modal.Body>
+      </Modal>
+    </AlertsContext.Provider>
   );
 }

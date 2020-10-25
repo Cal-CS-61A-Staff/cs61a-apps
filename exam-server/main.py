@@ -18,6 +18,19 @@ CLIENT_ID = "713452892775-59gliacuhbfho8qvn4ctngtp3858fgf9.apps.googleuserconten
 
 DEV_EMAIL = getenv("DEV_EMAIL", "exam-test@berkeley.edu")
 
+if getenv("ENV") == "dev":
+    import importlib.util
+    import sys
+    from os.path import abspath
+
+    for name in ["api", "main"]:
+        spec = importlib.util.spec_from_file_location(
+            name, abspath("../exam-alerts/{}.py".format(name))
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["alerts" if name == "main" else name] = module
+        spec.loader.exec_module(module)
+
 
 def update_cache():
     global main_html, main_js
@@ -179,20 +192,9 @@ def index(request):
             return jsonify({"success": True})
 
         if getenv("ENV") == "dev" and request.path.endswith("alerts/fetch_data"):
-            return jsonify(
-                {
-                    "success": True,
-                    "announcements": [
-                        {
-                            "id": "SNlddetyVazQiMYaNL2w",
-                            "message": "this is cool",
-                            "question": "1.2.",
-                            "time": 0,
-                        }
-                    ]
-                    * 100,
-                }
-            )
+            from alerts import index as alerts_index
+
+            return alerts_index(request)
 
     except:
         print(dict(request.json))
