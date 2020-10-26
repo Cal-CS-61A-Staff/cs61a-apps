@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Row, Card, Col, Form } from "react-bootstrap";
 import { useExamData } from "./AlertsContext";
+import { getToken } from "./auth";
 import FailText from "./FailText";
 import LoadingButton from "./LoadingButton";
 import post from "./post";
@@ -17,6 +18,7 @@ export default function AskQuestion({ exam, onUpdate }) {
     setIsLoading(true);
     try {
       const resp = await post("alerts/ask_question", {
+        token: getToken(),
         exam,
         question: question === "Overall Exam" ? null : question,
         message,
