@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Card, Modal, ListGroup } from "react-bootstrap";
 import { useTime } from "./AlertsContext";
+import { getToken } from "./auth";
 import { Group, postRenderFormat } from "./Exam";
 import Question from "./Question";
 import StaffMessageReplyBox from "./StaffMessageReplyBox";
@@ -22,6 +23,7 @@ export default function StaffMessagesList({
     setShowModal(true);
     try {
       const resp = await post("get_question", {
+        token: getToken(),
         exam: selectedExam,
         student,
         id,
