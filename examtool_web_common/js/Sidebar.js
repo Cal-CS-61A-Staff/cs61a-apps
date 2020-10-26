@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React, { useContext } from "react";
 import { Nav } from "react-bootstrap";
 import ExamContext from "./ExamContext";
@@ -20,7 +21,7 @@ export default function Sidebar({ groups }) {
           </Nav.Link>
         );
         return (
-          <>
+          <div key={i}>
             {heading}
             {getAllElements(group)
               .filter(
@@ -28,10 +29,14 @@ export default function Sidebar({ groups }) {
                   name.split(".").length === 2 ||
                   examContext.starredQuestions.get(id)
               )
-              .map(({ element, name }) => (
-                <QuestionLink question={element} name={`${i + 1}${name}`} />
+              .map(({ element, name }, j) => (
+                <QuestionLink
+                  key={j}
+                  question={element}
+                  name={`${i + 1}${name}`}
+                />
               ))}
-          </>
+          </div>
         );
       })}
     </Nav>

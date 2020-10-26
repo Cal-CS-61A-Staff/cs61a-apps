@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 
 from examtool.api.convert import rand_id
 from examtool.api.database import process_ok_exam_upload, set_exam, get_exam, set_roster
-from examtool.api.extract_questions import extract_questions
+from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import is_compressible_group, scramble
 from examtool.cli.utils import exam_name_option
 
@@ -32,13 +32,13 @@ from examtool.cli.utils import exam_name_option
     help="The unix timestamp corresponding to the start time of the exam.",
 )
 @click.option(
-    "--default-deadline",
+    "--enable-clarifications",
     prompt=True,
-    default=0,
-    type=int,
-    help="Specify if you want unregistered students to be able to take the exam, with this as the default deadline.",
+    default=True,
+    type=bool,
+    help="Let students send clarifications to staff from the exam itself.",
 )
-def deploy(exam, json, roster, start_time, default_deadline):
+def deploy(exam, json, roster, start_time, enable_clarifications):
     """
     Deploy an exam to the website. You must specify an exam JSON and associated roster CSV.
     You can deploy the JSON multiple times and the password will remain unchanged.
@@ -48,7 +48,7 @@ def deploy(exam, json, roster, start_time, default_deadline):
 
     exam_content = loads(json)
 
-    exam_content["default_deadline"] = default_deadline
+    exam_content["default_deadline"] = 0
     exam_content["secret"] = Fernet.generate_key().decode("utf-8")
 
     try:
@@ -112,16 +112,10 @@ def deploy(exam, json, roster, start_time, default_deadline):
                 ],
             },
             clear=i == 0,
+            enable_clarifications=enable_clarifications,
         )
 
     print("Announcements deployed to https://announcements.cs61a.org")
-
-
-def get_name(element):
-    if "name" in element:
-        return f"{element['index']} {element['name']}"
-    else:
-        return element["index"]
 
 
 if __name__ == "__main__":

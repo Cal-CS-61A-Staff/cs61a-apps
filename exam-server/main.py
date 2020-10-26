@@ -18,6 +18,19 @@ CLIENT_ID = "713452892775-59gliacuhbfho8qvn4ctngtp3858fgf9.apps.googleuserconten
 
 DEV_EMAIL = getenv("DEV_EMAIL", "exam-test@berkeley.edu")
 
+if getenv("ENV") == "dev":
+    import importlib.util
+    import sys
+    from os.path import abspath
+
+    for name in ["api", "main"]:
+        spec = importlib.util.spec_from_file_location(
+            name, abspath("../exam-alerts/{}.py".format(name))
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["alerts" if name == "main" else name] = module
+        spec.loader.exec_module(module)
+
 
 def update_cache():
     global main_html, main_js
@@ -59,26 +72,7 @@ def get_deadline(exam, email, db):
     except NotFound:
         pass
 
-    if not email.endswith("@berkeley.edu"):
-        abort(401)
-    exam_data = get_exam_dict(exam, db)
-    if exam_data.get("default_deadline"):
-        # log unexpected access
-        ref = (
-            db.collection("roster")
-            .document(exam)
-            .collection("unexpected_access_log")
-            .document()
-        )
-        ref.set(
-            {
-                "timestamp": time.time(),
-                "email": email,
-            }
-        )
-        return exam_data["default_deadline"]
-    else:
-        abort(401)
+    abort(401)
 
 
 def index(request):
@@ -178,21 +172,10 @@ def index(request):
             db.collection(exam).document(email).set({question_id: value}, merge=True)
             return jsonify({"success": True})
 
-        if getenv("ENV") == "dev" and request.path.endswith("alerts/fetch_data"):
-            return jsonify(
-                {
-                    "success": True,
-                    "announcements": [
-                        {
-                            "id": "SNlddetyVazQiMYaNL2w",
-                            "message": "this is cool",
-                            "question": "1.2.",
-                            "time": 0,
-                        }
-                    ]
-                    * 100,
-                }
-            )
+        if getenv("ENV") == "dev" and "alerts" in request.path:
+            from alerts import index as alerts_index
+
+            return alerts_index(request)
 
     except:
         print(dict(request.json))

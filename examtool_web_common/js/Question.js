@@ -70,6 +70,7 @@ export default function Question({ question, number }) {
       <div style={{ marginBottom: 10 }}>
         {question.options.map((option) => (
           <Form.Check
+            key={option.text}
             custom
             checked={value === option.text}
             name={question.id}
@@ -89,6 +90,7 @@ export default function Question({ question, number }) {
       <div style={{ marginBottom: 10 }}>
         {question.options.map((option) => (
           <Form.Check
+            key={option.text}
             custom
             checked={value.includes(option.text)}
             name={question.id}
@@ -250,7 +252,7 @@ export default function Question({ question, number }) {
               href="#"
               onClick={toggleStarred}
               className="badge badge-light"
-              style={{ float: "right", "font-size": "100%", color: starColor }}
+              style={{ float: "right", fontSize: "100%", color: starColor }}
             >
               {starBody}
             </a>

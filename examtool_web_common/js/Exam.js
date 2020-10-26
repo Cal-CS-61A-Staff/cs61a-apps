@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React, { useEffect } from "react";
 import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
@@ -6,24 +7,26 @@ import Points from "./Points";
 import Question from "./Question";
 import Sidebar from "./Sidebar";
 
+export function postRenderFormat() {
+  for (const link of document.getElementsByTagName("a")) {
+    if (
+      link.getAttribute("href") &&
+      link.hostname !== window.location.hostname
+    ) {
+      link.target = "_blank";
+    }
+  }
+  for (const table of document.getElementsByTagName("table")) {
+    table.classList.add("table", "table-bordered");
+  }
+  for (const blockquote of document.getElementsByTagName("blockquote")) {
+    blockquote.classList.add("blockquote");
+  }
+  typeset();
+}
+
 export default function Exam({ groups, publicGroup, ended }) {
-  useEffect(() => {
-    for (const link of document.getElementsByTagName("a")) {
-      if (
-        link.getAttribute("href") &&
-        link.hostname !== window.location.hostname
-      ) {
-        link.target = "_blank";
-      }
-    }
-    for (const table of document.getElementsByTagName("table")) {
-      table.classList.add("table", "table-bordered");
-    }
-    for (const blockquote of document.getElementsByTagName("blockquote")) {
-      blockquote.classList.add("blockquote");
-    }
-    typeset();
-  }, [groups, publicGroup]);
+  useEffect(postRenderFormat, [groups, publicGroup]);
 
   const stickyStyle = {
     position: "sticky",
@@ -39,7 +42,9 @@ export default function Exam({ groups, publicGroup, ended }) {
           {!ended && publicGroup && <Group group={publicGroup} number={0} />}
           {!ended &&
             groups &&
-            groups.map((group, i) => <Group group={group} number={i + 1} />)}
+            groups.map((group, i) => (
+              <Group key={i} group={group} number={i + 1} />
+            ))}
           {groups && (
             <Jumbotron>
               {/* eslint-disable-next-line jsx-a11y/accessible-emoji */}
@@ -61,7 +66,7 @@ export default function Exam({ groups, publicGroup, ended }) {
   );
 }
 
-function Group({ group, number, small }) {
+export function Group({ group, number, small }) {
   // eslint-disable-next-line react/jsx-props-no-spreading,jsx-a11y/heading-has-content
   const Header = (props) => (small ? <h4 {...props} /> : <h3 {...props} />);
   return (
@@ -77,9 +82,18 @@ function Group({ group, number, small }) {
         <div dangerouslySetInnerHTML={{ __html: group.html }} />
         {group.elements.map((element, i) =>
           element.type === "group" ? (
-            <Group group={element} number={`${number}.${i + 1}`} small />
+            <Group
+              key={i}
+              group={element}
+              number={`${number}.${i + 1}`}
+              small
+            />
           ) : (
-            <Question question={element} number={`${number}.${i + 1}`} />
+            <Question
+              key={i}
+              question={element}
+              number={`${number}.${i + 1}`}
+            />
           )
         )}
       </div>

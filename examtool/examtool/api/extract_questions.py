@@ -56,3 +56,10 @@ def extract_groups(group):
                 yield g2
         else:
             yield g
+
+
+def get_name(element):
+    if "name" in element:
+        return f"{element['index']} {element['name']}"
+    else:
+        return element["index"]

@@ -1,10 +1,9 @@
 import click
 
 from examtool.api.database import get_exam
-from examtool.api.extract_questions import extract_questions
+from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import scramble
 from examtool.api.substitutions import get_all_substitutions
-from examtool.cli.deploy import get_name
 from examtool.cli.utils import exam_name_option
 
 

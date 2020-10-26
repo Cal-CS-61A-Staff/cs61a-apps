@@ -17,3 +17,7 @@ export function useTime() {
 export function useExamData() {
   return useContext(AlertsContext).examData;
 }
+
+export function useStale() {
+  return useContext(AlertsContext).stale;
+}
