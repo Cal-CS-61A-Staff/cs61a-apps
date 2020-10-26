@@ -72,26 +72,7 @@ def get_deadline(exam, email, db):
     except NotFound:
         pass
 
-    if not email.endswith("@berkeley.edu"):
-        abort(401)
-    exam_data = get_exam_dict(exam, db)
-    if exam_data.get("default_deadline"):
-        # log unexpected access
-        ref = (
-            db.collection("roster")
-            .document(exam)
-            .collection("unexpected_access_log")
-            .document()
-        )
-        ref.set(
-            {
-                "timestamp": time.time(),
-                "email": email,
-            }
-        )
-        return exam_data["default_deadline"]
-    else:
-        abort(401)
+    abort(401)
 
 
 def index(request):

@@ -136,6 +136,7 @@ def index(request):
         if request.path.endswith("fetch_data") or student_reply:
             received_audio = request.json.get("receivedAudio")
             email = get_email(request)
+            exam_data = db.collection("exam-alerts").document(exam).get().to_dict()
             student_data = (
                 db.collection("exam-alerts")
                 .document(exam)
@@ -173,6 +174,9 @@ def index(request):
                 {
                     "success": True,
                     "exam_type": "ok-exam",
+                    "enableClarifications": exam_data.get(
+                        "enable_clarifications", False
+                    ),
                     "startTime": student_data["start_time"],
                     "endTime": student_data["end_time"],
                     "questions": [

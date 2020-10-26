@@ -107,7 +107,7 @@ def get_logs(*, exam, email):
 
 
 @server_only
-def process_ok_exam_upload(*, exam, data, clear=True):
+def process_ok_exam_upload(*, exam, data, enable_clarifications=False, clear=True):
     """
     data: {
         "students": [
@@ -134,7 +134,9 @@ def process_ok_exam_upload(*, exam, data, clear=True):
     """
     db = SafeFirestore()
 
-    db.collection("exam-alerts").document(exam).set({"questions": data["questions"]})
+    db.collection("exam-alerts").document(exam).set(
+        {"questions": data["questions"], "enable_clarifications": enable_clarifications}
+    )
     ref = db.collection("exam-alerts").document(exam).collection("students")
     if clear:
         clear_collection(db, ref)

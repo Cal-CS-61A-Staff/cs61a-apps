@@ -159,23 +159,25 @@ export default function ExamAlerts({ exam }) {
           {examData ? "" : " (Loading...)"}
         </Button>
       </div>
-      <div
-        style={{
-          position: "fixed",
-          bottom: 32,
-          left: 32,
-          width: 200,
-          background: "white",
-        }}
-      >
-        <Button
-          block
-          onClick={() => setShowModal(true)}
-          variant="outline-secondary"
+      {examData && examData.enableClarifications && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 32,
+            left: 32,
+            width: 200,
+            background: "white",
+          }}
         >
-          Clarifications
-        </Button>
-      </div>
+          <Button
+            block
+            onClick={() => setShowModal(true)}
+            variant="outline-secondary"
+          >
+            Clarifications
+          </Button>
+        </div>
+      )}
       {fail && (
         <Modal show>
           <Modal.Header>
@@ -188,7 +190,7 @@ export default function ExamAlerts({ exam }) {
           </Modal.Body>
         </Modal>
       )}
-      {examData && (
+      {examData && examData.enableClarifications && (
         <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
           <Modal.Header closeButton>Ask a question</Modal.Header>
           <Modal.Body>

@@ -183,10 +183,12 @@ export default function Alerts() {
             <Col>
               <StudentAlertsList />
             </Col>
-            <Col>
-              <AskQuestion onUpdate={setExamData} exam={selectedExam} />
-              <StudentMessagesList />
-            </Col>
+            {examData.enableClarifications === true && (
+              <Col>
+                <AskQuestion onUpdate={setExamData} exam={selectedExam} />
+                <StudentMessagesList />
+              </Col>
+            )}
           </Row>
         )}
         <CreateAnnouncement
