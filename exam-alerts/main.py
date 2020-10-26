@@ -292,6 +292,15 @@ def index(request):
         elif request.path.endswith("get_question"):
             question_title = request.json["id"]
             student = request.json["student"]
+            student_data = (
+                db.collection("exam-alerts")
+                .document(exam)
+                .collection("students")
+                .document(student)
+                .get()
+                .to_dict()
+            )
+            question_title = get_student_question_name(student_data, question_title)
             exam = db.collection("exams").document(exam).get().to_dict()
             questions = extract_questions(scramble(student, exam), include_groups=True)
             for question in questions:

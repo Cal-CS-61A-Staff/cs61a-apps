@@ -110,8 +110,10 @@ export default function StaffMessagesList({
         <Modal.Body>
           {questionData != null &&
             {
-              question: <Question question={questionData} number="" />,
-              group: <Group group={questionData} number="" />,
+              question: (
+                <Question question={questionData} number={questionData.index} />
+              ),
+              group: <Group group={questionData} number={questionData.index} />,
             }[questionData.type]}
         </Modal.Body>
         <Modal.Footer>
