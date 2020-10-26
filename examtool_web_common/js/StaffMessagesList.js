@@ -111,12 +111,17 @@ export default function StaffMessagesList({
         <Modal.Header closeButton>Question Preview</Modal.Header>
         <Modal.Body>
           {questionData != null &&
-            {
-              question: (
-                <Question question={questionData} number={questionData.index} />
-              ),
-              group: <Group group={questionData} number={questionData.index} />,
-            }[questionData.type]}
+            (questionData.type === "group" ? (
+              <Group
+                group={questionData}
+                number={questionData.index.slice(0, -1)}
+              />
+            ) : (
+              <Question
+                question={questionData}
+                number={questionData.index.slice(0, -1)}
+              />
+            ))}
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={() => setShowModal(false)}>Close</Button>
