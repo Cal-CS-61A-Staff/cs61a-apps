@@ -83,13 +83,13 @@ from examtool.api.gradescope_autograde import GradescopeGrader
     "--jobs", "-j",
     default = 10,
     type=int,
-    help="This is the number of simultaneous questions currently being processed"
+    help="This is the number of simultaneous questions currently being processed. Default: 10"
 )
 @click.option(
     "--sub-jobs", "-sj",
     default = 10,
     type=int,
-    help="This is the number of simultaneous jobs of a question currently being processed. Note this is per question."
+    help="This is the number of simultaneous jobs of a question currently being processed. Note this is per question. Default: 10"
 )
 @hidden_target_folder_option
 def gradescope_autograde(
