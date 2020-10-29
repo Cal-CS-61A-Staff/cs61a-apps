@@ -1,4 +1,5 @@
 import base64
+import random
 import time
 from os import getenv
 from google.cloud import texttospeech
@@ -44,7 +45,8 @@ def get_student_question_mapping(student, exam):
         for element in elements
         if element["type"] != "group" or not is_compressible_group(element)
     }
-    return [
+    old_seed = int(random.random() * 1000000)
+    out = [
         {
             "student_question_name": get_name(element),
             "canonical_question_name": elements[element["id"]],
@@ -53,6 +55,8 @@ def get_student_question_mapping(student, exam):
             extract_questions(scramble(student, exam), include_groups=True)
         )
     ]
+    random.seed(old_seed)
+    return out
 
 
 def get_student_question_name(student_data, canonical_question_name):
