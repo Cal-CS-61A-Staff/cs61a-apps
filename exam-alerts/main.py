@@ -8,6 +8,7 @@ from google.auth.transport import requests as g_requests
 
 from api import (
     get_canonical_question_name,
+    get_student_data,
     get_student_question_name,
     is_admin,
     clear_collection,
@@ -100,14 +101,7 @@ def index(request):
             student_question_name = request.json["question"]
             message = request.json["message"]
 
-            student_data = (
-                db.collection("exam-alerts")
-                .document(exam)
-                .collection("students")
-                .document(email)
-                .get()
-                .to_dict()
-            )
+            student_data = get_student_data(db, email, exam)
 
             if student_question_name is not None:
                 canonical_question_name = get_canonical_question_name(
@@ -134,14 +128,7 @@ def index(request):
             received_audio = request.json.get("receivedAudio")
             email = get_email(request)
             exam_data = db.collection("exam-alerts").document(exam).get().to_dict()
-            student_data = (
-                db.collection("exam-alerts")
-                .document(exam)
-                .collection("students")
-                .document(email)
-                .get()
-                .to_dict()
-            )
+            student_data = get_student_data(db, email, exam)
             announcements = list(
                 db.collection("exam-alerts")
                 .document(exam)
@@ -292,14 +279,7 @@ def index(request):
         elif request.path.endswith("get_question"):
             question_title = request.json["id"]
             student = request.json["student"]
-            student_data = (
-                db.collection("exam-alerts")
-                .document(exam)
-                .collection("students")
-                .document(student)
-                .get()
-                .to_dict()
-            )
+            student_data = get_student_data(db, student, exam)
             question_title = get_student_question_name(student_data, question_title)
             exam = db.collection("exams").document(exam).get().to_dict()
             questions = extract_questions(scramble(student, exam), include_groups=True)

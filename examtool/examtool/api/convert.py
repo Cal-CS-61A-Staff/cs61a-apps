@@ -1,12 +1,12 @@
 import json
-import random
 import re
-import string
 import os
 
 import pypandoc
 
 from tqdm import tqdm
+
+from examtool.api.utils import rand_id
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
@@ -83,10 +83,6 @@ def process_title(line):
         return " ".join(tokens[:-1]).strip(), has_fixed, float(point_sec[1:-1])
     except ValueError:
         return line.strip(), has_fixed, None
-
-
-def rand_id():
-    return "".join(random.choices(string.ascii_uppercase, k=32))
 
 
 class ToParse:
