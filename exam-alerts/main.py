@@ -176,6 +176,7 @@ def index(request):
                     ),
                     "startTime": student_data["start_time"],
                     "endTime": student_data["end_time"],
+                    "timestamp": time.time(),
                     "questions": [
                         question["student_question_name"]
                         for question in student_data["questions"]
