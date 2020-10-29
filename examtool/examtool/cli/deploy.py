@@ -1,10 +1,10 @@
 import csv
-from json import dumps, loads
+from json import loads
 
 import click
 from cryptography.fernet import Fernet
 
-from examtool.api.convert import rand_id
+from examtool.api.utils import rand_id
 from examtool.api.database import process_ok_exam_upload, set_exam, get_exam, set_roster
 from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import is_compressible_group, scramble
@@ -75,22 +75,10 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
         for element in elements
         if element["type"] != "group" or not is_compressible_group(element)
     }
-    json = dumps(exam_content)  # re-serialize with group IDs
 
     students = [
         {
             "email": email,
-            "questions": [
-                {
-                    "start_time": start_time,
-                    "end_time": int(deadline),
-                    "student_question_name": get_name(element),
-                    "canonical_question_name": elements[element["id"]],
-                }
-                for element in list(
-                    extract_questions(scramble(email, loads(json)), include_groups=True)
-                )
-            ],
             "start_time": start_time,
             "end_time": int(deadline),
         }
@@ -99,21 +87,17 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
 
     print("Updating announcements roster with {} students...".format(len(students)))
 
-    for i in range(0, len(students), 100):
-        print(
-            "Uploading from student #{} to #{}".format(i, min(i + 100, len(students)))
-        )
-        process_ok_exam_upload(
-            exam=exam,
-            data={
-                "students": students[i : i + 100],
-                "questions": [
-                    {"canonical_question_name": name} for name in elements.values()
-                ],
-            },
-            clear=i == 0,
-            enable_clarifications=enable_clarifications,
-        )
+    process_ok_exam_upload(
+        exam=exam,
+        data={
+            "students": students,
+            "questions": [
+                {"canonical_question_name": name} for name in elements.values()
+            ],
+        },
+        clear=True,
+        enable_clarifications=enable_clarifications,
+    )
 
     print("Announcements deployed to https://announcements.cs61a.org")
 
