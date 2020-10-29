@@ -238,7 +238,9 @@ export default function StudentApp() {
             ended={examEnded}
           />
           <ErrorBoundary>
-            {encryptedGroups && <ExamAlerts exam={selectedExam} />}
+            {encryptedGroups && (
+              <ExamAlerts exam={selectedExam} setDeadline={setDeadline} />
+            )}
           </ErrorBoundary>
         </ExamContext.Provider>
         {examLocked && <EndModal />}
