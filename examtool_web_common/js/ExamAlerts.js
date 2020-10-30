@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Col, Modal } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Toast from "react-bootstrap/Toast";
@@ -11,7 +11,7 @@ import { timeDeltaMinutesString } from "./timeUtils";
 import useInterval from "./useInterval";
 import useTick from "./useTick";
 
-export default function ExamAlerts({ exam }) {
+export default function ExamAlerts({ exam, setDeadline }) {
   const [examData, setExamData] = useState(null);
   const [stale, setStale] = useState(false);
   const [fail, setFail] = useState(false);
@@ -21,6 +21,8 @@ export default function ExamAlerts({ exam }) {
 
   const [show, setShow] = useState(true);
   const [showModal, setShowModal] = useState(false);
+
+  const announcementListRef = useRef();
 
   const time = useTick();
 
@@ -73,11 +75,19 @@ export default function ExamAlerts({ exam }) {
           if (data.success) {
             setExamData(data);
             setStale(false);
+            setDeadline(
+              data.endTime -
+                Math.round(data.timestamp) +
+                Math.round(new Date().getTime() / 1000) -
+                2
+            );
             const newAudio = [];
             for (const { audio } of data.announcements) {
               if (audio) {
                 newAudio.push(audio);
                 setShow(true);
+                announcementListRef.current.scrollTop =
+                  announcementListRef.current.scrollHeight;
               }
             }
             newAudio.reverse();
@@ -98,6 +108,7 @@ export default function ExamAlerts({ exam }) {
   return (
     <AlertsContext.Provider value={{ time, examData, stale }}>
       <div
+        ref={announcementListRef}
         style={{
           position: "fixed",
           overflow: "auto",

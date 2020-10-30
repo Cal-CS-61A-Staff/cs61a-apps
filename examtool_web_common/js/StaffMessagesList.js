@@ -43,70 +43,72 @@ export default function StaffMessagesList({
   return (
     <>
       <h3>Private Messages</h3>
-      {staffData.messages.map(({ email, messages }) =>
-        messages.map(
-          ({ id, responses, message, question, timestamp: messageTime }) => (
-            <div key={id}>
-              <Card
-                bg={responses.length === 0 ? "danger" : "default"}
-                text={responses.length === 0 ? "white" : "dark"}
-              >
-                <Card.Header>
-                  <b>
-                    {responses.length === 0
-                      ? "Unresolved Thread"
-                      : "Resolved Thread"}
-                  </b>{" "}
-                  [{question || "Overall Exam"}]{" "}
-                  {question != null && (
-                    <Button
-                      style={{ float: "right" }}
-                      variant="primary"
-                      size="sm"
-                      onClick={() => loadQuestion(question, email)}
-                    >
-                      View Question
-                    </Button>
-                  )}
-                </Card.Header>
-                <ListGroup variant="flush">
-                  <ListGroup.Item
-                    style={{ whiteSpace: "pre-wrap" }}
-                    variant="secondary"
-                  >
-                    <b>{email}: </b>
-                    {message} ({timeDeltaMinutesString(time - messageTime)})
-                  </ListGroup.Item>
-                  {responses.map(
-                    ({
-                      id: replyID,
-                      message: response,
-                      timestamp: responseTime,
-                    }) => (
-                      <ListGroup.Item
-                        key={replyID}
-                        style={{ whiteSpace: "pre-wrap" }}
+      {staffData.messages.map(({ email, messages }) => (
+        <div key={email}>
+          {messages.map(
+            ({ id, responses, message, question, timestamp: messageTime }) => (
+              <div key={id}>
+                <Card
+                  bg={responses.length === 0 ? "danger" : "default"}
+                  text={responses.length === 0 ? "white" : "dark"}
+                >
+                  <Card.Header>
+                    <b>
+                      {responses.length === 0
+                        ? "Unresolved Thread"
+                        : "Resolved Thread"}
+                    </b>{" "}
+                    [{question || "Overall Exam"}]{" "}
+                    {question != null && (
+                      <Button
+                        style={{ float: "right" }}
+                        variant="primary"
+                        size="sm"
+                        onClick={() => loadQuestion(question, email)}
                       >
-                        <b>Staff: </b>
-                        {response} (
-                        {timeDeltaMinutesString(time - responseTime)})
-                      </ListGroup.Item>
-                    )
-                  )}
-                  <ListGroup.Item style={{ whiteSpace: "pre-wrap" }}>
-                    <StaffMessageReplyBox
-                      message={id}
-                      exam={selectedExam}
-                      onUpdate={onUpdate}
-                    />
-                  </ListGroup.Item>
-                </ListGroup>
-              </Card>
-              <br />
-            </div>
-          )
-        )
-      )}
+                        View Question
+                      </Button>
+                    )}
+                  </Card.Header>
+                  <ListGroup variant="flush">
+                    <ListGroup.Item
+                      style={{ whiteSpace: "pre-wrap" }}
+                      variant="secondary"
+                    >
+                      <b>{email}: </b>
+                      {message} ({timeDeltaMinutesString(time - messageTime)})
+                    </ListGroup.Item>
+                    {responses.map(
+                      ({
+                        id: replyID,
+                        message: response,
+                        timestamp: responseTime,
+                      }) => (
+                        <ListGroup.Item
+                          key={replyID}
+                          style={{ whiteSpace: "pre-wrap" }}
+                        >
+                          <b>Staff: </b>
+                          {response} (
+                          {timeDeltaMinutesString(time - responseTime)})
+                        </ListGroup.Item>
+                      )
+                    )}
+                    <ListGroup.Item style={{ whiteSpace: "pre-wrap" }}>
+                      <StaffMessageReplyBox
+                        message={id}
+                        exam={selectedExam}
+                        onUpdate={onUpdate}
+                      />
+                    </ListGroup.Item>
+                  </ListGroup>
+                </Card>
+                <br />
+              </div>
+            )
+          )}
+        </div>
+      ))}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>Question Preview</Modal.Header>
         <Modal.Body>

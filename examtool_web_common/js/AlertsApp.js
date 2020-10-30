@@ -184,7 +184,7 @@ export default function Alerts() {
               <StudentAlertsList />
             </Col>
             {examData.enableClarifications === true && (
-              <Col>
+              <Col xs={6}>
                 <AskQuestion onUpdate={setExamData} exam={selectedExam} />
                 <StudentMessagesList />
               </Col>
@@ -198,14 +198,14 @@ export default function Alerts() {
         />
         {staffData && (
           <Row>
-            <Col>
+            <Col xs={6}>
               <StaffAlertsList
                 selectedExam={selectedExam}
                 staffData={staffData}
                 onUpdate={setStaffData}
               />
             </Col>
-            <Col>
+            <Col xs={6}>
               <StaffMessagesList
                 selectedExam={selectedExam}
                 staffData={staffData}

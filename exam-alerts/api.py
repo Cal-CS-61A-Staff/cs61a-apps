@@ -1,10 +1,15 @@
 import base64
+import random
 import time
 from os import getenv
 from google.cloud import texttospeech
 
 import requests
 from flask import abort
+
+from examtool.api.utils import rand_id
+from examtool.api.extract_questions import extract_questions, get_name
+from examtool.api.scramble import is_compressible_group, scramble
 
 BATCH_SIZE = 400
 assert BATCH_SIZE < 500
@@ -15,6 +20,43 @@ def get_email_from_secret(secret):
     if ret.status_code != 200:
         abort(401)
     return ret.json()["data"]["email"]
+
+
+def get_student_data(db, student, exam):
+    student_data = (
+        db.collection("exam-alerts")
+        .document(exam)
+        .collection("students")
+        .document(student)
+        .get()
+        .to_dict()
+    )
+    exam = db.collection("exams").document(exam).get().to_dict()
+    student_data["questions"] = get_student_question_mapping(student, exam)
+    return student_data
+
+
+def get_student_question_mapping(student, exam):
+    elements = list(extract_questions(exam, include_groups=True))
+    for element in elements:
+        element["id"] = element.get("id", rand_id())  # add IDs to groups
+    elements = {
+        element["id"]: get_name(element)
+        for element in elements
+        if element["type"] != "group" or not is_compressible_group(element)
+    }
+    old_seed = int(random.random() * 1000000)
+    out = [
+        {
+            "student_question_name": get_name(element),
+            "canonical_question_name": elements[element["id"]],
+        }
+        for element in list(
+            extract_questions(scramble(student, exam), include_groups=True)
+        )
+    ]
+    random.seed(old_seed)
+    return out
 
 
 def get_student_question_name(student_data, canonical_question_name):
@@ -98,24 +140,22 @@ def get_announcements(student_data, announcements, messages, received_audio, get
 
         question_name = announcement.get("canonical_question_name")
         if question_name:
-            for question in student_data["questions"]:
-                if question["canonical_question_name"].strip() == question_name.strip():
-                    event = question
-                    announcement["question"] = question["student_question_name"]
-                    break
+            student_question_name = get_student_question_name(
+                student_data, question_name
+            )
+            if student_question_name is not None:
+                announcement["question"] = student_question_name
             else:
                 # student did not receive this question
                 continue
-        else:
-            event = student_data
 
         if announcement["type"] == "immediate":
             include_it(announcement["timestamp"])
         elif announcement["type"] == "scheduled":
             threshold = (
-                event["start_time"]
+                student_data["start_time"]
                 if announcement["base"] == "start"
-                else event["end_time"]
+                else student_data["end_time"]
             )
             threshold += int(announcement["offset"])
 
