@@ -70,11 +70,11 @@ def create_admins_client(app):
                 "SELECT * FROM course_admins WHERE email=(%s) AND course=(%s)",
                 [get_email(), course],
             ).fetchone()
-        if not check:
-            db(
-                "INSERT INTO course_admins VALUES (%s, %s, %s, %s)",
-                [get_email(), get_name(), course, get_name()],
-            )
+            if not check:
+                db(
+                    "INSERT INTO course_admins VALUES (%s, %s, %s, %s)",
+                    [get_email(), get_name(), course, get_name()],
+                )
 
         return redirect(url_for("index"))
 
