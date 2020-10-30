@@ -1,12 +1,17 @@
 import calendar
+import csv
+
+from io import StringIO
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import List, Union
+from json import dumps
+from typing import List, Optional, Union
 
 import flask
 import pytz
 from flask import jsonify, render_template, request
 from flask_login import current_user, login_required
+from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course, is_admin
 from common.rpc.auth import read_spreadsheet
@@ -19,6 +24,8 @@ from models import (
     User,
     db,
 )
+
+FIRST_WEEK_START = datetime(year=2020, month=9, day=1).timestamp()
 
 
 class Failure(Exception):
@@ -58,8 +65,9 @@ def section_sorter(section: Section) -> int:
         or current_user.id in [student.id for student in section.students]
     ):
         score -= big * 10
-    if section.capacity > len(section.students):
-        score -= big
+    spare_capacity = max(0, section.capacity - len(section.students))
+    if spare_capacity:
+        score -= big * spare_capacity
     score += section.id
     return score
 
@@ -83,15 +91,17 @@ def create_state_client(app: flask.Flask):
         return handler
 
     @app.route("/", endpoint="index")
+    @app.route("/history/")
     @app.route("/admin/")
     @app.route("/section/<path:path>")
+    @app.route("/user/<path:path>")
     def generic(**_):
         return render_template("index.html")
 
     @app.route("/debug")
     def debug():
         refresh_state()
-        return render_template("index.html")
+        return "<body></body>"
 
     @api
     def refresh_state():
@@ -101,6 +111,7 @@ def create_state_client(app: flask.Flask):
                 config = CourseConfig(course=get_course())
                 db.session.add(config)
                 db.session.commit()
+
             return {
                 "enrolledSection": current_user.sections[0].json
                 if current_user.sections
@@ -117,6 +128,7 @@ def create_state_client(app: flask.Flask):
                 ],
                 "currentUser": current_user.full_json,
                 "config": config.json,
+                "custom": None,
             }
         else:
             return {"sections": []}
@@ -217,15 +229,16 @@ def create_state_client(app: flask.Flask):
 
     @api
     @staff_required
-    def set_attendance(session_id: str, student: str, status: str):
+    def set_attendance(session_id: str, student: str, status: Optional[str]):
         session_id = int(session_id)
         session = Session.query.get(session_id)
         status = AttendanceStatus[status]
         student = User.query.filter_by(email=student).one()
         Attendance.query.filter_by(session_id=session_id, student=student).delete()
-        db.session.add(
-            Attendance(status=status, session_id=session_id, student=student)
-        )
+        if status is not None:
+            db.session.add(
+                Attendance(status=status, session_id=session_id, student=student)
+            )
         db.session.commit()
         return fetch_section(section_id=session.section_id)
 
@@ -333,3 +346,58 @@ def create_state_client(app: flask.Flask):
         db.session.commit()
 
         return refresh_state()
+
+    @api
+    @admin_required
+    def export_attendance(full: bool):
+        if full:
+            stringify = dumps
+        else:
+
+            def stringify(data):
+                buff = StringIO()
+                writer = csv.writer(buff)
+                for student, attendance in data.items():
+                    writer.writerow([student, attendance])
+                return buff.getvalue()
+
+        return {
+            **refresh_state(),
+            "custom": {
+                "fileName": "attendances.json" if full else "attendance_scores.csv",
+                "attendances": stringify(
+                    {
+                        user.email: [
+                            {
+                                "section_id": attendance.session.section_id,
+                                "start_time": attendance.session.start_time,
+                                "status": attendance.status,
+                            }
+                            for attendance in user.attendances
+                        ]
+                        if full
+                        else len(
+                            set(
+                                (attendance.session.start_time - FIRST_WEEK_START)
+                                // (60 * 60 * 24 * 7)
+                                for attendance in user.attendances
+                                if attendance.session.start_time >= FIRST_WEEK_START
+                                and attendance.status == AttendanceStatus.present
+                            )
+                        )
+                        for user in User.query.filter_by(is_staff=False)
+                        .options(
+                            joinedload(User.attendances).joinedload(Attendance.session)
+                        )
+                        .all()
+                    }
+                ),
+            },
+        }
+
+    @api
+    @staff_required
+    def fetch_user(user_id: str):
+        user_id = int(user_id)
+        user = User.query.filter_by(id=user_id).one_or_none()
+        return user.full_json

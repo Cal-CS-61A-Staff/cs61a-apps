@@ -1,0 +1,5 @@
+# my deps
+Flask
+gunicorn
+pypandoc
+-e ./examtool[cli,admin]

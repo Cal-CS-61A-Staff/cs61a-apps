@@ -4,8 +4,10 @@ import sys
 from contextlib import contextmanager
 
 
-def sh(*args, capture_output=False):
-    out = subprocess.run(args, env={**os.environ, "ENV": "dev"}, capture_output=capture_output)
+def sh(*args, env={}, capture_output=False):
+    out = subprocess.run(
+        args, env={**os.environ, **env, "ENV": "dev"}, capture_output=capture_output
+    )
     if capture_output:
         print(out.stdout, file=sys.stdout)
         print(out.stderr, file=sys.stderr)

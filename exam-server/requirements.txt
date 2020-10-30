@@ -1,0 +1,4 @@
+# my deps
+google-cloud-firestore==1.9.0
+google-auth==1.22.1
+cryptography==3.1.1

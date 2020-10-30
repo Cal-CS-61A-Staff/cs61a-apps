@@ -10,6 +10,7 @@ import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import { BrowserRouter as Router, Link, Route, Switch } from "react-router-dom";
 import AdminPage from "./AdminPage";
+import HistoryPage from "./HistoryPage";
 import MainPage from "./MainPage";
 
 import "bootstrap/dist/css/bootstrap.css";
@@ -18,7 +19,7 @@ import Messages from "./Messages";
 import type { ID, State } from "./models";
 import SectionPage from "./SectionPage";
 import StateContext from "./StateContext";
-import useAPI from "./useAPI";
+import useAPI from "./useStateAPI";
 
 export default function App(): React.Node {
   const [state, setState] = useState<?State>(null);
@@ -80,9 +81,11 @@ export default function App(): React.Node {
             <Link to="/" className="nav-link active">
               Home
             </Link>
-            {/* <Link to="/history" className="nav-link active"> */}
-            {/*  History */}
-            {/* </Link> */}
+            {state.currentUser?.isStaff === false && (
+              <Link to="/history" className="nav-link active">
+                History
+              </Link>
+            )}
             <Nav.Link
               href="https://cs61a.org/tutors.html"
               target="_blank"
@@ -121,7 +124,12 @@ export default function App(): React.Node {
             <Route exact path="/">
               <MainPage />
             </Route>
-            <Route path="/history">TODO: History</Route>
+            <Route path="/history">
+              <HistoryPage />
+            </Route>
+            <Route path="/user/:id">
+              {({ match }) => <HistoryPage userID={match.params.id} />}
+            </Route>
             <Route path="/admin">
               <AdminPage />
             </Route>

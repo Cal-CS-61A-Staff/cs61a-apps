@@ -5,3 +5,5 @@ concurrency: 24
 tasks:
   - name: slack_notify
     schedule: "* * * * *"
+  - name: clear_inactive_groups
+    schedule: "* * * * *"

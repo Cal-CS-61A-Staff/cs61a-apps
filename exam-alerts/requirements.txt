@@ -1,0 +1,5 @@
+# my deps
+google-cloud-firestore
+google-cloud-texttospeech
+google-auth
+cryptography

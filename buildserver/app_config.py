@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, TypedDict
 
 import yaml
 
-from shell_utils import tmp_directory
+from common.shell_utils import tmp_directory
 
 WEB_DEPLOY_TYPES = {"flask", "docker"}
 
@@ -15,6 +15,8 @@ class Config(TypedDict):
     first_party_domains: List[str]
     concurrency: int
     tasks: List["Task"]
+    dependencies: List["Dependency"]
+    package_name: str
 
 
 class Task(TypedDict):
@@ -22,13 +24,23 @@ class Task(TypedDict):
     schedule: str
 
 
+class Dependency(TypedDict):
+    repo: str
+    src: str
+    dest: str
+
+
 @dataclass
 class App:
     name: str
     config: Config
 
+    # updated by deploy.py, since PyPI takes a while to update
+    deployed_pypi_version: Optional[str]
+
     def __init__(self, name: str):
         self.name = name
+        self.deployed_pypi_version = None
         with tmp_directory():
             with open(f"{name}/deploy.yaml") as f:
                 self.config = Config(**yaml.safe_load(f))
@@ -38,6 +50,8 @@ class App:
                 )
                 self.config["concurrency"] = self.config.get("concurrency", 80)
                 self.config["tasks"] = self.config.get("tasks", [])
+                self.config["dependencies"] = self.config.get("dependencies", [])
+                self.config["package_name"] = self.config.get("package_name", name)
 
     def __str__(self):
         return self.name

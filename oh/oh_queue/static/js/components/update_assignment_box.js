@@ -1,20 +1,16 @@
-function UpdateAssignmentBox({state, group}: {state: State, group: Group}) {
+function UpdateAssignmentBox({state, elem, onSubmit}: {state: State, elem: Group | Ticket, onSubmit: ({assignment_id: number, question: string}) => void }) {
     const {assignments} = state;
 
     let filteredAssignments = Object.values(assignments).filter((assignment) => assignment.visible).sort((a, b) => a.name.localeCompare(b.name));
 
-    const [assignment, setAssignment] = React.useState(group.assignment_id);
-    const [question, setQuestion] = React.useState(group.question);
-
-    const handleSubmit = () => {
-        app.makeRequest("update_group", {id: group.id, assignment_id: assignment, question});
-    }
+    const [assignment_id, setAssignment] = React.useState(elem.assignment_id);
+    const [question, setQuestion] = React.useState(elem.question);
 
     return (
         <div className="request-form form-group form-group-lg">
             <div className="input-group">
                 <SelectPicker options={filteredAssignments}
-                              value={assignment}
+                              value={assignment_id}
                               onChange={e => setAssignment(parseInt(e.target.value))}
                               className="selectpicker form-control form-left"
                               data-live-search="true" data-size="8" data-width="60%"
@@ -25,9 +21,9 @@ function UpdateAssignmentBox({state, group}: {state: State, group: Group}) {
                        value={question} onChange={e => setQuestion(e.target.value)}
                 />
             </div>
-          {assignment !== group.assignment_id || question !== group.question ? (
+          {assignment_id !== elem.assignment_id || question !== elem.question ? (
               <button
-                  onClick={handleSubmit}
+                  onClick={() => onSubmit({assignment_id, question})}
                   className="description-button btn btn-default btn-lg btn-block"
               >
                   {" "}Update Assignment{" "}

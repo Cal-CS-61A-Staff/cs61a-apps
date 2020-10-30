@@ -26,8 +26,8 @@ with connect_db() as db:
         """CREATE TABLE IF NOT EXISTS secrets (
     app varchar(128),
     name varchar(128),
-    public_value varchar(128),
-    staging_value varchar(128)
+    public_value varchar(512),
+    staging_value varchar(512)
 )"""
     )
     secret_key = db(

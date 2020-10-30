@@ -1,19 +1,18 @@
 // @flow strict
 
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import * as React from "react";
 import Button from "react-bootstrap/Button";
 import FormControl from "react-bootstrap/FormControl";
 import Modal from "react-bootstrap/Modal";
-import SectionStateContext from "./SectionStateContext";
-import useSectionAPI from "./useSectionAPI";
 
 type Props = {
   show: boolean,
+  onAdd: (string) => Promise<void>,
   onClose: () => void,
 };
 
-export default function AddStudentModal({ show, onClose }: Props) {
+export default function AddStudentModal({ show, onAdd, onClose }: Props) {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
@@ -21,9 +20,6 @@ export default function AddStudentModal({ show, onClose }: Props) {
       setEmail("");
     }
   }, [show]);
-
-  const section = useContext(SectionStateContext);
-  const addStudent = useSectionAPI("add_student");
 
   return (
     <Modal show={show} onHide={onClose}>
@@ -41,12 +37,7 @@ export default function AddStudentModal({ show, onClose }: Props) {
         <Button variant="secondary" onClick={onClose}>
           Close
         </Button>
-        <Button
-          variant="primary"
-          onClick={() =>
-            addStudent({ section_id: section.id, email }).finally(onClose)
-          }
-        >
+        <Button variant="primary" onClick={() => onAdd(email).then(onClose)}>
           Add Student
         </Button>
       </Modal.Footer>

@@ -3,14 +3,15 @@ from flask import Flask, redirect, request
 app = Flask(__name__)
 
 
-LOOKUP = dict(
-    tutor="http://pythontutor.com/composingprograms.html",  # deliberately http, it doesn't support https
-    book="https://composingprograms.com",
-    wiki="https://www.ocf.berkeley.edu/~shidi/cs61a/wiki",
-    python="https://code.cs61a.org/python",
-    scheme="https://code.cs61a.org/scheme",
-    sql="https://code.cs61a.org/sql",
-)
+LOOKUP = {
+    "tutor": "http://pythontutor.com/composingprograms.html",
+    "book": "https://composingprograms.com",
+    "wiki": "https://www.ocf.berkeley.edu/~shidi/cs61a/wiki",
+    "python": "https://code.cs61a.org/python",
+    "scheme": "https://code.cs61a.org/scheme",
+    "sql": "https://code.cs61a.org/sql",
+    "ok-help": "https://ok-help.app.cs61a.org",
+}
 
 
 def lookup(hostname):

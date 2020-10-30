@@ -16,7 +16,7 @@ import Row from "react-bootstrap/Row";
 import { Redirect } from "react-router-dom";
 import StateContext from "./StateContext";
 import ToggleSwitch from "./ToggleSwitch";
-import useAPI from "./useAPI";
+import useAPI from "./useStateAPI";
 
 export default function AdminPage(): React.Node {
   const { config, currentUser } = useContext(StateContext);
@@ -25,6 +25,27 @@ export default function AdminPage(): React.Node {
 
   const updateConfig = useAPI("update_config");
   const importSections = useAPI("import_sections");
+  const exportAttendance = useAPI(
+    "export_attendance",
+    ({ custom: { attendances, fileName } }) => {
+      if (attendances == null || fileName == null) {
+        return;
+      }
+      const element = document.createElement("a");
+      element.setAttribute(
+        "href",
+        `data:text/plain;charset=utf-8,${encodeURIComponent(attendances)}`
+      );
+      element.setAttribute("download", fileName);
+
+      element.style.display = "none";
+      // eslint-disable-next-line no-unused-expressions
+      document.body?.appendChild(element);
+      element.click();
+      // eslint-disable-next-line no-unused-expressions
+      document.body?.removeChild(element);
+    }
+  );
 
   if (!currentUser?.isStaff) {
     return <Redirect to="/" />;
@@ -112,6 +133,17 @@ export default function AdminPage(): React.Node {
                   </a>
                   .
                 </small>
+              </p>
+              <p>
+                <Button onClick={() => exportAttendance({ full: false })}>
+                  Export Attendance Summary
+                </Button>{" "}
+                <Button
+                  variant="secondary"
+                  onClick={() => exportAttendance({ full: true })}
+                >
+                  Export Full Attendances
+                </Button>
               </p>
             </Tab>
           </Tabs>

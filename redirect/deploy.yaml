@@ -8,6 +8,8 @@ first_party_domains:
   - sql.cs61a.org
   - book.cs61a.org
   - wiki.cs61a.org
+  - ok-help.apps.cs61a.org
+  - ok-help.cs61a.org
   # domain redirects
   - su20.cs61a.org
   - sp20.cs61a.org

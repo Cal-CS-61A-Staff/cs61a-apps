@@ -10,7 +10,7 @@ import Jumbotron from "react-bootstrap/Jumbotron";
 import moment from "moment-timezone";
 import { useContext } from "react";
 import Row from "react-bootstrap/Row";
-import styles from "styled-components";
+import styled from "styled-components";
 import EnrolledSectionCard from "./EnrolledSectionCard";
 
 import type { Section, Time } from "./models";
@@ -21,7 +21,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import SectionCardGroup from "./SectionCardGroup";
 import StateContext from "./StateContext";
 
-const FlexLayout = styles.div`
+const FlexLayout = styled.div`
   display: flex;
   align-items: center;
   height: 100%;
@@ -104,4 +104,3 @@ export default function MainPage(): React.Node {
     </>
   );
 }
-
