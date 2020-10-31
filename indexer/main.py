@@ -1,15 +1,15 @@
-import functools
-import os
 import re
-import threading
 from io import BytesIO
-from queue import Queue
 
 import requests
 from PyPDF2 import pdf as pdf_reader
 from PyPDF2.utils import PdfReadError
 from bs4 import BeautifulSoup
-from flask import Flask, jsonify, request, abort
+from flask import Flask
+
+from common.rpc.auth import PiazzaNetwork, piazza_course_id
+from common.rpc.indexer import clear_resources, index_piazza, upload_resources
+from common.rpc.secrets import get_secret, only
 
 SITE_DOMAIN = "https://cs61a.org"
 SEARCH_DOMAIN = "https://search-worker.apps.cs61a.org"
@@ -21,12 +21,6 @@ GOOGLE_DOC_EXPORT_TEMPLATE = (
     "https://docs.google.com/document/u/1/export?format=txt&id={}"
 )
 
-CLIENT_NAME = "piazza-search-indexer"
-AUTH_SECRET = os.getenv("AUTH_SECRET")  # needed for 61A Auth
-ACCESS_SECRET = os.getenv("ACCESS_SECRET")  # users need this to access it
-WORKER_SECRET = os.getenv(
-    "WORKER_SECRET"
-)  # needed to communicate with the search-worker
 
 app = Flask(__name__, static_folder="")
 
@@ -43,70 +37,20 @@ def search_css():
 
 def do(path, data={}):
     requests.post(
-        "{}/{}".format(SEARCH_DOMAIN, path), json={**data, "secret": WORKER_SECRET}
+        "{}/{}".format(SEARCH_DOMAIN, path),
+        json={**data, "secret": get_secret(secret_name="WORKER_SECRET")},
     ).raise_for_status()
 
 
-def secure(route):
-    @functools.wraps(route)
-    def wrapped(*args, **kwargs):
-        if request.json["secret"] != ACCESS_SECRET:
-            abort(401)
-        return route(*args, **kwargs)
-
-    return wrapped
-
-
-def make_worker_group():
-    queue = Queue()
-
-    def handler():
-        while not queue.empty():
-            f, args, kwargs = queue.get()
-            f(*args, **kwargs)
-            queue.task_done()
-
-    def worker(f):
-        active_thread = None
-
-        @functools.wraps(f)
-        def wrapped(*args, **kwargs):
-            nonlocal active_thread
-            queue.put([f, args, kwargs])
-            if not active_thread or not active_thread.is_alive():
-                active_thread = threading.Thread(target=handler)
-                active_thread.start()
-
-        return wrapped
-
-    return worker
-
-
-piazza_worker = make_worker_group()
-resource_worker = make_worker_group()
-
-
-@piazza_worker
-def upload_piazza():
+@index_piazza.bind(app)
+def index_piazza():
     print("Starting to scrape Piazza")
 
-    feed = requests.post(
-        "https://auth.apps.cs61a.org/piazza/get_feed",
-        json={
-            "limit": 10000,
-            "client_name": CLIENT_NAME,
-            "secret": AUTH_SECRET,
-            "staff": False,
-        },
-    ).json()["feed"]
+    piazza = PiazzaNetwork(course="cs61a", is_staff=False, is_test=False)
 
-    course_id = requests.post(
-        "https://auth.apps.cs61a.org/piazza/course_id",
-        json={
-            "client_name": CLIENT_NAME,
-            "secret": AUTH_SECRET,
-        },
-    ).json()
+    feed = piazza.get_feed(limit=10000)["feed"]
+
+    course_id = piazza_course_id()
 
     do("clear/piazza")
 
@@ -136,10 +80,19 @@ def upload_piazza():
 
     do("insert/piazza", {"data": posts})
     print("Piazza scraping completed")
+    return {"success": True}
 
 
-@resource_worker
-def scrape_and_upload_resources(resources):
+@clear_resources.bind(app)
+@only("course-deploy")
+def clear_resources():
+    do("clear/resources")
+    return {"success": True}
+
+
+@upload_resources.bind(app)
+@only("course-deploy")
+def upload_resources(resources):
     print("Starting to scrape resource batch")
     buffer = []
     buffer_length = 0
@@ -198,33 +151,7 @@ def scrape_and_upload_resources(resources):
             buffer_length = 0
 
     print("Resource scraping completed")
-
-
-@resource_worker
-def clear_worker():
-    do("clear/resources")
-
-
-@app.route("/api/index_piazza", methods=["POST"])
-@secure
-def index_piazza():
-    upload_piazza()
-    return jsonify({"success": True})
-
-
-@app.route("/api/clear_resources", methods=["POST"])
-@secure
-def clear_resources():
-    clear_worker()
-    return jsonify({"success": True})
-
-
-@app.route("/api/upload_resources", methods=["POST"])
-@secure
-def upload_resources():
-    resources = request.json["resources"]
-    scrape_and_upload_resources(resources)
-    return jsonify({"success": True})
+    return {"success": True}
 
 
 if __name__ == "__main__":
