@@ -43,6 +43,7 @@ def do(path, data={}):
 
 
 @index_piazza.bind(app)
+@only("course-deploy")
 def index_piazza():
     print("Starting to scrape Piazza")
 
