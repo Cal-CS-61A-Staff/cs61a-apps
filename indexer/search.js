@@ -64,7 +64,7 @@ const search = async (query, limit) => {
   };
 
   const { piazza, resources } = await (
-    await fetch("https://search-worker.apps.cs61a.org/query", {
+    await fetch("https://search-worker.app.cs61a.org/query", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
