@@ -1,0 +1,19 @@
+.cs61a-search-input {
+  margin-top: 10px;
+  font-size: 2rem;
+  width: 80%;
+  padding: 10px;
+}
+
+.cs61a-search-results {
+  text-align: left;
+}
+
+.cs61a-search-results em {
+  font-style: normal;
+  font-weight: bold;
+}
+
+.cs61a-search-results .preview {
+  font-size: 0.8em;
+}

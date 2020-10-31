@@ -1,0 +1,5 @@
+Flask
+gunicorn
+requests
+beautifulsoup4
+PyPdf2
