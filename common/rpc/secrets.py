@@ -1,6 +1,8 @@
 from functools import wraps
 from os import getenv
 
+from flask import abort
+
 from common.rpc.utils import cached, create_service, requires_master_secret
 
 service = create_service(__name__)
@@ -30,6 +32,22 @@ def validates_master_secret(func):
         return func(app=app, is_staging=is_staging, **kwargs)
 
     return wrapped
+
+
+def only(app, *, allow_staging=False):
+    def decorator(func):
+        @wraps(func)
+        @validates_master_secret
+        def wrapped(app_name, is_staging, **kwargs):
+            if app_name != app:
+                abort(403)
+            if is_staging and not allow_staging:
+                abort(403)
+            return func(**kwargs)
+
+        return wrapped
+
+    return decorator
 
 
 @cached()
