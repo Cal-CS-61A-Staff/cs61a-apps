@@ -12,7 +12,7 @@ from common.rpc.indexer import clear_resources, index_piazza, upload_resources
 from common.rpc.secrets import get_secret, only
 
 SITE_DOMAIN = "https://cs61a.org"
-SEARCH_DOMAIN = "https://search-worker.apps.cs61a.org"
+SEARCH_DOMAIN = "https://search-worker.app.cs61a.org"
 
 PIAZZA_TEMPLATE = "https://piazza.com/class/{}?cid={}"
 
