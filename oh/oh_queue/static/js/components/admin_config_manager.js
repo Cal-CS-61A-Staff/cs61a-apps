@@ -44,17 +44,6 @@ function AdminConfigManager({ state: { config } }) {
                         </td>
                     </tr>
                     <tr>
-                        <td>Should the homepage recommend students to make appointments?</td>
-                        <td className="col-md-1">
-                            <ConfigLinkedToggle
-                                config={config}
-                                configKey="recommend_appointments"
-                                offText="No"
-                                onText="Yes"
-                            />
-                        </td>
-                    </tr>
-                    <tr>
                         <td>
                             <p>What type of magic word should the queue require to submit new
                                 tickets?</p>
