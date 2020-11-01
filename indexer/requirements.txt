@@ -1,0 +1,5 @@
+Flask
+gunicorn
+beautifulsoup4
+PyPdf2
+-r common/requirements.txt
