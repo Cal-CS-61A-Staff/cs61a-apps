@@ -187,9 +187,28 @@ class GradescopeGrader:
         )
 
         # Finally we can process each question
-        self.process_questions(gs_outline, question_numbers, blacklist_question_numbers, email_to_data_map, email_to_question_sub_id, name_question_id, sid_question_id, custom_grouper_map)
-    
-    def process_questions(self, gs_outline, question_numbers, blacklist_question_numbers, email_to_data_map, email_to_question_sub_id, name_question_id, sid_question_id, custom_grouper_map):
+        self.process_questions(
+            gs_outline,
+            question_numbers,
+            blacklist_question_numbers,
+            email_to_data_map,
+            email_to_question_sub_id,
+            name_question_id,
+            sid_question_id,
+            custom_grouper_map,
+        )
+
+    def process_questions(
+        self,
+        gs_outline,
+        question_numbers,
+        blacklist_question_numbers,
+        email_to_data_map,
+        email_to_question_sub_id,
+        name_question_id,
+        sid_question_id,
+        custom_grouper_map,
+    ):
         def proc_q(d):
             qid, question = d
             if (
@@ -219,7 +238,15 @@ class GradescopeGrader:
 
         qi = list(gs_outline.questions_iterator())
         with ThreadPool(self.simultaneous_jobs) as p:
-            list(tqdm(p.imap_unordered(proc_q, qi), total=len(qi), desc="Questions Graded", unit="Question", **def_tqdm_args))
+            list(
+                tqdm(
+                    p.imap_unordered(proc_q, qi),
+                    total=len(qi),
+                    desc="Questions Graded",
+                    unit="Question",
+                    **def_tqdm_args,
+                )
+            )
 
     def add_additional_exams(
         self,
@@ -312,7 +339,16 @@ class GradescopeGrader:
         gs_outline = examtool_outline.get_gs_outline()
 
         # Finally we can process each question
-        self.process_questions(gs_outline, question_numbers, blacklist_question_numbers, email_to_data_map, email_to_question_sub_id, name_question_id, sid_question_id, custom_grouper_map)
+        self.process_questions(
+            gs_outline,
+            question_numbers,
+            blacklist_question_numbers,
+            email_to_data_map,
+            email_to_question_sub_id,
+            name_question_id,
+            sid_question_id,
+            custom_grouper_map,
+        )
 
     def fetch_and_export_examtool_exam_data(
         self,
@@ -545,8 +581,17 @@ class GradescopeGrader:
                     os.path.join(out, file_name),
                 ):
                     failed_emails.append(student_email)
+
             with ThreadPool(self.simultaneous_jobs) as p:
-                list(tqdm(p.imap_unordered(func, email_files), total=len(email_files), file=orig_stdout, unit="Submission", **def_tqdm_args))
+                list(
+                    tqdm(
+                        p.imap_unordered(func, email_files),
+                        total=len(email_files),
+                        file=orig_stdout,
+                        unit="Submission",
+                        **def_tqdm_args,
+                    )
+                )
         return failed_emails
 
     def set_group_types(self, outline: GS_Outline, debug=True):
@@ -559,8 +604,17 @@ class GradescopeGrader:
             def sgt(q):
                 qid, question = q
                 self.set_group_type(question)
+
             with ThreadPool(self.simultaneous_jobs) as p:
-                list(tqdm(p.imap_unordered(sgt, questions), total=len(questions), file=orig_stdout, unit="Question", **def_tqdm_args))
+                list(
+                    tqdm(
+                        p.imap_unordered(sgt, questions),
+                        total=len(questions),
+                        file=orig_stdout,
+                        unit="Question",
+                        **def_tqdm_args,
+                    )
+                )
 
     def set_group_type(self, o_question: GS_Outline_Question):
         question_type = o_question.data.get("type")
@@ -971,14 +1025,22 @@ class GradescopeGrader:
         #     **def_tqdm_args,
         # ):
         #     submit_group(group, question, failed_groups_names, max_attempts)
-        
+
         gps = groups.get_groups()
 
         def sg(g):
             submit_group(g, question, failed_groups_names, 5)
+
         with ThreadPool(self.simultaneous_sub_jobs) as p:
-            list(tqdm(p.imap_unordered(sg, gps), total=len(gps), desc=f"[{qid}]: Syncing Groups", unit="Group", **def_tqdm_args))
-        
+            list(
+                tqdm(
+                    p.imap_unordered(sg, gps),
+                    total=len(gps),
+                    desc=f"[{qid}]: Syncing Groups",
+                    unit="Group",
+                    **def_tqdm_args,
+                )
+            )
 
         # This is to decrease down stream errors
         for failed_group_name in failed_groups_names:
@@ -1062,10 +1124,21 @@ class GradescopeGrader:
                 sid = group_sids[0]
                 if not sub_id_mapping[str(sid)]["graded"]:
                     if not rubric.grade(sid, group_sel, save_group=True):
-                        tqdm.write(f"[{qid}]: Failed to grade group {group.get_name()}!")
+                        tqdm.write(
+                            f"[{qid}]: Failed to grade group {group.get_name()}!"
+                        )
+
         gps = groups.get_groups()
         with ThreadPool(self.simultaneous_sub_jobs) as p:
-            list(tqdm(p.imap_unordered(sg, gps), total=len(gps), desc=f"[{qid}]: Grading", unit="Group", **def_tqdm_args))
+            list(
+                tqdm(
+                    p.imap_unordered(sg, gps),
+                    total=len(gps),
+                    desc=f"[{qid}]: Grading",
+                    unit="Group",
+                    **def_tqdm_args,
+                )
+            )
 
 
 class ExamtoolOutline:

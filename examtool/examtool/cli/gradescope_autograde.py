@@ -80,16 +80,18 @@ from examtool.api.gradescope_autograde import GradescopeGrader
     help="This is the path to a python file which contains the dictionary named EXACTLY `examtool_custom_grouper_fns` mapping question IDs or question Gradescope numbers to a function which returns a QuestionGrouper type. See examtool.api.gradescope_autograde for details about that function.",
 )
 @click.option(
-    "--jobs", "-j",
-    default = 10,
+    "--jobs",
+    "-j",
+    default=10,
     type=int,
-    help="This is the number of simultaneous questions currently being processed. Default: 10"
+    help="This is the number of simultaneous questions currently being processed. Default: 10",
 )
 @click.option(
-    "--sub-jobs", "-sj",
-    default = 10,
+    "--sub-jobs",
+    "-sj",
+    default=10,
     type=int,
-    help="This is the number of simultaneous jobs of a question currently being processed. Note this is per question. Default: 10"
+    help="This is the number of simultaneous jobs of a question currently being processed. Note this is per question. Default: 10",
 )
 @hidden_target_folder_option
 def gradescope_autograde(
@@ -128,7 +130,12 @@ def gradescope_autograde(
             spec.loader.exec_module(cg)
             grouper_map = cg.examtool_custom_grouper_fns
 
-    grader = GradescopeGrader(email=email, password=password, simultaneous_jobs=jobs, simultaneous_sub_jobs=sub_jobs)
+    grader = GradescopeGrader(
+        email=email,
+        password=password,
+        simultaneous_jobs=jobs,
+        simultaneous_sub_jobs=sub_jobs,
+    )
     email_mutation_list = None
     if mutate_emails:
         with open(mutate_emails, "r") as f:
