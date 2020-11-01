@@ -33,7 +33,7 @@ let Queue = ({state}) => {
             </div>
         )}
         {!showJumbotron && <Messages messages={state.messages}/>}
-        <PresenceIndicator state={state} hideWelcome={state.config.party_enabled} />
+        <PresenceIndicator state={state} />
         <MyAppointments state={state} />
         <MyAssignedTickets state={state} tickets={myAssignedTickets} />
         {!!myAssignedTickets.length && <hr />}

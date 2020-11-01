@@ -1,0 +1,20 @@
+steps:
+  # Pull the service (PR or prod) image from cache
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull gcr.io/cs61a-140900/SERVICE_NAME:latest || exit 0']
+  # Pull the prod image from cache
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull gcr.io/cs61a-140900/PROD_SERVICE_NAME:latest || exit 0']
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', '-t', 'gcr.io/cs61a-140900/SERVICE_NAME',
+      '--cache-from', 'gcr.io/cs61a-140900/SERVICE_NAME:latest',
+      '--cache-from', 'gcr.io/cs61a-140900/PROD_SERVICE_NAME:latest',
+      '.'
+    ]
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/cs61a-140900/SERVICE_NAME']

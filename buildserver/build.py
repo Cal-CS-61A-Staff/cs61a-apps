@@ -1,21 +1,21 @@
 import os
-from glob import glob
 from shutil import copytree, rmtree
 from urllib.parse import urlparse
 
 from app_config import App
 from common.db import connect_db
 from common.rpc.secrets import get_secret
-from shell_utils import sh, tmp_directory
+from common.shell_utils import sh, tmp_directory
 
 
 def gen_working_dir(app: App):
     return f"{app}_deploy_DO_NOT_USE"
 
 
-def clone_commit(remote: str, sha: str):
+def clone_commit(remote: str, sha: str, *, in_place=False):
     path = urlparse(remote).path
-    with tmp_directory(clean=True):
+
+    def clone():
         sh("git", "init")
         sh(
             "git",
@@ -25,6 +25,12 @@ def clone_commit(remote: str, sha: str):
             sha,
         )
         sh("git", "checkout", "FETCH_HEAD")
+
+    if in_place:
+        clone()
+    else:
+        with tmp_directory(clean=True):
+            clone()
 
 
 def build(app: App, pr_number: int = 0):
@@ -52,6 +58,7 @@ def build(app: App, pr_number: int = 0):
         {
             "oh_queue": run_oh_queue_build,
             "create_react_app": run_create_react_app_build,
+            "webpack": run_webpack_build,
             "none": run_noop_build,
         }[app.config["build_type"]]()
 
@@ -60,7 +67,7 @@ def run_oh_queue_build():
     sh("python", "-m", "venv", "env")
     sh("env/bin/pip", "freeze")
     sh("env/bin/pip", "install", "-r", "requirements.txt")
-    sh("npm", "install")
+    sh("yarn")
     sh("env/bin/python", "./manage.py", "build")
 
 
@@ -77,6 +84,12 @@ def run_create_react_app_build():
 
     copytree("deploy", ".", dirs_exist_ok=True)
     rmtree("deploy")
+
+
+def run_webpack_build():
+    sh("yarn")
+    sh("yarn", "run", "webpack")
+    sh("rm", "-rf", "node_modules")
 
 
 def run_noop_build():

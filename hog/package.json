@@ -1,0 +1,48 @@
+{
+  "name": "hog-gui",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:31415",
+  "dependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "concurrently": "^5.3.0",
+    "flow-bin": "^0.116.0",
+    "nodemon": "^2.0.4",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-scripts": "3.3.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build && rm -rf deploy && mkdir deploy && mv build deploy/gui_files && cp -r server/* deploy",
+    "dev": "concurrently -n 'server, client' \"nodemon --exec python3 server/main.py\" \"yarn start\"",
+    "proj-build": "python3 build-61a.py",
+    "deploy": "cd deploy/ && rm -rf .git && git init && git add -A && git commit -m \"init\" && git remote add dokku dokku@app.cs61a.org:hog && git push --force dokku master",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "flow": "flow"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "bootstrap": "^4.4.1",
+    "eslint-config-airbnb": "^18.0.1",
+    "react-bootstrap": "^1.0.0-beta.16",
+    "styled-components": "^5.0.0"
+  }
+}

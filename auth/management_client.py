@@ -245,6 +245,7 @@ def create_management_client(app):
             ).fetchone()
         if endpoint:
             return endpoint[0]
+        raise KeyError
 
     @validate_secret.bind(app)
     @key_secure

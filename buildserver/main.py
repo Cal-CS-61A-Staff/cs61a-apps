@@ -167,7 +167,7 @@ def webhook():
 
         if payload["action"] in ("opened", "synchronize", "reopened"):
             set_pr_comment(
-                f"PR updated. To trigger a build, click [here]({url_for('trigger_build', pr_number=pr.number)})",
+                f"PR updated. To trigger a build, click [here]({url_for('trigger_build', pr_number=pr.number)}).",
                 pr,
             )
             repo.get_commit(pr.head.sha).create_status(

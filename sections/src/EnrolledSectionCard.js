@@ -12,7 +12,7 @@ import { sectionInterval } from "./models";
 import type { Section } from "./models";
 import StateContext from "./StateContext";
 import Tags from "./Tags";
-import useAPI from "./useAPI";
+import useAPI from "./useStateAPI";
 
 type Props = {
   section: Section,

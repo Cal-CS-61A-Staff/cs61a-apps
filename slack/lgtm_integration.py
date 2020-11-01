@@ -3,6 +3,7 @@ import re
 import requests
 from github import Github
 
+from common.rpc.auth import read_spreadsheet
 from common.rpc.secrets import get_secret
 from integration import Integration
 
@@ -20,6 +21,15 @@ TRIGGER_WORDS = {
     "lgtm": "APPROVE",
     "sucks": "REQUEST_CHANGES",
     "needs changes": "REQUEST_CHANGES",
+}
+
+STAFF_GITHUB = {
+    username: email
+    for email, username in read_spreadsheet(
+        course="cs61a",
+        url="https://docs.google.com/spreadsheets/d/11f3e2Vszybnxcjipkx0WPYTgDvYadzIKEkz7Tb_48kg/",
+        sheet_name="Sheet1",
+    )[1:]
 }
 
 
@@ -55,7 +65,13 @@ class LGTMIntegration(Integration):
         repo = g.get_repo(repo)
         pr = repo.get_pull(pr)
 
-        github_email = pr.user.email
+        if pr.user.login in STAFF_GITHUB:
+            github_email = STAFF_GITHUB[pr.user.login]
+        else:
+            github_email = pr.user.email
+
+        if not github_email:
+            return
 
         for member in users["members"]:
             if member["profile"].get("email") == github_email:

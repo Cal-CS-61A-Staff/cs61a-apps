@@ -1,0 +1,499 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  _______  _______  ___      ____   _______
+% |       ||       ||   |    |    | |   _   |
+% |       ||  _____||   |___  |   | |  |_|  |
+% |       || |_____ |    _  | |   | |       |
+% |      _||_____  ||   | | | |   | |       |
+% |     |_  _____| ||   |_| | |   | |   _   |
+% |_______||_______||_______| |___| |__| |__|
+%
+% TeX file for CS61A Exams
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+\makeatletter
+% Header for UC Berkeley Examination TeX Files
+
+% Imports
+\usepackage{graphicx}
+\usepackage{amsfonts, amsmath, amsthm, amssymb, wasysym}
+\usepackage{enumerate}
+\usepackage{wrapfig}
+\usepackage{color}
+\usepackage{pifont}
+\usepackage{multicol, multirow}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{scalerel}
+\usepackage{tabularx}
+\usepackage[inline]{enumitem}
+\usepackage{array}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{adjustbox}
+%\usepackage[varqu]{inconsolata}
+\usepackage[T1]{fontenc}
+
+% Tags that are out of scope: separated by vertical bars
+\def\OUTOFSCOPE{Recursive SQL|Growth|Exceptions|Scheme Malformed List|Environment Diagram|WWPD}
+
+% Course information
+\def\coursenumber{<COURSECODE>}
+\def\class{<DESCRIPTION>}
+
+% Macros for use in assignments and exams
+\def\q#1#2{{\bf\item (#1 points)\quad #2}}
+\def\subq#1{\item \textbf{(#1 pt)}}
+\def\mp{{\it Multiple choice}: }
+\newcommand{\eat}[1]{\ignorespaces}
+\newcommand{\todo}[1]{ {\color{blue} TODO: #1} }
+\def\truefalse{Circle \emph{True} or \emph{False}: }
+\def\qt#1#2#3{{\bf\item (#1 points, #2 minutes)\quad #3}}
+
+% Define formatting
+\def\asis{\obeylines\obeyspaces}
+\def\ttp{.\skip -0.5em\ }
+\def\tab{\hbox{\kern10pt}}
+{\obeyspaces\global\def {\ }}
+\newcolumntype{x}[1]{>{\centering\arraybackslash\hspace{0pt}}p{#1}}
+
+% Defining terms
+\newcommand{\define}[1]{\textbf{#1}}
+
+\textheight=9.25in
+\textwidth=7in
+\topmargin=-0.5in
+\oddsidemargin=-0.25in
+\evensidemargin=-0.25in
+\parindent=0pt
+\parskip=5pt
+\itemsep=-1pt
+\newlength{\bigitemsep}
+\bigitemsep=10pt plus 4pt minus 6pt
+\floatsep=5pt plus 2pt minus 3pt
+\intextsep=5pt plus 2pt minus 3pt
+\textfloatsep=5pt plus 2pt minus 3pt
+\renewcommand{\baselinestretch}{1.0}
+\font\dunhd=cmdunh10 scaled \magstep5
+\font\dunhc=cmdunh10 scaled \magstep4
+\font\dunhb=cmdunh10 scaled \magstep3
+\font\dunha=cmdunh10 scaled \magstep2
+\date{}
+
+\lstset{%
+  basicstyle=\ttfamily,
+  showstringspaces=false,
+  keepspaces=true,
+  columns=fullflexible,
+  upquote=true,
+}
+
+% Multiple choice questions
+% Gradescope template for multiple choice questions
+\newcommand{\mcqb}{{\Large$\Circle$}}
+\newcommand{\mcqs}{\textcolor{blue}{\Large$\CIRCLE$}}
+% Gradescope template for multiple option questions
+\newcommand{\moqb}{{\Large$\Square$}}
+\newcommand{\moqs}{\textcolor{blue}{\Large$\blacksquare$}}
+% Define new semantic choice type
+\newlist{choices}{itemize}{1}
+\setlist[choices]{label*=\mcqb, leftmargin=*}
+\newlist{choices*}{itemize*}{1}
+\setlist[choices*]{label*=\mcqb, leftmargin=*, itemjoin=\hspace{8pt}}
+\newcommand{\choice}{\item}
+\newcommand{\choicepage}[2][\mcqb]{\choice[#1] \begin{minipage}[t]{\linewidth}
+                  #2
+                  \end{minipage}}
+% Define new semantic option type
+\newlist{options}{itemize}{1}
+\setlist[options]{label*=\moqb, leftmargin=*}
+\newlist{options*}{itemize*}{1}
+\setlist[options*]{label*=\moqb, leftmargin=*, itemjoin=\hspace{8pt}}
+\newcommand{\option}{\item}
+\newcommand{\optionpage}[2][\moqb]{\option[#1] \begin{minipage}[t]{\linewidth}
+                  #2
+                  \end{minipage}}
+% Provide column-restricted environments
+\setlength\multicolsep{5pt}
+\SetEnumitemKey{twocol}{
+  before=\raggedcolumns\begin{multicols}{2},
+  after=\end{multicols}\vspace*{-\baselineskip}}
+\SetEnumitemKey{threecol}{
+  before=\raggedcolumns\begin{multicols}{3},
+  after=\end{multicols}\vspace*{-\baselineskip}}
+\SetEnumitemKey{fourcol}{
+  before=\raggedcolumns\begin{multicols}{4},
+  after=\end{multicols}\vspace*{-\baselineskip}}
+\SetEnumitemKey{fivecol}{
+  before=\raggedcolumns\begin{multicols}{5},
+  after=\end{multicols}\vspace*{-\baselineskip}}
+
+% Formatting and title
+\def\preamble#1{\gdef\@preamble{#1}}
+\def\sp#1{\underline{\hspace*{#1}}}
+
+\def\maketitle{%
+ \begingroup
+ \def\thefootnote{\fnsymbol{footnote}}
+ \def\@makefnmark{\hbox
+ to 0pt{$^{\@thefnmark}$\hss}}
+ \if@twocolumn
+ \twocolumn[\@maketitle]
+ \else \newpage
+ \global\@topnum\z@ \@maketitle \fi
+\@thanks
+ \endgroup
+ \setcounter{footnote}{0}
+ \let\maketitle\relax
+ \let\@maketitle\relax
+ \gdef\@thanks{}\gdef\@author{}\gdef\@title{}\let\thanks\relax}
+\def\@maketitle{\newpage
+\hrule height6pt \vskip .7em
+\makebox[1.6in][l]{\dunhb \coursenumber}
+{\dunhb \class \hfill \ }
+\vskip-0.15in
+\makebox[1.6in][l]{\dunhb \semester}
+{\sc \hfill \@title \par}
+\vskip 0.6em
+\hrule height6pt
+ \par
+ \vskip .5em}
+\def\section{\@startsection {section}{1}{\z@}{-3.0ex plus -.6ex minus
+    -.2ex}{1.3ex plus .1ex}{\dunhd}}
+\def\subsection{\@startsection{subsection}{2}{\z@}{-1.6ex plus -.5ex minus
+   -.1ex}{0.9ex plus .1ex}{\dunha}}
+
+\long\def\@makecaption#1#2{
+ \vskip 10pt
+ \setbox\@tempboxa\hbox{{\bf #2}}
+ \ifdim \wd\@tempboxa >\hsize {\bf #2}\par \else \hbox
+to\hsize{\hfil\box\@tempboxa\hfil}
+ \fi}
+
+
+% codetemplate{-2cm}{triple}{py} for files triple.py and triple_sol.py
+\newcommand{\codetemplate}[3]{
+  \makebox{\hspace*{#1}\solutionimage{\lstinputlisting{#2.#3}}{\lstinputlisting{#2_sol.#3}}}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Environment diagrams %
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \envcode{frame type}{source file}{width}
+\newcommand{\envcode}[3]{
+  \begin{minipage}{#3}
+    \vspace{0pt}
+    \definecolor{gray}{rgb}{0.5,0.5,0.5}
+    \lstinputlisting[
+      basicstyle=\small\ttfamily,
+      numbers=left,
+      numberstyle=\small\color{gray}\texttt,
+      frame=#1,
+      framexrightmargin=-0.3cm,
+      framerule=1.2pt]{#2}
+  \end{minipage}
+}
+
+\newcommand{\writecode}[3]{
+  \vfill
+  \makebox{\hspace{#3}\solutionimage{\lstinputlisting{#1}}{\lstinputlisting{#2}}}
+  \vfill
+}
+
+% \begin{envdiagram} wraps an environment diagram with the standard 3-column
+% style (code, frames, objects/functions). Code may be omitted (if listed
+% elsewhere) to create a two column layout.
+\newenvironment{envdiagram}{
+  \small
+  \renewcommand{\arraystretch}{0.35}
+
+  % \startframes{width}
+  % Must come before all \globalframe or \localframe.
+  % The argument sets the width of the minipage, not the frames themselves.
+  \newcommand{\startframes}[1]{
+    \begin{minipage}[t]{##1}
+    \vspace{0pt}
+  }
+
+  % \globalframe
+  % Starts a new global frame.
+  % Must come after \startframes and before \startobjects.
+  \newcommand{\globalframe}{
+    \begin{tabular}{|m{1cm}>{\raggedleft}m{2.5cm}@{}c|m{1cm}@{}c|}
+    \hline
+    \multicolumn{5}{|l|}{
+      \begin{tabular}{@{}l}
+       \noalign{\vskip 1mm}
+       \texttt{Global frame} \\
+      \end{tabular}
+    } \\
+  }
+
+  % \localframe{f#}{name}{parent}
+  % Starts a new local frame. Must come after \envcode and before \startobjects
+  \newcommand{\localframe}[3]{
+    \begin{tabular}{|m{1cm}>{\raggedleft}m{2.5cm}@{}c|m{1cm}@{}c|}
+    \hline
+    \multicolumn{5}{|l|}{
+      \begin{tabular}{@{}lm{1.6cm}@{}l@{}m{1.4cm}@{}l@{}}
+        \noalign{\vskip 2mm}
+        \texttt{##1:}&\texttt{##2}&
+        \texttt{[parent:}&\texttt{##3}&\texttt{]}\\
+        \cline{2-2}\cline{4-4}
+      \end{tabular}
+    } \\
+  }
+
+  % \smallframe
+  % Starts a unnamed frame of a specified width designed for \fixedbinding
+  \newcommand{\smallframe}[1]{
+    \begin{tabular}{|m{0cm}>{\raggedleft}m{##1}@{}c|m{0.8cm}@{}c|}
+    \hline
+  }
+
+  % \stopframe
+  % Signals the end of a frame that was started with \globalframe or \localframe
+  \newcommand{\stopframe}{
+    \multicolumn{5}{|c|}{} \\
+    \hline
+    \end{tabular}
+    \vskip 1mm
+  }
+
+  % \binding{name}{value}
+  % Creates a new binding. Must come between the start of a frame and \stopframe
+  \newcommand{\binding}[2]{
+    \multicolumn{5}{|c|}{} \\ [3mm]
+    & \texttt{##1} & & \texttt{##2} & \\
+    \cline{2-2}\cline{4-4}
+  }
+
+  % \fixedbinding{name}{value}
+  % Creates a new binding without the line under the name.
+  % Must come between the start of a frame and \stopframe
+  \newcommand{\fixedbinding}[2]{
+    \multicolumn{5}{|c|}{} \\ [3mm]
+    & \texttt{##1} & & \texttt{##2} & \\
+    \cline{4-4}
+  }
+
+  % \returnvalue{value}
+  % Like \binding, but for the return value
+  \newcommand{\returnvalue}[1]{
+    \multicolumn{5}{|c|}{} \\ [3mm]
+    & \texttt{Return Value} & & \texttt{##1} & \\
+    \cline{4-4}
+  }
+
+  % \anchor{id}
+  % Does not output anything, but creates a reference node for \arrows
+  % This should go inside a binding's value.
+  % \newcommand{\anchor}[1]{
+  %   \begin{tikzpicture}[remember picture,overlay]
+  %     \node (##1) at (0, 0.15){};
+  %   \end{tikzpicture}
+  % }
+  \newcommand{\anchor}[1]{%
+    \tikz[remember picture,overlay]{\node (##1) at (0, 0.15){};}
+  }
+
+  % \startobjects
+  % Signals the end of the frames and the start of the objects. All frames must
+  % come before this and all functions must come after it.
+  \newcommand{\startobjects}{
+    \end{minipage}
+    \begin{minipage}[t]{\textwidth}
+    \vspace{0pt}
+  }
+
+  % \function{contents}
+  % Creates a new function. If arrows point to it, \arrows or \solarrows should
+  % come within `contents` before the text.
+  \newcommand{\function}[1]{
+    \begin{flushleft}
+      \textbf{\texttt{##1}}
+    \end{flushleft}
+  }
+
+  % \arrows{{id,...}}
+  % For each item in the list, it creates an arrow from the anchor with `id` to
+  % the current location.
+  \newcommand{\arrows}[1]{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \foreach \x in ##1
+        \draw[very thick,->](\x) to[out=0,in=180] (0, 0.1);
+    \end{tikzpicture}
+  }
+
+  % \solarrows{{id,...}}
+  % Identical to \arrows, except that these will only appear in solutions and
+  % will be colored red if they appear. Don't put this inside another \solution
+  % block.
+  \newcommand{\solarrows}[1]{%
+    \solution{\begin{tikzpicture}[remember picture,overlay]
+      \foreach \x in ##1
+        \draw[red,very thick,->](\x) to[out=0, in=180] (0, 0.1);
+    \end{tikzpicture}}
+  }
+
+  % \arrowsc{{{id/type},...}}
+  % For each item in the list, it creates an arrow from the anchor with `id` to
+  % the current location. `type` specifies the sort of connection that should be
+  % used. "to" creates a straight line. "to[out=$x in=$x]" can be used to create
+  % a bezier curve. Use this for arrows that appear in the template.
+  \newcommand{\arrowsc}[1]{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \foreach \x/\y in ##1
+        \draw[very thick,->](\x) \y (0, 0.1);
+    \end{tikzpicture}
+  }
+
+  % \solarrowsc{{{id/type},...}}
+  % Identical to \arrowsc, except that these will only appear in solutions and
+  % will be colored red if they appear. Don't put this inside another \solution
+  % block.
+  \newcommand{\solarrowsc}[1]{%
+    \solution{\begin{tikzpicture}[remember picture,overlay]
+      \foreach \x/\y in ##1
+        \draw[red,very thick,->](\x) \y (0, 0.1);
+    \end{tikzpicture}}
+  }
+}{
+  \end{minipage}
+  \renewcommand{\arraystretch}{1}
+}
+\makeatother
+
+\usepackage{fancyvrb}
+\usepackage{setspace}
+\usepackage{booktabs}
+
+\pagestyle{myheadings}
+\markboth{}{Exam generated for \texttt{<EMAILADDRESS>}}
+
+% For Python code
+\lstset{%
+  language=Python,
+  basicstyle=\ttfamily,
+  showstringspaces=false
+  keywordstyle=\color{black},
+  commentstyle=\color{black},
+  stringstyle=\color{black},
+}
+
+\def\semester{<SEMESTER>}
+
+%%% Showing solutions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\solution}[1]{{\bf \color{blue}#1}}
+\newcommand{\note}[1]{{\color{blue}#1}}
+\newcommand{\solutioncircle}[1]{{\color{red}#1}}
+\newcommand{\solutionimage}[2]{#2}  % First arg is question, second is solution
+
+%%%%%%%% PANDOC STUFF %%%%%%%%%%%%%%%%
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage{longtable,booktabs}
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+%\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\raggedbottom
+
+\newenvironment{absolutelynopagebreak}
+  {\par\nobreak\vfil\penalty0\vfilneg
+   \vtop\bgroup}
+  {\par\xdef\tpd{\the\prevdepth}\egroup
+   \prevdepth=\tpd}
+
+
+%%% Document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\sc <EXAMTYPE>}
+
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+
+\medskip
+
+\textbf{INSTRUCTIONS}
+
+This is your exam. Complete it either at \url{exam.cs61a.org} or, if that doesn't work, by emailing course staff with your
+solutions before the exam deadline.
+
+This exam is intended for the student with email address \texttt{<EMAILADDRESS>}. If this is not your email address, notify course staff immediately, as each exam is different. Do not distribute this exam PDF even after the exam ends, as some students may be taking the exam in a different time zone.
+
+For questions with \textbf{circular bubbles}, you should select exactly \emph{one} choice.
+{
+\begin{choices}[leftmargin=1cm]
+  \choice You must choose either this option
+  \choice Or this one, but not both!
+\end{choices}
+}
+
+For questions with \textbf{square checkboxes}, you may select \emph{multiple} choices.
+{
+\begin{options}[leftmargin=1cm]
+  \option You could select this choice.
+  \option You could select this one too!
+\end{options}
+}
+
+\textbf{You may start your exam now. Your exam is due at <DEADLINE> Pacific Time.} Go to the next page to begin.
+
+\newpage
+\begin{enumerate}[label=\textbf{\arabic*.}]
+\newpage

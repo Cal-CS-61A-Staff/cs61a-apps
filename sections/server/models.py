@@ -5,6 +5,7 @@ from urllib.parse import quote
 import flask
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course_id, is_admin
 from common.db import database_url
@@ -21,8 +22,8 @@ db = SQLAlchemy()
 user_section_junction = db.Table(
     "user_section_junction",
     db.Model.metadata,
-    db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
-    db.Column("section_id", db.Integer, db.ForeignKey("section.id")),
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"), index=True),
+    db.Column("section_id", db.Integer, db.ForeignKey("section.id"), index=True),
 )
 
 
@@ -77,7 +78,7 @@ class Section(db.Model):
         return {
             **self.json,
             "sessions": [
-                session.json
+                session.full_json
                 for session in sorted(
                     self.sessions, key=lambda session: session.start_time
                 )
@@ -90,14 +91,18 @@ class Session(db.Model):
     start_time: int = db.Column(db.Integer)
     section_id: int = db.Column(db.Integer, db.ForeignKey("section.id"), index=True)
     section: Section = db.relationship(
-        "Section", backref=db.backref("sessions"), lazy="joined", innerjoin=True
+        "Section", backref=db.backref("sessions"), lazy="joined"
     )
+    attendances: List["Attendance"]
 
     @property
     def json(self):
+        return {"id": self.id, "startTime": self.start_time}
+
+    @property
+    def full_json(self):
         return {
-            "id": self.id,
-            "startTime": self.start_time,
+            **self.json,
             "attendances": [
                 attendance.json
                 for attendance in sorted(
@@ -126,15 +131,20 @@ class Attendance(db.Model):
     )
     student_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     student: "User" = db.relationship(
-        "User",
-        backref=db.backref("attendances", lazy="joined"),
-        lazy="joined",
-        innerjoin=True,
+        "User", backref=db.backref("attendances"), lazy="joined", innerjoin=True
     )
 
     @property
     def json(self):
         return {"student": self.student.json, "status": self.status.name}
+
+    @property
+    def full_json(self):
+        return {
+            **self.json,
+            "session": self.session.json,
+            "section": self.session.section.json if self.session.section else None,
+        }
 
 
 class User(db.Model, UserMixin):
@@ -148,10 +158,12 @@ class User(db.Model, UserMixin):
     name: str = db.Column(db.String(255))
     is_staff: bool = db.Column(db.Boolean)
     sections: List[Section]
+    attendances: List[Attendance]
 
     @property
     def json(self):
         return {
+            "id": self.id,
             "name": self.name,
             "email": self.email,
             "isStaff": self.is_staff,
@@ -160,7 +172,25 @@ class User(db.Model, UserMixin):
 
     @property
     def full_json(self):
-        return {**self.json, "isAdmin": is_admin(self.email)}
+        attendances = (
+            Attendance.query.filter_by(student_id=self.id)
+            .options(
+                joinedload(Attendance.session, innerjoin=True)
+                .joinedload(Session.section)
+                .joinedload(Section.staff)
+            )
+            .all()
+        )
+        return {
+            **self.json,
+            "isAdmin": is_admin(self.email),
+            "attendanceHistory": [
+                attendance.full_json
+                for attendance in sorted(
+                    attendances, key=lambda attendance: attendance.session.start_time
+                )
+            ],
+        }
 
 
 class CourseConfig(db.Model):

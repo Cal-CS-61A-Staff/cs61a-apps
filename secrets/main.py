@@ -6,10 +6,16 @@ from typing import List, Tuple
 
 from flask import Flask, abort, redirect, request, url_for
 
-from common.oauth_client import create_oauth_client
+from common.course_config import is_admin
+from common.oauth_client import create_oauth_client, get_user
 from common.db import connect_db
 from common.oauth_client import is_staff
-from common.rpc.secrets import create_master_secret, get_secret, validate_master_secret
+from common.rpc.secrets import (
+    create_master_secret,
+    get_secret_from_server,
+    load_all_secrets,
+    validate_master_secret,
+)
 
 app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
@@ -20,8 +26,8 @@ with connect_db() as db:
         """CREATE TABLE IF NOT EXISTS secrets (
     app varchar(128),
     name varchar(128),
-    public_value varchar(128),
-    staging_value varchar(128)
+    public_value varchar(512),
+    staging_value varchar(512)
 )"""
     )
     secret_key = db(
@@ -60,7 +66,7 @@ def validates_master_secret(func):
     return wrapped
 
 
-@get_secret.bind(app)
+@get_secret_from_server.bind(app)
 @validates_master_secret
 def get_secret(app, is_staging, secret_name):
     with connect_db() as db:
@@ -72,6 +78,20 @@ def get_secret(app, is_staging, secret_name):
         return staging_value
     else:
         return public_value
+
+
+@load_all_secrets.bind(app)
+@validates_master_secret
+def load_all_secrets(app, is_staging, created_app_name):
+    if app != "buildserver" or is_staging:
+        abort(403)  # only buildserver running in prod can view all secrets
+    with connect_db() as db:
+        return dict(
+            db(
+                "SELECT name, public_value FROM secrets WHERE app=%s",
+                [created_app_name],
+            ).fetchall()
+        )
 
 
 @create_master_secret.bind(app)
@@ -132,7 +152,15 @@ def index():
         so don't worry about it too much, just be careful.
     </p>
     """ + "".join(
-        f"<p>{app}/{name} - {display_hash(public_value)} (staging: {display_hash(staging_value)})</p>"
+        f"""<p>
+            <form 
+                style="display: inline" 
+                action="{url_for("delete_secret", app_name=app, secret_name=name)}" 
+                method="post"
+            >
+                {app}/{name} - {display_hash(public_value)} (staging: {display_hash(staging_value)})
+                <input type="submit" value="Remove">
+        </form>"""
         for app, name, public_value, staging_value in secrets
     )
 
@@ -155,6 +183,15 @@ def create_secret():
             "INSERT INTO secrets (app, name, public_value, staging_value) VALUES (%s, %s, %s, %s)",
             [app, name, public, staging],
         )
+    return redirect(url_for("index"))
+
+
+@app.route("/delete_secret/<app_name>/<secret_name>", methods=["POST"])
+def delete_secret(app_name, secret_name):
+    if not is_admin(get_user()["email"], "cs61a"):
+        return redirect(url_for("login"))
+    with connect_db() as db:
+        db("DELETE FROM secrets WHERE app=%s AND name=%s", [app_name, secret_name])
     return redirect(url_for("index"))
 
 

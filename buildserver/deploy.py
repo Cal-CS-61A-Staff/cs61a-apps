@@ -13,11 +13,11 @@ from build import gen_working_dir
 from app_config import App, WEB_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
-from common.rpc.secrets import create_master_secret, get_secret
-from shell_utils import sh, tmp_directory
+from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
+from common.shell_utils import sh, tmp_directory
+from pypi_utils import update_setup_py
 
-
-DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps"
+DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
 
 
 def gen_env_variables(app: App, pr_number: int):
@@ -25,7 +25,7 @@ def gen_env_variables(app: App, pr_number: int):
         drivername="mysql+pymysql",
         username="root",
         password=get_secret(secret_name="ROOT_DATABASE_PW"),
-        database=app.name,
+        database=app.name.replace("-", "_"),
         query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
     ).__to_string__(hide_password=False)
 
@@ -38,6 +38,7 @@ def gen_env_variables(app: App, pr_number: int):
         DATABASE_URL=database_url,
         INSTANCE_CONNECTION_NAME=DB_INSTANCE_NAME,
         APP_MASTER_SECRET=master_secret,
+        **(load_all_secrets(created_app_name=app.name) if pr_number == 0 else {}),
     )
 
 
@@ -61,6 +62,8 @@ def deploy_commit(app: App, pr_number: int):
         {
             "flask": run_flask_deploy,
             "docker": run_dockerfile_deploy,
+            "pypi": run_pypi_deploy,
+            "cloud_function": run_cloud_function_deploy,
             "none": run_noop_deploy,
         }[app.config["deploy_type"]](app, pr_number)
 
@@ -74,14 +77,16 @@ def run_dockerfile_deploy(app: App, pr_number: int):
     for f in os.listdir("../../deploy_files"):
         shutil.copyfile(f"../../deploy_files/{f}", f"./{f}")
     service_name = gen_service_name(app.name, pr_number)
-    sh(
-        "gcloud",
-        "builds",
-        "submit",
-        "-q",
-        "--tag",
-        f"gcr.io/cs61a-140900/{service_name}",
-    )
+    prod_service_name = gen_service_name(app.name, 0)
+    with open("cloudbuild.yaml", "a+") as f:
+        f.seek(0)
+        contents = f.read()
+        contents = contents.replace("SERVICE_NAME", service_name)
+        contents = contents.replace("PROD_SERVICE_NAME", prod_service_name)
+        f.seek(0)
+        f.truncate()
+        f.write(contents)
+    sh("gcloud", "builds", "submit", "-q", "--config", "cloudbuild.yaml")
     sh(
         "gcloud",
         "run",
@@ -177,6 +182,41 @@ def run_dockerfile_deploy(app: App, pr_number: int):
             )
 
 
+def run_pypi_deploy(app: App, pr_number: int):
+    sh("python", "-m", "venv", "env")
+    update_setup_py(app, pr_number)
+    sh("env/bin/pip", "install", "setuptools")
+    sh("env/bin/pip", "install", "wheel")
+    sh("env/bin/python", "setup.py", "sdist", "bdist_wheel")
+    sh(
+        "twine",
+        "upload",
+        *(f"dist/{file}" for file in os.listdir("dist")),
+        env=dict(
+            TWINE_USERNAME="__token__",
+            TWINE_PASSWORD=get_secret(secret_name="PYPI_PASSWORD"),
+        ),
+    )
+
+
+def run_cloud_function_deploy(app: App, pr_number: int):
+    if pr_number != 0:
+        return
+    sh(
+        "gcloud",
+        "functions",
+        "deploy",
+        app.name,
+        "--runtime",
+        "python37",
+        "--trigger-http",
+        "--entry-point",
+        "index",
+        "--timeout",
+        "500",
+    )
+
+
 def run_noop_deploy(_app: App, _pr_number: int):
     pass
 
@@ -212,7 +252,7 @@ def delete_unused_services(pr_number: int = None):
 
     for service in services:
         if service["metadata"]["name"] not in active_service_names:
-            if pr_number is None:
+            if "pr" not in service["metadata"]["name"]:
                 post_slack_message(
                     course="cs61a",
                     message=f"<!channel> Service f{service['metadata']['name']} was not detected in master, and the "

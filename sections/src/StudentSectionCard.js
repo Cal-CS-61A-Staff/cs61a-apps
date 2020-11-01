@@ -6,11 +6,12 @@ import Button from "react-bootstrap/Button";
 
 import Card from "react-bootstrap/Card";
 import ListGroup from "react-bootstrap/ListGroup";
+import { Link } from "react-router-dom";
 import { sectionTitle } from "./models";
 import type { Section } from "./models";
 import StateContext from "./StateContext";
 import Tags from "./Tags";
-import useAPI from "./useAPI";
+import useAPI from "./useStateAPI";
 
 type Props = {
   section: Section,
@@ -33,6 +34,8 @@ export default function StudentSectionCard({
   const slotText = (
     <>({section.capacity - section.students.length} slots left)</>
   );
+
+  const title = sectionTitle(section);
 
   return (
     <Card
@@ -64,7 +67,7 @@ export default function StudentSectionCard({
                   </Button>
                 ))}
           {!isStaff && <Tags tags={section.tags} />}
-          {sectionTitle(section)}
+          {isStaff ? <Link to={`/section/${section.id}`}>{title}</Link> : title}
         </Card.Title>
         <Card.Text>{section.description}</Card.Text>
       </Card.Body>

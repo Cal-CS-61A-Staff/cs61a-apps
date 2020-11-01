@@ -1,0 +1,5 @@
+build_type: webpack
+deploy_type: docker
+first_party_domains:
+  - write.final.cs61a.org
+  - write.exam.cs61a.org

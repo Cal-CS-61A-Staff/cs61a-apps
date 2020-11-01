@@ -2,7 +2,7 @@ import json
 from urllib.parse import urlparse
 
 from deploy import gen_service_name
-from shell_utils import sh
+from common.shell_utils import sh
 
 
 def get_base_hostname(app: str) -> str:

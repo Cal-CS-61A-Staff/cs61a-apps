@@ -6,7 +6,7 @@ import random
 import time
 from operator import or_
 from os import getenv
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from flask import abort, render_template, g, request, jsonify
 from flask_login import current_user, login_user
@@ -20,12 +20,13 @@ from common.course_config import (
     get_course,
     format_coursecode,
     get_course_id,
-    COURSE_DOMAINS,
+    get_domain,
 )
 from oh_queue.models import (
     Assignment,
     ChatMessage,
     ConfigEntry,
+    CourseNotificationState,
     Location,
     Ticket,
     TicketEvent,
@@ -69,7 +70,11 @@ def student_json(user):
 
 
 def message_json(message: ChatMessage):
-    return {"user": user_json(message.user), "body": message.body}
+    return {
+        "user": user_json(message.user),
+        "body": message.body,
+        "created": message.created.isoformat(),
+    }
 
 
 def ticket_json(ticket):
@@ -226,7 +231,7 @@ def emit_group_event(group, event_type):
     add_response("group_event", {"type": event_type, "group": group_json(group)})
 
 
-def emit_state(attrs):
+def emit_state(attrs, entity=None):
     state = {}
     if "tickets" in attrs:
         tickets = (
@@ -238,6 +243,9 @@ def emit_state(attrs):
             .options(joinedload(Ticket.group))
             .all()
         )
+        if entity not in tickets and isinstance(entity, Ticket):
+            if has_ticket_access(entity):
+                tickets.append(entity)
         state["tickets"] = [ticket_json(ticket) for ticket in tickets]
     if "assignments" in attrs:
         assignments = Assignment.query.filter_by(course=get_course()).all()
@@ -267,6 +275,12 @@ def emit_state(attrs):
             )
             .all()
         )
+        if entity not in appointments and isinstance(entity, Appointment):
+            if current_user.is_staff or current_user.id in [
+                signup.user.id for signup in entity.signups
+            ]:
+                appointments.append(entity)
+
         state["appointments"] = [
             appointments_json(appointment) for appointment in appointments
         ]
@@ -274,6 +288,9 @@ def emit_state(attrs):
         groups = Group.query.filter(
             Group.group_status == GroupStatus.active, Group.course == get_course()
         ).all()
+        if entity not in groups and isinstance(entity, Group):
+            if has_group_access(entity):
+                groups.append(entity)
         state["groups"] = [group_json(group) for group in groups]
     if "current_user" in attrs:
         state["current_user"] = student_json(current_user)
@@ -441,6 +458,19 @@ def index(*args, **kwargs):
     check = db.session.query(ConfigEntry).filter_by(course=get_course()).first()
     if not check:
         init_config()
+    notif_state = CourseNotificationState.query.filter_by(
+        course=get_course()
+    ).one_or_none()
+    if not notif_state:
+        notif_state = CourseNotificationState(
+            course=get_course(),
+            domain=get_domain(),
+            last_queue_ping=datetime.datetime.now(),
+            last_appointment_notif=get_current_time(),
+        )
+        db.session.add(notif_state)
+    db.session.commit()
+
     return render_template("index.html", course_name=format_coursecode(get_course()))
 
 
@@ -466,7 +496,8 @@ def api(endpoint):
             course = validate_secret(secret=secret, course=course)
             user = User.query.filter_by(course=course, email=email).one()
             login_user(user)
-            return jsonify(f() if args is None else f(args))
+            resp = f() if args is None else f(args)
+            return jsonify({"action": resp, "updates": g.response_buffer})
 
         app.add_url_rule(
             "/api/{}".format(endpoint), f.__name__, handler, methods=["POST"]
@@ -526,23 +557,27 @@ def is_staff(f):
     return wrapper
 
 
-def has_ticket_access(f):
+def has_ticket_access(ticket: Ticket):
+    if not current_user.is_authenticated:
+        return False
+    group = ticket.group
+    if group:
+        if not (current_user.is_staff or is_member_of(group)):
+            return False
+    elif not (current_user.is_staff or ticket.user.id == current_user.id):
+        return False
+    return True
+
+
+def requires_ticket_access(f):
     @functools.wraps(f)
     def wrapper(*args, **kwds):
-        if not current_user.is_authenticated:
-            return socket_unauthorized()
         data = args[0]
         ticket_id = data.get("id")
         if not ticket_id:
             return socket_error("Invalid ticket ID")
         ticket = Ticket.query.filter_by(id=ticket_id, course=get_course()).one_or_none()
-        if not ticket:
-            return socket_error("Invalid ticket ID")
-        group = ticket.group
-        if group:
-            if not (current_user.is_staff or is_member_of(group)):
-                return socket_unauthorized()
-        elif not (current_user.is_staff or ticket.user.id == current_user.id):
+        if not has_ticket_access(ticket):
             return socket_unauthorized()
         kwds["ticket"] = ticket
         return f(*args, **kwds)
@@ -550,19 +585,25 @@ def has_ticket_access(f):
     return wrapper
 
 
-def has_group_access(f):
+def has_group_access(group: Group):
+    if not current_user.is_authenticated:
+        return socket_unauthorized()
+    if not group:
+        return False
+    if not (current_user.is_staff or is_member_of(group)):
+        return False
+    return True
+
+
+def requires_group_access(f):
     @functools.wraps(f)
     def wrapper(*args, **kwds):
-        if not current_user.is_authenticated:
-            return socket_unauthorized()
         data = args[0]
         group_id = data.get("id")
         if not group_id:
             return socket_error("Invalid group ID")
         group = Group.query.filter_by(id=group_id, course=get_course()).one_or_none()
-        if not group:
-            return socket_error("Invalid group ID")
-        if not (current_user.is_staff or is_member_of(group)):
+        if not has_group_access(group):
             return socket_unauthorized()
         kwds["group"] = group
         return f(*args, **kwds)
@@ -571,11 +612,34 @@ def has_group_access(f):
 
 
 @api("connect")
-def connect():
+def connect(data=None):
     if not current_user.is_authenticated:
         pass
 
     current_user.heartbeat_time = datetime.datetime.utcnow()
+
+    entity_type = None
+
+    if data:
+        url = data["url"]
+        path = urlparse(url).path
+        path = path.strip("/")
+        parts = path.split("/")
+        if len(parts) == 2:
+            if parts[1].isdigit():
+                entity_type = parts[0]
+                entity_id = int(parts[1])
+
+    if entity_type == "tickets":
+        entity = Ticket.query.filter_by(course=get_course(), id=entity_id).one_or_none()
+    elif entity_type == "appointments":
+        entity = Appointment.query.filter_by(
+            course=get_course(), id=entity_id
+        ).one_or_none()
+    elif entity_type == "groups":
+        entity = Group.query.filter_by(course=get_course(), id=entity_id).one_or_none()
+    else:
+        entity = None
 
     emit_state(
         [
@@ -587,7 +651,8 @@ def connect():
             "current_user",
             "config",
             "presence",
-        ]
+        ],
+        entity,
     )
 
 
@@ -776,6 +841,13 @@ def get_next_ticket(location=None):
         ticket = ticket.first()
     if not ticket:
         ticket = Ticket.query.filter(
+            Ticket.status == TicketStatus.rerequested,
+            Ticket.helper_id == None,
+            Ticket.course == get_course(),
+        )
+        ticket = ticket.first()
+    if not ticket:
+        ticket = Ticket.query.filter(
             Ticket.status == TicketStatus.pending, Ticket.course == get_course()
         )
         if location:
@@ -934,8 +1006,9 @@ def release_holds(data):
     to_me = data.get("to_me")
     tickets = get_tickets(ticket_ids)
     for ticket in tickets:
-        ticket.helper_id = current_user.id if to_me else None
-        emit_event(ticket, TicketEventType.hold_released)
+        if ticket.status in [TicketStatus.juggled, TicketStatus.rerequested]:
+            ticket.helper_id = current_user.id if to_me else None
+            emit_event(ticket, TicketEventType.hold_released)
     db.session.commit()
 
     return socket_redirect()
@@ -962,18 +1035,45 @@ def load_ticket(ticket_id):
         return ticket_json(ticket)
 
 
-@api("update_ticket")
-@has_ticket_access
-def update_ticket(data, ticket):
+def apply_ticket_update(data, ticket=None):
+    if not ticket:
+        ticket_id = data["id"]
+        ticket = Ticket.query.filter_by(id=ticket_id, course=get_course()).one()
     if "description" in data:
         ticket.description = data["description"]
     if "location_id" in data:
         ticket.location = Location.query.filter_by(
             course=get_course(), id=data["location_id"]
-        ).one_or_none()
-    emit_event(ticket, TicketEventType.update)
+        ).one()
+    if "assignment_id" in data:
+        ticket.assignment = Assignment.query.filter_by(
+            course=get_course(), id=data["assignment_id"]
+        ).one()
+    if "question" in data:
+        ticket.question = data["question"]
+
+
+@api("update_ticket")
+@requires_ticket_access
+def update_ticket(data, ticket):
+    apply_ticket_update(data, ticket)
     db.session.commit()
+    emit_event(ticket, TicketEventType.update)
     return ticket_json(ticket)
+
+
+@api("update_tickets")
+@is_staff
+def update_tickets(arr):
+    ticket_ids = [data["id"] for data in arr]
+    tickets = Ticket.query.filter(
+        Ticket.id.in_(ticket_ids), Ticket.course == get_course()
+    ).all()
+    ticket_dict = {ticket.id: ticket for ticket in tickets}
+    for data in arr:
+        apply_ticket_update(data, ticket_dict[data["id"]])
+    db.session.commit()
+    return emit_state(["tickets"])
 
 
 @api("add_assignment")
@@ -1186,6 +1286,9 @@ def assign_appointment(data):
         old_signup.attendance_status if old_signup else AttendanceStatus.unknown
     )
 
+    if appointment.status != AppointmentStatus.pending:
+        return socket_error("Appointment is not pending")
+
     if old_signup:
         db.session.delete(old_signup)
         db.session.commit()
@@ -1196,9 +1299,6 @@ def assign_appointment(data):
         and not old_signup
     ):
         return socket_error("Appointment is at full capacity")
-
-    if appointment.status != AppointmentStatus.pending:
-        return socket_error("Appointment is not pending")
 
     signup = AppointmentSignup(
         appointment_id=data["appointment_id"],
@@ -1376,12 +1476,14 @@ def upload_appointments(data):
 @api("update_staff_online_setup")
 @is_staff
 def update_staff_online_setup(data):
-    current_user.call_url = data["staff-call-link"] and urljoin(
-        "https://", data["staff-call-link"]
-    )
-    current_user.doc_url = data["staff-doc-link"] and urljoin(
-        "https://", data["staff-doc-link"]
-    )
+    if "staff-call-link" in data:
+        current_user.call_url = data["staff-call-link"] and urljoin(
+            "https://", data["staff-call-link"]
+        )
+    if "staff-doc-link" in data:
+        current_user.doc_url = data["staff-doc-link"] and urljoin(
+            "https://", data["staff-doc-link"]
+        )
     db.session.add(current_user)
 
     db.session.commit()
@@ -1436,13 +1538,20 @@ def send_chat_message(data):
 
 @api("bulk_appointment_action")
 @is_staff
-def bulk_appointment_action(action):
+def bulk_appointment_action(data):
+    action = data["action"]
+    ids = data.get("ids", None)
     if action == "open_all_assigned":
-        Appointment.query.filter(
+        appointments = Appointment.query.filter(
             Appointment.course == get_course(),
             Appointment.helper_id != None,
             Appointment.status == AppointmentStatus.hidden,
-        ).update({Appointment.status: AppointmentStatus.pending})
+        )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        appointments.update(
+            {Appointment.status: AppointmentStatus.pending}, synchronize_session=False
+        )
     elif action == "resolve_all_past":
         appointments = (
             Appointment.query.filter(
@@ -1454,15 +1563,14 @@ def bulk_appointment_action(action):
             .outerjoin(Appointment.signups)
             .group_by(Appointment)
             .having(func.count(AppointmentSignup.id) == 0)
-            .all()
         )
-        (
-            Appointment.query.filter(
-                Appointment.id.in_({x.id for x in appointments})
-            ).update(
-                {Appointment.status: AppointmentStatus.resolved},
-                synchronize_session=False,
-            )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        appointments = appointments.all()
+        Appointment.query.filter(
+            Appointment.id.in_({x.id for x in appointments})
+        ).update(
+            {Appointment.status: AppointmentStatus.resolved}, synchronize_session=False
         )
     elif action == "remove_all_unassigned":
         appointments = (
@@ -1472,8 +1580,10 @@ def bulk_appointment_action(action):
             .outerjoin(Appointment.signups)
             .group_by(Appointment)
             .having(func.count(AppointmentSignup.id) == 0)
-            .all()
         )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        appointments = appointments.all()
         Appointment.query.filter(
             Appointment.id.in_({x.id for x in appointments})
         ).delete(False)
@@ -1499,6 +1609,9 @@ def get_user(user_id):
             Ticket.course == get_course(),
         )
         .order_by(desc(Ticket.created))
+        .options(joinedload(Ticket.user, innerjoin=True))
+        .options(joinedload(Ticket.helper))
+        .options(joinedload(Ticket.group))
         .all()
     )
     appointments = (
@@ -1506,12 +1619,23 @@ def get_user(user_id):
             Appointment.helper_id == user.id, Appointment.course == get_course()
         )
         .order_by(desc(Appointment.start_time))
+        .options(joinedload(Appointment.helper))
+        .options(
+            joinedload(Appointment.signups).joinedload(
+                AppointmentSignup.user, innerjoin=True
+            )
+        )
         .all()
     )
     signups = (
         AppointmentSignup.query.join(AppointmentSignup.appointment)
         .filter(
             AppointmentSignup.user_id == user.id, Appointment.course == get_course()
+        )
+        .options(
+            joinedload(AppointmentSignup.appointment).options(
+                joinedload(Appointment.helper)
+            )
         )
         .order_by(desc(Appointment.start_time))
         .all()
@@ -1527,14 +1651,45 @@ def get_user(user_id):
     }
 
 
+def apply_appointment_update(data, appointment=None):
+    if not appointment:
+        appointment_id = data["id"]
+        appointment = Appointment.query.filter_by(
+            id=appointment_id, course=get_course()
+        ).one()
+    if "description" in data:
+        appointment.description = data["description"]
+    if "location_id" in data:
+        appointment.location = Location.query.filter_by(
+            course=get_course(), id=data["location_id"]
+        ).one()
+    if "helper_id" in data:
+        if data["helper_id"] is None:
+            appointment.helper = None
+        else:
+            appointment.helper = User.query.filter_by(
+                course=get_course(), id=data["helper_id"]
+            ).one()
+
+
 @api("update_appointment")
 @is_staff
 def update_appointment(data):
-    appointment_id = data["id"]
-    description = data["description"]
-    Appointment.query.filter_by(
-        id=appointment_id, course=get_course()
-    ).one().description = description
+    apply_appointment_update(data)
+    db.session.commit()
+    return emit_state(["appointments"])
+
+
+@api("update_appointments")
+@is_staff
+def update_appointments(arr):
+    appointment_ids = [data["id"] for data in arr]
+    appointments = Appointment.query.filter(
+        Appointment.id.in_(appointment_ids), Appointment.course == get_course()
+    ).all()
+    appointment_dict = {appointment.id: appointment for appointment in appointments}
+    for data in arr:
+        apply_appointment_update(data, appointment_dict[data["id"]])
     db.session.commit()
     return emit_state(["appointments"])
 
@@ -1542,11 +1697,13 @@ def update_appointment(data):
 @api("test_slack")
 @is_staff
 def test_slack():
-    domain = COURSE_DOMAINS[get_course()]
+    notif_config: CourseNotificationState = CourseNotificationState.query.filter_by(
+        course=get_course()
+    ).one()
     post_slack_message(
         message="This is a test message from the OH queue! Your default queue domain is {}. This channel will "
         "be used for all future notifications. To change the channel, visit auth.cs61a.org and "
-        "update the channel associated with `oh-queue`.".format(domain),
+        "update the channel associated with `oh-queue`.".format(notif_config.domain),
         purpose="oh-queue",
         course=get_course(),
     )
@@ -1555,7 +1712,7 @@ def test_slack():
 @api("appointment_summary")
 @is_staff
 def appointment_summary():
-    send_appointment_summary(app, get_course())
+    send_appointment_summary(get_course())
 
 
 def leave_current_groups():
@@ -1706,9 +1863,10 @@ def leave_group(group_id):
     return socket_redirect()
 
 
-@api("update_group")
-@has_group_access
-def update_group(data, group):
+def apply_group_update(data, group=None):
+    if not group:
+        group_id = data["id"]
+        group = Group.query.filter_by(id=group_id, course=get_course()).one()
     if "description" in data:
         group.description = data["description"]
     if "assignment_id" in data:
@@ -1720,14 +1878,34 @@ def update_group(data, group):
     if "location_id" in data:
         group.location = Location.query.filter_by(
             course=get_course(), id=data["location_id"]
-        ).one_or_none()
+        ).one()
+
+
+@api("update_group")
+@requires_group_access
+def update_group(data, group):
+    apply_group_update(data, group)
     db.session.commit()
     emit_group_event(group, "update_group")
     return group_json(group)
 
 
+@api("update_groups")
+@is_staff
+def update_groups(arr):
+    group_ids = [data["id"] for data in arr]
+    groups = Group.query.filter(
+        Group.id.in_(group_ids), Group.course == get_course()
+    ).all()
+    group_dict = {group.id: group for group in groups}
+    for data in arr:
+        apply_group_update(data, group_dict[data["id"]])
+    db.session.commit()
+    return emit_state(["groups"])
+
+
 @api("create_group_ticket")
-@has_group_access
+@requires_group_access
 def create_group_ticket(data, group):
     is_queue_open = ConfigEntry.query.filter_by(
         course=get_course(), key="is_queue_open"
@@ -1767,14 +1945,20 @@ def create_group_ticket(data, group):
 @is_staff
 def delete_group(group_id):
     group = Group.query.filter_by(id=group_id, course=get_course()).one()
+    delete_group_worker(group, emit=True)
+    db.session.commit()
+
+
+def delete_group_worker(group, *, emit):
     group.group_status = GroupStatus.resolved
     for attendance in group.attendees:
         attendance.group_attendance_status = GroupAttendanceStatus.gone
-    emit_group_event(group, "group_closed")
+    if emit:
+        emit_group_event(group, "group_closed")
     if group.ticket:
         group.ticket.status = TicketStatus.deleted
-        emit_event(group.ticket, TicketEventType.delete)
-    db.session.commit()
+        if emit:
+            emit_event(group.ticket, TicketEventType.delete)
 
 
 @app.route("/debug")
