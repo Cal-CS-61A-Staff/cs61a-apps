@@ -444,7 +444,9 @@ def init_config():
         )
     )
     db.session.add(
-        ConfigEntry(key="recommend_appointments", value="true", public=True, course=get_course())
+        ConfigEntry(
+            key="recommend_appointments", value="true", public=True, course=get_course()
+        )
     )
     db.session.commit()
 
@@ -1236,15 +1238,16 @@ def assign_appointment(data):
         )
         week_start = start - datetime.timedelta(days=appointment.start_time.weekday())
         week_end = week_start + datetime.timedelta(days=7)
-        num_this_week = AppointmentSignup.query.join(
-            AppointmentSignup.appointment
-        ).filter(
-            week_start < Appointment.start_time,
-            Appointment.start_time < week_end,
-            AppointmentSignup.user_id == current_user.id,
-            AppointmentSignup.attendance_status != AttendanceStatus.excused,
-        ).count() - int(
-            bool(old_signup)
+        num_this_week = (
+            AppointmentSignup.query.join(AppointmentSignup.appointment)
+            .filter(
+                week_start < Appointment.start_time,
+                Appointment.start_time < week_end,
+                AppointmentSignup.user_id == current_user.id,
+                AppointmentSignup.attendance_status != AttendanceStatus.excused,
+            )
+            .count()
+            - int(bool(old_signup))
         )
         if num_this_week >= weekly_threshold:
             return socket_error(
@@ -1254,12 +1257,17 @@ def assign_appointment(data):
             )
 
         day_end = start + datetime.timedelta(days=1)
-        num_today = AppointmentSignup.query.join(AppointmentSignup.appointment).filter(
-            start < Appointment.start_time,
-            Appointment.start_time < day_end,
-            AppointmentSignup.user_id == current_user.id,
-            AppointmentSignup.attendance_status != AttendanceStatus.excused,
-        ).count() - int(bool(old_signup))
+        num_today = (
+            AppointmentSignup.query.join(AppointmentSignup.appointment)
+            .filter(
+                start < Appointment.start_time,
+                Appointment.start_time < day_end,
+                AppointmentSignup.user_id == current_user.id,
+                AppointmentSignup.attendance_status != AttendanceStatus.excused,
+            )
+            .count()
+            - int(bool(old_signup))
+        )
         if num_today >= daily_threshold:
             return socket_error(
                 "You have already signed up for {} OH slots for the same day".format(
@@ -1267,13 +1275,14 @@ def assign_appointment(data):
                 )
             )
 
-        num_pending = AppointmentSignup.query.join(
-            AppointmentSignup.appointment
-        ).filter(
-            Appointment.status == AppointmentStatus.pending,
-            AppointmentSignup.user_id == current_user.id,
-        ).count() - int(
-            bool(old_signup)
+        num_pending = (
+            AppointmentSignup.query.join(AppointmentSignup.appointment)
+            .filter(
+                Appointment.status == AppointmentStatus.pending,
+                AppointmentSignup.user_id == current_user.id,
+            )
+            .count()
+            - int(bool(old_signup))
         )
         if num_pending >= pending_threshold:
             return socket_error(
