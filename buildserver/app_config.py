@@ -9,8 +9,8 @@ WEB_DEPLOY_TYPES = {"flask", "docker"}
 
 
 class Config(TypedDict):
-    build_type: Literal["create_react_app", "oh_queue", "none"]
-    deploy_type: Literal["flask", "docker", "none"]
+    build_type: Literal["create_react_app", "oh_queue", "webpack", "none"]
+    deploy_type: Literal["flask", "docker", "pypi", "cloud_function", "none"]
     memory_limit: str
     first_party_domains: List[str]
     concurrency: int
