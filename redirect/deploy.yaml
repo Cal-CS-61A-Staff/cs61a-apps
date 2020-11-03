@@ -5,6 +5,8 @@ first_party_domains:
   - ok.cs61a.org
   - python.cs61a.org
   - book.cs61a.org
+  - scheme.cs61a.org	
+  - sql.cs61a.org	
   - wiki.cs61a.org
   - ok-help.apps.cs61a.org
   - ok-help.cs61a.org
