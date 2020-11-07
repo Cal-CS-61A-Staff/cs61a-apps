@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Dict
 
 from flask import Flask, abort, current_app, safe_join, send_file
 from google.cloud import storage
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     app.debug = True
 
 
-def get_bucket(valid_apps: Set[str]):
+def get_bucket(app_lookup: Dict[str, str]):
     if current_app.debug:
         return "website.buckets.cs61a.org"
 
@@ -21,14 +21,14 @@ def get_bucket(valid_apps: Set[str]):
     if ".pr." in host:
         pr, app, *_ = host.split(".")
         pr = int(pr)
-        if app not in valid_apps:
+        if app not in app_lookup:
             abort(404)
-        return f"{app}-pr{pr}.buckets.cs61a.org"
+        return f"{app_lookup[app]}-pr{pr}.buckets.cs61a.org"
     else:
         app, *_ = host.split(".")
-        if app not in valid_apps:
+        if app not in app_lookup:
             abort(404)
-        return f"{app}.buckets.cs61a.org"
+        return f"{app_lookup[app]}.buckets.cs61a.org"
 
 
 @app.route("/", defaults={"path": ""})
@@ -38,7 +38,9 @@ def get(path):
     if filename:
         try:
             client = storage.Client()
-            bucket = client.get_bucket(get_bucket({"website"}))
+            bucket = client.get_bucket(
+                get_bucket({"static-server": "website", "website": "website"})
+            )
             blob = bucket.blob(filename)
             with tempfile.NamedTemporaryFile() as temp:
                 blob.download_to_filename(temp.name)
