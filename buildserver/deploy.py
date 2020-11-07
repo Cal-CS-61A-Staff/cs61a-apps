@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from subprocess import CalledProcessError
 from time import sleep
 from typing import List
 from urllib.parse import urlparse
@@ -10,7 +11,7 @@ import sqlalchemy
 import sqlalchemy.engine.url
 
 from build import gen_working_dir
-from app_config import App, WEB_DEPLOY_TYPES
+from app_config import App, CLOUD_RUN_DEPLOY_TYPES, WEB_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
 from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
@@ -64,6 +65,7 @@ def deploy_commit(app: App, pr_number: int):
             "docker": run_dockerfile_deploy,
             "pypi": run_pypi_deploy,
             "cloud_function": run_cloud_function_deploy,
+            "static": run_static_deploy,
             "none": run_noop_deploy,
         }[app.config["deploy_type"]](app, pr_number)
 
@@ -217,6 +219,16 @@ def run_cloud_function_deploy(app: App, pr_number: int):
     )
 
 
+def run_static_deploy(app: App, pr_number: int):
+    bucket = f"gs://{gen_service_name(app.name, pr_number)}.buckets.cs61a.org"
+    try:
+        sh("gsutil", "mb", "-b", "on", bucket)
+    except CalledProcessError:
+        # bucket already exists
+        pass
+    sh("gsutil", "-m", "rsync", "-dR", ".", bucket)
+
+
 def run_noop_deploy(_app: App, _pr_number: int):
     pass
 
@@ -299,25 +311,45 @@ def update_service_routes(apps: List[App], pr_number: int):
         )
     )
     for app in apps:
+
+        def get_hostname(service_name):
+            for service in services:
+                if service["metadata"]["name"] == service_name:
+                    return urlparse(service["status"]["address"]["url"]).netloc
+            return None
+
         if app.config["deploy_type"] not in WEB_DEPLOY_TYPES:
             continue
-        for service in services:
-            if service["metadata"]["name"] == gen_service_name(app.name, pr_number):
-                hostname = urlparse(service["status"]["address"]["url"]).netloc
-                for _ in range(2):
-                    try:
-                        requests.post(
-                            "https://pr.cs61a.org/create_subdomain",
-                            json=dict(
-                                app=app.name,
-                                pr_number=pr_number,
-                                pr_host=hostname,
-                                secret=get_secret(secret_name="PR_WEBHOOK_SECRET"),
-                            ),
-                        )
-                    except requests.exceptions.ConnectionError:
-                        # pr_proxy will throw when nginx restarts, but that's just expected
-                        sleep(5)  # let nginx restart
-                break
+        if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES:
+            hostname = get_hostname(gen_service_name(app.name, pr_number))
+            assert hostname is not None
+            create_subdomain(app.name, pr_number, hostname)
+        elif app.config["deploy_type"] == "static":
+            for consumer in app.config["static_consumers"]:
+                hostname = get_hostname(gen_service_name(consumer, pr_number))
+                if hostname is None:
+                    # consumer does not have a PR build, point to master build
+                    hostname = get_hostname(gen_service_name(consumer, 0))
+                    assert (
+                        hostname is not None
+                    ), "Invalid static resource consumer service"
+                create_subdomain(app.name, pr_number, hostname)
         else:
-            assert False
+            assert False, "Unknown deploy type, failed to create PR domains"
+
+
+def create_subdomain(app_name: str, pr_number: int, hostname: str):
+    for _ in range(2):
+        try:
+            requests.post(
+                "https://pr.cs61a.org/create_subdomain",
+                json=dict(
+                    app=app_name,
+                    pr_number=pr_number,
+                    pr_host=hostname,
+                    secret=get_secret(secret_name="PR_WEBHOOK_SECRET"),
+                ),
+            )
+        except requests.exceptions.ConnectionError:
+            # pr_proxy will throw when nginx restarts, but that's just expected
+            sleep(5)  # let nginx restart
