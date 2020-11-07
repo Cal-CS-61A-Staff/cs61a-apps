@@ -333,7 +333,7 @@ def update_service_routes(apps: List[App], pr_number: int):
                     assert (
                         hostname is not None
                     ), "Invalid static resource consumer service"
-                create_subdomain(app.name, pr_number, hostname)
+                create_subdomain(consumer, pr_number, hostname)
         else:
             assert False, "Unknown deploy type, failed to create PR domains"
 
