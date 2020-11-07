@@ -1,6 +1,7 @@
 from typing import Dict
 
 from flask import Flask, abort, current_app, safe_join, send_file
+from flask_compress import Compress
 from google.cloud import storage
 import tempfile
 
@@ -32,23 +33,30 @@ def get_bucket(app_lookup: Dict[str, str]):
 
 
 @app.route("/", defaults={"path": ""})
-@app.route("/<path:path>", methods=["GET"])
+@app.route("/<path:path>/", methods=["GET"])
 def get(path):
     filename = safe_join("/", path)[1:]
-    if filename:
-        try:
-            client = storage.Client()
-            bucket = client.get_bucket(
-                get_bucket({"static-server": "website", "website": "website"})
-            )
-            blob = bucket.blob(filename)
-            with tempfile.NamedTemporaryFile() as temp:
-                blob.download_to_filename(temp.name)
-                return send_file(temp.name, attachment_filename=filename)
-        except NotFound:
+    try:
+        if not filename:
+            raise NotFound(filename)
+        client = storage.Client()
+        bucket = client.get_bucket(
+            get_bucket({"static-server": "website", "website": "website"})
+        )
+        blob = bucket.blob(filename)
+        with tempfile.NamedTemporaryFile() as temp:
+            blob.download_to_filename(temp.name)
+            return send_file(temp.name, attachment_filename=filename)
+    except NotFound:
+        if filename.endswith("index.html"):
             abort(404)
-    else:
-        return get("index.html")
+        else:
+            if filename and not filename.endswith("/"):
+                filename += "/"
+            return get(filename + "index.html")
+
+
+Compress(app)
 
 
 if __name__ == "__main__":
