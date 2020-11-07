@@ -12,7 +12,7 @@ from main import app
 from models import Section, User, db
 
 hour = 4
-min = 30
+min = 0
 
 reader = read_spreadsheet(
     url="https://docs.google.com/spreadsheets/d/1S10VeClOIzcMaEQcRrdzdUl_NCLFNX3YeyK9Z3DXn1U/",
