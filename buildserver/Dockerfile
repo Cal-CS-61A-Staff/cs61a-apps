@@ -21,10 +21,6 @@ RUN gcloud components install beta
 
 RUN apt install -y git
 
-RUN apt-get install gcc python3-dev python3-setuptools
-RUN pip3 uninstall crcmod
-RUN pip3 install --no-cache-dir -U crcmod
-
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
