@@ -4,13 +4,12 @@ from github.File import File
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from app_config import App, WEB_DEPLOY_TYPES
+from app_config import App, CLOUD_RUN_DEPLOY_TYPES
 from build import build, clone_commit
 from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
 from github_utils import set_pr_comment
 from lock import service_lock
-from pypi_utils import get_latest_version
 from target_determinator import determine_targets
 
 
@@ -64,16 +63,18 @@ def land_commit(
             "All modified services rebuilt!",
             "Pusher",
         )
-        web_apps = [
-            app for app in apps if app.config["deploy_type"] in WEB_DEPLOY_TYPES
-        ]
+        web_app_names = [
+            app.name
+            for app in apps
+            if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES
+        ] + [consumer for app in apps for consumer in app.config["static_consumers"]]
         pr_builds_text = (
             "\n\nDeployed PR builds are available at: \n"
             + "\n".join(
-                f" * [{pr.number}.{app.name}.pr.cs61a.org](https://{pr.number}.{app.name}.pr.cs61a.org)"
-                for app in web_apps
+                f" * [{pr.number}.{app_name}.pr.cs61a.org](https://{pr.number}.{app_name}.pr.cs61a.org)"
+                for app_name in web_app_names
             )
-            if web_apps and pr is not None
+            if web_app_names and pr is not None
             else ""
         )
         if pr is not None:
