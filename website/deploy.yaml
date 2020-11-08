@@ -2,3 +2,7 @@ build_type: none
 deploy_type: static
 static_consumers:
   - static-server
+dependencies:
+    - repo: Cal-CS-61A-Staff/berkeley-cs61a
+      src: .
+      dest: .
