@@ -91,6 +91,7 @@ def run_dockerfile_deploy(app: App, pr_number: int):
     sh("gcloud", "builds", "submit", "-q", "--config", "cloudbuild.yaml")
     sh(
         "gcloud",
+        "beta",
         "run",
         "deploy",
         service_name,
@@ -101,7 +102,7 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         "--platform",
         "managed",
         "--timeout",
-        "15m",
+        "45m",
         "--cpu",
         str(app.config["cpus"]),
         "--memory",
