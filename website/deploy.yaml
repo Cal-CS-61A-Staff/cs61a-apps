@@ -1,7 +1,7 @@
-build_type: 61a_website
+build_type: none
 deploy_type: static
 static_consumers:
-  - static-server
+  - website-server
 dependencies:
     - repo: Cal-CS-61A-Staff/berkeley-cs61a
       src: .
