@@ -13,10 +13,6 @@ def gen_working_dir(app: App):
     return f"{app}_working_DO_NOT_USE"
 
 
-def gen_deploy_dir(app: App):
-    return f"{app}_deploy_DO_NOT_USE"
-
-
 def clone_commit(remote: str, sha: str, *, in_place=False):
     path = urlparse(remote).path
 
@@ -55,9 +51,8 @@ def build(app: App, pr_number: int = 0):
 
         os.chdir("..")
         working_dir = gen_working_dir(app)
-        deploy_dir = gen_deploy_dir(app)
 
-        copytree(app_dir, working_dir, dirs_exist_ok=True, symlinks=True)
+        copytree(app_dir, working_dir, dirs_exist_ok=True, symlinks=False)
 
         os.chdir(working_dir)
 
@@ -70,8 +65,6 @@ def build(app: App, pr_number: int = 0):
         }[app.config["build_type"]]()
 
         os.chdir("..")
-
-        copytree(working_dir, deploy_dir, dirs_exist_ok=True, symlinks=False)
 
 
 def run_oh_queue_build():

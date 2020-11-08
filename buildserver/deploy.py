@@ -10,7 +10,7 @@ import requests
 import sqlalchemy
 import sqlalchemy.engine.url
 
-from build import gen_deploy_dir
+from build import gen_working_dir
 from app_config import App, CLOUD_RUN_DEPLOY_TYPES, WEB_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
@@ -59,7 +59,7 @@ def gen_service_name(app_name: str, pr_number: int):
 
 def deploy_commit(app: App, pr_number: int):
     with tmp_directory():
-        os.chdir(gen_deploy_dir(app))
+        os.chdir(gen_working_dir(app))
         {
             "flask": run_flask_deploy,
             "docker": run_dockerfile_deploy,
