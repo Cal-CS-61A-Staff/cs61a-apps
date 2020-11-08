@@ -267,7 +267,7 @@ def delete_unused_services(pr_number: int = None):
             if "pr" not in service["metadata"]["name"]:
                 post_slack_message(
                     course="cs61a",
-                    message=f"<!channel> Service f{service['metadata']['name']} was not detected in master, and the "
+                    message=f"<!channel> Service `{service['metadata']['name']}` was not detected in master, and the "
                     "buildserver attepted to delete it. For safety reasons, the buildserver will not delete "
                     "a production service. Please visit the Cloud Run console and shut the service down "
                     "manually, or review the most recent push to master if you believe that something has "

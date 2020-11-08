@@ -19,6 +19,7 @@ class Config(TypedDict):
     concurrency: int
     tasks: List["Task"]
     dependencies: List["Dependency"]
+    repo: Optional[str]
     package_name: str
     static_consumers: List[str]
 
@@ -59,6 +60,7 @@ class App:
                 self.config["static_consumers"] = self.config.get(
                     "static_consumers", []
                 )
+                self.config["repo"] = self.config.get("repo")
 
     def __str__(self):
         return self.name
