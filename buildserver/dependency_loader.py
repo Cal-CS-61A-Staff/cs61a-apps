@@ -1,7 +1,7 @@
 import os
 from os import chdir, mkdir
 from os.path import isdir
-from shutil import copyfile
+from shutil import copyfile, copytree
 
 from github import Github
 
@@ -25,7 +25,15 @@ def load_dependencies(app: App):
                 chdir(folder_name)
                 clone_commit(repo.clone_url, sha, in_place=True)
                 chdir("..")
-            copyfile(
-                os.path.join(folder_name, dependency["src"]),
-                os.path.join(app.name, dependency["dest"]),
-            )
+            try:
+                copytree(
+                    os.path.join(folder_name, dependency["src"]),
+                    os.path.join(app.name, dependency["dest"]),
+                    symlinks=True,
+                    dirs_exist_ok=True,
+                )
+            except NotADirectoryError:
+                copyfile(
+                    os.path.join(folder_name, dependency["src"]),
+                    os.path.join(app.name, dependency["dest"]),
+                )
