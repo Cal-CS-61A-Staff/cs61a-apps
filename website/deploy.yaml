@@ -1,8 +1,5 @@
-build_type: none
-deploy_type: none
+build_type: 61a_website
+deploy_type: static
 static_consumers:
   - website-server
-dependencies:
-    - repo: Cal-CS-61A-Staff/berkeley-cs61a
-      src: .
-      dest: .
+repo: Cal-CS-61A-Staff/berkeley-cs61a
