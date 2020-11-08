@@ -102,6 +102,8 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         "managed",
         "--timeout",
         "15m",
+        "--cpu",
+        str(app.config["cpus"]),
         "--memory",
         app.config["memory_limit"],
         "--concurrency",

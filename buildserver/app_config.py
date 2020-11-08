@@ -14,6 +14,7 @@ class Config(TypedDict):
         "create_react_app", "oh_queue", "webpack", "61a_website", "none"
     ]
     deploy_type: Literal["flask", "docker", "pypi", "cloud_function", "static", "none"]
+    cpus: int
     memory_limit: str
     first_party_domains: List[str]
     concurrency: int
@@ -49,6 +50,7 @@ class App:
         with tmp_directory():
             with open(f"{name}/deploy.yaml") as f:
                 self.config = Config(**yaml.safe_load(f))
+                self.config["cpus"] = self.config.get("cpus", 1)
                 self.config["memory_limit"] = self.config.get("memory_limit", "256M")
                 self.config["first_party_domains"] = self.config.get(
                     "first_party_domains", [f"{name}.cs61a.org"]
