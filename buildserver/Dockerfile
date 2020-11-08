@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y rsync
 RUN apt install -y --no-install-recommends texlive-latex-recommended texlive-fonts-recommended
 RUN apt install -y --no-install-recommends texlive-latex-extra texlive-fonts-extra texlive-lang-all
 
+RUN apt-get update && apt-get install -y latexmk
+
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
