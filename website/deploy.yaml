@@ -1,5 +1,5 @@
 build_type: none
-deploy_type: static
+deploy_type: none
 static_consumers:
   - website-server
 dependencies:
