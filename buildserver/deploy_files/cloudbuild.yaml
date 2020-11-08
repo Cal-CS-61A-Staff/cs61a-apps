@@ -18,3 +18,4 @@ steps:
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/cs61a-140900/SERVICE_NAME']
+timeout: 3600s
