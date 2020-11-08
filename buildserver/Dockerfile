@@ -20,10 +20,10 @@ ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 RUN gcloud components install beta
 
 RUN apt install -y git
-#RUN apt-get update && apt-get install -y rsync
-#
-#RUN apt install -y --no-install-recommends texlive-latex-recommended texlive-fonts-recommended
-#RUN apt install -y --no-install-recommends texlive-latex-extra texlive-fonts-extra texlive-lang-all
+RUN apt-get update && apt-get install -y rsync
+
+RUN apt install -y --no-install-recommends texlive-latex-recommended texlive-fonts-recommended
+RUN apt install -y --no-install-recommends texlive-latex-extra texlive-fonts-extra texlive-lang-all
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
