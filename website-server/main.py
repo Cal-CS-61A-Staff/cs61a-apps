@@ -11,8 +11,8 @@ if __name__ == "__main__":
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>", methods=["GET"])
 def get(path):
-    bucket = get_bucket({"static-server": "website", "website": "website"}, "website")
-    return serve_path(bucket, "/", path)
+    bucket = get_bucket({"cs61a": "website", "website-server": "website"}, "website")
+    return serve_path(bucket, "/released/", path)
 
 
 Compress(app)
