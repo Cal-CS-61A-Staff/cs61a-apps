@@ -1,14 +1,19 @@
 import os
 from shutil import copytree, rmtree
+from subprocess import CalledProcessError
 from urllib.parse import urlparse
 
 from app_config import App
 from common.db import connect_db
 from common.rpc.secrets import get_secret
-from common.shell_utils import sh, tmp_directory
+from common.shell_utils import clean_all_except, sh, tmp_directory
 
 
 def gen_working_dir(app: App):
+    return f"{app}_working_DO_NOT_USE"
+
+
+def gen_deploy_dir(app: App):
     return f"{app}_deploy_DO_NOT_USE"
 
 
@@ -49,18 +54,24 @@ def build(app: App, pr_number: int = 0):
         app_dir = app.name
 
         os.chdir("..")
-        deploy_dir = gen_working_dir(app)
+        working_dir = gen_working_dir(app)
+        deploy_dir = gen_deploy_dir(app)
 
-        copytree(app_dir, deploy_dir, dirs_exist_ok=True)
+        copytree(app_dir, working_dir, dirs_exist_ok=True, symlinks=True)
 
-        os.chdir(deploy_dir)
+        os.chdir(working_dir)
 
         {
             "oh_queue": run_oh_queue_build,
             "create_react_app": run_create_react_app_build,
             "webpack": run_webpack_build,
+            "61a_website": run_61a_website_build,
             "none": run_noop_build,
         }[app.config["build_type"]]()
+
+        os.chdir("..")
+
+        copytree(working_dir, deploy_dir, dirs_exist_ok=True, symlinks=False)
 
 
 def run_oh_queue_build():
@@ -74,14 +85,7 @@ def run_oh_queue_build():
 def run_create_react_app_build():
     sh("yarn")
     sh("yarn", "build")
-    for dirpath, _, filenames in os.walk("."):
-        dirnames = dirpath.split(os.sep)[1:]
-        if not dirnames:
-            for filename in filenames:
-                os.remove(filename)
-        elif dirnames[0] != "deploy":
-            rmtree(dirpath)
-
+    clean_all_except(["deploy"])
     copytree("deploy", ".", dirs_exist_ok=True)
     rmtree("deploy")
 
@@ -92,10 +96,43 @@ def run_webpack_build():
     sh("rm", "-rf", "node_modules")
 
 
+def run_61a_website_build():
+    # install dependencies
+    sh("make", "-C", "src", "check-env")
+
+    def build(target):
+        # need to re-run make for stupid reasons
+        num_iterations = 3
+        for i in range(num_iterations):
+            is_last_iteration = i == num_iterations - 1
+            parallel_args = ["-j1"] if is_last_iteration else []
+            try:
+                sh(
+                    "make",
+                    "--no-print-directory",
+                    "-C",
+                    "src",
+                    "BUILDTYPE=pull",
+                    target,
+                    f"BUILDPASS={i+1}",
+                    *parallel_args,
+                )
+            except CalledProcessError:
+                # initial passes are allowed to fail
+                if is_last_iteration:
+                    raise
+
+    build("all")
+    copytree("published", "released", dirs_exist_ok=True)
+    build("unreleased")
+    copytree("published", "unreleased", dirs_exist_ok=True)
+    clean_all_except(["released", "unreleased"])
+
+
 def run_noop_build():
     pass
 
 
 if __name__ == "__main__":
     with tmp_directory():
-        run_create_react_app_build()
+        run_61a_website_build()

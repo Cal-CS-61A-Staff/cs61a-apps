@@ -10,7 +10,9 @@ CLOUD_RUN_DEPLOY_TYPES = {"flask", "docker"}
 
 
 class Config(TypedDict):
-    build_type: Literal["create_react_app", "oh_queue", "webpack", "none"]
+    build_type: Literal[
+        "create_react_app", "oh_queue", "webpack", "61a_website", "none"
+    ]
     deploy_type: Literal["flask", "docker", "pypi", "cloud_function", "static", "none"]
     memory_limit: str
     first_party_domains: List[str]

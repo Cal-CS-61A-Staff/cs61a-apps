@@ -2,6 +2,8 @@ import os
 import subprocess
 import sys
 from contextlib import contextmanager
+from shutil import rmtree
+from typing import List
 
 
 def sh(*args, env={}, capture_output=False):
@@ -13,6 +15,16 @@ def sh(*args, env={}, capture_output=False):
         print(out.stderr, file=sys.stderr)
     out.check_returncode()
     return out.stdout
+
+
+def clean_all_except(folders: List[str]):
+    for dirpath, _, filenames in os.walk("."):
+        dirnames = dirpath.split(os.sep)[1:]
+        if not dirnames:
+            for filename in filenames:
+                os.remove(filename)
+        elif dirnames[0] not in folders:
+            rmtree(dirpath)
 
 
 @contextmanager
