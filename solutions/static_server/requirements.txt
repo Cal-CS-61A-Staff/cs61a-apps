@@ -1,5 +1,0 @@
-Flask==1.1.2
-gunicorn==20.0.4
-google-cloud-storage==1.30.0
-flask-compress==1.5.0
--r common/requirements.txt
