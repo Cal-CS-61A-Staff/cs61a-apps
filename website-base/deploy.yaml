@@ -1,0 +1,6 @@
+build_type: 61a_website
+deploy_type: static
+static_consumers:
+  - website
+  - solutions
+repo: Cal-CS-61A-Staff/berkeley-cs61a
