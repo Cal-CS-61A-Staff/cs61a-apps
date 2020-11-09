@@ -13,6 +13,7 @@ from examtool.cli.utils import exam_name_option
 @click.option(
     "--show-all",
     default=False,
+    is_flag=True,
     help="Show all questions received, not just with substitutions.",
 )
 def substitutions(exam, email, show_all):
