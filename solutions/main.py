@@ -3,7 +3,7 @@ from flask_compress import Compress
 
 from common.oauth_client import create_oauth_client, is_staff
 from common.url_for import url_for
-from utils import get_bucket, serve_path
+from static_server.utils import get_bucket, serve_path
 
 app = Flask(__name__)
 if __name__ == "__main__":
