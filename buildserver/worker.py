@@ -13,9 +13,14 @@ from lock import service_lock
 from target_determinator import determine_targets
 
 
-def land_app(app: App, pr_number: int = 0):
+def land_app(
+    app: App,
+    pr_number: int,
+    sha: str,
+    repo: Repository,
+):
     with service_lock(app, pr_number):
-        load_dependencies(app)
+        load_dependencies(app, sha, repo)
         build(app, pr_number)
         deploy_commit(app, pr_number)
 
@@ -23,13 +28,21 @@ def land_app(app: App, pr_number: int = 0):
 def land_commit(
     sha: str,
     repo: Repository,
+    base_repo: Repository,
     pr: Optional[PullRequest],
     files: Iterable[Union[File, str]],
 ):
+    """
+    :param sha: The hash of the commit we are building
+    :param repo: The repo containing the above commit
+    :param base_repo: The *base* cs61a-apps repo containing the deploy.yaml config
+    :param pr: The PR made to trigger the build, if any
+    :param files: Files changed in the commit, used for target determination
+    """
     try:
         repo.get_commit(sha).create_status(
             "pending",
-            "https://buildserver.experiments.cs61a.org",
+            "https://buildserver.cs61a.org",
             "Pusher is rebuilding all modified services",
             "Pusher",
         )
@@ -40,10 +53,17 @@ def land_commit(
             f"Targets: \n{target_list}",
             pr,
         )
-        clone_commit(repo.clone_url, sha)
+        # If the commit is made on the base repo, take the config from the current commit.
+        # Otherwise, retrieve it from master
+        clone_commit(
+            base_repo.clone_url,
+            sha
+            if repo.full_name == base_repo.full_name
+            else repo.get_branch(repo.default_branch).commit.sha,
+        )
         apps = [App(target) for target in targets]
         for app in apps:
-            land_app(app, pr.number if pr else 0)
+            land_app(app, pr.number if pr else 0, sha, repo)
         update_service_routes(apps, pr.number if pr else 0)
     except Exception as e:
         repo.get_commit(sha).create_status(

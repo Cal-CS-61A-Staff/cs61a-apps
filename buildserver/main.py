@@ -12,7 +12,7 @@ from common.rpc.buildserver import (
     get_base_hostname,
     trigger_build_sync,
 )
-from common.rpc.secrets import get_secret, validates_master_secret
+from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
 from deploy import delete_unused_services
 from github_utils import set_pr_comment
@@ -38,8 +38,9 @@ with connect_db() as db:
     )
     db(
         """CREATE TABLE IF NOT EXISTS apps (
-app varchar(128),
-secure boolean
+    app varchar(128),
+    repo varchar(128),
+    autobuild boolean
 )"""
     )
 
@@ -55,9 +56,7 @@ def index():
         apps = db("SELECT app FROM services WHERE pr_number=0", []).fetchall()
     return f"""
         <h1>61A Buildserver</h1>
-        This service manages the deployment of 61A hosted apps.
-        To manage the deployment of the main repo, see <code>course_deploy</code>
-        at <a href="https://build.cs61a.org/">build.cs61a.org</a>.
+        This service manages the deployment of the 61A website and various apps.
         {"".join(f'''
         <form action="/deploy_prod_app">
             <input type="submit" name="app" value="{app}" />
@@ -90,6 +89,7 @@ def handle_deploy_prod_app_sync(app, is_staging, target_app):
     land_commit(
         repo.get_branch(repo.default_branch).commit.sha,
         repo,
+        repo,
         None,
         [f"{target_app}/main.py"],
     )
@@ -107,14 +107,12 @@ def trigger_build():
 
 
 @trigger_build_sync.bind(app)
-@validates_master_secret
-def handle_trigger_build_sync(app, is_staging, pr_number):
-    if app != "buildserver" or is_staging:
-        abort(401)
+@only("buildserver")
+def handle_trigger_build_sync(pr_number):
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     pr = repo.get_pull(pr_number)
-    land_commit(pr.head.sha, repo, pr, pr.get_files())
+    land_commit(pr.head.sha, repo, repo, pr, pr.get_files())
 
 
 @app.route("/delete_unused_services", methods=["POST"])
@@ -146,11 +144,13 @@ def webhook():
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
 
     if "pusher" in payload and payload["ref"] == "refs/heads/master":
+        base_repo = g.get_repo(GITHUB_REPO)
         repo = g.get_repo(payload["repository"]["id"])
         sha = payload["after"]
         land_commit(
             sha,
             repo,
+            base_repo,
             None,
             [
                 file
@@ -186,10 +186,8 @@ def webhook():
 
 
 @get_base_hostname.bind(app)
-@validates_master_secret
-def get_base_hostname(app, is_staging, target_app):
-    if app != "domains":
-        abort(403)
+@only("domains", allow_staging=True)
+def get_base_hostname(target_app):
     return api.get_base_hostname(target_app)
 
 

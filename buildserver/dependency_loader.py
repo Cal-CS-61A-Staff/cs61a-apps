@@ -4,6 +4,7 @@ from os.path import isdir
 from shutil import copyfile, copytree
 
 from github import Github
+from github.Repository import Repository
 
 from app_config import App
 from build import clone_commit, gen_working_dir
@@ -11,13 +12,17 @@ from common.rpc.secrets import get_secret
 from common.shell_utils import tmp_directory
 
 
-def load_dependencies(app: App):
+def load_dependencies(app: App, sha: str, repo: Repository):
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
 
-    def clone_repo(repo: str):
-        repo = g.get_repo(repo)
-        sha = repo.get_branch(repo.default_branch).commit.sha
-        clone_commit(repo.clone_url, sha, in_place=True)
+    def clone_repo(repo_str: str):
+        cloned_repo = g.get_repo(repo_str)
+        cloned_sha = (
+            sha
+            if cloned_repo.full_name == repo.full_name
+            else cloned_repo.get_branch(cloned_repo.default_branch).commit.sha
+        )
+        clone_commit(cloned_repo.clone_url, cloned_sha, in_place=True)
 
     with tmp_directory():
         for dependency in app.config["dependencies"]:

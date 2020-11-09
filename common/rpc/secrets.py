@@ -37,8 +37,8 @@ def validates_master_secret(func):
 def only(allowed_app, *, allow_staging=False):
     def decorator(func):
         @wraps(func)
-        @validates_master_secret
-        def wrapped(app, is_staging, **kwargs):
+        def wrapped(master_secret, **kwargs):
+            app, is_staging = validate_master_secret(master_secret=master_secret)
             if app != allowed_app:
                 abort(403)
             if is_staging and not allow_staging:
