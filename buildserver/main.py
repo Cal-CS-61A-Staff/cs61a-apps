@@ -166,16 +166,19 @@ def webhook():
         pr = repo.get_pull(payload["pull_request"]["number"])
 
         if payload["action"] in ("opened", "synchronize", "reopened"):
-            set_pr_comment(
-                f"PR updated. To trigger a build, click [here]({url_for('trigger_build', pr_number=pr.number)}).",
-                pr,
-            )
-            repo.get_commit(pr.head.sha).create_status(
-                "pending",
-                "https://buildserver.cs61a.org",
-                "You must rebuild the modified apps before merging",
-                "Pusher",
-            )
+            if repo.full_name != GITHUB_REPO:
+                land_commit(pr.head.sha, repo, g.get_repo(GITHUB_REPO), pr, [])
+            else:
+                set_pr_comment(
+                    f"PR updated. To trigger a build, click [here]({url_for('trigger_build', pr_number=pr.number)}).",
+                    pr,
+                )
+                repo.get_commit(pr.head.sha).create_status(
+                    "pending",
+                    "https://buildserver.cs61a.org",
+                    "You must rebuild the modified apps before merging",
+                    "Pusher",
+                )
 
         elif payload["action"] == "closed":
             set_pr_comment("PR closed, shutting down PR builds...", pr)

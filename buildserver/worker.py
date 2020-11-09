@@ -8,6 +8,7 @@ from app_config import App, CLOUD_RUN_DEPLOY_TYPES
 from build import build, clone_commit
 from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
+from external_repo_utils import update_config
 from github_utils import set_pr_comment
 from lock import service_lock
 from target_determinator import determine_targets
@@ -21,6 +22,7 @@ def land_app(
 ):
     with service_lock(app, pr_number):
         load_dependencies(app, sha, repo)
+        update_config(app, pr_number)
         build(app, pr_number)
         deploy_commit(app, pr_number)
 
@@ -46,7 +48,7 @@ def land_commit(
             "Pusher is rebuilding all modified services",
             "Pusher",
         )
-        targets = determine_targets(files)
+        targets = determine_targets(repo, files)
         target_list = "\n".join(f" * {target}" for target in targets)
         set_pr_comment(
             f"Building commit: {sha}. View logs at [logs.cs61a.org](https://logs.cs61a.org).\n"

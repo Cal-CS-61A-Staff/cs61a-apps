@@ -2,6 +2,9 @@ import os
 from typing import Iterable, Optional, Set, Union
 
 from github.File import File
+from github.Repository import Repository
+
+from common.db import connect_db
 
 
 def get_app(path: Optional[str]):
@@ -16,7 +19,7 @@ def get_app(path: Optional[str]):
     return str(folders[0])
 
 
-def determine_targets(files: Iterable[Union[File, str]]) -> Set[str]:
+def determine_targets(repo: Repository, files: Iterable[Union[File, str]]) -> Set[str]:
     modified_apps = []
     for file in files:
         if isinstance(file, str):
@@ -24,5 +27,13 @@ def determine_targets(files: Iterable[Union[File, str]]) -> Set[str]:
         else:
             modified_apps.append(get_app(file.filename))
             modified_apps.append(get_app(file.previous_filename))
+
+    with connect_db() as db:
+        modified_apps.extend(
+            app
+            for [app] in db(
+                "SELECT app FROM apps WHERE repo=(%s)", [repo.full_name]
+            ).fetchall()
+        )
 
     return set([app for app in modified_apps if app is not None])

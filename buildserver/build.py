@@ -45,6 +45,8 @@ def build(app: App, pr_number: int = 0):
                     "DELETE FROM services WHERE app=%s AND pr_number=%s",
                     [app.name, pr_number],
                 )
+                if pr_number == 0:
+                    db("DELETE FROM apps WHERE app=%s", [app.name])
             return
 
         app_dir = app.name
