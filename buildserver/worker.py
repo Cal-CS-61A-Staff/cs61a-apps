@@ -48,7 +48,9 @@ def land_commit(
             "Pusher is rebuilding all modified services",
             "Pusher",
         )
-        targets = determine_targets(repo, files)
+        targets = determine_targets(
+            repo, files if repo.full_name == base_repo.full_name else []
+        )
         target_list = "\n".join(f" * {target}" for target in targets)
         set_pr_comment(
             f"Building commit: {sha}. View logs at [logs.cs61a.org](https://logs.cs61a.org).\n"
