@@ -16,7 +16,10 @@ def index(path):
     if ".pr." in get_host() and not is_staff("cs61a"):
         return redirect(url_for("login"))
 
-    bucket = get_bucket({"cs61a": "website", "website-server": "website"}, "website")
+    bucket = get_bucket(
+        {"cs61a": "website", "website": "website", "website-server": "website"},
+        "website",
+    )
     return serve_path(bucket, "/released/", path)
 
 

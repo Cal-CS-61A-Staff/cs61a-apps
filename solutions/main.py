@@ -15,7 +15,9 @@ if __name__ == "__main__":
 def index(path):
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
-    bucket = get_bucket({"cs61a": "website", "solutions": "website"}, "website")
+    bucket = get_bucket(
+        {"cs61a": "website", "solutions2": "website", "solutions": "website"}, "website"
+    )
     return serve_path(bucket, "/unreleased/", path)
 
 
