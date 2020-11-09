@@ -83,8 +83,8 @@ def run_dockerfile_deploy(app: App, pr_number: int):
     with open("cloudbuild.yaml", "a+") as f:
         f.seek(0)
         contents = f.read()
-        contents = contents.replace("SERVICE_NAME", service_name)
         contents = contents.replace("PROD_SERVICE_NAME", prod_service_name)
+        contents = contents.replace("SERVICE_NAME", service_name)
         f.seek(0)
         f.truncate()
         f.write(contents)
