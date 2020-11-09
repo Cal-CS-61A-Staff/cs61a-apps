@@ -61,7 +61,7 @@ def land_commit(
             base_repo.clone_url,
             sha
             if repo.full_name == base_repo.full_name
-            else repo.get_branch(repo.default_branch).commit.sha,
+            else base_repo.get_branch(base_repo.default_branch).commit.sha,
         )
         apps = [App(target) for target in targets]
         for app in apps:
