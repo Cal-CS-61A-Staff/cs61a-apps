@@ -17,8 +17,12 @@ def index(path):
         return redirect(url_for("login"))
 
     bucket = get_bucket(
-        {"cs61a": "website", "website": "website", "website-server": "website"},
-        "website",
+        {
+            "cs61a": "website-base",
+            "website": "website-base",
+            "website-server": "website-base",
+        },
+        "website-base",
     )
     return serve_path(bucket, "/released/", path)
 
