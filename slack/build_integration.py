@@ -47,7 +47,7 @@ class BuildIntegration(Integration):
             return
 
         common.rpc.buildserver.trigger_build_sync(pr_number=pr, noreply=True)
-        self.reply = ":white_check_mark: Build triggered!"
+        self.reply = ":building_construction: Build triggered!"
 
     @property
     def message(self):

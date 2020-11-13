@@ -10,7 +10,7 @@ from common.rpc.auth import is_admin
 from common.rpc.buildserver import (
     deploy_prod_app_sync,
     get_base_hostname,
-    trigger_build_sync,
+    rigger_build_sync,
 )
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
@@ -108,8 +108,8 @@ def trigger_build():
 
 @trigger_build_sync.bind(app)
 @validates_master_secret
-def handle_trigger_build_sync(pr_number, app):
-    if app != "slack" and app != "buildserver":
+def handle_trigger_build_sync(app, is_staging, pr_number):
+    if app not in ("slack", "buildserver") or is_staging:
         abort(401)
 
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
