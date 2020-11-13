@@ -33,7 +33,7 @@ class BuildIntegration(Integration):
         else:
             return
 
-        if not sender_email or not is_admin("cs61a", sender_email):
+        if not sender_email or not is_admin(course="cs61a", email=sender_email):
             return
 
         match = re.search(REGEX_TEMPLATE, self._message)
