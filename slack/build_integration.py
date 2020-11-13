@@ -1,4 +1,8 @@
 import re
+
+import requests
+from common.rpc.auth import is_admin
+
 from integration import Integration
 
 VALID_PATH = r"[0-9A-Za-z\-]+"
@@ -14,8 +18,22 @@ class BuildIntegration(Integration):
     def _process(self):
         if "build" not in self._message.lower():
             return
-            
+
         if "cs61a" != self._course:
+            return
+        
+        users = requests.get(
+            "https://slack.com/api/users.list", params={"token": self._bot_token}
+        ).json()
+
+        for member in users["members"]:
+            if member["id"] == self._event["user"]:
+                sender_email = member["profile"].get("email")
+                break
+        else:
+            return
+
+        if not sender_email or not is_admin("cs61a", sender_email):
             return
 
         match = re.search(REGEX_TEMPLATE, self._message)

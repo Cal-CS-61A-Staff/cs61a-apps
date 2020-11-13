@@ -107,8 +107,11 @@ def trigger_build():
 
 
 @trigger_build_sync.bind(app)
-@only("buildserver")
-def handle_trigger_build_sync(pr_number):
+@validates_master_secret
+def handle_trigger_build_sync(pr_number, app):
+    if app != "slack" and app != "buildserver":
+        abort(401)
+
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     pr = repo.get_pull(pr_number)
