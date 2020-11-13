@@ -56,7 +56,7 @@ class StudentView extends Component {
     }
 
     handleFutureCheckboxChange = () => {
-        this.setState(state => ({ future: !state.future, plannedScores: extend(state.scores) }));
+        this.setState(state => ({ future: !state.future, plannedScores: extend(state.scores, LOOKUP) }));
     };
 
     handleFutureScoreChange = (name, newScore) => {
