@@ -16,7 +16,12 @@ def index(path):
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
     bucket = get_bucket(
-        {"cs61a": "website", "solutions2": "website", "solutions": "website"}, "website"
+        {
+            "cs61a": "website-base",
+            "solutions2": "website-base",
+            "solutions": "website-base",
+        },
+        "website-base",
     )
     return serve_path(bucket, "/unreleased/", path)
 

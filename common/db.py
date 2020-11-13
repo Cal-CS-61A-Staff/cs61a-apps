@@ -4,6 +4,7 @@ from os import getenv
 
 import sqlalchemy.engine.url
 
+from common.rpc.secrets import get_secret
 
 use_devdb = getenv("ENV", "DEV") in ("DEV", "TEST")
 use_prod_proxy = getenv("ENV") == "DEV_ON_PROD"
@@ -37,8 +38,8 @@ elif use_prod_proxy:
         exit(0)
     database_url = sqlalchemy.engine.url.URL(
         drivername="mysql+pymysql",
-        username="root",
-        password="oh8jez0NI6f4Ckrr",  # get_secret(secret_name="ROOT_DATABASE_PW"),
+        username="apps",
+        password=get_secret(secret_name="DATABASE_PW"),
         host="127.0.0.1",
         port=3307,
         database=app,

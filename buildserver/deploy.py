@@ -24,8 +24,8 @@ DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
 def gen_env_variables(app: App, pr_number: int):
     database_url = sqlalchemy.engine.url.URL(
         drivername="mysql+pymysql",
-        username="root",
-        password=get_secret(secret_name="ROOT_DATABASE_PW"),
+        username="apps",
+        password=get_secret(secret_name="DATABASE_PW"),
         database=app.name.replace("-", "_"),
         query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
     ).__to_string__(hide_password=False)
@@ -83,8 +83,8 @@ def run_dockerfile_deploy(app: App, pr_number: int):
     with open("cloudbuild.yaml", "a+") as f:
         f.seek(0)
         contents = f.read()
-        contents = contents.replace("SERVICE_NAME", service_name)
         contents = contents.replace("PROD_SERVICE_NAME", prod_service_name)
+        contents = contents.replace("SERVICE_NAME", service_name)
         f.seek(0)
         f.truncate()
         f.write(contents)
