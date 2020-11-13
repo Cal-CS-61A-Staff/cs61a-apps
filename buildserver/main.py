@@ -10,7 +10,7 @@ from common.rpc.auth import is_admin
 from common.rpc.buildserver import (
     deploy_prod_app_sync,
     get_base_hostname,
-    rigger_build_sync,
+    trigger_build_sync,
 )
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
