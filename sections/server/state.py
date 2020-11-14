@@ -356,7 +356,6 @@ def create_state_client(app: flask.Flask):
     def export_attendance_secret(secret: str, full: bool):
         if validate_secret(secret=secret) == "cs61a":
             return export_helper(full)
-        return
     
     def export_helper(full: bool):
         if full:
