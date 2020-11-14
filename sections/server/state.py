@@ -379,7 +379,7 @@ def create_state_client(app: flask.Flask):
                             {
                                 "section_id": attendance.session.section_id,
                                 "start_time": attendance.session.start_time,
-                                "status": attendance.status,
+                                "status": attendance.status.name,
                             }
                             for attendance in user.attendances
                         ]
