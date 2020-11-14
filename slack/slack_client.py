@@ -167,12 +167,12 @@ def create_slack_client(app):
                 integrations.append(PRLinkIntegration)
             if "issues" in active_services:
                 integrations.append(IssueIntegration)
-            if "lgtm" in active_services:
-                integrations.append(LGTMIntegration)
             if "appsprlinks" in active_services:
                 integrations.append(AppsPRLinkIntegration)
             if "build" in active_services:
                 integrations.append(BuildIntegration)
+            if "lgtm" in active_services:
+                integrations.append(LGTMIntegration)
 
             combined_integration = combine_integrations(integrations)(
                 event["text"], token if token is not UNABLE else None, team_id, event
