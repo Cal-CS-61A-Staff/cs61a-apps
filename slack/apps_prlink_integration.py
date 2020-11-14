@@ -13,8 +13,8 @@ PATH_REGEX = r"(?P<path>{}+)".format(VALID_PATH)
 REGEX_TEMPLATE = (
     r"<(https?://)?github\.com/Cal-CS-61A-Staff/cs61a-apps/pull/{}/?(\|[^\s|]+)?>"
 )
+SHORT_REGEX_TEMPLATE = r"(?<!-)apps/{}/?"
 
-SHORT_REGEX_TEMPLATE = r"apps/{}/?"
 
 class AppsPRLinkIntegration(Integration):
     def _process(self):
