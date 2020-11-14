@@ -353,7 +353,7 @@ def create_state_client(app: flask.Flask):
         return export_helper(full)
     
     @api
-    def export_attendance_token(secret: str, full: bool):
+    def export_attendance_secret(secret: str, full: bool):
         if validate_secret(secret=secret) == "cs61a":
             return export_helper(full)
         return
