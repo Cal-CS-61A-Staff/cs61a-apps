@@ -2,6 +2,7 @@ import re
 
 import requests
 from common.rpc.auth import is_admin
+from common.rpc.buildserver import trigger_build_sync
 
 from integration import Integration
 
@@ -30,8 +31,6 @@ class BuildIntegration(Integration):
             if member["id"] == self._event["user"]:
                 sender_email = member["profile"].get("email")
                 break
-        else:
-            return
 
         if not sender_email or not is_admin(course="cs61a", email=sender_email):
             return
@@ -46,7 +45,7 @@ class BuildIntegration(Integration):
         except ValueError:
             return
 
-        common.rpc.buildserver.trigger_build_sync(pr_number=pr, noreply=True)
+        trigger_build_sync(pr_number=pr, noreply=True)
         self.reply = ":building_construction: Build triggered!"
 
     @property
