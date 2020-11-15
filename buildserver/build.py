@@ -92,8 +92,10 @@ def run_webpack_build():
 
 
 def run_61a_website_build():
+    env = dict(CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org")
+
     # install dependencies
-    sh("make", "-C", "src", "check-env")
+    sh("make", "-C", "src", "check-env", env=env)
 
     def build(target):
         # need to re-run make for stupid reasons
@@ -111,9 +113,7 @@ def run_61a_website_build():
                     target,
                     f"BUILDPASS={i+1}",
                     *parallel_args,
-                    env=dict(
-                        CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org"
-                    ),
+                    env=env,
                 )
             except CalledProcessError:
                 # initial passes are allowed to fail
