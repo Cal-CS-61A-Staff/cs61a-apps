@@ -15,6 +15,7 @@ REGEX_TEMPLATE = (
 )
 SHORT_REGEX_TEMPLATE = r"(?<!-)apps/{}/?"
 
+
 class AppsPRLinkIntegration(Integration):
     def _process(self):
         self._prlinks = OrderedSet()

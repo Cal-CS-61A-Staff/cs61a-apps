@@ -183,7 +183,7 @@ def create_client(app):
             set_grades(data, get_course(), db)
 
         return jsonify({"success": True})
-    
+
     @app.route("/setGradesSecret", methods=["POST"])
     def set_grades_secret_route():
         if validate_secret(secret=request.form.get("secret")) != "cs61a":

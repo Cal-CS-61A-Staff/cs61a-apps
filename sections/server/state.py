@@ -351,12 +351,12 @@ def create_state_client(app: flask.Flask):
     @admin_required
     def export_attendance(full: bool):
         return export_helper(full)
-    
+
     @api
     def export_attendance_secret(secret: str, full: bool):
         if validate_secret(secret=secret) == "cs61a":
             return export_helper(full)
-    
+
     def export_helper(full: bool):
         if full:
             stringify = dumps

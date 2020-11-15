@@ -9,9 +9,8 @@ from integration import Integration
 VALID_PATH = r"[0-9A-Za-z\-]+"
 PATH_REGEX = rf"(?P<path>{VALID_PATH})"
 
-REGEX_TEMPLATE = (
-    fr"(https?://)?github\.com/Cal-CS-61A-Staff/cs61a-apps/pull/{PATH_REGEX}/?(\|[^\s|]+)?"
-)
+REGEX_TEMPLATE = fr"(https?://)?github\.com/Cal-CS-61A-Staff/cs61a-apps/pull/{PATH_REGEX}/?(\|[^\s|]+)?"
+
 
 class BuildIntegration(Integration):
     reply = None
@@ -22,7 +21,7 @@ class BuildIntegration(Integration):
 
         if "cs61a" != self._course:
             return
-        
+
         users = requests.get(
             "https://slack.com/api/users.list", params={"token": self._bot_token}
         ).json()
