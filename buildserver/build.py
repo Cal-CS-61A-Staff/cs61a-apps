@@ -111,6 +111,9 @@ def run_61a_website_build():
                     target,
                     f"BUILDPASS={i+1}",
                     *parallel_args,
+                    env=dict(
+                        CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org"
+                    ),
                 )
             except CalledProcessError:
                 # initial passes are allowed to fail
