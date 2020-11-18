@@ -3,4 +3,4 @@ deploy_type: flask
 memory_limit: 512M
 tasks:
   - name: update_grades
-    schedule: 0 * * * *
+    schedule: 0 4,16 * * *

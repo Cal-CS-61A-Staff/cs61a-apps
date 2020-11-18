@@ -3,6 +3,10 @@
 import argparse, sys, okpy_export
 import gs_export, sections_export, assemble
 
+import os
+if not os.path.exists('data'):
+    os.makedirs('data')
+
 def update():
     print("=================================================")
     okpy_export.export()
