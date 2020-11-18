@@ -2,7 +2,7 @@ import hashlib
 
 import datetime
 import numpy as np
-import pandas as pd
+import csv
 import pytz
 import re
 from dateutil.parser import parse
@@ -12,8 +12,11 @@ from common.rpc.auth import piazza_course_id
 from piazza import network
 from slack import send
 
-STAFF_csv = pd.read_csv("staff_roster.csv")
-STAFF = STAFF_csv.loc[STAFF_csv.index.repeat(STAFF_csv.Weight)].reset_index(drop=True)
+STAFF = csv.DictReader(open("staff_roster.csv"))
+STAFF_LST = []
+for row in STAFF:
+    for _ in range(int(row['Weight'])):
+        STAFF_LST.append(row)
 
 TIMEZONE = pytz.timezone("America/Los_Angeles")
 
@@ -136,8 +139,8 @@ class Main:
         post_hash = sum(
             [ord(c) for c in hashlib.sha224((str(post_id)).encode("utf-8")).hexdigest()]
         )
-        staff_index = post_hash % len(STAFF.index)
-        return STAFF["email"].iloc[staff_index]
+        staff_index = post_hash % len(STAFF_LST)
+        return STAFF_LST[staff_index]['email']
 
     def is_urgent(self, post):
         """Returns a boolean indicating whether the input post or followup is urgent. For a post to be urgent,
@@ -186,6 +189,5 @@ class Main:
 
 
 if __name__ == "__main__":
-    print("in here")
     run = Main()
     run.send_message()
