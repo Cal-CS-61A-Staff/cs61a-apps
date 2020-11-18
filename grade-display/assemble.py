@@ -10,7 +10,7 @@ MT1 = "data/mt1.csv"             # midterm scores from Gradescope
 MT2 = "data/mt2.csv"             # midterm scores from Gradescope
 TUTORIALS = "data/tutorials.csv" # tutorial scores from tutorials.cs61a.org
 
-UPLOAD_SECRET = get_secret(secret_name="HAID_SECRET")
+UPLOAD_SECRET = get_secret(secret_name="AUTH_SECRET")
 ENDPOINT = "https://howamidoing.cs61a.org/setGradesSecret"
 
 # ---------------------------

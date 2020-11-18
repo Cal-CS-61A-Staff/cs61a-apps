@@ -1,7 +1,7 @@
 import requests, csv
 from common.rpc.secrets import get_secret
 
-CLIENT_SECRET = get_secret(secret_name="SECTIONS_SECRET")
+CLIENT_SECRET = get_secret(secret_name="AUTH_SECRET")
 URL = "https://tutorials.cs61a.org/api/export_attendance_secret"
 
 def export():
