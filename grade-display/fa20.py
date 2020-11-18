@@ -1,13 +1,15 @@
 # Fall 2020 Sequence of Actions
 
-import argparse, sys, okpy_export
+import os, roster_export, okpy_export
 import gs_export, sections_export, assemble
 
-import os
 if not os.path.exists('data'):
     os.makedirs('data')
 
 def update():
+    print("=================================================")
+    roster_export.export()
+
     print("=================================================")
     okpy_export.export()
 
