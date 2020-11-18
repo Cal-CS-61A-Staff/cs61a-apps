@@ -2,5 +2,5 @@ build_type: none
 deploy_type: flask
 memory_limit: 512M
 tasks:
-  - name: ping_unread
+  - name: update_grades
     schedule: 0 * * * *
