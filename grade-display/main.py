@@ -7,7 +7,7 @@ from fa20 import update
 from auth import authenticate, update_storage
 
 app = Flask(__name__)
-create_oauth_client(app, 'grade-display-exports', update_storage)
+create_oauth_client(app, 'grade-display-exports', return_response=update_storage)
 
 @app.route('/')
 def index():

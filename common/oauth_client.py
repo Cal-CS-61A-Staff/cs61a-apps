@@ -104,12 +104,11 @@ def create_oauth_client(
             return "Access denied: error=%s" % (request.args["error"])
         if isinstance(resp, dict) and "access_token" in resp:
             session["access_token"] = (resp["access_token"], "")
+            if return_response:
+                return_response(resp)
 
         if success_callback:
             success_callback()
-        
-        if return_response:
-            return_response(resp)
 
         return redirect(url_for("index"))
 
