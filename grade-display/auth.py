@@ -16,7 +16,7 @@ import ssl
 
 from flask import session, g, redirect
 
-from common.oauth_client import create_oauth_client, is_staff
+from common.oauth_client import is_staff
 from common.rpc.secrets import get_secret
 from common.url_for import url_for
 from common.db import connect_db
@@ -44,8 +44,6 @@ with connect_db() as db:
 )
 """
     )
-
-create_oauth_client(app, 'grade-display-exports')
 
 def make_token_post(server, data):
     """Try getting an access token from the server. If successful, returns the
