@@ -5,7 +5,7 @@ import sys
 from common.course_config import get_course
 from common.db import connect_db, transaction_db
 from common.oauth_client import create_oauth_client, get_user, is_logged_in, is_staff
-from common.rpc.howamidoing import upload_grades
+from common.rpc.howamidoing import upload_grades as rpc_upload_grades
 from common.rpc.secrets import only
 from common.rpc.auth import validate_secret
 from setup_functions import set_default_config, set_grades
@@ -196,7 +196,7 @@ def create_client(app):
 
         return jsonify({"success": True})
     
-    @upload_grades.bind(app)
+    @rpc_upload_grades.bind(app)
     @only('grade-display', allow_staging=True)
     def upload_grades(data: str):
         with transaction_db() as db:
