@@ -5,7 +5,7 @@ service = create_service(__name__)
 
 @requires_master_secret
 @service.route("/api/trigger_build")
-def trigger_build_sync(*, pr_number: int):
+def trigger_build_sync(*, pr_number: int, target_app: str):
     ...
 
 
