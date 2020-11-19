@@ -41,7 +41,11 @@ def is_staff(course):
 
 
 def create_oauth_client(
-    app: flask.Flask, consumer_key, secret_key=None, success_callback=None
+    app: flask.Flask,
+    consumer_key,
+    secret_key=None,
+    success_callback=None,
+    return_response=None,
 ):
     oauth = OAuth(app)
 
@@ -104,6 +108,8 @@ def create_oauth_client(
             return "Access denied: error=%s" % (request.args["error"])
         if isinstance(resp, dict) and "access_token" in resp:
             session["access_token"] = (resp["access_token"], "")
+            if return_response:
+                return_response(resp)
 
         if success_callback:
             success_callback()
