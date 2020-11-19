@@ -15,6 +15,8 @@ from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course, is_admin
 from common.rpc.auth import read_spreadsheet, validate_secret
+from common.rpc.secrets import only
+from common.rpc.sections import rpc_export_attendance
 from models import (
     Attendance,
     AttendanceStatus,
@@ -350,6 +352,11 @@ def create_state_client(app: flask.Flask):
     @api
     @admin_required
     def export_attendance(full: bool):
+        return export_helper(full)
+
+    @rpc_export_attendance.bind(app)
+    @only('grade-display')
+    def export_attendance_rpc(full: bool):
         return export_helper(full)
 
     @api
