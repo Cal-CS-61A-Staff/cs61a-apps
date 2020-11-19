@@ -68,3 +68,15 @@ def connect_db():
             return conn.execute(query, *rest)
 
         yield db
+
+@contextmanager
+def transaction_db():
+    with engine.begin() as conn:
+
+        def db(*args):
+            query, *rest = args
+            if use_devdb:
+                query = query.replace("%s", "?")
+            return conn.execute(query, *rest)
+
+        yield db
