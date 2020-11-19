@@ -8,7 +8,7 @@ def export(app):
     ENDPOINT = "/api/v3/course/cal/{cc}/{sem}/grades".format(cc=COURSE_CODE, sem=SEMESTER)
     FILE_PATH = "data/okpy_grades.csv"
 
-    access_token = auth.authenticate(app)
+    access_token = auth.get_token(app)
 
     print("Getting grades...")
     grades = requests.get(OK_SERVER + ENDPOINT, params={"access_token": access_token}).json()

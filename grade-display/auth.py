@@ -102,6 +102,8 @@ def update_storage(data):
             "INSERT INTO tokens (access_token, expires_at, refresh_token) VALUES (%s, %s, %s)",
             [access_token, cur_time + expires_in, refresh_token],
         )
+    
+    session["access_token"] = access_token
 
 def refresh_local_token():
     cur_time = int(time.time())
@@ -132,15 +134,19 @@ def authenticate(app):
     """
     try:
         access_token = refresh_local_token()
-        session["access_token"] = access_token
     except Exception:
         print("Performing authentication.")
     
     if not is_staff("cs61a"):
         g.cache_token = update_storage
         return redirect(url_for("login"))
-    
+
     return "Authorized!"
+
+def get_token(app):
+    if "access_token" not in session:
+        authenticate(app)
+    return session["access_token"]
 
 def get_info(access_token):
     response = requests.get(
