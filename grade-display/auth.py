@@ -144,9 +144,7 @@ def authenticate(app):
     return "Authorized!"
 
 def get_token(app):
-    if "access_token" not in session:
-        authenticate(app)
-    return session["access_token"]
+    return get_storage()[0]
 
 def get_info(access_token):
     response = requests.get(
