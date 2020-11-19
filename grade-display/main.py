@@ -11,10 +11,12 @@ create_oauth_client(app, 'grade-display-exports')
 
 @app.route('/')
 def index():
+    print(app)
     return authenticate(app)
 
 @job(app, "update_grades")
 def run():
+    print(app)
     update(app)
 
 if __name__ == "__main__":
