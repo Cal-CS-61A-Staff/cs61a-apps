@@ -104,6 +104,8 @@ def create_oauth_client(
             return "Access denied: error=%s" % (request.args["error"])
         if isinstance(resp, dict) and "access_token" in resp:
             session["access_token"] = (resp["access_token"], "")
+            if "cache_token" in g:
+                g.cache_token(resp)
 
         if success_callback:
             success_callback()

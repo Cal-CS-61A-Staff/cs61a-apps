@@ -6,12 +6,12 @@ import gs_export, sections_export, assemble
 if not os.path.exists('data'):
     os.makedirs('data')
 
-def update():
+def update(app):
     print("=================================================")
-    roster_export.export()
+    roster_export.export(app)
 
     print("=================================================")
-    okpy_export.export()
+    okpy_export.export(app)
 
     print("=================================================")
     gs_export.export("mt1")
