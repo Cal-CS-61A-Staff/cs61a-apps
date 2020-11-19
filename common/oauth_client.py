@@ -41,7 +41,11 @@ def is_staff(course):
 
 
 def create_oauth_client(
-    app: flask.Flask, consumer_key, secret_key=None, success_callback=None, return_response=None
+    app: flask.Flask,
+    consumer_key,
+    secret_key=None,
+    success_callback=None,
+    return_response=None,
 ):
     oauth = OAuth(app)
 

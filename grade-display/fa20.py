@@ -3,8 +3,9 @@
 import os, roster_export, okpy_export
 import gs_export, sections_export, assemble
 
-if not os.path.exists('data'):
-    os.makedirs('data')
+if not os.path.exists("data"):
+    os.makedirs("data")
+
 
 def update():
     print("=================================================")
@@ -27,5 +28,6 @@ def update():
 
     print("=================================================")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     update()

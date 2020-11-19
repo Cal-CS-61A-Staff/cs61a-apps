@@ -11,13 +11,14 @@ from common.rpc.secrets import get_secret
 pd.options.mode.chained_assignment = None
 
 # Gradescope login credentials, if saved
-CREDENTIALS = Path('credentials.txt')
+CREDENTIALS = Path("credentials.txt")
 
 # Change these every semester
 COURSE_CODE = "185229"
-ASSIGNMENTS = {'mt1': '673189', 'mt2': '800596'}
+ASSIGNMENTS = {"mt1": "673189", "mt2": "800596"}
 
-def export(assignment = None):
+
+def export(assignment=None):
     if CREDENTIALS.exists():
         print("Using credentials file.")
         with open(CREDENTIALS) as f:
@@ -56,13 +57,13 @@ def export(assignment = None):
     res = gs.download_scores(COURSE_CODE, assign_num)
 
     if res:
-        p = Path('.').expanduser().absolute()
+        p = Path(".").expanduser().absolute()
         if not p.exists():
             p.parent.mkdir(parents=True, exist_ok=True)
         if not p.is_file():
             p = p.joinpath(f"data/{assignment}.csv")
-        
-        with open(p, 'wb+') as f:
+
+        with open(p, "wb+") as f:
             f.write(res)
         print("Done.\n")
     else:
@@ -71,11 +72,12 @@ def export(assignment = None):
 
     print("Converting to Okpy upload file...")
     gs_csv = pd.read_csv(f"data/{assignment}.csv")
-    ok_csv = gs_csv[['SID', 'Email','Total Score']]
-    ok_csv['SID'] = ok_csv['SID'].fillna(0).astype(int).astype(str)
+    ok_csv = gs_csv[["SID", "Email", "Total Score"]]
+    ok_csv["SID"] = ok_csv["SID"].fillna(0).astype(int).astype(str)
 
     ok_csv.to_csv(f"data/{assignment}.csv", index=False)
     print("Done.")
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
