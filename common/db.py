@@ -69,6 +69,7 @@ def connect_db():
 
         yield db
 
+
 @contextmanager
 def transaction_db():
     with engine.begin() as conn:
