@@ -65,8 +65,8 @@ def index():
         ''' for [app] in apps)}
         {"".join(f'''
         <form action="/trigger_build">
-            <input type="submit" name="app" value="{app}" type="hidden" />
-            <input type="submit" name="pr_number" value="{pr_number}" type="hidden" />
+            <input type="hidden" name="app" value="{app}" />
+            <input type="hidden" name="pr_number" value="{pr_number}" />
             <input type="submit" value="{app + "-pr" + str(pr_number)}" />
         </form>
         ''' for [app, pr_number] in pr_apps)}
