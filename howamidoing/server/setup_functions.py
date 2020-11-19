@@ -18,12 +18,14 @@ def set_grades(data, course_code, db):
     db("DELETE FROM students WHERE courseCode=%s", [course_code])
     db("DELETE FROM headers WHERE courseCode=%s", [course_code])
     db("INSERT INTO headers VALUES (%s, %s)", [course_code, json.dumps(header)])
+
     for row in reader:
         short_data = {x: row[header.index(x)] for x in ["Email", "SID", "Name"]}
         db(
             "INSERT INTO students VALUES (%s, %s, %s, %s)",
             [course_code, row[email_index], json.dumps(short_data), json.dumps(row)],
         )
+
     db("DELETE FROM lastUpdated WHERE courseCode=%s", [course_code])
     db(
         "INSERT INTO lastUpdated VALUES (%s, %s)",
