@@ -65,8 +65,9 @@ def index():
         ''' for [app] in apps)}
         {"".join(f'''
         <form action="/trigger_build">
-            <input type="submit" name="app" value="{app}" />
-            <input type="submit" name="pr_number" value="{pr_number}" />
+            <input type="submit" name="app" value="{app}" type="hidden" />
+            <input type="submit" name="pr_number" value="{pr_number}" type="hidden" />
+            <input type="submit" value="{app + "-pr" + str(pr_number)}" />
         </form>
         ''' for [app, pr_number] in pr_apps)}
         <form action="/delete_unused_services" method="post">
@@ -119,7 +120,7 @@ def trigger_build():
 
 @trigger_build_sync.bind(app)
 @validates_master_secret
-def handle_trigger_build_sync(app, is_staging, pr_number, target_app="all"):
+def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
     if app not in ("slack", "buildserver") or is_staging:
         abort(401)
 

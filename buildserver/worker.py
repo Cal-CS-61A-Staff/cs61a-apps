@@ -41,7 +41,7 @@ def land_commit(
     :param base_repo: The *base* cs61a-apps repo containing the deploy.yaml config
     :param pr: The PR made to trigger the build, if any
     :param files: Files changed in the commit, used for target determination
-    :param target_apps: Apps to rebuild, if not all
+    :param target_app: App to rebuild, if not all
     """
     try:
         repo.get_commit(sha).create_status(
