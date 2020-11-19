@@ -105,7 +105,6 @@ def update_storage(data):
         )
     
     print("Updated Storage:", access_token, str(cur_time + expires_in), refresh_token)
-    session["access_token"] = access_token
 
 def refresh_local_token():
     cur_time = int(time.time())
