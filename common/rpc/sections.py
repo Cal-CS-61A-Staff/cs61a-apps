@@ -6,6 +6,6 @@ service = create_service(__name__)
 
 
 @requires_master_secret
-@service.route("/api/export_attendance")
+@service.route("/api/export_attendance_rpc")
 def rpc_export_attendance(*, full: bool):
     ...
