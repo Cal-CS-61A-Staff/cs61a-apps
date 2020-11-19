@@ -3,12 +3,12 @@ import requests, auth, sys
 COURSE_CODE = "cs61a"
 SEMESTER = "fa20"
 
-def export(app):
+def export():
     OK_SERVER = "https://okpy.org"
     ENDPOINT = "/api/v3/course/cal/{cc}/{sem}/roster".format(cc=COURSE_CODE, sem=SEMESTER)
     FILE_PATH = "data/roster.csv"
 
-    access_token = auth.get_token(app)
+    access_token = auth.get_token()
 
     print("Getting roster...")
     roster = requests.get(OK_SERVER + ENDPOINT, params={"access_token": access_token}).json()

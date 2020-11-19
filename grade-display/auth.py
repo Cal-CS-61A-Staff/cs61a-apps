@@ -1,20 +1,7 @@
-import hashlib
-import http.server
-import os
-import pickle
-import requests
-import time
-from urllib.parse import urlencode, urlparse, parse_qsl
-import webbrowser
+import requests, sys, time
+import logging, ssl
 
-from contextlib import contextmanager
-import sys
-
-import logging
-import traceback
-import ssl
-
-from flask import session, g, redirect
+from flask import redirect
 
 from common.oauth_client import is_staff
 from common.rpc.secrets import get_secret
@@ -30,7 +17,6 @@ OAUTH_SCOPE = 'all'
 
 TIMEOUT = 10
 
-INFO_ENDPOINT = '/api/v3/user/'
 TOKEN_ENDPOINT = '/oauth/token'
 
 # ---------------------
@@ -85,7 +71,6 @@ def get_storage():
             expires_at = token[1]
             refresh_token = token[2]
 
-            print("Storage:", access_token, str(expires_at), refresh_token)
             return access_token, expires_at, refresh_token
     return None, 0, None
 
@@ -103,8 +88,6 @@ def update_storage(data):
             "INSERT INTO tokens (access_token, expires_at, refresh_token) VALUES (%s, %s, %s)",
             [access_token, cur_time + expires_in, refresh_token],
         )
-    
-    print("Updated Storage:", access_token, str(cur_time + expires_in), refresh_token)
 
 def refresh_local_token():
     cur_time = int(time.time())
@@ -143,25 +126,8 @@ def authenticate(app):
 
     return "Authorized!"
 
-def get_token(app):
+def get_token():
     return get_storage()[0]
-
-def get_info(access_token):
-    response = requests.get(
-        server_url() + INFO_ENDPOINT,
-        headers={'Authorization': 'Bearer {}'.format(access_token)},
-        timeout=5)
-    response.raise_for_status()
-    return response.json()['data']
-
-def display_student_email(access_token):
-    try:
-        email = get_info(access_token)['email']
-        print('Successfully logged in as', email)
-        return email
-    except Exception:  # Do not catch KeyboardInterrupts
-        log.debug("Did not obtain email", exc_info=True)
-        return None
 
 class OkException(Exception):
     """Base exception class for OK."""

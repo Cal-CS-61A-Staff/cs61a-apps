@@ -6,6 +6,8 @@ from pathlib import Path
 from fullGSapi.api.gs_api_client import GradescopeAPIClient
 from fullGSapi.api.client import GradescopeClient
 
+from common.rpc.secrets import get_secret
+
 pd.options.mode.chained_assignment = None
 
 # Gradescope login credentials, if saved
@@ -21,7 +23,8 @@ def export(assignment = None):
         with open(CREDENTIALS) as f:
             email, password = f.readlines()
     else:
-        email, password = input('Email: '), getpass()
+        email = "cs61a@berkeley.edu"
+        password = get_secret(secret_name="GRADESCOPE_PW")
     email, password = email.strip(), password.strip()
 
     print("Logging in...")

@@ -15,7 +15,7 @@ def index():
 
 @job(app, "update_grades")
 def run():
-    update(app)
+    update()
 
 if __name__ == "__main__":
     app.run(debug=True)
