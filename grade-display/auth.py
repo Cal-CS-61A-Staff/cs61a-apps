@@ -85,7 +85,7 @@ def get_storage():
             expires_at = token[1]
             refresh_token = token[2]
 
-            print(access_token, str(expires_at), refresh_token)
+            print("Storage:", access_token, str(expires_at), refresh_token)
             return access_token, expires_at, refresh_token
     return None, 0, None
 
@@ -104,6 +104,7 @@ def update_storage(data):
             [access_token, cur_time + expires_in, refresh_token],
         )
     
+    print("Updated Storage:", access_token, str(cur_time + expires_in), refresh_token)
     session["access_token"] = access_token
 
 def refresh_local_token():
