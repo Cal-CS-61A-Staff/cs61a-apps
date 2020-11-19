@@ -44,7 +44,7 @@ def land_commit(
     try:
         repo.get_commit(sha).create_status(
             "pending",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserver",
             "Pusher is rebuilding all modified services",
             "Pusher",
         )
@@ -72,7 +72,7 @@ def land_commit(
     except Exception as e:
         repo.get_commit(sha).create_status(
             "failure",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserver",
             "Pusher failed to rebuild all modified services",
             "Pusher",
         )
@@ -83,7 +83,7 @@ def land_commit(
     else:
         repo.get_commit(sha).create_status(
             "success",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserver",
             "All modified services rebuilt!",
             "Pusher",
         )
