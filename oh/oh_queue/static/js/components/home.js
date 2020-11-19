@@ -1,4 +1,4 @@
-let Home = ({match, state, children}) => {
+let Home = ({ match, state, children }) => {
   let { Route, Switch } = ReactRouterDOM;
 
   if (isStaff(state) || getMyTicket(state)) {
@@ -11,7 +11,7 @@ let Home = ({match, state, children}) => {
   return (
     <div>
       <Navbar state={state} mode="queue" />
-      <OfflineIndicator offline={state.offline && state.loaded}/>
+      <OfflineIndicator offline={state.offline && state.loaded} />
       <Queue state={state} />
     </div>
   );

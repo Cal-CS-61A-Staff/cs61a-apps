@@ -9,8 +9,8 @@ Create Date: 2020-03-12 23:45:37.468475
 # revision identifiers, used by Alembic.
 from sqlalchemy import orm
 
-revision = '1f54dee7ae76'
-down_revision = 'c2f835ce68a7'
+revision = "1f54dee7ae76"
+down_revision = "c2f835ce68a7"
 
 from alembic import op
 import sqlalchemy as sa
@@ -24,7 +24,11 @@ def upgrade():
     session = orm.Session(bind=connection)
 
     for course in session.query(ConfigEntry.course).distinct():
-        session.add(ConfigEntry(key='simul_appointment_limit', value='1', public=True, course=course[0]))
+        session.add(
+            ConfigEntry(
+                key="simul_appointment_limit", value="1", public=True, course=course[0]
+            )
+        )
 
     session.commit()
 

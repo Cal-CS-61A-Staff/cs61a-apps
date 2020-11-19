@@ -1,16 +1,16 @@
 .warningBadge {
-    font-size: 30%;
-    margin-left: 10px;
-    vertical-align: top;
-    margin-top: 10px;
+  font-size: 30%;
+  margin-left: 10px;
+  vertical-align: top;
+  margin-top: 10px;
 }
 
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-input[type=number] {
-    -moz-appearance:textfield;
+input[type="number"] {
+  -moz-appearance: textfield;
 }

@@ -6,7 +6,7 @@ class MagicWordDisplay extends React.Component {
       loaded: false,
       oldMagicWord: undefined,
       magicWord: undefined,
-      refreshInterval: null
+      refreshInterval: null,
     };
 
     this.loadState = this.loadState.bind(this);
@@ -21,7 +21,7 @@ class MagicWordDisplay extends React.Component {
       setTimeout(this.loadState, 100);
       return;
     }
-    if (isStaff(this.props.state) && config.queue_magic_word_mode !== 'none') {
+    if (isStaff(this.props.state) && config.queue_magic_word_mode !== "none") {
       if (this.state.refreshInterval) {
         clearInterval(this.state.refreshInterval);
         this.state.refreshInterval = null;
@@ -29,20 +29,23 @@ class MagicWordDisplay extends React.Component {
       this.setState({
         refreshInterval: setInterval(() => {
           let mode = this.props.state.config.queue_magic_word_mode;
-          if (mode !== 'timed_numeric'
-            && (mode !== 'none' || this.state.magicWord !== undefined)) return
-          app.makeRequest('refresh_magic_word', (res) => {
+          if (
+            mode !== "timed_numeric" &&
+            (mode !== "none" || this.state.magicWord !== undefined)
+          )
+            return;
+          app.makeRequest("refresh_magic_word", (res) => {
             let magicWord = res.magic_word || null;
             this.setState({
               oldMagicWord: this.state.magicWord,
-              magicWord: magicWord
+              magicWord: magicWord,
             });
           });
-        }, 10000)
+        }, 10000),
       });
     }
     this.setState({
-      loaded: true
+      loaded: true,
     });
   }
 
@@ -58,20 +61,22 @@ class MagicWordDisplay extends React.Component {
       this.loadState();
       return false;
     }
-    if (this.props.state.config.queue_magic_word_mode === 'none'
-      || this.state.magicWord === undefined) {
+    if (
+      this.props.state.config.queue_magic_word_mode === "none" ||
+      this.state.magicWord === undefined
+    ) {
       return false;
     }
 
-    let magicWordElem = (<i>Loading...</i>);
+    let magicWordElem = <i>Loading...</i>;
     if (this.state.magicWord) {
       let magicWord = this.state.magicWord;
-      magicWordElem = (<code>{ magicWord }</code>);
+      magicWordElem = <code>{magicWord}</code>;
     }
 
     return (
       <div>
-        <h4>Magic word: { magicWordElem }</h4>
+        <h4>Magic word: {magicWordElem}</h4>
       </div>
     );
   }

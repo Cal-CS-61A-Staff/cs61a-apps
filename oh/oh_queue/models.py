@@ -156,7 +156,7 @@ class Ticket(db.Model):
 
     @classmethod
     def by_status(cls, status=None):
-        """ Tickets in any of the states as status.
+        """Tickets in any of the states as status.
         @param status: Iterable containing TicketStatus values
         """
         if status is None:
