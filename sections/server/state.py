@@ -355,7 +355,7 @@ def create_state_client(app: flask.Flask):
         return export_helper(full)
 
     @rpc_export_attendance.bind(app)
-    @only('grade-display')
+    @only('grade-display', allow_staging=True)
     def export_attendance_rpc(full: bool):
         return export_helper(full)
 
