@@ -87,12 +87,12 @@ def create_piazza_client(app):
                     [course],
                 ).fetchone()
             if is_test:
-                course_id, = db(
+                (course_id,) = db(
                     "SELECT test_course_id FROM piazza_config WHERE course = (%s)",
                     [course],
                 ).fetchone()
             else:
-                course_id, = db(
+                (course_id,) = db(
                     "SELECT course_id FROM piazza_config WHERE course = (%s)", [course]
                 ).fetchone()
 
@@ -113,12 +113,12 @@ def create_piazza_client(app):
         is_test = test or is_test  # test exists for backwards compatibility only
         with connect_db() as db:
             if is_test:
-                course_id, = db(
+                (course_id,) = db(
                     "SELECT test_course_id FROM piazza_config WHERE course=(%s)",
                     [course],
                 ).fetchone()
             else:
-                course_id, = db(
+                (course_id,) = db(
                     "SELECT course_id FROM piazza_config WHERE course=(%s)", [course]
                 ).fetchone()
         return course_id
@@ -171,13 +171,24 @@ def create_piazza_client(app):
                 "SELECT * FROM piazza_config WHERE course=(%s)", [course]
             ).fetchone()
             if ret:
-                course_id, test_course_id, student_user, student_pw, staff_user, staff_pw, _ = (
-                    ret
-                )
+                (
+                    course_id,
+                    test_course_id,
+                    student_user,
+                    student_pw,
+                    staff_user,
+                    staff_pw,
+                    _,
+                ) = ret
             else:
-                course_id, test_course_id, student_user, student_pw, staff_user, staff_pw = (
-                    [""] * 6
-                )
+                (
+                    course_id,
+                    test_course_id,
+                    student_user,
+                    student_pw,
+                    staff_user,
+                    staff_pw,
+                ) = [""] * 6
 
         course_id = request.form["course_id"] or course_id
         test_course_id = request.form["test_course_id"] or test_course_id

@@ -15,7 +15,12 @@ export default function Messages({ messages, onChange }: Props) {
   return (
     <>
       {messages.map((message, i) => (
-        <Alert variant="danger" onClose={() => hideMessage(i)} dismissible key={i}>
+        <Alert
+          variant="danger"
+          onClose={() => hideMessage(i)}
+          dismissible
+          key={i}
+        >
           {message}
         </Alert>
       ))}

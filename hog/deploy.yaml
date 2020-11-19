@@ -1,6 +1,6 @@
 build_type: create_react_app
 deploy_type: flask
 dependencies:
-    - repo: Cal-CS-61A-Staff/berkeley-cs61a
-      src: src/proj/hog/hog.py
-      dest: server/hog.py
+  - repo: Cal-CS-61A-Staff/berkeley-cs61a
+    src: src/proj/hog/hog.py
+    dest: server/hog.py

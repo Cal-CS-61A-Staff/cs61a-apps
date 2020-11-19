@@ -18,11 +18,11 @@ h1 {
 }
 
 .zone {
-    font-family: "Roboto", sans-serif;
-    font-size: 0.6em;
-    display:inline-block;
-    padding-top: 0.4em;
-    padding-bottom: 0.4em;
+  font-family: "Roboto", sans-serif;
+  font-size: 0.6em;
+  display: inline-block;
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
 }
 
 .code {
@@ -30,20 +30,20 @@ h1 {
 }
 
 .description {
-    font-size: 1.5em;
-    color: #888;
+  font-size: 1.5em;
+  color: #888;
 }
 
 .value {
-    font-size: 1.5em;
-    color: #008;
+  font-size: 1.5em;
+  color: #008;
 }
 
 .subhead {
-    font-size: 1.5em;
-    margin-bottom: 0.5em;
-    color: #88d;
-    font-style: italic;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+  color: #88d;
+  font-style: italic;
 }
 
 .dateinput {
@@ -56,8 +56,8 @@ h1 {
 .dateform {
   .dateinput;
   font-family: "Roboto", sans-serif;
-  border-width:0px;
-  border:none;
+  border-width: 0px;
+  border: none;
   color: #448;
   background-color: #eef;
   font-size: 1em;
@@ -65,24 +65,24 @@ h1 {
   text-align: center;
 }
 
-input[type='number']::-webkit-inner-spin-button,
-input[type='number']::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .fourwidth {
-    width: 3.5em;
+  width: 3.5em;
 }
 
 .twowidth {
-    width: 2em;
+  width: 2em;
 }
 
 .button {
   font-family: "Roboto", sans-serif;
-  border-width:0px;
-  border:none;
+  border-width: 0px;
+  border: none;
   color: #000;
   background-color: #ccf;
   font-size: 1em;
@@ -91,12 +91,14 @@ input[type='number']::-webkit-outer-spin-button {
   vertical-align: center;
 }
 
-::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
   color: #ccc;
   opacity: 1; /* Firefox */
 }
 
-:-ms-input-placeholder { /* Internet Explorer 10-11 */
+:-ms-input-placeholder {
+  /* Internet Explorer 10-11 */
   color: #ccc;
 }
 
@@ -104,17 +106,17 @@ a {
   color: #88c;
 }
 
-.main .description{
-  width:50%;
-  display:inline-block;
-  box-sizing:border-box;
-  text-align:right;
+.main .description {
+  width: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  text-align: right;
 }
 
-.main .value{
-  text-align:left;
-  padding-left:10px;
-  width:50%;
-  display:inline-block;
-  box-sizing:border-box;
+.main .value {
+  text-align: left;
+  padding-left: 10px;
+  width: 50%;
+  display: inline-block;
+  box-sizing: border-box;
 }

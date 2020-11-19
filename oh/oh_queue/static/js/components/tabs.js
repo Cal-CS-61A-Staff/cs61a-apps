@@ -10,17 +10,23 @@
  *   </Tab>
  * </Tabs>
  */
-let Tabs = ({selectedIndex, onSelect, children}) => {
-  children = React.Children.toArray(children).filter(x => x);
+let Tabs = ({ selectedIndex, onSelect, children }) => {
+  children = React.Children.toArray(children).filter((x) => x);
   let renderLabel = (child, index) => {
     let active = selectedIndex === index;
     let tabClass = classNames({
-      'active': active,
-      'pulsating': child.props.shouldHighlight && !active,
+      active: active,
+      pulsating: child.props.shouldHighlight && !active,
     });
     return (
       <li key={index} className={tabClass}>
-        <a href="#" onClick={(e) => { e.preventDefault(); onSelect(index); }}>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onSelect(index);
+          }}
+        >
           {child.props.label}
         </a>
       </li>
@@ -32,18 +38,12 @@ let Tabs = ({selectedIndex, onSelect, children}) => {
         <ul className="nav nav-tabs nav-justified">
           {children.map(renderLabel)}
         </ul>
-        <div className="tab-content">
-          {children[selectedIndex]}
-        </div>
+        <div className="tab-content">{children[selectedIndex]}</div>
       </div>
     </div>
   );
-}
+};
 
 const Tab = (props) => {
-  return (
-    <div>
-      {props.children}
-    </div>
-  );
+  return <div>{props.children}</div>;
 };

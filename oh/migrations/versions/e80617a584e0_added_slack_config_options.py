@@ -9,8 +9,8 @@ Create Date: 2020-04-09 15:03:43.071903
 # revision identifiers, used by Alembic.
 from sqlalchemy import orm
 
-revision = 'e80617a584e0'
-down_revision = 'c568f4d277de'
+revision = "e80617a584e0"
+down_revision = "c568f4d277de"
 
 from alembic import op
 import sqlalchemy as sa
@@ -24,9 +24,30 @@ def upgrade():
     session = orm.Session(bind=connection)
 
     for course in session.query(ConfigEntry.course).distinct():
-        session.add(ConfigEntry(key='slack_notif_long_queue', value='false', public=True, course=course[0]))
-        session.add(ConfigEntry(key='slack_notif_appt_summary', value='false', public=True, course=course[0]))
-        session.add(ConfigEntry(key='slack_notif_missed_appt', value='false', public=True, course=course[0]))
+        session.add(
+            ConfigEntry(
+                key="slack_notif_long_queue",
+                value="false",
+                public=True,
+                course=course[0],
+            )
+        )
+        session.add(
+            ConfigEntry(
+                key="slack_notif_appt_summary",
+                value="false",
+                public=True,
+                course=course[0],
+            )
+        )
+        session.add(
+            ConfigEntry(
+                key="slack_notif_missed_appt",
+                value="false",
+                public=True,
+                course=course[0],
+            )
+        )
 
     session.commit()
 

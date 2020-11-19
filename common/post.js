@@ -26,7 +26,7 @@ export default async function post(endpoint, data, skipTimeout) {
     body: JSON.stringify(data),
   });
   if (skipTimeout) {
-    return promise.then(resp => resp.json());
+    return promise.then((resp) => resp.json());
   }
   return timeoutPromise(10000, promise).then((resp) => resp.json());
 }

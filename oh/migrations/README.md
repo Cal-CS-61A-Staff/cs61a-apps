@@ -13,11 +13,14 @@ brew install mysql
 Reccomended SQL Client for local exploration: [Sequel Pro](https://sequelpro.com/)
 
 ## Configuring MySQL
+
 Start MySQL and connect
+
 ```
 mysql.server start
 mysql -u root
 ```
+
 The password for root is blank by default. Just hit enter and you will enter the mysql console.
 See the [MySQL docs](http://dev.mysql.com/doc/mysql-getting-started/en/) for more info.
 
@@ -37,6 +40,7 @@ If the `master` branch is the current state of the production branch - start by 
 
 Make sure OK is using MySQL and not sqlite by setting the `DATABASE_URL`
 environment variable. For Bash,
+
 ```
 export DATABASE_URL=mysql://ohdev:@127.0.0.1:3306/ohdevel?charset=utf8mb4
 ```
@@ -54,7 +58,9 @@ Now you can checkout the branch with changes:
 ```
 ./manage.py db migrate -m "Added new feature"
 ```
+
 That should produce the output along the lines of
+
 ```
 INFO  [alembic.runtime.migration] Context impl MySQLImpl.
 INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
@@ -67,7 +73,9 @@ INFO  [alembic.autogenerate.compare] Detected added column 'assignment.published
 Check the file contents before running the migrations to make sure the changes make sense. There should not be unncessary changes. It's ok to manually make changes to the script (or manually write a migration file) if needed.
 
 ## Deploying the migration.
+
 Make sure the deploy the app. After it's running, run
+
 ```
 
 dokku maintenance:on officehours-web # maintenance message
@@ -79,16 +87,20 @@ dokku run officehours-web ./manage.py db upgrade
 dokku maintenance:off officehours-web
 dokku deploy officehours-web  # to restart
 ```
+
 to upgrade.
 
 ## Common errors
 
 If you are getting long tracebacks that end in somethng like this
+
 ```
 raise errorclass(errno, errorvalue)
 sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1146, "Table 'ok-dev.client' doesn't exist") [SQL: 'ALTER TABLE client ADD COLUMN created DATETIME NOT NULL DEFAULT now()']
 ```
+
 or
+
 ```
     raise util.CommandError("Target database is not up to date.")
 alembic.util.exc.CommandError: Target database is not up to date.

@@ -1,10 +1,10 @@
 ## PR_Proxy
 
-This is the *only* service that is not managed by the `buildserver`. It is used to proxy PR subdomains (like <https://1.oh.pr.cs61a.org>) to the Cloud Run instances created by the `buildserver`.
+This is the _only_ service that is not managed by the `buildserver`. It is used to proxy PR subdomains (like <https://1.oh.pr.cs61a.org>) to the Cloud Run instances created by the `buildserver`.
 
 The reason we can't use Cloud Run instances directly is because new subdomains take between 15 minutes and 24 hours to have TLS setup, which can be an issue when running smoke tests / manual testing.
 
-Instead, we deploy PRs to their default Cloud Run domains, and `pr_proxy` hosts an nginx reverse proxy pointing to those domains from the nice looking ones. 
+Instead, we deploy PRs to their default Cloud Run domains, and `pr_proxy` hosts an nginx reverse proxy pointing to those domains from the nice looking ones.
 
 We have a DNS `A` record from `*.pr.cs61a.org` to the IP address `34.94.235.143` where `pr_proxy` lives. Then, the nginx config is dynamically updated by `register_pr_build.py` (called `main.py` on the GCP instance) in response to requests sent from the `buildserver` on a PR build.
 
