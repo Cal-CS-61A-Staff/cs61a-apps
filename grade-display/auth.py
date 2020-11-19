@@ -127,7 +127,7 @@ def authenticate(app):
     return "Authorized!"
 
 def get_token():
-    return get_storage()[0]
+    return refresh_local_token()
 
 class OkException(Exception):
     """Base exception class for OK."""
