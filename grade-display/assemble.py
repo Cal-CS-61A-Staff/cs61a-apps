@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 
 from common.rpc.secrets import get_secret
+from common.rpc.howamidoing import upload_grades
 
 ROSTER = "data/roster.csv"
 GRADES = "data/okpy_grades.csv"
@@ -91,6 +92,7 @@ def assemble(haid=True):
     if haid:
         print("Uploading data to Howamidoing...")
         upload = finalized.to_csv(index=False)
+        upload_grades(upload)
         print(requests.post(ENDPOINT, {"secret": UPLOAD_SECRET, "data": upload}).text)
 
 

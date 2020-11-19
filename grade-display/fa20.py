@@ -24,7 +24,7 @@ def update():
     sections_export.export()
 
     print("=================================================")
-    #assemble.assemble()
+    assemble.assemble()
 
     print("=================================================")
 
