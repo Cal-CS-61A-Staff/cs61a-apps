@@ -45,6 +45,8 @@ with connect_db() as db:
 """
     )
 
+create_oauth_client(app, 'grade-display-exports')
+
 def make_token_post(server, data):
     """Try getting an access token from the server. If successful, returns the
     JSON response. If unsuccessful, raises an OAuthException.
@@ -130,7 +132,6 @@ def authenticate(app):
     or refresh the OAuth token. If NOINTERACT is true, it will return None
     rather than prompting the user.
     """
-    create_oauth_client(app, 'grade-display-exports')
     try:
         access_token = refresh_local_token()
         session["access_token"] = access_token
