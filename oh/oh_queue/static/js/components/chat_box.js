@@ -33,9 +33,9 @@ function ChatBox({ currentUser, id, mode, messages }) {
   React.useEffect(scrollDown, [messages]);
 
   function formatTooltip(message, omitUsername = false) {
-    if(!message.created) return message.user.name;
+    if (!message.created) return message.user.name;
     let time = moment.utc(message.created).local().format("ddd hh:mmA");
-    if(omitUsername) return time;
+    if (omitUsername) return time;
     return `${message.user.name} | ${time}`;
   }
 

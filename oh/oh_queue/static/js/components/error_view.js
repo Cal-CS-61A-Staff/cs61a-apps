@@ -3,11 +3,11 @@ class ErrorView extends React.Component {
     let query = Qs.parse(this.props.location.search.substring(1));
     let state = this.props.state;
 
-    state.message = this.props.message || query.message || 'Unknown error';
+    state.message = this.props.message || query.message || "Unknown error";
   }
 
   render() {
-    var {Link} = ReactRouterDOM;
+    var { Link } = ReactRouterDOM;
     let state = this.props.state;
 
     return (
@@ -17,9 +17,11 @@ class ErrorView extends React.Component {
           <div className="row">
             <div className="col-xs-12">
               <div className="alert alert-danger">
-                <p>{ state.message }</p>
+                <p>{state.message}</p>
               </div>
-              <Link className="btn btn-primary" to="/">Home</Link>
+              <Link className="btn btn-primary" to="/">
+                Home
+              </Link>
             </div>
           </div>
         </div>

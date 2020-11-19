@@ -1,19 +1,22 @@
-{% extends "default.html" %}
-{% block header %}{% endblock %}
-{% block body %}
+{% extends "default.html" %} {% block header %}{% endblock %} {% block body %}
 <h1>Log In</h1>
 <form class="form-inline" action="{{ callback }}" method="POST">
   <div class="form-group">
-  <input class="form-control" type="text" name="name" value="Student McGee">
+    <input class="form-control" type="text" name="name" value="Student McGee" />
   </div>
   <div class="form-group">
-  <input class="form-control" type="email" name="email" value="student@cs61a.org">
+    <input
+      class="form-control"
+      type="email"
+      name="email"
+      value="student@cs61a.org"
+    />
   </div>
   <div class="checkbox">
-  <label>
-    <input type="checkbox" name="is_staff" label="Staff">
-    Staff Member
-  </label>
+    <label>
+      <input type="checkbox" name="is_staff" label="Staff" />
+      Staff Member
+    </label>
   </div>
   <button class="btn btn-primary" type="submit" value="Submit">Submit</button>
 </form>

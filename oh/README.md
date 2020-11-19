@@ -1,5 +1,4 @@
-Office Hours Queue
-==================
+# Office Hours Queue
 
 ## Overview
 
@@ -17,39 +16,45 @@ This is a hosted app provided by 61A. To set it up for your own course, visit [A
 
 1. Clone this repo:
 
-    ```
-    git clone https://github.com/Cal-CS-61A-Staff/oh-queue.git
-    ```
-    Then cd into it:
-    ```
-    cd oh-queue
-    ```
+   ```
+   git clone https://github.com/Cal-CS-61A-Staff/oh-queue.git
+   ```
+
+   Then cd into it:
+
+   ```
+   cd oh-queue
+   ```
 
 2. Create and activate a virtualenv:
-    ```
-    python3 -m virtualenv env  (If this does not work, try: `virtualenv -p python3 env`)
-    source env/bin/activate
-    ```
+
+   ```
+   python3 -m virtualenv env  (If this does not work, try: `virtualenv -p python3 env`)
+   source env/bin/activate
+   ```
 
 3. Use pip to install all the dependencies:
-    ```
-    pip install -r requirements.txt
-    npm install
-    ```
+
+   ```
+   pip install -r requirements.txt
+   npm install
+   ```
 
 4. Run the database migrations to setup the initial database.
-    ```
-    ./manage.py resetdb
-    ./manage.py seed_data
-    ./manage.py db upgrade
-    ```
+
+   ```
+   ./manage.py resetdb
+   ./manage.py seed_data
+   ./manage.py db upgrade
+   ```
 
 5. Run the server:
-    ```
-    ./manage.py server
-    ```
 
-6. Point your browser to http://localhost:5000.  (This might take a while the first time.)
+   ```
+   ./manage.py server
+   ```
+
+6. Point your browser to http://localhost:5000. (This might take a while the first time.)
 
 7. You can log in as any email while testing by going to http://localhost:5000/testing-login/.
 

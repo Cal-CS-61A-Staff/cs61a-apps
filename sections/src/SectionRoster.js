@@ -115,9 +115,7 @@ export default function SectionRoster({ section }: Props) {
       </FlexLayout>
       <AddStudentModal
         show={adding}
-        onAdd={(email) =>
-          addStudent({ section_id: section.id, email })
-        }
+        onAdd={(email) => addStudent({ section_id: section.id, email })}
         onClose={() => setAdding(false)}
       />
     </>

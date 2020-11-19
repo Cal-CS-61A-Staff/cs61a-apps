@@ -176,7 +176,7 @@ def create_slack_client(app):
     @key_secure
     def handle_post_message(course, message, purpose):
         with connect_db() as db:
-            channel_id, = db(
+            (channel_id,) = db(
                 "SELECT channel_id FROM slack_channels WHERE course=(%s) AND purpose=(%s)",
                 [course, purpose],
             ).fetchone()
