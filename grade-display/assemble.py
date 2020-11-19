@@ -92,7 +92,7 @@ def assemble(haid=True):
     if haid:
         print("Uploading data to Howamidoing...")
         upload = finalized.to_csv(index=False)
-        upload_grades(upload)
+        upload_grades(data=upload)
         print(requests.post(ENDPOINT, {"secret": UPLOAD_SECRET, "data": upload}).text)
 
 
