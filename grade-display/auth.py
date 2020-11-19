@@ -140,7 +140,6 @@ def authenticate(app):
         print("Performing authentication.")
     
     if not is_staff("cs61a"):
-        g.cache_token = update_storage
         return redirect(url_for("login"))
 
     return "Authorized!"

@@ -4,19 +4,17 @@ from common.oauth_client import create_oauth_client
 from common.jobs import job
 from fa20 import update
 
-from auth import authenticate
+from auth import authenticate, update_storage
 
 app = Flask(__name__)
-create_oauth_client(app, 'grade-display-exports')
+create_oauth_client(app, 'grade-display-exports', update_storage)
 
 @app.route('/')
 def index():
-    print(app)
     return authenticate(app)
 
 @job(app, "update_grades")
 def run():
-    print(app)
     update(app)
 
 if __name__ == "__main__":
