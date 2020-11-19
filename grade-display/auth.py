@@ -85,6 +85,7 @@ def get_storage():
             expires_at = token[1]
             refresh_token = token[2]
 
+            print(access_token, str(expires_at), refresh_token)
             return access_token, expires_at, refresh_token
     return None, 0, None
 
