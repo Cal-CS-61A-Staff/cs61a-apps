@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import requests
 
-from common.rpc.secrets import get_secret
 from common.rpc.howamidoing import upload_grades
 
 ROSTER = "data/roster.csv"
@@ -10,9 +9,6 @@ GRADES = "data/okpy_grades.csv"
 MT1 = "data/mt1.csv"  # midterm scores from Gradescope
 MT2 = "data/mt2.csv"  # midterm scores from Gradescope
 TUTORIALS = "data/tutorials.csv"  # tutorial scores from tutorials.cs61a.org
-
-UPLOAD_SECRET = get_secret(secret_name="AUTH_SECRET")
-ENDPOINT = "https://howamidoing.cs61a.org/setGradesSecret"
 
 # ---------------------------
 
@@ -26,8 +22,6 @@ def csv(name):
 # exam recovery calculations
 def attendance(row):
     return row["Tutorial Attendance (Total)"]  # special formula for FA20 restructure
-
-
 #    return sum(row["Discussion {} (Total)".format(i)] for i in range(1, 13) if i != 8)
 
 
@@ -40,7 +34,7 @@ def exam_recovery(your_exam_score, attendance, max_exam_score, cap=10):
     return max_recovery * recovery_ratio
 
 
-def assemble(haid=True):
+def assemble():
     print("Loading scores data...")
     roster = csv(ROSTER).rename(columns={"sid": "SID", "email": "Email"})
     grades = csv(GRADES)
@@ -89,11 +83,10 @@ def assemble(haid=True):
     print("Writing to file...")
     finalized.to_csv("data/grades.csv", index=False)
 
-    if haid:
-        print("Uploading data to Howamidoing...")
-        upload = finalized.to_csv(index=False)
-        upload_grades(data=upload)
-        print(requests.post(ENDPOINT, {"secret": UPLOAD_SECRET, "data": upload}).text)
+    print("Uploading data to Howamidoing...")
+    upload = finalized.to_csv(index=False)
+    upload_grades(data=upload)
+    print("Done.")
 
 
 if __name__ == "__main__":
