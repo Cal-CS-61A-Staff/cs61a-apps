@@ -114,7 +114,11 @@ def trigger_build():
         target = request.args["app"]
     else:
         target = None
-    handle_trigger_build_sync(pr_number=int(request.args["pr_number"]), target_app=target)#, noreply=True)
+    #trigger_build_sync(pr_number=int(request.args["pr_number"]), target_app=target, noreply=True)
+    g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
+    repo = g.get_repo(GITHUB_REPO)
+    pr = repo.get_pull(int(request.args["pr_number"]))
+    land_commit(pr.head.sha, repo, repo, pr, pr.get_files(), target)
     return ""
 
 
