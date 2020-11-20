@@ -1,3 +1,5 @@
+import sys
+
 from flask import Flask, abort, request, redirect
 from typing import List, Tuple
 
@@ -5,7 +7,7 @@ from common.oauth_client import create_oauth_client, is_staff
 from common.jobs import job
 from common.db import connect_db
 from common.url_for import url_for
-from fa20 import update
+from update_job import update
 
 from auth import authenticate, update_storage
 
@@ -90,7 +92,9 @@ def delete_assign(name):
 
 @job(app, "update_grades")
 def run():
+    print("Grade update triggered!", file=sys.stderr)
     update()
+    print("Grade update completed!", file=sys.stderr)
 
 
 if __name__ == "__main__":
