@@ -1,14 +1,10 @@
 import requests, auth, sys
 
-COURSE_CODE = "cs61a"
-SEMESTER = "fa20"
-
+from common.rpc.auth import get_endpoint
 
 def export():
     OK_SERVER = "https://okpy.org"
-    ENDPOINT = "/api/v3/course/cal/{cc}/{sem}/roster".format(
-        cc=COURSE_CODE, sem=SEMESTER
-    )
+    ENDPOINT = f"/api/v3/course/{get_endpoint(course='cs61a')}/roster"
     FILE_PATH = "data/roster.csv"
 
     access_token = auth.get_token()
