@@ -91,6 +91,7 @@ def delete_assign(name):
 
 
 @job(app, "update_grades")
+@app.route("/update_grades")
 def run():
     print("Grade update triggered!", file=sys.stderr)
     update()
