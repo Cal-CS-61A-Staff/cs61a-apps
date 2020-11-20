@@ -34,7 +34,7 @@ def exam_recovery(your_exam_score, attendance, max_exam_score, cap=10):
     return max_recovery * recovery_ratio
 
 
-def assemble():
+def assemble(gscope, recovery=False, sections=False):
     print("Loading scores data...")
     roster = csv(ROSTER).rename(columns={"sid": "SID", "email": "Email"})
     grades = csv(GRADES)
@@ -42,39 +42,38 @@ def assemble():
     grades = grades.drop("Tutorial Attendance (Total)", axis=1)
 
     # Fall 2020 Tutorials
-    tutorials = csv(TUTORIALS)
-    tutorials.fillna(0)
-    grades = pd.merge(grades, tutorials, how="left", on="Email")
+    if sections:
+        tutorials = csv(TUTORIALS)
+        tutorials.fillna(0)
+        grades = pd.merge(grades, tutorials, how="left", on="Email")
 
-    # Fall 2020 Midterm 1
-    mt1 = csv(MT1)[["SID", "Total Score"]]
-    mt1.fillna(0)
-    grades = pd.merge(grades, mt1, how="left", on="SID").rename(
-        columns={"Total Score": "Midterm 1 (Raw)"}
-    )
-
-    # Fall 2020 Midterm 2
-    mt2 = csv(MT2)[["SID", "Total Score"]]
-    mt2.fillna(0)
-    grades = pd.merge(grades, mt2, how="left", on="SID").rename(
-        columns={"Total Score": "Midterm 2 (Raw)"}
-    )
+    if gscope:
+        for name in gscope:
+            scores = csv(f"data/{name}.csv")[["SID", "Total Score"]]
+            scores.fillna(0)
+            grades = pd.merge(grades, scores, how="left", on="SID").rename(
+                columns={"Total Score": f"{gscope[name]} (Raw)"}
+            )
 
     out = pd.merge(roster, grades, how="left", on="Email")
 
-    print("Calculating recovery points...")
-    out["Midterm 1 (Recovery)"] = out.apply(
-        lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40), axis=1
-    )
+    if recovery:
+        print("Calculating recovery points...")
+        out["Midterm 1 (Recovery)"] = out.apply(
+            lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40), axis=1
+        )
 
-    out["Midterm 2 (Recovery)"] = out.apply(
-        lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50), axis=1
-    )
+        out["Midterm 2 (Recovery)"] = out.apply(
+            lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50), axis=1
+        )
 
     out = out.rename(columns={"SID_x": "SID"})
 
     # finalize
-    out = out[[*grades.columns, "name", "Midterm 1 (Recovery)", "Midterm 2 (Recovery)"]]
+    if recovery:
+        out = out[[*grades.columns, "name", "Midterm 1 (Recovery)", "Midterm 2 (Recovery)"]]
+    else:
+        out = out[[*grades.columns, "name"]]
 
     finalized = out.fillna(0)
     finalized = finalized.rename(columns={"name": "Name"})
