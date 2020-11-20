@@ -114,7 +114,7 @@ def trigger_build():
         target = request.args["app"]
     else:
         target = None
-    trigger_build_sync(pr_number=int(request.args["pr_number"]), target_app=target, noreply=True)
+    handle_trigger_build_sync(pr_number=int(request.args["pr_number"]), target_app=target)#, noreply=True)
     return ""
 
 
