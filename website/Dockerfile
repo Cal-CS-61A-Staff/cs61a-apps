@@ -15,4 +15,4 @@ COPY . ./
 
 RUN pip install -r requirements.txt
 
-CMD gunicorn -b :$PORT -w 8 main:app -t 3000
+CMD gunicorn -b :$PORT -w 4 main:app -t 3000
