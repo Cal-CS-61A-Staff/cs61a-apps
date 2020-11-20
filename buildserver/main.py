@@ -54,7 +54,10 @@ def index():
         abort(401)
     with connect_db() as db:
         apps = db("SELECT app FROM services WHERE pr_number=0", []).fetchall()
-        pr_apps = db("SELECT app, pr_number FROM services WHERE pr_number>0 ORDER BY pr_number DESC", []).fetchall()
+        pr_apps = db(
+            "SELECT app, pr_number FROM services WHERE pr_number>0 ORDER BY pr_number DESC",
+            [],
+        ).fetchall()
     return f"""
         <h1>61A Buildserver</h1>
         This service manages the deployment of the 61A website and various apps.
@@ -114,7 +117,9 @@ def trigger_build():
         target = request.args["app"]
     else:
         target = None
-    trigger_build_sync(pr_number=int(request.args["pr_number"]), target_app=target, noreply=True)
+    trigger_build_sync(
+        pr_number=int(request.args["pr_number"]), target_app=target, noreply=True
+    )
     return ""
 
 

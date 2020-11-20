@@ -33,7 +33,8 @@ def land_commit(
     base_repo: Repository,
     pr: Optional[PullRequest],
     files: Iterable[Union[File, str]],
-    *, target_app: Optional[str] = None,
+    *,
+    target_app: Optional[str] = None,
 ):
     """
     :param sha: The hash of the commit we are building
