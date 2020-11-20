@@ -127,7 +127,7 @@ def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     pr = repo.get_pull(pr_number)
-    land_commit(pr.head.sha, repo, repo, pr, pr.get_files(), target_app)
+    land_commit(pr.head.sha, repo, repo, pr, pr.get_files(), target_app=target_app)
 
 
 @app.route("/delete_unused_services", methods=["POST"])
