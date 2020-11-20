@@ -61,7 +61,7 @@ def config():
 @app.route("/create_assign", methods=["POST"])
 def create_assign():
     if not is_staff("cs61a"):
-        redirect(url_for("config"))
+        return redirect(url_for("config"))
 
     name = request.form["name"]
     gs_code = request.form["gs_code"]
@@ -79,9 +79,9 @@ def create_assign():
 
 
 @app.route("/delete_assign/<name>", methods=["POST"])
-def delete_secret(name):
+def delete_assign(name):
     if not is_staff("cs61a"):
-        redirect(url_for("config"))
+        return redirect(url_for("config"))
     with connect_db() as db:
         db("DELETE FROM gscope WHERE name=%s", [name])
     return redirect(url_for("config"))
