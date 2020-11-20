@@ -1,7 +1,7 @@
 from flask import Flask, abort, request, url_for, redirect
 from typing import List, Tuple
 
-from common.oauth_client import create_oauth_client
+from common.oauth_client import create_oauth_client, is_staff
 from common.jobs import job
 from common.db import connect_db
 from fa20 import update
@@ -59,10 +59,9 @@ def config():
     )
 
 @app.route("/create_assign", methods=["POST"])
-def create_secret():
-    auth_result = authenticate(app)
-    if not (isinstance(auth_result, str) and auth_result == "Authorized!"):
-        return auth_result
+def create_assign():
+    if not is_staff("cs61a"):
+        redirect(url_for("config"))
 
     name = request.form["name"]
     gs_code = request.form["gs_code"]
@@ -81,9 +80,8 @@ def create_secret():
 
 @app.route("/delete_assign/<name>", methods=["POST"])
 def delete_secret(name):
-    auth_result = authenticate(app)
-    if not (isinstance(auth_result, str) and auth_result == "Authorized!"):
-        return auth_result
+    if not is_staff("cs61a"):
+        redirect(url_for("config"))
     with connect_db() as db:
         db("DELETE FROM gscope WHERE name=%s", [name])
     return redirect(url_for("config"))
