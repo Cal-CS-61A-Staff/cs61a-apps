@@ -1,5 +1,4 @@
 -r static_server/requirements.txt
 
 # for running builds
-PyGitHub==1.52
-PyYAML==5.3.1
+-r buildserver/requirements.txt
