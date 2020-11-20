@@ -1,2 +1,2 @@
 build_type: none
-deploy_type: flask
+deploy_type: docker
