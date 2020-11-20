@@ -5,8 +5,8 @@ import yaml
 
 from common.shell_utils import tmp_directory
 
-WEB_DEPLOY_TYPES = {"flask", "docker", "static"}
-CLOUD_RUN_DEPLOY_TYPES = {"flask", "docker"}
+WEB_DEPLOY_TYPES = {"flask", "flask-pandas", "docker", "static"}
+CLOUD_RUN_DEPLOY_TYPES = {"flask", "flask-pandas", "docker"}
 
 
 class Config(TypedDict):
