@@ -62,6 +62,7 @@ def deploy_commit(app: App, pr_number: int):
         os.chdir(gen_working_dir(app))
         {
             "flask": run_flask_deploy,
+            "flask-pandas": run_flask_pandas_deploy,
             "docker": run_dockerfile_deploy,
             "pypi": run_pypi_deploy,
             "cloud_function": run_cloud_function_deploy,
@@ -72,6 +73,11 @@ def deploy_commit(app: App, pr_number: int):
 
 def run_flask_deploy(app: App, pr_number: int):
     shutil.copy("../../dockerfiles/flask.Dockerfile", "./Dockerfile")
+    run_dockerfile_deploy(app, pr_number)
+
+
+def run_flask_pandas_deploy(app: App, pr_number: int):
+    shutil.copy("../../dockerfiles/flask-pandas.Dockerfile", "./Dockerfile")
     run_dockerfile_deploy(app, pr_number)
 
 
