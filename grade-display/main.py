@@ -24,7 +24,7 @@ def index():
     return authenticate(app)
 
 @app.route("/config")
-def index():
+def config():
     auth_result = authenticate(app)
     if not (isinstance(auth_result, str) and auth_result == "Authorized!"):
         return auth_result
