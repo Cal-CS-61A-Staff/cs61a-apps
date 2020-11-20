@@ -13,7 +13,7 @@ class Config(TypedDict):
     build_type: Literal[
         "create_react_app", "oh_queue", "webpack", "61a_website", "none"
     ]
-    deploy_type: Literal["flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"]
+    deploy_type: Literal["flask", "docker", "pypi", "cloud_function", "static", "none"]
     cpus: int
     memory_limit: str
     first_party_domains: List[str]
