@@ -27,7 +27,10 @@ def lookup(hostname):
 @app.route("/<path:path>")
 def catch_all(path):
     hostname = request.headers["HOST"]
-    return redirect(f"{lookup(hostname)}/{path}")
+    if path:
+        return redirect(f"{lookup(hostname)}/{path}")
+    else:
+        return redirect(lookup(hostname))
 
 
 if __name__ == "__main__":
