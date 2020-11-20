@@ -1,6 +1,6 @@
 # Fall 2020 Sequence of Actions
 
-import os, roster_export, okpy_export
+import os, roster_export, okpy_export, sys
 import gs_export, sections_export, assemble
 
 from typing import List, Tuple
@@ -31,11 +31,16 @@ def update():
 
     gs_assignments = {}
 
+    if not gscope:
+        print("No Gradescope assignments found!", file=sys.stderr)
+
     for name, gs_code in gscope:
         print("=================================================")
         full_name = gs_export.export(name, gs_code)
         if full_name:
             gs_assignments[name] = full_name
+        else:
+            print(f"Gradescope export for '{name} ({gs_code})' failed.", file=sys.stderr)
 
     if sections:
         print("=================================================")

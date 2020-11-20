@@ -25,17 +25,17 @@ def export(name, gs_code):
         if gs.log_in(email, password):
             print("Logged in.\n")
         else:
-            print("Frontend login failed :(")
+            print("Frontend login failed :(", file=sys.stderr)
             sys.exit(1)
     else:
-        print("Backend login failed :(")
+        print("Backend login failed :(", file=sys.stderr)
         sys.exit(1)
 
     print(f"Looking up {name}...")
     full_name = gs.get_assignment_name(COURSE_CODE, gs_code)
 
     if not full_name:
-        print("Assignment not found :(")
+        print(f"Assignment for '{name}' not found :(", file=sys.stderr)
         sys.exit(1)
 
     print(f"Assignment '{full_name}' found. Downloading scores...")
@@ -52,7 +52,7 @@ def export(name, gs_code):
             f.write(res)
         print("Done.\n")
     else:
-        print("Download failed :(")
+        print(f"Download for '{full_name}' failed :(", file=sys.stderr)
         sys.exit(1)
 
     print("Converting to Okpy upload file...")

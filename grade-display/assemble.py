@@ -59,13 +59,15 @@ def assemble(gscope, recovery=False, sections=False):
 
     if recovery:
         print("Calculating recovery points...")
-        out["Midterm 1 (Recovery)"] = out.apply(
-            lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40), axis=1
-        )
+        if "mt1" in gscope:
+            out["Midterm 1 (Recovery)"] = out.apply(
+                lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40), axis=1
+            )
 
-        out["Midterm 2 (Recovery)"] = out.apply(
-            lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50), axis=1
-        )
+        if "mt2" in gscope:
+            out["Midterm 2 (Recovery)"] = out.apply(
+                lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50), axis=1
+            )
 
     out = out.rename(columns={"SID_x": "SID"})
 
