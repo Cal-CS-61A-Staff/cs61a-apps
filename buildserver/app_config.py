@@ -13,7 +13,10 @@ class Config(TypedDict):
     build_type: Literal[
         "create_react_app", "oh_queue", "webpack", "61a_website", "none"
     ]
-    deploy_type: Literal["flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"]
+    deploy_type: Literal[
+        "flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"
+    ]
+    highcpu_build: bool
     cpus: int
     memory_limit: str
     first_party_domains: List[str]
@@ -50,6 +53,7 @@ class App:
         with tmp_directory():
             with open(f"{name}/deploy.yaml") as f:
                 self.config = Config(**yaml.safe_load(f))
+                self.config["highcpu_build"] = self.config.get("highcpu_build", False)
                 self.config["cpus"] = self.config.get("cpus", 1)
                 self.config["memory_limit"] = self.config.get("memory_limit", "256M")
                 self.config["first_party_domains"] = self.config.get(

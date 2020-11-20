@@ -10,6 +10,7 @@ from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
 from external_repo_utils import update_config
 from github_utils import set_pr_comment
+from highcpu_build import run_highcpu_build
 from lock import service_lock
 from target_determinator import determine_targets
 
@@ -21,10 +22,22 @@ def land_app(
     repo: Repository,
 ):
     with service_lock(app, pr_number):
-        load_dependencies(app, sha, repo)
         update_config(app, pr_number)
-        build(app, pr_number)
-        deploy_commit(app, pr_number)
+        if app.config["highcpu_build"]:
+            run_highcpu_build(app, pr_number, sha, repo)
+        else:
+            land_app_worker(app, pr_number, sha, repo)
+
+
+def land_app_worker(
+    app: App,
+    pr_number: int,
+    sha: str,
+    repo: Repository,
+):
+    load_dependencies(app, sha, repo)
+    build(app, pr_number)
+    deploy_commit(app, pr_number)
 
 
 def land_commit(
