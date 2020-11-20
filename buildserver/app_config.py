@@ -16,7 +16,7 @@ class Config(TypedDict):
     deploy_type: Literal[
         "flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"
     ]
-    highcpu_build: bool
+    build_image: Optional[str]
     cpus: int
     memory_limit: str
     first_party_domains: List[str]
@@ -53,7 +53,7 @@ class App:
         with tmp_directory():
             with open(f"{name}/deploy.yaml") as f:
                 self.config = Config(**yaml.safe_load(f))
-                self.config["highcpu_build"] = self.config.get("highcpu_build", False)
+                self.config["build_image"] = self.config.get("build_image", None)
                 self.config["cpus"] = self.config.get("cpus", 1)
                 self.config["memory_limit"] = self.config.get("memory_limit", "256M")
                 self.config["first_party_domains"] = self.config.get(

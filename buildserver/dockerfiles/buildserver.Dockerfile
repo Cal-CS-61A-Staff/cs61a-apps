@@ -1,4 +1,4 @@
-FROM gcr.io/cs61a-140900/buildserver:latest
+FROM gcr.io/cs61a-140900/$BASE_IMAGE:latest
 
 ENV APP_MASTER_SECRET $MASTER_SECRET
 
@@ -6,4 +6,4 @@ ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
 
-RUN python highcpu_build.py $APP_NAME $PR_NUMBER $SHA $REPO_ID
+RUN python external_build.py $APP_NAME $PR_NUMBER $SHA $REPO_ID
