@@ -1,3 +1,5 @@
+import sys
+
 from flask import Flask, abort, request, redirect
 from typing import List, Tuple
 
@@ -5,9 +7,10 @@ from common.oauth_client import create_oauth_client, is_staff
 from common.jobs import job
 from common.db import connect_db
 from common.url_for import url_for
-from fa20 import update
+from update_job import update
 
 from auth import authenticate, update_storage
+from datetime import datetime
 
 app = Flask(__name__)
 create_oauth_client(app, "grade-display-exports", return_response=update_storage)
@@ -89,8 +92,15 @@ def delete_assign(name):
 
 
 @job(app, "update_grades")
+@app.route("/update_grades")
 def run():
+    start = datetime.now()
+    print(f"Grade update triggered at {str(start)}.", file=sys.stderr)
     update()
+    end = datetime.now()
+    print(f"Grade update completed at {str(end)}.", file=sys.stderr)
+    return f"Done. Took {str((end - start).total_seconds())} seconds."
+
 
 
 if __name__ == "__main__":
