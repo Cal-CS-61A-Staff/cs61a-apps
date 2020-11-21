@@ -49,8 +49,8 @@ function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
 
 export default function EnrolledSectionCard({ section }: Props) {
   const [startTime, endTime] = useMemo(() => {
-    const start = moment.unix(section.startTime).tz("America/Los_Angeles");
-    const end = moment.unix(section.endTime).tz("America/Los_Angeles");
+    const start = moment.unix(section.startTime);
+    const end = moment.unix(section.endTime);
     const curr = moment();
     while (end < curr) {
       start.add(7, "days");

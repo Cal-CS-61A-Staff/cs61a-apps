@@ -39,7 +39,7 @@ def create_secret(service):
         abort(404)
 
     out = [
-        entry["timestamp"] + ": " + entry["textPayload"]
+        entry["textPayload"]
         for entry in loads(
             sh(
                 "gcloud",
@@ -47,7 +47,7 @@ def create_secret(service):
                 "read",
                 f"projects/cs61a-140900/logs/run.googleapis.com AND resource.labels.service_name={service}",
                 "--limit",
-                "10000",
+                "100",
                 "--format",
                 "json",
                 capture_output=True,
@@ -56,7 +56,7 @@ def create_secret(service):
         if "textPayload" in entry
     ]
 
-    return "<pre>" + "\n".join(map(str, reversed(out))) + "</pre>"
+    return "<pre>" + "\n".join(map(str, out)) + "</pre>"
 
 
 def list_services():

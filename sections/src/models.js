@@ -92,8 +92,6 @@ export function sectionTitle(section: ?Section): React.MixedElement {
   );
 }
 
-export function normalizeTime()
-
 export function sectionInterval(section: Section): React.MixedElement {
   const isPT = moment.tz.guess() === "America/Los_Angeles";
   return (
