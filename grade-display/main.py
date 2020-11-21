@@ -23,22 +23,24 @@ with connect_db() as db:
 )"""
     )
 
+
 @app.route("/")
 def index():
     return authenticate(app)
+
 
 @app.route("/config")
 def config():
     auth_result = authenticate(app)
     if not (isinstance(auth_result, str) and auth_result == "Authorized!"):
         return auth_result
-    
+
     with connect_db() as db:
         gscope: List[Tuple[str, str]] = db(
-                "SELECT name, gs_code FROM gscope",
-                [],
-            ).fetchall()
-    
+            "SELECT name, gs_code FROM gscope",
+            [],
+        ).fetchall()
+
     return """
     <h1>Grade Display Config</h1>
     <p>
@@ -62,6 +64,7 @@ def config():
         for name, gs_code in gscope
     )
 
+
 @app.route("/create_assign", methods=["POST"])
 def create_assign():
     if not is_staff("cs61a"):
@@ -70,9 +73,7 @@ def create_assign():
     name = request.form["name"]
     gs_code = request.form["gs_code"]
     with connect_db() as db:
-        existing = db(
-            "SELECT * FROM gscope WHERE name=%s", [name]
-        ).fetchall()
+        existing = db("SELECT * FROM gscope WHERE name=%s", [name]).fetchall()
         if existing:
             abort(409)
         db(
@@ -100,7 +101,6 @@ def run():
     end = datetime.now()
     print(f"Grade update completed at {str(end)}.", file=sys.stderr)
     return f"Done. Took {str((end - start).total_seconds())} seconds."
-
 
 
 if __name__ == "__main__":

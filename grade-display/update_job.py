@@ -18,9 +18,10 @@ sections = "fa20" in get_endpoint(course="cs61a")
 
 with connect_db() as db:
     gscope: List[Tuple[str, str]] = db(
-            "SELECT name, gs_code FROM gscope",
-            [],
-        ).fetchall()
+        "SELECT name, gs_code FROM gscope",
+        [],
+    ).fetchall()
+
 
 def update():
     print("=================================================")
@@ -40,7 +41,9 @@ def update():
         if full_name:
             gs_assignments[name] = full_name
         else:
-            print(f"Gradescope export for '{name} ({gs_code})' failed.", file=sys.stderr)
+            print(
+                f"Gradescope export for '{name} ({gs_code})' failed.", file=sys.stderr
+            )
 
     if sections:
         print("=================================================")

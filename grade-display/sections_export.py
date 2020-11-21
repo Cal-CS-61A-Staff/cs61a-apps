@@ -1,5 +1,6 @@
-import requests, csv
+import csv
 from common.rpc.sections import rpc_export_attendance
+
 
 def export():
     print("Getting tutorial attendance...")
