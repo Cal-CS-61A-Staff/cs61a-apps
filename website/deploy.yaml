@@ -3,4 +3,4 @@ deploy_type: docker
 dependencies:
   - repo: Cal-CS-61A-Staff/berkeley-cs61a
     src: requirements.txt
-    dest: website_build_requirements.tx
+    dest: website_build_requirements.txt
