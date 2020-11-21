@@ -1,4 +1,4 @@
-from common.shell_utils import sh
+from sicp.common.shell_utils import sh
 import os
 
 def run_apps_clone(dir):

@@ -1,5 +1,5 @@
 import click
-from clone import run_apps_clone
+from sicp.clone import run_apps_clone
 
 @click.group()
 def cli():
