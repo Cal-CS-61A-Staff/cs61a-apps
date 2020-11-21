@@ -10,6 +10,7 @@ from common.url_for import url_for
 from update_job import update
 
 from auth import authenticate, update_storage
+from datetime import datetime
 
 app = Flask(__name__)
 create_oauth_client(app, "grade-display-exports", return_response=update_storage)
@@ -93,9 +94,13 @@ def delete_assign(name):
 @job(app, "update_grades")
 @app.route("/update_grades")
 def run():
-    print("Grade update triggered!", file=sys.stderr)
+    start = datetime.now()
+    print(f"Grade update triggered at {str(start)}.", file=sys.stderr)
     update()
-    print("Grade update completed!", file=sys.stderr)
+    end = datetime.now()
+    print(f"Grade update completed at {str(end)}.", file=sys.stderr)
+    return f"Done. Took {str((end - start).total_seconds())} seconds."
+
 
 
 if __name__ == "__main__":
