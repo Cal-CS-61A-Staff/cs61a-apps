@@ -92,7 +92,11 @@ def run_webpack_build():
 
 
 def run_61a_website_build():
-    env = dict(CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org")
+    env = dict(
+        CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org", VIRTUAL_ENV="../env"
+    )
+
+    sh("python", "-m", "venv", "env", "--system-site-packages")
 
     # install dependencies
     sh("make", "-C", "src", "check-env", env=env)
@@ -102,23 +106,18 @@ def run_61a_website_build():
         num_iterations = 3
         for i in range(num_iterations):
             is_last_iteration = i == num_iterations - 1
-            parallel_args = ["-j1"] if is_last_iteration else []
-            try:
-                sh(
-                    "make",
-                    "--no-print-directory",
-                    "-C",
-                    "src",
-                    "BUILDTYPE=pull",
-                    target,
-                    f"BUILDPASS={i+1}",
-                    *parallel_args,
-                    env=env,
-                )
-            except CalledProcessError:
-                # initial passes are allowed to fail
-                if is_last_iteration:
-                    raise
+            parallel_args = ["-j1"] if is_last_iteration else ["-j4"]
+            sh(
+                "make",
+                "--no-print-directory",
+                "-C",
+                "src",
+                "BUILDTYPE=pull",
+                target,
+                f"BUILDPASS={i+1}",
+                *parallel_args,
+                env=env,
+            )
 
     build("all")
     copytree("published", "released", dirs_exist_ok=True)
