@@ -1,5 +1,5 @@
 import click
-from sicp.clone import run_apps_clone
+from sicp.clone import run_apps_clone, run_61a_clone
 
 @click.group()
 def cli():
@@ -20,6 +20,8 @@ def clone(repo, dest):
     """
     if repo == "apps":
         run_apps_clone(dest if dest else 'cs61a-apps')
+    elif repo == "cs61a":
+        run_61a_clone(dest if dest else 'berkeley-cs61a')
     else:
         click.echo("No need to use sicp for that! Just git clone.", err=True)
 
