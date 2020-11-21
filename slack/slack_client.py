@@ -28,6 +28,7 @@ from prlink_integration import PRLinkIntegration
 from issue_integration import IssueIntegration
 from apps_prlink_integration import AppsPRLinkIntegration
 from build_integration import BuildIntegration
+from merge_integration import MergeIntegration
 
 from promotions import make_promo_block
 from security import slack_signed
@@ -173,6 +174,8 @@ def create_slack_client(app):
                 integrations.append(BuildIntegration)
             if "lgtm" in active_services:
                 integrations.append(LGTMIntegration)
+            if "merge" in active_services:
+                integrations.append(MergeIntegration)
 
             combined_integration = combine_integrations(integrations)(
                 event["text"], token if token is not UNABLE else None, team_id, event

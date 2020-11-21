@@ -16,7 +16,10 @@ class BuildIntegration(Integration):
     reply = None
 
     def _process(self):
-        if "build" not in self._message.lower():
+        if len(self._message) < 6 or len(self._message) > 17:
+            return
+
+        if self._message.lower()[:5] != "build":
             return
 
         if "cs61a" != self._course:

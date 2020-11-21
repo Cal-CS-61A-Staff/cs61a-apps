@@ -9,6 +9,7 @@
     "issues": "Automatically hyperlink issues posted in chat.",
     "lgtm": "Automatically approve or request changes on PRs from chat.",
     "appsprlinks": "Automatically reformat cs61a-apps PR links posted in chat.",
-    "build": "Automatically trigger builds for cs61a-apps PRs."
+    "build": "Automatically trigger builds for cs61a-apps PRs.",
+    "merge": "Automatically merge PRs posted in chat."
   }
 }
