@@ -15,8 +15,8 @@ def clone(repo, dest):
     """Clone REPO to DEST.
 
     REPO is the name of the 61a repo to set up.
-    Currently, only "apps" is supported. By
-    default, DEST is set to the name of REPO.
+    Currently, "apps" and "cs61a" are supported.
+    By default, DEST is set to the name of REPO.
     """
     if repo == "apps":
         run_apps_clone(dest if dest else 'cs61a-apps')
