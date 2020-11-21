@@ -1,0 +1,32 @@
+#!/bin/sh
+JS_FILES=$(git diff --cached --name-only --diff-filter=ACMR "*.js" "*.jsx" | sed 's| |\\ |g')
+PY_FILES=$(git diff --cached --name-only --diff-filter=ACMR "*.py" | sed 's| |\\ |g')
+[ -z "$JS_FILES" ] && [ -z "$PY_FILES" ] && echo "No files to reformat." && exit 0
+
+prettier()
+{
+	echo "Running Prettier..."
+
+	# Prettify all selected files
+	echo "$JS_FILES" | xargs prettier --write
+
+	# Add back the modified/prettified files to staging
+	echo "$JS_FILES" | xargs git add
+}
+
+[ ! -z "$JS_FILES" ] && prettier
+
+black()
+{
+	echo "Running Black..."
+
+	# Black all selected files
+	echo "$PY_FILES" | xargs python3 -m black
+
+	# Add back the modified/blacked files to staging
+	echo "$PY_FILES" | xargs git add
+}
+
+[ ! -z "$PY_FILES" ] && black
+
+exit 0
