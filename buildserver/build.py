@@ -63,7 +63,7 @@ def build(app: App, pr_number: int = 0):
             "create_react_app": run_create_react_app_build,
             "webpack": run_webpack_build,
             "61a_website": run_61a_website_build,
-            "wiki": run_wiki_build,
+            "hugo": run_hugo_build,
             "none": run_noop_build,
         }[app.config["build_type"]]()
 
@@ -127,7 +127,7 @@ def run_61a_website_build():
     clean_all_except(["released", "unreleased"])
 
 
-def run_wiki_build():
+def run_hugo_build():
     sh("hugo")
     clean_all_except(["public"])
     copytree("public", ".", dirs_exist_ok=True)
