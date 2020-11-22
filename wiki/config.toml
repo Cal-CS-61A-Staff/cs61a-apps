@@ -1,0 +1,11 @@
+baseURL = "https://wiki.cs61a/"
+languageCode = "en-us"
+title = "CS 61A Infra Wiki"
+
+theme = "learn"
+
+[outputs]
+home = [ "HTML", "RSS", "JSON"]
+
+[params]
+themeVariant = "cs61a"
