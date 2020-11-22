@@ -11,7 +11,7 @@ CLOUD_RUN_DEPLOY_TYPES = {"flask", "flask-pandas", "docker"}
 
 class Config(TypedDict):
     build_type: Literal[
-        "create_react_app", "oh_queue", "webpack", "61a_website", "none"
+        "create_react_app", "oh_queue", "webpack", "61a_website", "wiki", "none"
     ]
     deploy_type: Literal[
         "flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"
