@@ -8,7 +8,6 @@ first_party_domains:
   - scheme.cs61a.org
   - scheme.cs61a.org.cs61a.org # lmao
   - sql.cs61a.org
-  - wiki.cs61a.org
   - ok-help.apps.cs61a.org
   - ok-help.cs61a.org
   # domain redirects
