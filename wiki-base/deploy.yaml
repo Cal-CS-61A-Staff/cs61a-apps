@@ -1,0 +1,4 @@
+build_type: wiki
+deploy_type: static
+static_consumers:
+  - wiki
