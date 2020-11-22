@@ -1,4 +1,4 @@
-build_type: wiki
+build_type: hugo
 deploy_type: static
 static_consumers:
   - wiki
