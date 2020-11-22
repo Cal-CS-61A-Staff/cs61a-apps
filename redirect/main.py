@@ -6,7 +6,6 @@ app = Flask(__name__)
 LOOKUP = {
     "tutor": "http://pythontutor.com/composingprograms.html",
     "book": "https://composingprograms.com",
-    "wiki": "https://www.ocf.berkeley.edu/~shidi/cs61a/wiki",
     "python": "https://code.cs61a.org/python",
     "scheme": "https://code.cs61a.org/scheme",
     "sql": "https://code.cs61a.org/sql",
