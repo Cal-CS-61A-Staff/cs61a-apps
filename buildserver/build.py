@@ -128,6 +128,7 @@ def run_61a_website_build():
 
 
 def run_hugo_build():
+    sh("python3", "make_content.py")
     sh("hugo")
     clean_all_except(["public"])
     copytree("public", ".", dirs_exist_ok=True)
