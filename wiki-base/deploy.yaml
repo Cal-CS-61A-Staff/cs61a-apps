@@ -2,3 +2,7 @@ build_type: hugo
 deploy_type: static
 static_consumers:
   - wiki
+dependencies:
+  - repo: itsvs/hugo-theme-cs61a
+    src: .
+    dest: themes/cs61a
