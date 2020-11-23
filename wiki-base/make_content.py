@@ -29,6 +29,10 @@ PATHS = {
 if not os.path.exists("content"):
     os.makedirs("content")
 
+with open("content/_index.md", "w") as index:
+    index.write("\n# CS 61A Infra Wiki\n")
+    index.write("Welcome to the CS 61A Infrastructure Wiki!\n")
+
 apps = []
 for root, dirs, files in os.walk("../"):
     dirs[:] = [d for d in dirs if d not in EXCLUDE]
