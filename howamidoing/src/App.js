@@ -100,7 +100,6 @@ class App extends Component {
                 <a href="/" style={{ color: "black", textDecoration: "none" }}>
                   <strong>{window.COURSE_CODE}</strong> Status Check
                 </a>
-                <span className="badge badge-danger warningBadge">Beta</span>
               </h1>
             </div>
             <div className="col-auto">
