@@ -1,5 +1,6 @@
 ---
 title: Writing Exams
+authors: ["Rahul Arya"]
 ---
 
 Essentially, you write your exam in Markdown, with some special commands to

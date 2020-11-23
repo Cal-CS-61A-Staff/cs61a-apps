@@ -1,5 +1,6 @@
 ---
 title: README
+authors: ["Animesh Agarwal"]
 ---
 
 ## Setup
