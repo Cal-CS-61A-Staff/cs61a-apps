@@ -1,7 +1,5 @@
 ---
-title: Readme
+title: README
 ---
 
-This folder contains up-to-date versions of the scripts used to display grades on howamidoing.cs61a.org.
-
-To change how grades are processed before being uploaded to howamidoing, take a look at `assemble.py`. To change how grades are exported from Gradescope and the relevant columns are saved, take a look at `gs_export.py`. To update variables for the current semester, take look at `config.json`. This is the only file that should require changes!
+To develop, install the python dependencies in `server/requirements.txt`, run `yarn`, then run `yarn dev`. `yarn dev` will concurrently run `python3 main.py` (backend) and `yarn start` (frontend).
