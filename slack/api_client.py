@@ -25,7 +25,7 @@ def create_api_client(app):
     @api_secure
     def handle_list_channels(course):
         with connect_db() as db:
-            bot_token, = db(
+            (bot_token,) = db(
                 "SELECT bot_access_token FROM bot_data WHERE course = (%s)", [course]
             ).fetchone()
 
@@ -41,7 +41,7 @@ def create_api_client(app):
     @api_secure
     def handle_post_message(course, message, channel):
         with connect_db() as db:
-            bot_token, = db(
+            (bot_token,) = db(
                 "SELECT bot_access_token FROM bot_data WHERE course = (%s)", [course]
             ).fetchone()
 

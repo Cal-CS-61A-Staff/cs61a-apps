@@ -3,8 +3,11 @@ import os
 import sys
 
 from common.course_config import get_course
-from common.db import connect_db
+from common.db import connect_db, transaction_db
 from common.oauth_client import create_oauth_client, get_user, is_logged_in, is_staff
+from common.rpc.howamidoing import upload_grades as rpc_upload_grades
+from common.rpc.secrets import only
+from common.rpc.auth import validate_secret
 from setup_functions import set_default_config, set_grades
 
 from flask import Flask, redirect, request, jsonify, render_template, Response
@@ -178,10 +181,26 @@ def create_client(app):
         if not is_staff(get_course()):
             return jsonify({"success": False})
         data = request.form.get("data")
-        with connect_db() as db:
+        with transaction_db() as db:
             set_grades(data, get_course(), db)
 
         return jsonify({"success": True})
+
+    @app.route("/setGradesSecret", methods=["POST"])
+    def set_grades_secret_route():
+        if validate_secret(secret=request.form.get("secret")) != "cs61a":
+            return jsonify({"success": False})
+        data = request.form.get("data")
+        with transaction_db() as db:
+            set_grades(data, get_course(), db)
+
+        return jsonify({"success": True})
+
+    @rpc_upload_grades.bind(app)
+    @only("grade-display", allow_staging=True)
+    def upload_grades(data: str):
+        with transaction_db() as db:
+            set_grades(data, get_course(), db)
 
 
 def print_to_stderr(print_function):

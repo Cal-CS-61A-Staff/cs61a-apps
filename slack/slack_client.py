@@ -26,6 +26,8 @@ from lgtm_integration import LGTMIntegration
 from piazza_integration import PiazzaIntegration
 from prlink_integration import PRLinkIntegration
 from issue_integration import IssueIntegration
+from apps_prlink_integration import AppsPRLinkIntegration
+from build_integration import BuildIntegration
 
 from promotions import make_promo_block
 from security import slack_signed
@@ -165,6 +167,10 @@ def create_slack_client(app):
                 integrations.append(PRLinkIntegration)
             if "issues" in active_services:
                 integrations.append(IssueIntegration)
+            if "appsprlinks" in active_services:
+                integrations.append(AppsPRLinkIntegration)
+            if "build" in active_services:
+                integrations.append(BuildIntegration)
             if "lgtm" in active_services:
                 integrations.append(LGTMIntegration)
 

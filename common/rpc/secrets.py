@@ -39,7 +39,10 @@ def only(allowed_app, *, allow_staging=False):
         @wraps(func)
         def wrapped(master_secret, **kwargs):
             app, is_staging = validate_master_secret(master_secret=master_secret)
-            if app != allowed_app:
+            allowed_apps = (
+                [allowed_app] if isinstance(allowed_app, str) else allowed_app
+            )
+            if app not in allowed_apps:
                 abort(403)
             if is_staging and not allow_staging:
                 abort(403)

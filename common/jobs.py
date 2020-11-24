@@ -12,7 +12,7 @@ def job(app: Flask, endpoint):
 
         app.add_url_rule(
             f"/jobs/{endpoint}",
-            func.__name__,
+            func.__name__ + "_job",
             wrapped,
             strict_slashes=False,
             methods=["POST"],

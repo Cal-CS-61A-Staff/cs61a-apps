@@ -6,7 +6,6 @@ app = Flask(__name__)
 LOOKUP = {
     "tutor": "http://pythontutor.com/composingprograms.html",
     "book": "https://composingprograms.com",
-    "wiki": "https://www.ocf.berkeley.edu/~shidi/cs61a/wiki",
     "python": "https://code.cs61a.org/python",
     "scheme": "https://code.cs61a.org/scheme",
     "sql": "https://code.cs61a.org/sql",
@@ -27,7 +26,10 @@ def lookup(hostname):
 @app.route("/<path:path>")
 def catch_all(path):
     hostname = request.headers["HOST"]
-    return redirect(f"{lookup(hostname)}/{path}")
+    if path:
+        return redirect(f"{lookup(hostname)}/{path}")
+    else:
+        return redirect(lookup(hostname))
 
 
 if __name__ == "__main__":

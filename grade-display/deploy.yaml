@@ -1,0 +1,6 @@
+build_type: none
+deploy_type: flask-pandas
+memory_limit: 512M
+tasks:
+  - name: update_grades
+    schedule: 0 4,16 * * *

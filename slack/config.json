@@ -1,12 +1,14 @@
 {
-    "services": {
-      "piazza": "Automatically preview Piazza links posted in chat.",
-      "golinks": "Automatically reformat golinks posted in chat.",
-      "emojify": "Include emoji of staff members when their names are mentioned.",
-      "groups": "Automatically tag particular groups (e.g. @heads) when mentioned.",
-      "claps": "Adds a \\clap command.",
-      "prlinks": "Automatically reformat PR links posted in chat.",
-      "issues": "Automatically hyperlink issues posted in chat.",
-      "lgtm": "Automatically approve or request changes on PRs from chat."
-    }
+  "services": {
+    "piazza": "Automatically preview Piazza links posted in chat.",
+    "golinks": "Automatically reformat golinks posted in chat.",
+    "emojify": "Include emoji of staff members when their names are mentioned.",
+    "groups": "Automatically tag particular groups (e.g. @heads) when mentioned.",
+    "claps": "Adds a \\clap command.",
+    "prlinks": "Automatically reformat PR links posted in chat.",
+    "issues": "Automatically hyperlink issues posted in chat.",
+    "lgtm": "Automatically approve or request changes on PRs from chat.",
+    "appsprlinks": "Automatically reformat cs61a-apps PR links posted in chat.",
+    "build": "Automatically trigger builds for cs61a-apps PRs."
   }
+}

@@ -14,7 +14,9 @@ from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course, is_admin
-from common.rpc.auth import read_spreadsheet
+from common.rpc.auth import read_spreadsheet, validate_secret
+from common.rpc.secrets import only
+from common.rpc.sections import rpc_export_attendance
 from models import (
     Attendance,
     AttendanceStatus,
@@ -350,6 +352,19 @@ def create_state_client(app: flask.Flask):
     @api
     @admin_required
     def export_attendance(full: bool):
+        return export_helper(full)
+
+    @rpc_export_attendance.bind(app)
+    @only("grade-display", allow_staging=True)
+    def export_attendance_rpc(full: bool):
+        return export_helper(full)
+
+    @api
+    def export_attendance_secret(secret: str, full: bool):
+        if validate_secret(secret=secret) == "cs61a":
+            return export_helper(full)
+
+    def export_helper(full: bool):
         if full:
             stringify = dumps
         else:
@@ -371,7 +386,7 @@ def create_state_client(app: flask.Flask):
                             {
                                 "section_id": attendance.session.section_id,
                                 "start_time": attendance.session.start_time,
-                                "status": attendance.status,
+                                "status": attendance.status.name,
                             }
                             for attendance in user.attendances
                         ]

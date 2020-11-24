@@ -26,6 +26,8 @@ RUN apt install -y --no-install-recommends texlive-full
 
 RUN apt-get update && apt-get install -y latexmk
 
+RUN apt install -y hugo
+
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./

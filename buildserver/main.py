@@ -54,6 +54,10 @@ def index():
         abort(401)
     with connect_db() as db:
         apps = db("SELECT app FROM services WHERE pr_number=0", []).fetchall()
+        pr_apps = db(
+            "SELECT app, pr_number FROM services WHERE pr_number>0 ORDER BY pr_number DESC",
+            [],
+        ).fetchall()
     return f"""
         <h1>61A Buildserver</h1>
         This service manages the deployment of the 61A website and various apps.
@@ -62,6 +66,13 @@ def index():
             <input type="submit" name="app" value="{app}" />
         </form>
         ''' for [app] in apps)}
+        {"".join(f'''
+        <form action="/trigger_build">
+            <input type="hidden" name="app" value="{app}" />
+            <input type="hidden" name="pr_number" value="{pr_number}" />
+            <input type="submit" value="{app + "-pr" + str(pr_number)}" />
+        </form>
+        ''' for [app, pr_number] in pr_apps)}
         <form action="/delete_unused_services" method="post">
             <input type="submit" value="Delete unused services" />
        </form>
@@ -102,17 +113,26 @@ def trigger_build():
     email = get_user()["email"]
     if not is_admin(course="cs61a", email=email):
         abort(401)
-    trigger_build_sync(pr_number=int(request.args["pr_number"]), noreply=True)
+    if "app" in request.args:
+        target = request.args["app"]
+    else:
+        target = None
+    trigger_build_sync(
+        pr_number=int(request.args["pr_number"]), target_app=target, noreply=True
+    )
     return ""
 
 
 @trigger_build_sync.bind(app)
-@only("buildserver")
-def handle_trigger_build_sync(pr_number):
+@validates_master_secret
+def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
+    if app not in ("slack", "buildserver") or is_staging:
+        abort(401)
+
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     pr = repo.get_pull(pr_number)
-    land_commit(pr.head.sha, repo, repo, pr, pr.get_files())
+    land_commit(pr.head.sha, repo, repo, pr, pr.get_files(), target_app=target_app)
 
 
 @app.route("/delete_unused_services", methods=["POST"])

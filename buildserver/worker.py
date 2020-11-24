@@ -33,6 +33,8 @@ def land_commit(
     base_repo: Repository,
     pr: Optional[PullRequest],
     files: Iterable[Union[File, str]],
+    *,
+    target_app: Optional[str] = None,
 ):
     """
     :param sha: The hash of the commit we are building
@@ -40,17 +42,21 @@ def land_commit(
     :param base_repo: The *base* cs61a-apps repo containing the deploy.yaml config
     :param pr: The PR made to trigger the build, if any
     :param files: Files changed in the commit, used for target determination
+    :param target_app: App to rebuild, if not all
     """
     try:
         repo.get_commit(sha).create_status(
             "pending",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserver",
             "Pusher is rebuilding all modified services",
             "Pusher",
         )
-        targets = determine_targets(
-            repo, files if repo.full_name == base_repo.full_name else []
-        )
+        if target_app:
+            targets = [target_app]
+        else:
+            targets = determine_targets(
+                repo, files if repo.full_name == base_repo.full_name else []
+            )
         target_list = "\n".join(f" * {target}" for target in targets)
         set_pr_comment(
             f"Building commit: {sha}. View logs at [logs.cs61a.org](https://logs.cs61a.org).\n"
@@ -72,7 +78,7 @@ def land_commit(
     except Exception as e:
         repo.get_commit(sha).create_status(
             "failure",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserver",
             "Pusher failed to rebuild all modified services",
             "Pusher",
         )
@@ -83,7 +89,7 @@ def land_commit(
     else:
         repo.get_commit(sha).create_status(
             "success",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserver",
             "All modified services rebuilt!",
             "Pusher",
         )
