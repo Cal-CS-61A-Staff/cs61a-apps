@@ -26,7 +26,7 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
             f"https://{get_secret(secret_name='GITHUB_ACCESS_TOKEN')}@github.com{path}",
             sha,
         )
-        sh("git", "checkout", "FETCH_HEAD")
+        sh("git", "checkout", "FETCH_HEAD", "-f")
 
     if in_place:
         target = os.getcwd()
