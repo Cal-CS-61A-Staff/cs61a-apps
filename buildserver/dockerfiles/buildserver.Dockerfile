@@ -1,4 +1,4 @@
-FROM gcr.io/cs61a-140900/website-pr97:latest
+FROM gcr.io/cs61a-140900/$BASE_IMAGE:latest
 
 ENV APP_MASTER_SECRET $MASTER_SECRET
 

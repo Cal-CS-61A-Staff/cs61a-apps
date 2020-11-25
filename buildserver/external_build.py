@@ -24,7 +24,7 @@ def run_highcpu_build(
     with open("Dockerfile", "a+") as f:
         f.seek(0)
         contents = f.read()
-        # contents = contents.replace("$BASE_IMAGE", app.config["build_image"])
+        contents = contents.replace("$BASE_IMAGE", app.config["build_image"])
         contents = contents.replace("$APP_NAME", app.name)
         contents = contents.replace("$PR_NUMBER", str(pr_number))
         contents = contents.replace("$SHA", sha)
