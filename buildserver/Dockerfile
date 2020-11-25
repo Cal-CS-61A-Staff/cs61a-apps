@@ -20,7 +20,7 @@ ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 RUN gcloud components install beta
 
 RUN apt install -y git
-RUN apt-get update && apt-get install -y rsync && apt-get install -y latexmk
+RUN apt-get update && apt-get install -y rsync
 
 RUN apt install -y --no-install-recommends texlive-full
 
