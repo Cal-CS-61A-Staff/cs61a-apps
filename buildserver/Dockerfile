@@ -48,6 +48,6 @@ ENV APP_MASTER_SECRET <APP_MASTER_SECRET>
 RUN mkdir repos
 RUN python -c "from common.rpc.secrets import get_secret; print(get_secret(secret_name=\"GITHUB_ACCESS_TOKEN\"))" > github_access_token
 RUN git clone https://$(cat github_access_token)@github.com/Cal-CS-61A-Staff/berkeley-cs61a repos/Cal-CS-61A-Staff-berkeley-cs61a
-RUN pip install -r Cal-CS-61A-Staff-berkeley-cs61a/requirements.txt
+RUN pip install -r repos/Cal-CS-61A-Staff-berkeley-cs61a/requirements.txt
 
 CMD gunicorn -b :$PORT -w 1 main:app -t 3000
