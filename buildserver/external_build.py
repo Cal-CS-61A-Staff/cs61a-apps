@@ -1,18 +1,12 @@
 import os
 import shutil
-import sys
 
-from github import Github
 from github.Repository import Repository
 
 from app_config import App
-from build import clone_commit
-from common.rpc.secrets import get_secret
 from common.secrets import get_master_secret
 from common.shell_utils import sh
 from deploy import gen_service_name
-import worker
-import main
 
 
 def run_highcpu_build(
@@ -30,7 +24,7 @@ def run_highcpu_build(
     with open("Dockerfile", "a+") as f:
         f.seek(0)
         contents = f.read()
-        contents = contents.replace("$BASE_IMAGE", app.config["build_image"])
+        # contents = contents.replace("$BASE_IMAGE", app.config["build_image"])
         contents = contents.replace("$APP_NAME", app.name)
         contents = contents.replace("$PR_NUMBER", str(pr_number))
         contents = contents.replace("$SHA", sha)
@@ -48,17 +42,3 @@ def run_highcpu_build(
         "gcr.io/cs61a-140900/temp-{}".format(gen_service_name(app.name, pr_number)),
         # "--machine-type=N1_HIGHCPU_32",
     )
-
-
-# this is used to trigger the worker via Cloud Build
-if __name__ == "__main__":
-    g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
-    _, app_name, pr_number, sha, repo_id = sys.argv
-    base_repo = g.get_repo(main.GITHUB_REPO)
-    clone_commit(
-        base_repo.clone_url,
-        sha
-        if repo_id == base_repo.full_name
-        else base_repo.get_branch(base_repo.default_branch).commit.sha,
-    )
-    worker.land_app_worker(App(app_name), int(pr_number), sha, g.get_repo(repo_id))

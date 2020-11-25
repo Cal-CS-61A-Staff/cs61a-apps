@@ -23,7 +23,7 @@ def land_app(
 ):
     with service_lock(app, pr_number):
         update_config(app, pr_number)
-        if app.config["build_image"]:
+        if app.config["build_image"] or True:
             run_highcpu_build(app, pr_number, sha, repo)
         else:
             land_app_worker(app, pr_number, sha, repo)
