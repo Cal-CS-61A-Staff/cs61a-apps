@@ -39,8 +39,6 @@ def find_unexpected_words(exam, logs):
                         # check for false positives
                         if variant in original_questions[question]["text"]:
                             continue
-                        if variant in scrambled_questions[question]["text"]:
-                            continue
 
                         flagged_questions.add(question)
 

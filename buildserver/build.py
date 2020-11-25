@@ -94,10 +94,10 @@ def run_webpack_build():
 
 def run_61a_website_build():
     env = dict(
-        CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org", VIRTUAL_ENV="../env"
+        CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org",  # VIRTUAL_ENV="../env"
     )
 
-    sh("python", "-m", "venv", "env", "--system-site-packages")
+    # sh("python", "-m", "venv", "env", "--system-site-packages")
 
     # install dependencies
     sh("make", "-C", "src", "check-env", env=env)
