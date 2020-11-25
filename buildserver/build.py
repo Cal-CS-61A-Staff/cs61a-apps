@@ -116,10 +116,6 @@ def run_61a_website_build():
         PATH=os.path.join(os.getcwd(), "env/bin") + ":" + os.environ["PATH"],
     )
 
-    print({**os.environ, **env})
-
-    sh("python", "-m", "venv", "env")  # , "--system-site-packages")
-
     try:
         # install dependencies
         sh("make", "-C", "src", "check-env", env=env)
@@ -152,18 +148,5 @@ def run_61a_website_build():
     clean_all_except(["released", "unreleased"])
 
 
-def run_hugo_build():
-    sh("python", "make_content.py")
-    sh("hugo")
-    clean_all_except(["public"])
-    copytree("public", ".", dirs_exist_ok=True)
-    rmtree("public")
-
-
 def run_noop_build():
     pass
-
-
-if __name__ == "__main__":
-    with tmp_directory():
-        run_61a_website_build()
