@@ -36,7 +36,7 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
 
     prev_dir = os.getcwd()
     os.chdir("/app")
-    remote_key = path[1:].replace("/", "-")
+    remote_key = path[1:].replace("/", "-").split(".")[0]
     repo_cached = remote_key in os.listdir("repos")
 
     if repo_cached:
@@ -44,6 +44,7 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
         clone()
         copytree(".", target, dirs_exist_ok=True, symlinks=True)
     elif in_place:
+        os.chdir(prev_dir)
         clone()
     else:
         with tmp_directory(clean=True):
