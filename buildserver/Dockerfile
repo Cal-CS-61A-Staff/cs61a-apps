@@ -43,7 +43,7 @@ ENV CLOUD_STORAGE_BUCKET=website-pdf-cache.buckets.cs61a.org
 # This is just a performance optimization for a common dependency, and is not necessary for smaller repos we depend on
 RUN python -c "from common.rpc.secrets import get_secret; print(get_secret(secret_name=\"GITHUB_ACCESS_TOKEN\"))" > github_access_token
 RUN git clone https://$(cat github_access_token)@github.com/Cal-CS-61A-Staff/berkeley-cs61a tmp/website-base_working_DO_NOT_USE \
-  && cd tmp/website-base/src \
+  && cd tmp/website-base_working_DO_NOT_USE/src \
   && make virtualenv \
   && cd ../../.. \
   && mkdir repos \
