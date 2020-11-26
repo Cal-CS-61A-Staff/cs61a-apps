@@ -45,6 +45,7 @@ RUN python -c "from common.rpc.secrets import get_secret; print(get_secret(secre
 RUN git clone https://$(cat github_access_token)@github.com/Cal-CS-61A-Staff/berkeley-cs61a tmp/website-base_working_DO_NOT_USE \
   && cd tmp/website-base_working_DO_NOT_USE/src \
   && make virtualenv \
+  && ../env/bin/pip install google-cloud-storage \
   && cd ../../.. \
   && mkdir repos \
   && mv tmp/website-base_working_DO_NOT_USE repos/Cal-CS-61A-Staff-berkeley-cs61a

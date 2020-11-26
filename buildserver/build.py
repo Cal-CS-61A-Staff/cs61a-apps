@@ -41,7 +41,7 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
 
     if repo_cached:
         os.chdir("repos/" + remote_key)
-        copytree(".", target, dirs_exist_ok=True, symlinks=True)
+        sh("cp", "-aT", ".", target)
         os.chdir(target)
         clone()
     elif in_place:
@@ -135,9 +135,9 @@ def run_61a_website_build():
             )
 
     build("all")
-    copytree("published", "released", dirs_exist_ok=True)
+    sh("cp", "-aT", "published", "released")
     build("unreleased")
-    copytree("published", "unreleased", dirs_exist_ok=True)
+    sh("cp", "-aT", "published", "unreleased")
     clean_all_except(["released", "unreleased"])
 
 
