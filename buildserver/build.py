@@ -41,8 +41,9 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
 
     if repo_cached:
         os.chdir("repos/" + remote_key)
-        clone()
         copytree(".", target, dirs_exist_ok=True, symlinks=True)
+        os.chdir(target)
+        clone()
     elif in_place:
         os.chdir(prev_dir)
         clone()
