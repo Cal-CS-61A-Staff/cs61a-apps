@@ -17,8 +17,7 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
     path = urlparse(remote).path
 
     def clone():
-        if not repo_cached:
-            sh("git", "init")
+        sh("git", "init")
         sh(
             "git",
             "fetch",
@@ -29,29 +28,10 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
         sh("git", "checkout", "FETCH_HEAD", "-f")
 
     if in_place:
-        target = os.getcwd()
-    else:
-        with tmp_directory(clean=True):
-            target = os.getcwd()
-
-    prev_dir = os.getcwd()
-    os.chdir("/app")
-    remote_key = path[1:].replace("/", "-").split(".")[0]
-    repo_cached = remote_key in os.listdir("repos")
-
-    if repo_cached:
-        os.chdir("repos/" + remote_key)
-        sh("cp", "-aT", ".", target)
-        os.chdir(target)
-        clone()
-    elif in_place:
-        os.chdir(prev_dir)
         clone()
     else:
         with tmp_directory(clean=True):
             clone()
-
-    os.chdir(prev_dir)
 
 
 def build(app: App, pr_number: int = 0):

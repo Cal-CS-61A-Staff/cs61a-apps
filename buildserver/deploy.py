@@ -95,15 +95,6 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         f.seek(0)
         f.truncate()
         f.write(contents)
-    with open("Dockerfile", "a+") as f:
-        f.seek(0)
-        contents = f.read()
-        contents = contents.replace(
-            "<APP_MASTER_SECRET>", gen_master_secret(app, pr_number)
-        )
-        f.seek(0)
-        f.truncate()
-        f.write(contents)
     sh("gcloud", "builds", "submit", "-q", "--config", "cloudbuild.yaml")
     sh(
         "gcloud",

@@ -1,6 +1,2 @@
 build_type: none
-deploy_type: docker
-dependencies:
-  - repo: Cal-CS-61A-Staff/berkeley-cs61a
-    src: requirements.txt
-    dest: website_build_requirements.txt
+deploy_type: flask

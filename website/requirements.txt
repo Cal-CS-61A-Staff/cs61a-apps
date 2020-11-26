@@ -1,5 +1,1 @@
 -r static_server/requirements.txt
-
-# for running builds
--r buildserver/requirements.txt
--r website_build_requirements.txt
