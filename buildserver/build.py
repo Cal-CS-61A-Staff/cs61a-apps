@@ -113,16 +113,7 @@ def run_webpack_build():
 def run_61a_website_build():
     env = dict(
         CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org",
-        VIRTUAL_ENV=os.path.join(os.getcwd(), "env"),
-        PATH=os.path.join(os.getcwd(), "env/bin") + ":" + os.environ["PATH"],
     )
-
-    try:
-        # install dependencies
-        sh("make", "-C", "src", "check-env", env=env)
-    except CalledProcessError:
-        # apparently failures here don't matter?
-        pass
 
     def build(target):
         # need to re-run make for stupid reasons
