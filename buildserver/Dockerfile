@@ -42,11 +42,11 @@ ENV CLOUD_STORAGE_BUCKET=website-pdf-cache.buckets.cs61a.org
 # We cache the website git repo so that we can just fetch it, rather than doing a full clone for every build
 # This is just a performance optimization for a common dependency, and is not necessary for smaller repos we depend on
 RUN python -c "from common.rpc.secrets import get_secret; print(get_secret(secret_name=\"GITHUB_ACCESS_TOKEN\"))" > github_access_token
-RUN git clone https://$(cat github_access_token)@github.com/Cal-CS-61A-Staff/berkeley-cs61a tmp/website-base \
+RUN git clone https://$(cat github_access_token)@github.com/Cal-CS-61A-Staff/berkeley-cs61a tmp/website-base_working_DO_NOT_USE \
   && cd tmp/website-base/src \
   && make virtualenv \
   && cd ../../.. \
   && mkdir repos \
-  && mv tmp/website-base repos/Cal-CS-61A-Staff-berkeley-cs61a
+  && mv tmp/website-base_working_DO_NOT_USE repos/Cal-CS-61A-Staff-berkeley-cs61a
 
 CMD gunicorn -b :$PORT -w 1 main:app -t 3000
