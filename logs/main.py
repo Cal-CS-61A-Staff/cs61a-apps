@@ -38,23 +38,25 @@ def create_secret(service):
     if service not in list_services():
         abort(404)
 
-    out = [
-        entry["textPayload"]
-        for entry in loads(
-            sh(
-                "gcloud",
-                "logging",
-                "read",
-                f"projects/cs61a-140900/logs/run.googleapis.com AND resource.labels.service_name={service}",
-                "--limit",
-                "100",
-                "--format",
-                "json",
-                capture_output=True,
+    out = reversed(
+        [
+            entry["timestamp"] + " " + entry["textPayload"]
+            for entry in loads(
+                sh(
+                    "gcloud",
+                    "logging",
+                    "read",
+                    f"projects/cs61a-140900/logs/run.googleapis.com AND resource.labels.service_name={service}",
+                    "--limit",
+                    "100",
+                    "--format",
+                    "json",
+                    capture_output=True,
+                )
             )
-        )
-        if "textPayload" in entry
-    ]
+            if "textPayload" in entry
+        ]
+    )
 
     return "<pre>" + "\n".join(map(str, out)) + "</pre>"
 

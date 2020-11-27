@@ -1,9 +1,4 @@
 steps:
-  # Pull the service (PR or prod) image from cache
-  - name: "gcr.io/cloud-builders/docker"
-    entrypoint: "bash"
-    args:
-      ["-c", "docker pull gcr.io/cs61a-140900/SERVICE_NAME:latest || exit 0"]
   # Pull the prod image from cache
   - name: "gcr.io/cloud-builders/docker"
     entrypoint: "bash"
