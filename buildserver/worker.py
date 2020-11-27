@@ -6,6 +6,7 @@ from github.Repository import Repository
 
 from app_config import App, CLOUD_RUN_DEPLOY_TYPES
 from build import build, clone_commit
+from common.rpc.buildserver import clear_queue
 from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
 from external_repo_utils import update_config
@@ -51,6 +52,7 @@ def land_commit(
     files: Iterable[Union[File, str]],
     *,
     target_app: Optional[str] = None,
+    dequeue_only=False,
 ):
     """
     :param sha: The hash of the commit we are building
@@ -59,8 +61,11 @@ def land_commit(
     :param pr: The PR made to trigger the build, if any
     :param files: Files changed in the commit, used for target determination
     :param target_app: App to rebuild, if not all
+    :param dequeue_only: Only pop targets off the queue, do not build any new targets
     """
-    if target_app:
+    if dequeue_only:
+        targets = []
+    elif target_app:
         targets = [target_app]
     else:
         targets = determine_targets(
@@ -105,3 +110,7 @@ def land_commit(
                     else None,
                 )
             update_service_routes([app], pr.number if pr else 0)
+    if grouped_targets:
+        # because we ran a build, we need to clear the queue of anyone we blocked
+        # we run this in a new worker to avoid timing out
+        clear_queue(repo=repo.full_name, pr_number=pr.number, noreply=True)

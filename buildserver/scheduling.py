@@ -64,13 +64,15 @@ def enqueue_builds(
         # Then, we dequeue any target that is now ready to be built
         can_build_list = []
         queued = db(
-            "SELECT app, packed_ref FROM builds WHERE pr_number=%s AND status='queued'"
+            "SELECT app, packed_ref FROM builds WHERE pr_number=%s AND status='queued'",
+            [pr_number],
         ).fetchall()
         # sanity check that there are no duplicate apps
         assert len(queued) == len({app for app, _ in queued})
         for app, packed_ref in queued:
             conflicts = db(
-                "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND status='building'"
+                "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND status='building'",
+                [app, pr_number],
             ).fetchall()
             if conflicts:
                 # cannot build app, because someone else is currently building
@@ -102,10 +104,25 @@ def report_build_status(
     url: Optional[str],
 ):
     with connect_db() as db:
-        db(
-            "UPDATE builds SET status=%s AND url=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
-            [status.name, url, target, pr_number, packed_ref],
-        )
+        existing = db(
+            "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+            [
+                target,
+                pr_number,
+                packed_ref,
+            ],
+        ).fetchone()
+        if not existing:
+            # we have just been pushed or manually triggered
+            db(
+                "INSERT INTO builds VALUES (%s, %s, %s, %s, %s, %s)",
+                [time(), target, pr_number, status.name, packed_ref, url],
+            )
+        else:
+            db(
+                "UPDATE builds SET status=%s, url=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+                [status.name, url, target, pr_number, packed_ref],
+            )
     update_status(
         packed_ref,
         pr_number,

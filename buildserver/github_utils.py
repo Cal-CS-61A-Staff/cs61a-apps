@@ -15,7 +15,9 @@ from target_determinator import determine_targets
 def update_status(packed_ref: str, pr_number: int):
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo_url, sha = unpack(packed_ref)
-    repo_name = urlparse(repo_url).path.split(".")[0]  # This is awful ... but it works
+    repo_name = urlparse(repo_url).path.split(".")[0][
+        1:
+    ]  # This is awful ... but it works
     repo = g.get_repo(repo_name)
 
     # First we will update the commit-specific status indicator
@@ -128,7 +130,7 @@ def update_status(packed_ref: str, pr_number: int):
             + "\n".join(
                 f" - [{host}](https://{host}) ({sha})"
                 if host
-                else f" - `{app} ({sha})`"
+                else f" - `{app}` ({sha})"
                 for app, host, sha in success
             )
             + "\n\n"
@@ -155,16 +157,17 @@ def update_status(packed_ref: str, pr_number: int):
             + "\n\n"
         )
 
-    message += (
-        "View detailed build logs at [logs.cs61a.org](https://logs.cs61a.org).\n\n"
-    )
+    if success or failure or running or queued:
+        message += (
+            "View detailed build logs at [logs.cs61a.org](https://logs.cs61a.org).\n\n"
+        )
 
     if (success or failure or running or queued) and triggerable:
         message += "-----\n"
 
     if triggerable:
         message += (
-            f"**[Click here]({url_for('trigger_build', pr_number=pr.number)}) to trigger all builds "
+            f"**[Click here]({url_for('trigger_build', pr_number=pr.number)})** to trigger all builds "
             f"for the most recent commit ({pr.head.sha})\n\n"
             "Or trigger builds individually:\n"
         ) + "\n".join(
