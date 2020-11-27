@@ -4,7 +4,7 @@ from github.File import File
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from app_config import App, CLOUD_RUN_DEPLOY_TYPES
+from app_config import App, CLOUD_RUN_DEPLOY_TYPES, WEB_DEPLOY_TYPES
 from build import build, clone_commit
 from common.rpc.buildserver import clear_queue
 from dependency_loader import load_dependencies
@@ -71,7 +71,9 @@ def land_commit(
         targets = determine_targets(
             repo, files if repo.full_name == base_repo.full_name else []
         )
-    grouped_targets = enqueue_builds(targets, pr.number, pack(repo.clone_url, sha))
+    grouped_targets = enqueue_builds(
+        targets, pr.number if pr else 0, pack(repo.clone_url, sha)
+    )
     for packed_ref, targets in grouped_targets.items():
         repo_clone_url, sha = unpack(packed_ref)
         # If the commit is made on the base repo, take the config from the current commit.
@@ -101,10 +103,15 @@ def land_commit(
                     pack(repo.clone_url, sha),
                     BuildStatus.success,
                     ",".join(
-                        f"https://{pr.number}.{name}.pr.cs61a.org"
-                        for name in [app.name] + app.config["static_consumers"]
+                        f"{pr.number}.{name}.pr.cs61a.org"
+                        for name in (
+                            [app.name]
+                            if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES
+                            else []
+                        )
+                        + app.config["static_consumers"]
                     )
-                    if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES
+                    if app.config["deploy_type"] in WEB_DEPLOY_TYPES
                     else f"pypi.org/project/{app.config['package_name']}/{app.deployed_pypi_version}"
                     if pr is not None and app.config["deploy_type"] == "pypi"
                     else None,

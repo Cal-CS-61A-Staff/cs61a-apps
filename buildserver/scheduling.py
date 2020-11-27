@@ -40,6 +40,15 @@ def enqueue_builds(
                     packed_ref,
                 ],
             ).fetchone()
+            if status == BuildStatus.building.name:
+                # no need to start a second build for the same (app, packed_ref)
+                continue
+
+            # enqueues itself and dequeues anyone else who is queued
+            db(
+                "UPDATE builds SET status='pushed' WHERE app=%s AND pr_number=%s AND packed_ref!=%s AND status='queued'",
+                [target, pr_number, packed_ref],
+            )
             if status is None:
                 # we have just been pushed or manually triggered
                 db(
@@ -47,15 +56,6 @@ def enqueue_builds(
                     [time(), target, pr_number, packed_ref],
                 )
             else:
-                status = BuildStatus(status[0])
-                if status == BuildStatus.building:
-                    # no need to start a second build for the same (app, packed_ref)
-                    continue
-                # enqueues itself and dequeues anyone else who is queued
-                db(
-                    "UPDATE builds SET status='pushed' WHERE app=%s AND pr_number=%s AND packed_ref!=%s AND status='queued'",
-                    [target, pr_number, packed_ref],
-                )
                 db(
                     "UPDATE builds SET status='queued' WHERE app=%s AND pr_number=%s AND packed_ref=%s",
                     [target, pr_number, packed_ref],
@@ -91,7 +91,7 @@ def enqueue_builds(
         if packed_ref not in can_build:
             can_build[packed_ref] = []
         can_build[packed_ref].append(app)
-    for packed_ref in can_build:
+    for packed_ref in set(packed_ref for app, packed_ref in queued):
         update_status(packed_ref, pr_number)
     return can_build
 
