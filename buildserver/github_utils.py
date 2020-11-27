@@ -118,9 +118,9 @@ def update_status(packed_ref: str, pr_number: int):
                 triggerable.append(app)
 
     if repo.name == "berkeley-cs61a":
-        message = f"## Build Status ([pr/{pr_number}]({pr.url}))\n\n"
+        message = f"## Build Status ([pr/{pr_number}]({pr.html_url}))\n\n"
     elif repo.name == "cs61a-apps":
-        message = f"## Build Status ([apps/{pr_number}]({pr.url}))\n\n"
+        message = f"## Build Status ([apps/{pr_number}]({pr.html_url}))\n\n"
     else:
         message = f"## Build Status (#{pr_number})\n\n"
 
