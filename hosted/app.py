@@ -10,11 +10,12 @@ client = docker.from_env()
 def list_apps():
     containers = client.containers.list(all=True)
     info = {}
+    apps = get_config()
     for c in containers:
         info[c.name] = {
             "running": c.status == "running",
             "image": c.image.tags[0],
-            "url": f"{c.name}.hosted.cs61a.org",
+            "domains": apps[c.name]["domains"],
         }
     return jsonify(info)
 
@@ -39,26 +40,29 @@ def new():
     apps = get_config()
 
     if app_name in apps:
-        for c in client.containers.list():
-            if c.name == app_name:
-                client.containers.get(app_name).kill()
-                break
         for c in client.containers.list(all=True):
             if c.name == app_name:
-                client.containers.get(app_name).remove()
+                if c.status == "running":
+                    c.kill()
+                c.remove()
                 break
         port = apps[app_name]["port"]
     else:
         port = get_empty_port()
         configure(app_name, port)
 
-    env = {"ENV": "prod", "PORT": 8001}
+    env = {}
     if "env" in params:
         for key in params.get("env"):
             env[key] = params.get("env").get(key)
 
+    if "ENV" not in env:
+        env["ENV"] = "prod"
+    if "PORT" not in env:
+        env["PORT"] = 8001
+
     volumes = {
-        f"/home/vs/docker-api/saves/{app_name}": {
+        f"{os.environ.get('HOME')}/docker-api/saves/{app_name}": {
             "bind": "/save",
             "mode": "rw",
         },
@@ -68,7 +72,7 @@ def new():
         img,
         detach=True,
         environment=env,
-        ports={8001: port},
+        ports={int(env["PORT"]): port},
         volumes=volumes,
         name=app_name,
     )
@@ -92,7 +96,7 @@ def stop():
     if app_name in apps:
         for c in client.containers.list():
             if c.name == app_name:
-                client.containers.get(app_name).kill()
+                c.kill()
                 return jsonify(success=True)
 
     return jsonify(
@@ -140,13 +144,11 @@ def delete():
     apps = get_config()
 
     if app_name in apps:
-        for c in client.containers.list():
-            if c.name == app_name:
-                client.containers.get(app_name).kill()
-                break
         for c in client.containers.list(all=True):
             if c.name == app_name:
-                client.containers.get(app_name).remove()
+                if c.status == "running":
+                    c.kill()
+                c.remove()
                 break
         deconfigure(app_name)
         return jsonify(success=True)
@@ -167,13 +169,17 @@ def add_domain():
     app_name = params.get("name")
     apps = get_config()
 
-    if app_name in apps:
-        domain = params.get("domain")
-        if domain in apps[app_name]["domains"]:
-            return jsonify(
-                success=False, reason="That domain is already bound to this container."
-            )
+    domain = params.get("domain")
 
+    if "force" not in params or not params.get("force"):
+        for other_app in apps:
+            if domain in apps[other_app]["domains"]:
+                return jsonify(
+                    success=False,
+                    reason=f"That domain is already bound to {other_app}. Use 'force=True' to overwrite.",
+                )
+
+    if app_name in apps:
         write_nginx(domain, apps[app_name]["port"])
         redirect(domain, app_name)
         return jsonify(success=True)
