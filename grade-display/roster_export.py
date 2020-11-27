@@ -2,6 +2,7 @@ import requests, auth, sys
 
 from common.rpc.auth import get_endpoint
 
+
 def export():
     OK_SERVER = "https://okpy.org"
     ENDPOINT = f"/api/v3/course/{get_endpoint(course='cs61a')}/roster"

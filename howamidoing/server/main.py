@@ -195,9 +195,9 @@ def create_client(app):
             set_grades(data, get_course(), db)
 
         return jsonify({"success": True})
-    
+
     @rpc_upload_grades.bind(app)
-    @only('grade-display', allow_staging=True)
+    @only("grade-display", allow_staging=True)
     def upload_grades(data: str):
         with transaction_db() as db:
             set_grades(data, get_course(), db)

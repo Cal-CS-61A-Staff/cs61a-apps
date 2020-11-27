@@ -22,6 +22,8 @@ def csv(name):
 # exam recovery calculations
 def attendance(row):
     return row["Tutorial Attendance (Total)"]  # special formula for FA20 restructure
+
+
 #    return sum(row["Discussion {} (Total)".format(i)] for i in range(1, 13) if i != 8)
 
 
@@ -61,19 +63,23 @@ def assemble(gscope, recovery=False, sections=False):
         print("Calculating recovery points...")
         if "mt1" in gscope:
             out["Midterm 1 (Recovery)"] = out.apply(
-                lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40), axis=1
+                lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40),
+                axis=1,
             )
 
         if "mt2" in gscope:
             out["Midterm 2 (Recovery)"] = out.apply(
-                lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50), axis=1
+                lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50),
+                axis=1,
             )
 
     out = out.rename(columns={"SID_x": "SID"})
 
     # finalize
     if recovery:
-        out = out[[*grades.columns, "name", "Midterm 1 (Recovery)", "Midterm 2 (Recovery)"]]
+        out = out[
+            [*grades.columns, "name", "Midterm 1 (Recovery)", "Midterm 2 (Recovery)"]
+        ]
     else:
         out = out[[*grades.columns, "name"]]
 

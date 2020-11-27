@@ -12,9 +12,10 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     licence="MIT",
-    packages=find_packages(include=["sicp"]),
+    packages=find_packages(include=["sicp", "sicp.common"]),
     package_data={"": ["**/*.tex"]},
     include_package_data=True,
     entry_points={"console_scripts": ["sicp=sicp.__main__:cli"]},
-    python_requires=">=3.6",
+    python_requires=">=3.8",
+    install_requires=["click"],
 )

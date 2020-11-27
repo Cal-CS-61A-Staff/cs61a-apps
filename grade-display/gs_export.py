@@ -13,6 +13,7 @@ pd.options.mode.chained_assignment = None
 # Change this every semester
 COURSE_CODE = "185229"
 
+
 def export(name, gs_code):
     email = "cs61a@berkeley.edu".strip()
     password = get_secret(secret_name="GRADESCOPE_PW").strip()
