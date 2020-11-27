@@ -65,10 +65,10 @@ This endpoint takes no parameters.
 Sample Response
 ```json
 {
-    app1: {
-        running: false,
-        image: "ubuntu:latest",
-        domains: ["app1.example.com", "app1-pr.example.com"]
+    "app1": {
+        "running": false,
+        "image": "ubuntu:latest",
+        "domains": ["app1.example.com", "app1-pr.example.com"]
     }
 }
 ```
@@ -99,7 +99,7 @@ Required Params
 Sample Response
 ```json
 {
-    success: true
+    "success": true
 }
 ```
 
@@ -113,8 +113,8 @@ Required Params
 Sample Response
 ```json
 {
-    success: false,
-    reason: "That container is already running."
+    "success": false,
+    "reason": "That container is already running."
 }
 ```
 
@@ -129,7 +129,7 @@ Required Params
 Sample Response
 ```json
 {
-    success: true
+    "success": true
 }
 ```
 
@@ -143,7 +143,7 @@ Required Params
 Sample Response
 ```json
 {
-    success: false,
-    reason: "That container doesn't exist."
+    "success": false,
+    "reason": "That container doesn't exist."
 }
 ```
