@@ -1,6 +1,5 @@
 import os
 from shutil import copytree, rmtree
-from subprocess import CalledProcessError
 from urllib.parse import urlparse
 
 from app_config import App
