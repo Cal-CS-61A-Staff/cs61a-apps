@@ -114,6 +114,8 @@ def run_61a_website_build():
                 env=env,
             )
 
+    sh("rm", "-rf", "env")
+    sh("cp", "-aT", "/app/buildcache/website-env", "env")
     build("all")
     sh("cp", "-aT", "published", "released")
     build("unreleased")

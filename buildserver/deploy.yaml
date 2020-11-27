@@ -3,7 +3,3 @@ deploy_type: docker
 cpus: 4
 memory_limit: 4G
 concurrency: 1
-dependencies:
-  - repo: Cal-CS-61A-Staff/berkeley-cs61a
-    src: requirements.txt
-    dest: website_build_requirements.txt
