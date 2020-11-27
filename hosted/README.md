@@ -201,4 +201,4 @@ Sample Response
 ```
 
 ## Note on Persistence
-By default, every container `app_name` that you create will have a mounted folder at `/save` that will point to `$hosted/saves/app_name` on your local disk. Note that this folder will persist between reboots and updates, but **will be deleted when the container is deleted via `POST /delete`**. Make sure to copy any data that you might need before you delete a container!
+By default, every container `app_name` that you create will have a mounted folder at `/save` that will point to `$hosted/data/saves/app_name` on your local disk. Note that this folder will persist between reboots and updates, but **will be deleted when the container is deleted via `POST /delete`**. Make sure to copy any data that you might need before you delete a container!

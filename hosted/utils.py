@@ -1,6 +1,7 @@
 import socket, json, subprocess, os, shutil
 
-NGINX_ENABLED = f"{os.getcwd()}/nginx-confs"
+CONFIG = f"{os.getcwd()}/data/config.json"
+NGINX_ENABLED = f"{os.getcwd()}/data/nginx-confs"
 NGINX_TEMPLATE = """
 server {
     server_name {domain};
@@ -19,12 +20,12 @@ def delete_nginx(app_name):
     apps = get_config()
     for domain in apps[app_name]["domains"]:
         os.remove(f"{NGINX_ENABLED}/{domain}")
-        # process = subprocess.Popen(
-        #     ["sudo", "certbot", "delete", "--cert-name", domain],
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.PIPE,
-        # )
-        # _, _ = process.communicate()
+        process = subprocess.Popen(
+            ["sudo", "certbot", "delete", "--cert-name", domain],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        _, _ = process.communicate()
 
     process = subprocess.Popen(
         ["sudo", "nginx", "-s", "reload"],
@@ -44,12 +45,12 @@ def write_nginx(domain, port):
         stderr=subprocess.PIPE,
     )
     _, _ = process.communicate()
-    # process = subprocess.Popen(
-    #     ["sudo", "certbot", "--nginx", "-d", domain, "--non-interactive"],
-    #     stdout=subprocess.PIPE,
-    #     stderr=subprocess.PIPE,
-    # )
-    # _, _ = process.communicate()
+    process = subprocess.Popen(
+        ["sudo", "certbot", "--nginx", "-d", domain, "--non-interactive"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    _, _ = process.communicate()
 
 
 def get_empty_port():
@@ -61,15 +62,12 @@ def get_empty_port():
 
 
 def make_save(app_name):
-    if not os.path.exists(f"{os.getcwd()}/saves/{app_name}"):
-        os.makedirs(f"{os.getcwd()}/saves/{app_name}")
+    if not os.path.exists(f"{os.getcwd()}/data/saves/{app_name}"):
+        os.makedirs(f"{os.getcwd()}/data/saves/{app_name}")
 
 
 def del_save(app_name):
-    shutil.rmtree(f"{os.getcwd()}/saves/{app_name}")
-
-
-CONFIG = "config.json"
+    shutil.rmtree(f"{os.getcwd()}/data/saves/{app_name}")
 
 
 def get_config():

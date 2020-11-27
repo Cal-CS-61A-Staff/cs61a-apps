@@ -5,6 +5,9 @@ import docker, os
 app = Flask(__name__)
 client = docker.from_env()
 
+if not os.path.exists("data"):
+    os.makedirs("data")
+
 
 @app.route("/", methods=["GET"])
 def list_apps():
@@ -62,7 +65,7 @@ def new():
         env["PORT"] = 8001
 
     volumes = {
-        f"{os.getcwd()}/saves/{app_name}": {
+        f"{os.getcwd()}/data/saves/{app_name}": {
             "bind": "/save",
             "mode": "rw",
         },
