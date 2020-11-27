@@ -91,7 +91,7 @@ def enqueue_builds(
         if packed_ref not in can_build:
             can_build[packed_ref] = []
         can_build[packed_ref].append(app)
-    for packed_ref in can_build:
+    for packed_ref in set(packed_ref for app, packed_ref in queued):
         update_status(packed_ref, pr_number)
     return can_build
 
