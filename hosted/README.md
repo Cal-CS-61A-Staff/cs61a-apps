@@ -5,13 +5,13 @@ This is 61A's internal Docker API implementation, similar to [Dokku](https://git
 ## Setup
 To use this tool, you'll need to set up `nginx`, `docker`, and the `systemd` service.
 
-1. Install `nginx` and `docker` for your distribution.
+1. Install `nginx` and `docker` for your distribution. If you wish to use SSL, install `certbot` as well.
 2. Clone this repo. **For the remainder of this guide, we will refer to your cloned `hosted` directory as `$hosted`.** Make sure to replace `$hosted` with the absolute path to your cloned `hosted` directory.
 3. Make sure your user has access to the `docker` CLI without `sudo`. Also make sure that your user can run `nginx` commands with `sudo` without a password.
 
 ### Python Setup
 4. `cd` into `$hosted` and run `python3 -m venv env`. This will create the virtual environment that the `systemd` service will use.
-5. Run `source env/bin/activate` to activate the environment, then run `pip install -r requirements` to install Python dependencies.
+5. Run `source env/bin/activate` to activate the environment, then run `pip install -r requirements` to install Python dependencies. Feel free to `deactivate` once this is done -- you will only need to activate this environment to run the app manually. The `systemd` service will activate it in its own environment automatically.
 
 ### `nginx` Setup
 6. Edit `/etc/nginx/nginx.conf`. Under "Virtual Host Configs" at the bottom of `http`, add the line `include $hosted/nginx-confs/*;`.
@@ -65,10 +65,10 @@ This endpoint takes no parameters.
 Sample Response
 ```json
 {
-    'app1': {
-        'running': false,
-        'image': 'ubuntu:latest',
-        'domains': ['app1.example.com', 'app1-pr.example.com']
+    app1: {
+        running: false,
+        image: "ubuntu:latest",
+        domains: ["app1.example.com", "app1-pr.example.com"]
     }
 }
 ```
@@ -97,8 +97,10 @@ Required Params
 - `name`: the name of the container
 
 Sample Response
-```
-{success: true}
+```json
+{
+    success: true
+}
 ```
 
 ### Run a stopped container
@@ -109,7 +111,7 @@ Required Params
 - `name`: the name of the container
 
 Sample Response
-```
+```json
 {
     success: false,
     reason: "That container is already running."
@@ -125,8 +127,10 @@ Required Params
 - `domain`: the fully-qualified domain (minus the protocol) to add to the container
 
 Sample Response
-```
-{success: true}
+```json
+{
+    success: true
+}
 ```
 
 ### Delete a container
@@ -137,7 +141,7 @@ Required Params
 - `name`: the name of the container
 
 Sample Response
-```
+```json
 {
     success: false,
     reason: "That container doesn't exist."
