@@ -58,7 +58,7 @@ WantedBy=multi-user.target
 For this section, we'll be using `example.com` as the deploy server.
 
 ### List all existing containers
-`GET example.com`
+`GET /`
 
 This endpoint takes no parameters.
 
@@ -74,7 +74,7 @@ Sample Response
 ```
 
 ### Deploy a new container
-`POST example.com/new`
+`POST /new`
 
 Required Params
 - `secret`: the deploy secret
@@ -101,7 +101,7 @@ Running on app1.example.com!
 ```
 
 ### Run a stopped container
-`POST example.com/run`
+`POST /run`
 
 Required Params
 - `secret`: the deploy secret
@@ -126,7 +126,7 @@ Sample Response
 ```
 
 ### Stop a running container
-`POST example.com/stop`
+`POST /stop`
 
 Required Params
 - `secret`: the deploy secret
@@ -150,7 +150,7 @@ Sample Response
 ```
 
 ### Add a domain to an existing container
-`POST example.com/add_domain`
+`POST /add_domain`
 
 Required Params
 - `secret`: the deploy secret
@@ -176,7 +176,7 @@ Sample Response
 ```
 
 ### Delete a container
-`POST example.com/delete`
+`POST /delete`
 
 Required Params
 - `secret`: the deploy secret
@@ -199,3 +199,6 @@ Sample Response
     "reason": "That container doesn't exist."
 }
 ```
+
+## Note on Persistence
+By default, every container `app_name` that you create will have a mounted folder at `/save` that will point to `$hosted/saves/app_name` on your local disk. Note that this folder will persist between reboots and updates, but **will be deleted when the container is deleted via `POST /delete`**. Make sure to copy any data that you might need before you delete a container!
