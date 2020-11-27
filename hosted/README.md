@@ -57,7 +57,7 @@ WantedBy=multi-user.target
 ## Using the API
 For this section, we'll be using `example.com` as the deploy server.
 
-### List running containers
+### List all existing containers
 `GET example.com`
 
 This endpoint takes no parameters.
