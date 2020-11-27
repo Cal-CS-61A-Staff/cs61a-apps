@@ -15,7 +15,7 @@ RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tm
 RUN mkdir -p /usr/local/gcloud \
   && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
   && /usr/local/gcloud/google-cloud-sdk/install.sh -q
-ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
+ENV PATH /usr/local/gcloud/google-cloud-sdk/bin:$PATH
 
 RUN gcloud components install beta
 
