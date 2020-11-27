@@ -62,7 +62,7 @@ def new():
         env["PORT"] = 8001
 
     volumes = {
-        f"{os.environ.get('HOME')}/docker-api/saves/{app_name}": {
+        f"{os.getcwd()}/saves/{app_name}": {
             "bind": "/save",
             "mode": "rw",
         },

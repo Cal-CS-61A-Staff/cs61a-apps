@@ -1,6 +1,6 @@
 import socket, json, subprocess, os, shutil
 
-NGINX_ENABLED = f"{os.environ.get('HOME')}/docker-api/nginx-confs"
+NGINX_ENABLED = f"{os.getcwd()}/nginx-confs"
 NGINX_TEMPLATE = """
 server {
     server_name {domain};
@@ -10,6 +10,9 @@ server {
     }
 }
 """
+
+if not os.path.exists(NGINX_ENABLED):
+    os.makedirs(NGINX_ENABLED)
 
 
 def delete_nginx(app_name):
@@ -58,12 +61,12 @@ def get_empty_port():
 
 
 def make_save(app_name):
-    if not os.path.exists(f"{os.environ.get('HOME')}/docker-api/saves/{app_name}"):
-        os.makedirs(f"{os.environ.get('HOME')}/docker-api/saves/{app_name}")
+    if not os.path.exists(f"{os.getcwd()}/saves/{app_name}"):
+        os.makedirs(f"{os.getcwd()}/saves/{app_name}")
 
 
 def del_save(app_name):
-    shutil.rmtree(f"{os.environ.get('HOME')}/docker-api/saves/{app_name}")
+    shutil.rmtree(f"{os.getcwd()}/saves/{app_name}")
 
 
 CONFIG = "config.json"
