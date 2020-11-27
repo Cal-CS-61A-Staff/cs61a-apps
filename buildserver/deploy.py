@@ -21,6 +21,11 @@ from pypi_utils import update_setup_py
 DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
 
 
+def gen_master_secret(app: App, pr_number: int):
+    public_value, staging_value = create_master_secret(created_app_name=app.name)
+    return public_value if pr_number == 0 else staging_value
+
+
 def gen_env_variables(app: App, pr_number: int):
     database_url = sqlalchemy.engine.url.URL(
         drivername="mysql+pymysql",
@@ -30,15 +35,11 @@ def gen_env_variables(app: App, pr_number: int):
         query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
     ).__to_string__(hide_password=False)
 
-    public_value, staging_value = create_master_secret(created_app_name=app.name)
-
-    master_secret = public_value if pr_number == 0 else staging_value
-
     return dict(
         ENV="prod",
         DATABASE_URL=database_url,
         INSTANCE_CONNECTION_NAME=DB_INSTANCE_NAME,
-        APP_MASTER_SECRET=master_secret,
+        APP_MASTER_SECRET=gen_master_secret(app, pr_number),
         **(load_all_secrets(created_app_name=app.name) if pr_number == 0 else {}),
     )
 
@@ -91,6 +92,15 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         contents = f.read()
         contents = contents.replace("PROD_SERVICE_NAME", prod_service_name)
         contents = contents.replace("SERVICE_NAME", service_name)
+        f.seek(0)
+        f.truncate()
+        f.write(contents)
+    with open("Dockerfile", "a+") as f:
+        f.seek(0)
+        contents = f.read()
+        contents = contents.replace(
+            "<APP_MASTER_SECRET>", gen_master_secret(app, pr_number)
+        )
         f.seek(0)
         f.truncate()
         f.write(contents)

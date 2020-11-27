@@ -80,6 +80,7 @@ main.js
 # GCP stuff
 creds.json
 cloud_sql_proxy
+/buildserver/tmp/
 
 # wiki theme "submodule"
 wiki-base/themes
