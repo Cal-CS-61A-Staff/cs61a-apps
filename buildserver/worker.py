@@ -71,9 +71,8 @@ def land_commit(
         targets = determine_targets(
             repo, files if repo.full_name == base_repo.full_name else []
         )
-    grouped_targets = enqueue_builds(
-        targets, pr.number if pr else 0, pack(repo.clone_url, sha)
-    )
+    pr_number = pr.number if pr else 0
+    grouped_targets = enqueue_builds(targets, pr_number, pack(repo.clone_url, sha))
     for packed_ref, targets in grouped_targets.items():
         repo_clone_url, sha = unpack(packed_ref)
         # If the commit is made on the base repo, take the config from the current commit.
@@ -87,11 +86,11 @@ def land_commit(
         apps = [App(target) for target in targets]
         for app in apps:
             try:
-                land_app(app, pr.number if pr else 0, sha, repo)
+                land_app(app, pr_number, sha, repo)
             except:
                 report_build_status(
                     app.name,
-                    pr.number,
+                    pr_number,
                     pack(repo.clone_url, sha),
                     BuildStatus.failure,
                     None,
@@ -99,11 +98,11 @@ def land_commit(
             else:
                 report_build_status(
                     app.name,
-                    pr.number,
+                    pr_number,
                     pack(repo.clone_url, sha),
                     BuildStatus.success,
                     ",".join(
-                        f"{pr.number}.{name}.pr.cs61a.org"
+                        f"{pr_number}.{name}.pr.cs61a.org"
                         for name in (
                             [app.name]
                             if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES
@@ -116,8 +115,8 @@ def land_commit(
                     if pr is not None and app.config["deploy_type"] == "pypi"
                     else None,
                 )
-            update_service_routes([app], pr.number if pr else 0)
+            update_service_routes([app], pr_number)
     if grouped_targets:
         # because we ran a build, we need to clear the queue of anyone we blocked
         # we run this in a new worker to avoid timing out
-        clear_queue(repo=repo.full_name, pr_number=pr.number, noreply=True)
+        clear_queue(repo=repo.full_name, pr_number=pr_number, noreply=True)
