@@ -13,11 +13,15 @@ server {
 
 
 def delete_nginx(app_name):
-    # process = subprocess.Popen(['sudo', 'certbot', 'delete', '--cert-name', f'{app_name}.hosted.cs61a.org'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # _, _ = process.communicate()
     apps = get_config()
     for domain in apps[app_name]["domains"]:
         os.remove(f"{NGINX_ENABLED}/{domain}")
+        process = subprocess.Popen(
+            ["sudo", "certbot", "delete", "--cert-name", domain],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    _, _ = process.communicate()
 
     process = subprocess.Popen(
         ["sudo", "nginx", "-s", "reload"],
@@ -37,8 +41,12 @@ def write_nginx(domain, port):
         stderr=subprocess.PIPE,
     )
     _, _ = process.communicate()
-    # process = subprocess.Popen(['sudo', 'certbot', '--nginx', '-d', f'{app_name}.hosted.cs61a.org', '--non-interactive'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # _, _ = process.communicate()
+    process = subprocess.Popen(
+        ["sudo", "certbot", "--nginx", "-d", domain, "--non-interactive"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    _, _ = process.communicate()
 
 
 def get_empty_port():
