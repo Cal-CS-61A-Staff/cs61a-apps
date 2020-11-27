@@ -1,6 +1,7 @@
-from flask import Flask, request, abort, jsonify
+import docker
+from flask import Flask, abort, jsonify, request
+
 from utils import *
-import docker, os
 
 app = Flask(__name__)
 client = docker.from_env()
@@ -30,7 +31,7 @@ def new():
     if secret != os.environ.get("DEPLOY_KEY"):
         abort(403)
 
-    if not "image" in params:
+    if "image" not in params:
         abort(400)
 
     img = params.get("image")
@@ -90,7 +91,7 @@ def stop():
     if secret != os.environ.get("DEPLOY_KEY"):
         abort(403)
 
-    if not "name" in params:
+    if "name" not in params:
         abort(400)
 
     app_name = params.get("name")
@@ -166,7 +167,7 @@ def add_domain():
     if secret != os.environ.get("DEPLOY_KEY"):
         abort(403)
 
-    if not "name" in params or not "domain" in params:
+    if "name" not in params or "domain" not in params:
         abort(400)
 
     app_name = params.get("name")

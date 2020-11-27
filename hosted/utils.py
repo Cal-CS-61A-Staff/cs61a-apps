@@ -1,4 +1,8 @@
-import socket, json, subprocess, os, shutil
+import json
+import os
+import shutil
+import socket
+import subprocess
 
 CONFIG = f"{os.getcwd()}/data/config.json"
 NGINX_ENABLED = f"{os.getcwd()}/data/nginx-confs"
