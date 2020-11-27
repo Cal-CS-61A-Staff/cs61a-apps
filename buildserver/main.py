@@ -8,6 +8,7 @@ from common.db import connect_db
 from common.oauth_client import create_oauth_client, get_user, is_staff
 from common.rpc.auth import is_admin
 from common.rpc.buildserver import (
+    clear_queue,
     deploy_prod_app_sync,
     get_base_hostname,
     trigger_build_sync,
@@ -15,7 +16,9 @@ from common.rpc.buildserver import (
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
 from deploy import delete_unused_services
-from github_utils import set_pr_comment
+from github_utils import BuildStatus, pack, set_pr_comment
+from scheduling import report_build_status
+from target_determinator import determine_targets
 from worker import land_commit
 
 GITHUB_REPO = "Cal-CS-61A-Staff/cs61a-apps"
@@ -135,6 +138,22 @@ def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
     land_commit(pr.head.sha, repo, repo, pr, pr.get_files(), target_app=target_app)
 
 
+@clear_queue.bind(app)
+@only("buildserver", allow_staging=True)
+def clear_queue(repo: str, pr_number: int):
+    g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
+    repo = g.get_repo(repo)
+    pr = repo.get_pull(pr_number) if pr_number else None
+    land_commit(
+        pr.head.sha if pr else repo.get_branch(repo.default_branch).commit.sha,
+        repo,
+        g.get_repo(GITHUB_REPO),
+        pr,
+        [],
+        dequeue_only=True,
+    )
+
+
 @app.route("/delete_unused_services", methods=["POST"])
 def delete_unused_services_handler():
     if not is_staff("cs61a"):
@@ -189,16 +208,14 @@ def webhook():
             if repo.full_name != GITHUB_REPO:
                 land_commit(pr.head.sha, repo, g.get_repo(GITHUB_REPO), pr, [])
             else:
-                set_pr_comment(
-                    f"PR updated. To trigger a build, click [here]({url_for('trigger_build', pr_number=pr.number)}).",
-                    pr,
-                )
-                repo.get_commit(pr.head.sha).create_status(
-                    "pending",
-                    "https://buildserver.cs61a.org",
-                    "You must rebuild the modified apps before merging",
-                    "Pusher",
-                )
+                for target in determine_targets(repo, pr.get_files()):
+                    report_build_status(
+                        target,
+                        pr.number,
+                        pack(repo.clone_url, pr.head.sha),
+                        BuildStatus.pushed,
+                        None,
+                    )
 
         elif payload["action"] == "closed":
             set_pr_comment("PR closed, shutting down PR builds...", pr)

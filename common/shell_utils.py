@@ -6,10 +6,15 @@ from shutil import rmtree
 from typing import List
 
 
-def sh(*args, env={}, capture_output=False):
-    out = subprocess.run(
-        args, env={**os.environ, **env, "ENV": "dev"}, capture_output=capture_output
-    )
+def sh(*args, env={}, capture_output=False, quiet=False):
+    if quiet:
+        out = subprocess.run(
+            args, env={**os.environ, **env, "ENV": "dev"}, stdout=subprocess.PIPE
+        )
+    else:
+        out = subprocess.run(
+            args, env={**os.environ, **env, "ENV": "dev"}, capture_output=capture_output
+        )
     if capture_output:
         print(out.stdout, file=sys.stdout)
         print(out.stderr, file=sys.stderr)

@@ -1,6 +1,5 @@
 import os
 from shutil import copytree, rmtree
-from subprocess import CalledProcessError
 from urllib.parse import urlparse
 
 from app_config import App
@@ -25,7 +24,7 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
             f"https://{get_secret(secret_name='GITHUB_ACCESS_TOKEN')}@github.com{path}",
             sha,
         )
-        sh("git", "checkout", "FETCH_HEAD")
+        sh("git", "checkout", "FETCH_HEAD", "-f")
 
     if in_place:
         clone()
@@ -63,6 +62,7 @@ def build(app: App, pr_number: int = 0):
             "create_react_app": run_create_react_app_build,
             "webpack": run_webpack_build,
             "61a_website": run_61a_website_build,
+            "hugo": run_hugo_build,
             "none": run_noop_build,
         }[app.config["build_type"]]()
 
@@ -93,13 +93,8 @@ def run_webpack_build():
 
 def run_61a_website_build():
     env = dict(
-        CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org", VIRTUAL_ENV="../env"
+        CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org",
     )
-
-    sh("python", "-m", "venv", "env", "--system-site-packages")
-
-    # install dependencies
-    sh("make", "-C", "src", "check-env", env=env)
 
     def build(target):
         # need to re-run make for stupid reasons
@@ -119,17 +114,22 @@ def run_61a_website_build():
                 env=env,
             )
 
+    sh("rm", "-rf", "env")
+    sh("cp", "-aT", "/app/buildcache/website-env", "env")
     build("all")
-    copytree("published", "released", dirs_exist_ok=True)
+    sh("cp", "-aT", "published", "released")
     build("unreleased")
-    copytree("published", "unreleased", dirs_exist_ok=True)
+    sh("cp", "-aT", "published", "unreleased")
     clean_all_except(["released", "unreleased"])
+
+
+def run_hugo_build():
+    sh("python", "make_content.py")
+    sh("hugo")
+    clean_all_except(["public"])
+    copytree("public", ".", dirs_exist_ok=True)
+    rmtree("public")
 
 
 def run_noop_build():
     pass
-
-
-if __name__ == "__main__":
-    with tmp_directory():
-        run_61a_website_build()

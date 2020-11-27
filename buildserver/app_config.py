@@ -11,11 +11,12 @@ CLOUD_RUN_DEPLOY_TYPES = {"flask", "flask-pandas", "docker"}
 
 class Config(TypedDict):
     build_type: Literal[
-        "create_react_app", "oh_queue", "webpack", "61a_website", "none"
+        "create_react_app", "oh_queue", "webpack", "61a_website", "hugo", "none"
     ]
     deploy_type: Literal[
         "flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"
     ]
+    build_image: Optional[str]
     cpus: int
     memory_limit: str
     first_party_domains: List[str]
@@ -52,6 +53,7 @@ class App:
         with tmp_directory():
             with open(f"{name}/deploy.yaml") as f:
                 self.config = Config(**yaml.safe_load(f))
+                self.config["build_image"] = self.config.get("build_image", None)
                 self.config["cpus"] = self.config.get("cpus", 1)
                 self.config["memory_limit"] = self.config.get("memory_limit", "256M")
                 self.config["first_party_domains"] = self.config.get(
