@@ -4,7 +4,7 @@ from github.File import File
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from app_config import App, WEB_DEPLOY_TYPES
+from app_config import App, CLOUD_RUN_DEPLOY_TYPES, WEB_DEPLOY_TYPES
 from build import build, clone_commit
 from common.rpc.buildserver import clear_queue
 from dependency_loader import load_dependencies
@@ -104,7 +104,12 @@ def land_commit(
                     BuildStatus.success,
                     ",".join(
                         f"{pr.number}.{name}.pr.cs61a.org"
-                        for name in [app.name] + app.config["static_consumers"]
+                        for name in (
+                            [app.name]
+                            if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES
+                            else []
+                        )
+                        + app.config["static_consumers"]
                     )
                     if app.config["deploy_type"] in WEB_DEPLOY_TYPES
                     else f"pypi.org/project/{app.config['package_name']}/{app.deployed_pypi_version}"
