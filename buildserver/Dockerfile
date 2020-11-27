@@ -48,7 +48,7 @@ RUN git clone https://$(cat github_access_token)@github.com/Cal-CS-61A-Staff/ber
   && ../env/bin/pip install google-cloud-storage \
   && cd ../../.. \
   && mkdir buildcache \
-  && mv tmp/website-base_working_DO_NOT_USE/env buildcache/website-env
+  && mv tmp/website-base_working_DO_NOT_USE/env buildcache/website-env \
   && rm -rf tmp
 
 CMD gunicorn -b :$PORT -w 1 main:app -t 3000
