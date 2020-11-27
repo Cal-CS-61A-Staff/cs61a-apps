@@ -1,40 +1,22 @@
-from enum import Enum, unique
-from typing import Dict, List
+from time import time
+from typing import Dict, List, Optional
 
 from common.db import connect_db
-from github_utils import update_status
+from github_utils import BuildStatus, update_status
 
 
 with connect_db() as db:
     db(
         """CREATE TABLE IF NOT EXISTS builds (
+    unix int,
     app varchar(128),
     pr_number int,
     status varchar(128),
-    packed_ref varchar(256)
+    packed_ref varchar(256),
+    url varchar(256)
 );
 """
     )
-
-
-@unique
-class BuildStatus(Enum):
-    pushed = "pushed"
-    queued = "queued"
-    building = "building"
-    failure = "failure"
-    success = "success"
-
-
-def pack(clone_url: str, packed_ref: str) -> str:
-    """
-    Pack the source for a commit into a single str
-    """
-    return clone_url + "|" + packed_ref
-
-
-def unpack(packed_ref: str):
-    return packed_ref.split("|")
 
 
 def enqueue_builds(
@@ -61,8 +43,8 @@ def enqueue_builds(
             if status is None:
                 # we have just been pushed or manually triggered
                 db(
-                    "INSERT INTO builds VALUES (%s, %s, 'queued', %s)",
-                    [target, pr_number, packed_ref],
+                    "INSERT INTO builds VALUES (%s, %s, %s, 'queued', %s, NULL)",
+                    [time(), target, pr_number, packed_ref],
                 )
             else:
                 status = BuildStatus(status[0])
@@ -107,16 +89,24 @@ def enqueue_builds(
         if packed_ref not in can_build:
             can_build[packed_ref] = []
         can_build[packed_ref].append(app)
-    update_status(pr_number)
+    for packed_ref in can_build:
+        update_status(packed_ref, pr_number)
     return can_build
 
 
 def report_build_status(
-    target: str, pr_number: int, packed_ref: str, status: BuildStatus
+    target: str,
+    pr_number: int,
+    packed_ref: str,
+    status: BuildStatus,
+    url: Optional[str],
 ):
     with connect_db() as db:
         db(
-            "UPDATE builds SET status=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
-            [status.name, target, pr_number, packed_ref],
+            "UPDATE builds SET status=%s AND url=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+            [status.name, url, target, pr_number, packed_ref],
         )
-    update_status(pr_number)
+    update_status(
+        packed_ref,
+        pr_number,
+    )

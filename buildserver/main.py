@@ -15,7 +15,9 @@ from common.rpc.buildserver import (
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
 from deploy import delete_unused_services
-from github_utils import set_pr_comment
+from github_utils import BuildStatus, pack, set_pr_comment
+from scheduling import report_build_status
+from target_determinator import determine_targets
 from worker import land_commit
 
 GITHUB_REPO = "Cal-CS-61A-Staff/cs61a-apps"
@@ -189,16 +191,14 @@ def webhook():
             if repo.full_name != GITHUB_REPO:
                 land_commit(pr.head.sha, repo, g.get_repo(GITHUB_REPO), pr, [])
             else:
-                set_pr_comment(
-                    f"PR updated. To trigger a build, click [here]({url_for('trigger_build', pr_number=pr.number)}).",
-                    pr,
-                )
-                repo.get_commit(pr.head.sha).create_status(
-                    "pending",
-                    "https://buildserver.cs61a.org",
-                    "You must rebuild the modified apps before merging",
-                    "Pusher",
-                )
+                for target in determine_targets(repo, pr.get_files()):
+                    report_build_status(
+                        target,
+                        pr.number,
+                        pack(repo.clone_url, pr.head.sha),
+                        BuildStatus.pushed,
+                        None,
+                    )
 
         elif payload["action"] == "closed":
             set_pr_comment("PR closed, shutting down PR builds...", pr)

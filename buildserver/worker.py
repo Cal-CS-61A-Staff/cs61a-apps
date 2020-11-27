@@ -10,9 +10,11 @@ from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
 from external_repo_utils import update_config
 from github_utils import (
-    set_pr_comment,
+    BuildStatus,
+    pack,
+    unpack,
 )
-from scheduling import BuildStatus, enqueue_builds, pack, report_build_status, unpack
+from scheduling import enqueue_builds, report_build_status
 from external_build import run_highcpu_build
 from target_determinator import determine_targets
 
@@ -58,52 +60,48 @@ def land_commit(
     :param files: Files changed in the commit, used for target determination
     :param target_app: App to rebuild, if not all
     """
-    try:
-        repo.get_commit(sha).create_status(
-            "pending",
-            "https://logs.cs61a.org/service/buildserver",
-            "Pusher is rebuilding all modified services",
-            "Pusher",
+    if target_app:
+        targets = [target_app]
+    else:
+        targets = determine_targets(
+            repo, files if repo.full_name == base_repo.full_name else []
         )
-        if target_app:
-            targets = [target_app]
-        else:
-            targets = determine_targets(
-                repo, files if repo.full_name == base_repo.full_name else []
-            )
-        target_list = "\n".join(f" * {target}" for target in targets)
-        set_pr_comment(
-            f"Building commit: {sha}. View logs at [logs.cs61a.org](https://logs.cs61a.org).\n"
-            f"Targets: \n{target_list}",
-            pr,
+    grouped_targets = enqueue_builds(targets, pr.number, pack(repo.clone_url, sha))
+    for packed_ref, targets in grouped_targets.items():
+        repo_clone_url, sha = unpack(packed_ref)
+        # If the commit is made on the base repo, take the config from the current commit.
+        # Otherwise, retrieve it from master
+        clone_commit(
+            base_repo.clone_url,
+            sha
+            if repo_clone_url == base_repo.clone_url
+            else base_repo.get_branch(base_repo.default_branch).commit.sha,
         )
-        grouped_targets = enqueue_builds(targets, pr.number, pack(repo.clone_url, sha))
-        for packed_ref, targets in grouped_targets.items():
-            repo_clone_url, sha = unpack(packed_ref)
-            # If the commit is made on the base repo, take the config from the current commit.
-            # Otherwise, retrieve it from master
-            clone_commit(
-                base_repo.clone_url,
-                sha
-                if repo_clone_url == base_repo.clone_url
-                else base_repo.get_branch(base_repo.default_branch).commit.sha,
-            )
-            apps = [App(target) for target in targets]
-            for app in apps:
-                try:
-                    land_app(app, pr.number if pr else 0, sha, repo)
-                except:
-                    report_build_status(
-                        app.name,
-                        pr.number,
-                        pack(repo.clone_url, sha),
-                        BuildStatus.failure,
+        apps = [App(target) for target in targets]
+        for app in apps:
+            try:
+                land_app(app, pr.number if pr else 0, sha, repo)
+            except:
+                report_build_status(
+                    app.name,
+                    pr.number,
+                    pack(repo.clone_url, sha),
+                    BuildStatus.failure,
+                    None,
+                )
+            else:
+                report_build_status(
+                    app.name,
+                    pr.number,
+                    pack(repo.clone_url, sha),
+                    BuildStatus.success,
+                    ",".join(
+                        f"https://{pr.number}.{name}.pr.cs61a.org"
+                        for name in [app.name] + app.config["static_consumers"]
                     )
-                else:
-                    report_build_status(
-                        app.name,
-                        pr.number,
-                        pack(repo.clone_url, sha),
-                        BuildStatus.success,
-                    )
-            update_service_routes(apps, pr.number if pr else 0)
+                    if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES
+                    else f"pypi.org/project/{app.config['package_name']}/{app.deployed_pypi_version}"
+                    if pr is not None and app.config["deploy_type"] == "pypi"
+                    else None,
+                )
+            update_service_routes([app], pr.number if pr else 0)
