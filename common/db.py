@@ -1,6 +1,7 @@
 import os
 from contextlib import contextmanager
 from os import getenv
+from typing import List
 
 import sqlalchemy.engine.url
 
@@ -61,7 +62,7 @@ engine = sqlalchemy.create_engine(
 def connect_db():
     with engine.connect() as conn:
 
-        def db(*args):
+        def db(query: str, args: List[str] = []):
             query, *rest = args
             if use_devdb:
                 query = query.replace("%s", "?")
