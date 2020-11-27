@@ -15,8 +15,6 @@ steps:
         "-t",
         "gcr.io/cs61a-140900/SERVICE_NAME",
         "--cache-from",
-        "gcr.io/cs61a-140900/SERVICE_NAME:latest",
-        "--cache-from",
         "gcr.io/cs61a-140900/PROD_SERVICE_NAME:latest",
         ".",
       ]
