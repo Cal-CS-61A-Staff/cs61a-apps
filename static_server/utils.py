@@ -38,15 +38,14 @@ def serve_path(bucket, root, path):
             blob.download_to_filename(temp.name)
             return send_file(temp.name, attachment_filename=filename)
     except NotFound:
-        if filename.endswith("index.html"):
+        if filename.endswith("404.html"):
             abort(404)
+        elif filename.endswith("index.html"):
+            return serve_path(bucket, root, "404.html"), 404
         else:
             if path and not path.endswith("/"):
                 if bucket.blob(filename + "/" + "index.html").exists():
                     return redirect("/" + filename + "/", 301)
                 else:
-                    if bucket.blob("404.html").exists():
-                        return serve_path(bucket, root, "404.html"), 404
-                    else:
-                        abort(404)
+                    return serve_path(bucket, root, "404.html"), 404
             return serve_path(bucket, root, path + "index.html")
