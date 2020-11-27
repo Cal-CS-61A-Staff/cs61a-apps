@@ -63,10 +63,9 @@ def connect_db():
     with engine.connect() as conn:
 
         def db(query: str, args: List[str] = []):
-            query, *rest = args
             if use_devdb:
                 query = query.replace("%s", "?")
-            return conn.execute(query, *rest)
+            return conn.execute(query, args)
 
         yield db
 
