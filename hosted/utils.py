@@ -21,7 +21,7 @@ def delete_nginx(app_name):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-    _, _ = process.communicate()
+        _, _ = process.communicate()
 
     process = subprocess.Popen(
         ["sudo", "nginx", "-s", "reload"],
