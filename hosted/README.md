@@ -84,23 +84,20 @@ Optional Params
 - `name`: a name to use, by default the name of the `image`
 - `env`: a dictionary of environment variables to pass into the container
 
+Sample `cURL`
+```sh
+curl --location --request POST 'https://example.com/new' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "secret": "thisisasecret",
+    "image": "ubuntu",
+    "name": "app1"
+}'
+```
+
 Sample Response
 ```
 Running on app1.example.com!
-```
-
-### Stop a running container
-`POST example.com/stop`
-
-Required Params
-- `secret`: the deploy secret
-- `name`: the name of the container
-
-Sample Response
-```json
-{
-    "success": true
-}
 ```
 
 ### Run a stopped container
@@ -110,11 +107,45 @@ Required Params
 - `secret`: the deploy secret
 - `name`: the name of the container
 
+Sample `cURL`
+```sh
+curl --location --request POST 'https://example.com/run' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "secret": "thisisasecret",
+    "name": "app1"
+}'
+```
+
 Sample Response
 ```json
 {
     "success": false,
     "reason": "That container is already running."
+}
+```
+
+### Stop a running container
+`POST example.com/stop`
+
+Required Params
+- `secret`: the deploy secret
+- `name`: the name of the container
+
+Sample `cURL`
+```sh
+curl --location --request POST 'https://example.com/stop' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "secret": "thisisasecret",
+    "name": "app1"
+}'
+```
+
+Sample Response
+```json
+{
+    "success": true
 }
 ```
 
@@ -125,6 +156,17 @@ Required Params
 - `secret`: the deploy secret
 - `name`: the name of the container
 - `domain`: the fully-qualified domain (minus the protocol) to add to the container
+
+Sample `cURL`
+```sh
+curl --location --request POST 'https://example.com/add_domain' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "secret": "thisisasecret",
+    "name": "app1",
+    "domain": "app1-pr.example.com"
+}'
+```
 
 Sample Response
 ```json
@@ -139,6 +181,16 @@ Sample Response
 Required Params
 - `secret`: the deploy secret
 - `name`: the name of the container
+
+Sample `cURL`
+```sh
+curl --location --request POST 'https://example.com/delete' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "secret": "thisisasecret",
+    "name": "nonexistent-app"
+}'
+```
 
 Sample Response
 ```json
