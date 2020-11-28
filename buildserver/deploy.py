@@ -14,6 +14,7 @@ from build import gen_working_dir
 from app_config import App, CLOUD_RUN_DEPLOY_TYPES, WEB_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
+from common.rpc.hosted import add_domain, delete, list_apps, new
 from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
 from common.shell_utils import sh, tmp_directory
 from pypi_utils import update_setup_py
@@ -69,6 +70,7 @@ def deploy_commit(app: App, pr_number: int):
             "cloud_function": run_cloud_function_deploy,
             "service": run_service_deploy,
             "static": run_static_deploy,
+            "hosted": run_hosted_deploy,
             "none": run_noop_deploy,
         }[app.config["deploy_type"]](app, pr_number)
 
@@ -83,7 +85,7 @@ def run_flask_pandas_deploy(app: App, pr_number: int):
     run_dockerfile_deploy(app, pr_number)
 
 
-def run_dockerfile_deploy(app: App, pr_number: int):
+def build_docker_image(app: App, pr_number: int) -> str:
     for f in os.listdir("../../deploy_files"):
         shutil.copyfile(f"../../deploy_files/{f}", f"./{f}")
     service_name = gen_service_name(app.name, pr_number)
@@ -106,6 +108,12 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         f.truncate()
         f.write(contents)
     sh("gcloud", "builds", "submit", "-q", "--config", "cloudbuild.yaml")
+    return f"gcr.io/cs61a-140900/{service_name}"
+
+
+def run_dockerfile_deploy(app: App, pr_number: int):
+    image = build_docker_image(app, pr_number)
+    service_name = gen_service_name(app.name, pr_number)
     sh(
         "gcloud",
         "beta",
@@ -113,7 +121,7 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         "deploy",
         service_name,
         "--image",
-        f"gcr.io/cs61a-140900/{service_name}",
+        image,
         "--region",
         "us-west1",
         "--platform",
@@ -277,6 +285,15 @@ def run_service_deploy(app: App, pr_number: int):
     )
 
 
+def run_hosted_deploy(app: App, pr_number: int):
+    image = build_docker_image(app, pr_number)
+    service_name = gen_service_name(app.name, pr_number)
+    new(img=image, name=service_name, env=gen_env_variables(app, pr_number))
+    if pr_number == 0:
+        for domain in app.config["first_party_domains"]:
+            add_domain(name=service_name, domain=domain)
+
+
 def run_noop_deploy(_app: App, _pr_number: int):
     pass
 
@@ -336,6 +353,11 @@ def delete_unused_services(pr_number: int = None):
                     "-q",
                 )
 
+    services = list_apps()
+    for service in services:
+        if service not in active_service_names:
+            delete(name=service)
+
     if pr_number is not None:
         with connect_db() as db:
             db("DELETE FROM services WHERE pr_number=%s", [pr_number])
@@ -382,6 +404,12 @@ def update_service_routes(apps: List[App], pr_number: int):
                         hostname is not None
                     ), "Invalid static resource consumer service"
                 create_subdomain(consumer, pr_number, hostname)
+        elif app.config["deploy_type"] == "hosted":
+            create_subdomain(
+                app.name,
+                pr_number,
+                f"{gen_service_name(app.name, pr_number)}.hosted.cs61a.org",
+            )
         else:
             assert False, "Unknown deploy type, failed to create PR domains"
 

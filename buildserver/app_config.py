@@ -21,6 +21,7 @@ class Config(TypedDict):
         "cloud_function",
         "static",
         "service",
+        "hosted",
         "none",
     ]
     build_image: Optional[str]
