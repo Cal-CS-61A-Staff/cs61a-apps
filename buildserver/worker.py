@@ -4,7 +4,11 @@ from github.File import File
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from app_config import App, CLOUD_RUN_DEPLOY_TYPES, WEB_DEPLOY_TYPES
+from app_config import (
+    App,
+    PR_LINKED_DEPLOY_TYPES,
+    WEB_DEPLOY_TYPES,
+)
 from build import build, clone_commit
 from common.rpc.buildserver import clear_queue
 from dependency_loader import load_dependencies
@@ -105,8 +109,7 @@ def land_commit(
                         f"{pr_number}.{name}.pr.cs61a.org"
                         for name in (
                             [app.name]
-                            if app.config["deploy_type"]
-                            in CLOUD_RUN_DEPLOY_TYPES + ["hosted"]
+                            if app.config["deploy_type"] in PR_LINKED_DEPLOY_TYPES
                             else []
                         )
                         + app.config["static_consumers"]
