@@ -7,6 +7,7 @@ from common.shell_utils import tmp_directory
 
 WEB_DEPLOY_TYPES = {"flask", "flask-pandas", "docker", "hosted", "static"}
 CLOUD_RUN_DEPLOY_TYPES = {"flask", "flask-pandas", "docker"}
+PR_LINKED_DEPLOY_TYPES = {*CLOUD_RUN_DEPLOY_TYPES, "hosted"}
 
 
 class Config(TypedDict):
