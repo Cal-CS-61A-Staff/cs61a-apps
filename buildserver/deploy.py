@@ -67,6 +67,7 @@ def deploy_commit(app: App, pr_number: int):
             "docker": run_dockerfile_deploy,
             "pypi": run_pypi_deploy,
             "cloud_function": run_cloud_function_deploy,
+            "service": run_service_deploy,
             "static": run_static_deploy,
             "none": run_noop_deploy,
         }[app.config["deploy_type"]](app, pr_number)
@@ -249,6 +250,26 @@ def run_static_deploy(app: App, pr_number: int):
         # bucket already exists
         pass
     sh("gsutil", "-m", "rsync", "-dRc", ".", bucket)
+
+
+def run_service_deploy(app: App, pr_number: int):
+    if pr_number != 0:
+        return  # do not deploy PR builds to prod!
+    sh(
+        "gcloud",
+        "compute",
+        "scp",
+        "--recurse",
+        os.getcwd(),
+        app.config["service"]["host"] + ":" + app.config["service"]["root"],
+    )
+    sh(
+        "gcloud",
+        "compute",
+        "ssh",
+        app.config["service"]["host"],
+        "--command=systemctl restart {}".format(app.config["service"]["name"]),
+    )
 
 
 def run_noop_deploy(_app: App, _pr_number: int):

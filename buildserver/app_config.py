@@ -14,7 +14,14 @@ class Config(TypedDict):
         "create_react_app", "oh_queue", "webpack", "61a_website", "hugo", "none"
     ]
     deploy_type: Literal[
-        "flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"
+        "flask",
+        "flask-pandas",
+        "docker",
+        "pypi",
+        "cloud_function",
+        "static",
+        "service",
+        "none",
     ]
     build_image: Optional[str]
     cpus: int
@@ -26,6 +33,7 @@ class Config(TypedDict):
     repo: Optional[str]
     package_name: str
     static_consumers: List[str]
+    service: "Service"
 
 
 class Task(TypedDict):
@@ -37,6 +45,12 @@ class Dependency(TypedDict):
     repo: str
     src: str
     dest: str
+
+
+class Service(TypedDict):
+    host: str
+    root: str
+    name: str
 
 
 @dataclass
@@ -67,6 +81,7 @@ class App:
                     "static_consumers", []
                 )
                 self.config["repo"] = self.config.get("repo")
+                self.config["service"] = self.config.get("service")
 
     def __str__(self):
         return self.name
