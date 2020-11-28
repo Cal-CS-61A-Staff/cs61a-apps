@@ -21,7 +21,7 @@ def list_apps():
     for c in containers:
         info[c.name] = {
             "running": c.status == "running",
-            "image": c.image.tags[0],
+            "image": c.image.tags[0] if c.image.tags else c.image.short_id[7:],
             "domains": apps[c.name]["domains"],
         }
     return info
