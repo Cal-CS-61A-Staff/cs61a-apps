@@ -14,7 +14,7 @@ To use this tool, you'll need to set up `nginx`, `docker`, and the `systemd` ser
 5. Run `source env/bin/activate` to activate the environment, then run `pip install -r requirements` to install Python dependencies. Feel free to `deactivate` once this is done -- you will only need to activate this environment to run the app manually. The `systemd` service will activate it in its own environment automatically.
 
 ### `nginx` Setup
-6. Edit `/etc/nginx/nginx.conf`. Under "Virtual Host Configs" at the bottom of `http`, add the line `include $hosted/nginx-confs/*;`.
+6. Edit `/etc/nginx/nginx.conf`. Under "Virtual Host Configs" at the bottom of `http`, add the line `include $hosted/data/nginx-confs/*;`.
 7. Create an `nginx` config for this tool. See below for details on how to write the config file. Then, copy this file into `/etc/nginx/sites-available/`. To enable the new configuration, `cd` to `/etc/nginx/sites-enabled/` and run `ln -s ../sites-available/<config> <config>`. Replace `<config>` with the full name of the config file.
 8. To use SSL, run `sudo certbot --nginx -d <url>` to install a Let's Encrypt certificate. Replace `<url>` with the fully-qualified URL (minus the protocol) to your service.
 9. Run `sudo nginx -s reload` to read the new configurations.
