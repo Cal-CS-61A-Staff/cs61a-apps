@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 from common.rpc.utils import create_service, requires_master_secret
 
-service = create_service("deploy.hosted")
+service = create_service(__name__, "deploy.hosted")
 
 
 @requires_master_secret

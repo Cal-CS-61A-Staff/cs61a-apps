@@ -14,8 +14,8 @@ class Service:
         self.route = route
 
 
-def create_service(app: str):
-    app = app.split(".")[-1] if app.endswith(".py") else app
+def create_service(app: str, override=None):
+    app = override or app.split(".")[-1]
 
     def route(path):
         def decorator(func):
