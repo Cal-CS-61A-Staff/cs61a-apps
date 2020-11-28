@@ -270,7 +270,7 @@ def run_service_deploy(app: App, pr_number: int):
         "compute",
         "ssh",
         app.config["service"]["host"],
-        '--command="systemctl restart {}"'.format(app.config["service"]["name"]),
+        '--command="sudo systemctl restart {}"'.format(app.config["service"]["name"]),
         "--zone",
         app.config["zone"],
     )
