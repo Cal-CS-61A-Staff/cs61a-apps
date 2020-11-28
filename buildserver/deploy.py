@@ -33,6 +33,7 @@ def gen_env_variables(app: App, pr_number: int):
         database_url = sqlalchemy.engine.url.URL(
             drivername="mysql",
             host=DB_IP_ADDRESS,
+            username="apps",
             password=get_secret(secret_name="DATABASE_PW"),
             database=app.name.replace("-", "_"),
         ).__to_string__(hide_password=False)
