@@ -1,5 +1,5 @@
 build_type: none
-deploy_type: docker
+deploy_type: hosted
 cpus: 4
 memory_limit: 4G
 concurrency: 1
