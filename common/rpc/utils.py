@@ -15,7 +15,7 @@ class Service:
 
 
 def create_service(app: str):
-    app = app.split(".")[-1]
+    app = app.split(".")[-1] if app.endswith(".py") else app
 
     def route(path):
         def decorator(func):

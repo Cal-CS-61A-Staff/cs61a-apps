@@ -1,6 +1,8 @@
 import docker
-from flask import Flask, abort, jsonify, request
+from flask import Flask
 
+from common.rpc.hosted import add_domain, delete, list_apps, new, run, stop
+from common.rpc.secrets import only
 from utils import *
 
 app = Flask(__name__)
@@ -10,7 +12,8 @@ if not os.path.exists("data"):
     os.makedirs("data")
 
 
-@app.route("/", methods=["GET"])
+@list_apps.bind(app)
+@only("buildserver")
 def list_apps():
     containers = client.containers.list(all=True)
     info = {}
@@ -21,44 +24,30 @@ def list_apps():
             "image": c.image.tags[0],
             "domains": apps[c.name]["domains"],
         }
-    return jsonify(info)
+    return info
 
 
-@app.route("/new", methods=["POST"])
-def new():
-    params = request.json
-    secret = params.get("secret")
-    if secret != os.environ.get("DEPLOY_KEY"):
-        abort(403)
-
-    if "image" not in params:
-        abort(400)
-
-    img = params.get("image")
+@new.bind(app)
+@only("buildserver")
+def new(img, name=None, env={}):
     client.images.pull(img)
 
-    if "name" in params:
-        app_name = params.get("name")
-    else:
-        app_name = img.split("/")[-1]
+    if name is None:
+        name = img.split("/")[-1]
+
     apps = get_config()
 
-    if app_name in apps:
+    if name in apps:
         for c in client.containers.list(all=True):
-            if c.name == app_name:
+            if c.name == name:
                 if c.status == "running":
                     c.kill()
                 c.remove()
                 break
-        port = apps[app_name]["port"]
+        port = apps[name]["port"]
     else:
         port = get_empty_port()
-        configure(app_name, port)
-
-    env = {}
-    if "env" in params:
-        for key in params.get("env"):
-            env[key] = params.get("env").get(key)
+        configure(name, port)
 
     if "ENV" not in env:
         env["ENV"] = "prod"
@@ -66,129 +55,93 @@ def new():
         env["PORT"] = 8001
 
     volumes = {
-        f"{os.getcwd()}/data/saves/{app_name}": {
+        f"{os.getcwd()}/data/saves/{name}": {
             "bind": "/save",
             "mode": "rw",
         },
     }
 
-    app = client.containers.run(
+    client.containers.run(
         img,
         detach=True,
         environment=env,
         ports={int(env["PORT"]): port},
         volumes=volumes,
-        name=app_name,
+        name=name,
     )
 
-    return f"Running on {app_name}.hosted.cs61a.org!"
+    return f"Running on {name}.hosted.cs61a.org!"
 
 
-@app.route("/stop", methods=["POST"])
-def stop():
-    params = request.json
-    secret = params.get("secret")
-    if secret != os.environ.get("DEPLOY_KEY"):
-        abort(403)
-
-    if "name" not in params:
-        abort(400)
-
-    app_name = params.get("name")
+@stop.bind(app)
+@only("buildserver")
+def stop(name):
     apps = get_config()
 
-    if app_name in apps:
+    if name in apps:
         for c in client.containers.list():
-            if c.name == app_name:
+            if c.name == name:
                 c.kill()
-                return jsonify(success=True)
+                return dict(success=True)
 
-    return jsonify(
+    return dict(
         success=False, reason="That container doesn't exist, or is not running."
     )
 
 
-@app.route("/run", methods=["POST"])
-def run():
-    params = request.json
-    secret = params.get("secret")
-    if secret != os.environ.get("DEPLOY_KEY"):
-        abort(403)
-
-    if not "name" in params:
-        abort(400)
-
-    app_name = params.get("name")
+@run.bind(app)
+@only("buildserver")
+def run(name):
     apps = get_config()
 
-    if app_name in apps:
+    if name in apps:
         for c in client.containers.list():
-            if c.name == app_name:
-                return jsonify(
-                    success=False, reason="That container is already running."
-                )
+            if c.name == name:
+                return dict(success=False, reason="That container is already running.")
     else:
-        return jsonify(success=False, reason="That container doesn't exist.")
+        return dict(success=False, reason="That container doesn't exist.")
 
-    client.containers.get(app_name).start()
-    return jsonify(success=True)
+    client.containers.get(name).start()
+    return dict(success=True)
 
 
-@app.route("/delete", methods=["POST"])
-def delete():
-    params = request.json
-    secret = params.get("secret")
-    if secret != os.environ.get("DEPLOY_KEY"):
-        abort(403)
-
-    if "name" not in params:
-        abort(400)
-
-    app_name = params.get("name")
+@delete.bind(app)
+@only("buildserver")
+def delete(name):
     apps = get_config()
 
-    if app_name in apps:
+    if name in apps:
         for c in client.containers.list(all=True):
-            if c.name == app_name:
+            if c.name == name:
                 if c.status == "running":
                     c.kill()
                 c.remove()
                 break
-        deconfigure(app_name)
-        return jsonify(success=True)
+        deconfigure(name)
+        return dict(success=True)
     else:
-        return jsonify(success=False, reason="That container doesn't exist.")
+        return dict(success=False, reason="That container doesn't exist.")
 
 
-@app.route("/add_domain", methods=["POST"])
-def add_domain():
-    params = request.json
-    secret = params.get("secret")
-    if secret != os.environ.get("DEPLOY_KEY"):
-        abort(403)
-
-    if "name" not in params or "domain" not in params:
-        abort(400)
-
-    app_name = params.get("name")
+@add_domain.bind(app)
+@only("buildserver")
+def add_domain(name, domain, force=False):
     apps = get_config()
 
-    domain = params.get("domain")
-
-    if "force" not in params or not params.get("force"):
+    if not force:
         for other_app in apps:
             if domain in apps[other_app]["domains"]:
-                return jsonify(
+                return dict(
                     success=False,
                     reason=f"That domain is already bound to {other_app}. Use 'force=True' to overwrite.",
                 )
 
-    if app_name in apps:
-        write_nginx(domain, apps[app_name]["port"])
-        redirect(domain, app_name)
-        return jsonify(success=True)
+    if name in apps:
+        write_nginx(domain, apps[name]["port"])
+        redirect(domain, name)
+        return dict(success=True)
 
-    return jsonify(success=False, reason="That container doesn't exist.")
+    return dict(success=False, reason="That container doesn't exist.")
 
 
 if __name__ == "__main__":
