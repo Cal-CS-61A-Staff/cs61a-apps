@@ -50,6 +50,7 @@ class Dependency(TypedDict):
 class Service(TypedDict):
     host: str
     root: str
+    zone: str
     name: str
 
 

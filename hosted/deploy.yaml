@@ -1,6 +1,2 @@
 build_type: none
-deploy_type: service
-service:
-  host: hosted-apps
-  root: /home/api/docker-api
-  name: dockerapi
+deploy_type: none

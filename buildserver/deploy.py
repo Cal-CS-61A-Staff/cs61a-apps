@@ -262,13 +262,17 @@ def run_service_deploy(app: App, pr_number: int):
         "--recurse",
         os.getcwd(),
         app.config["service"]["host"] + ":" + app.config["service"]["root"],
+        "--zone",
+        app.config["zone"],
     )
     sh(
         "gcloud",
         "compute",
         "ssh",
         app.config["service"]["host"],
-        "--command=systemctl restart {}".format(app.config["service"]["name"]),
+        '--command="systemctl restart {}"'.format(app.config["service"]["name"]),
+        "--zone",
+        app.config["zone"],
     )
 
 
