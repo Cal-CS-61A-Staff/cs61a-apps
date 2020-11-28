@@ -5,7 +5,7 @@ import yaml
 
 from common.shell_utils import tmp_directory
 
-WEB_DEPLOY_TYPES = {"flask", "flask-pandas", "docker", "static"}
+WEB_DEPLOY_TYPES = {"flask", "flask-pandas", "docker", "hosted", "static"}
 CLOUD_RUN_DEPLOY_TYPES = {"flask", "flask-pandas", "docker"}
 
 
