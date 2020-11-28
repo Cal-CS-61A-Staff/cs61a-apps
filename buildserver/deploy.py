@@ -255,24 +255,25 @@ def run_static_deploy(app: App, pr_number: int):
 def run_service_deploy(app: App, pr_number: int):
     if pr_number != 0:
         return  # do not deploy PR builds to prod!
-    sh(
-        "gcloud",
-        "compute",
-        "scp",
-        "--recurse",
-        os.getcwd(),
-        app.config["service"]["host"] + ":" + app.config["service"]["root"],
-        "--zone",
-        app.config["zone"],
-    )
+    for file in os.listdir("."):
+        sh(
+            "gcloud",
+            "compute",
+            "scp",
+            "--recurse",
+            file,
+            app.config["service"]["host"] + ":" + app.config["service"]["root"],
+            "--zone",
+            app.config["service"]["zone"],
+        )
     sh(
         "gcloud",
         "compute",
         "ssh",
         app.config["service"]["host"],
-        '--command="sudo systemctl restart {}"'.format(app.config["service"]["name"]),
+        "--command=sudo systemctl restart {}".format(app.config["service"]["name"]),
         "--zone",
-        app.config["zone"],
+        app.config["service"]["zone"],
     )
 
 
