@@ -1,0 +1,41 @@
+from typing import Dict, Optional
+
+from common.rpc.utils import create_service, requires_master_secret
+
+service = create_service("deploy.hosted")
+
+
+@requires_master_secret
+@service.route("/api/list_apps")
+def list_apps():
+    ...
+
+
+@requires_master_secret
+@service.route("/api/new")
+def new(*, img: str, name: Optional[str] = None, env: Dict[str, str] = {}):
+    ...
+
+
+@requires_master_secret
+@service.route("/api/stop")
+def stop(*, name: str):
+    ...
+
+
+@requires_master_secret
+@service.route("/api/run")
+def run(*, name: str):
+    ...
+
+
+@requires_master_secret
+@service.route("/api/delete")
+def delete(*, name: str):
+    ...
+
+
+@requires_master_secret
+@service.route("/api/add_domain")
+def add_domain(*, name: str, domain: str, force: bool = False):
+    ...
