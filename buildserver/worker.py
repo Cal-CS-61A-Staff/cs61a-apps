@@ -105,7 +105,8 @@ def land_commit(
                         f"{pr_number}.{name}.pr.cs61a.org"
                         for name in (
                             [app.name]
-                            if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES
+                            if app.config["deploy_type"]
+                            in CLOUD_RUN_DEPLOY_TYPES + ["hosted"]
                             else []
                         )
                         + app.config["static_consumers"]
