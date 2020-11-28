@@ -17,10 +17,8 @@ from common.rpc.auth import post_slack_message
 from common.rpc.hosted import add_domain, delete, list_apps, new
 from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
 from common.shell_utils import sh, tmp_directory
+from conf import DB_INSTANCE_NAME, DB_IP_ADDRESS
 from pypi_utils import update_setup_py
-
-DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
-DB_IP_ADDRESS = "35.236.93.51"
 
 
 def gen_master_secret(app: App, pr_number: int):
