@@ -20,6 +20,7 @@ from common.shell_utils import sh, tmp_directory
 from pypi_utils import update_setup_py
 
 DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
+DB_IP_ADDRESS = "35.236.93.51"
 
 
 def gen_master_secret(app: App, pr_number: int):
@@ -28,13 +29,23 @@ def gen_master_secret(app: App, pr_number: int):
 
 
 def gen_env_variables(app: App, pr_number: int):
-    database_url = sqlalchemy.engine.url.URL(
-        drivername="mysql+pymysql",
-        username="apps",
-        password=get_secret(secret_name="DATABASE_PW"),
-        database=app.name.replace("-", "_"),
-        query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
-    ).__to_string__(hide_password=False)
+    if app.config["deploy_type"] == "hosted":
+        database_url = sqlalchemy.engine.url.URL(
+            drivername="mysql",
+            host=DB_IP_ADDRESS,
+            password=get_secret(secret_name="DATABASE_PW"),
+            database=app.name.replace("-", "_"),
+        ).__to_string__(hide_password=False)
+    elif app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES:
+        database_url = sqlalchemy.engine.url.URL(
+            drivername="mysql+pymysql",
+            username="apps",
+            password=get_secret(secret_name="DATABASE_PW"),
+            database=app.name.replace("-", "_"),
+            query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
+        ).__to_string__(hide_password=False)
+    else:
+        database_url = None
 
     return dict(
         ENV="prod",
