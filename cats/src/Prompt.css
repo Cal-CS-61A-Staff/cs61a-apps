@@ -1,0 +1,10 @@
+.PromptBox {
+	text-align: left;
+}
+
+.Prompt {
+	border: purple 2px solid;
+	text-align: left;
+	padding: 10px;
+	user-select: none;
+}

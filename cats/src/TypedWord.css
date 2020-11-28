@@ -1,0 +1,18 @@
+.TypedWord {
+    white-space: pre-wrap;
+}
+
+.updated {
+    color: green;
+    font-weight: bold;
+}
+
+.incorrect {
+    color: red;
+    font-weight: bold;
+}
+
+.both {
+    color: orange;
+    font-weight: bold;
+}

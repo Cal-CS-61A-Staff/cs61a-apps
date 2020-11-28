@@ -1,6 +1,6 @@
 build_type: create_react_app
-deploy_type: flask
+deploy_type: hosted
 dependencies:
   - repo: Cal-CS-61A-Staff/berkeley-cs61a
-    src: src/proj/hog/hog.py
-    dest: server/hog.py
+    src: src/proj/cats/cats.py
+    dest: server/cats.py

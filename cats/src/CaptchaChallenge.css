@@ -1,0 +1,17 @@
+.CaptchaChallenge .images img {
+    height: 2rem;
+    border-bottom: transparent 5px solid;
+    box-sizing: content-box;
+}
+
+.CaptchaChallenge .images {
+    border: purple 2px solid;
+    padding: 10px;
+    text-align: center;
+    cursor: text;
+    line-height: 2.5rem;
+}
+
+.CaptchaChallenge .activeImage.activeImage {
+    border-bottom: green 5px solid;
+}

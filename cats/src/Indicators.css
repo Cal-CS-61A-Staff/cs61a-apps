@@ -1,0 +1,12 @@
+.Indicator {
+    display: inline-block;
+    border: black 2px solid;
+    padding: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+    width: 160px;
+}
+
+.Indicators {
+    width: 100%;
+}
