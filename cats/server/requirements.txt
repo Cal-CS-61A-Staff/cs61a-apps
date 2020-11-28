@@ -1,0 +1,6 @@
+Flask
+gunicorn
+mysqlclient
+cryptography
+claptcha
+-r common/requirements.txt

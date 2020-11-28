@@ -1,0 +1,11 @@
+.Character {
+    white-space: pre-wrap;
+}
+
+.correct {
+    background-color: lightgreen;
+}
+
+.wrong {
+    background-color: pink;
+}
