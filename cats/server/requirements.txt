@@ -1,7 +1,6 @@
 Flask
 gunicorn
-SQLAlchemy
 mysqlclient
 cryptography
 claptcha
-requests
+-r common/requirements.txt
