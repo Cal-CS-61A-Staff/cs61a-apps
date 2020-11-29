@@ -1,5 +1,25 @@
+import click
+
 from sicp.common.shell_utils import sh
 import os
+
+
+@click.command()
+@click.argument("repo")
+@click.argument("dest", default="")
+def clone(repo, dest):
+    """Clone REPO to DEST.
+
+    REPO is the name of the 61a repo to set up.
+    Currently, "apps" and "cs61a" are supported.
+    By default, DEST is set to the name of REPO.
+    """
+    if repo == "apps":
+        run_apps_clone(dest if dest else "cs61a-apps")
+    elif repo == "cs61a":
+        run_61a_clone(dest if dest else "berkeley-cs61a")
+    else:
+        click.echo("No need to use sicp for that! Just git clone.", err=True)
 
 
 def run_apps_clone(dir):
