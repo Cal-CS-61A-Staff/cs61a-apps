@@ -15,7 +15,7 @@ def sh(*args, env={}, capture_output=False, quiet=False):
         out = subprocess.run(
             args, env={**os.environ, **env, "ENV": "dev"}, capture_output=capture_output
         )
-    if capture_output:
+    if capture_output and not quiet:
         print(out.stdout, file=sys.stdout)
         print(out.stderr, file=sys.stderr)
     out.check_returncode()
