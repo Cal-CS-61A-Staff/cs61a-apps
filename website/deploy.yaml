@@ -1,2 +1,4 @@
 build_type: none
 deploy_type: flask
+first_party_domains:
+  - cs61a.org
