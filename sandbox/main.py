@@ -7,7 +7,13 @@ app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
     app.debug = True
 
+WORKING_DIRECTORY = "tmp" if app.debug else "/save"
+
 create_oauth_client(app, "61a-sandbox")
+
+
+def token_required():
+    ...
 
 
 @app.route("/")
