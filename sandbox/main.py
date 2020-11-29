@@ -7,7 +7,7 @@ app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
     app.debug = True
 
-create_oauth_client(app, "61a-staging")
+create_oauth_client(app, "61a-sandbox")
 
 
 @app.route("/")
