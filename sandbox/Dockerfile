@@ -1,7 +1,9 @@
 FROM python:buster
 
 RUN pip install -U pip && pip install pipenv
-RUN apt install -y --no-install-recommends texlive-full && apt-get install -y latexmk && git config --global core.symlinks true
+RUN apt-get update \
+  && apt install -y --no-install-recommends texlive-full \
+  && apt-get install -y latexmk
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
