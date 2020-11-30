@@ -36,6 +36,8 @@ with open("content/_index.md", "w") as index:
 apps = []
 for root, dirs, files in os.walk("../"):
     dirs[:] = [d for d in dirs if d not in EXCLUDE]
+    if root == "../cats":
+        continue
     if root == "../wiki-base":
         dirs[:] = []
     for file in files:
