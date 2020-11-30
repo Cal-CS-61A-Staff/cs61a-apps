@@ -36,7 +36,7 @@ def create_service(app: str, override=None):
 
                 if app == "sb":
                     endpoints = [
-                        f"http://localhost:5000{path}"
+                        f"https://121.sandbox.pr.cs61a.org{path}"
                     ]  # FIXME DO NOT MERGE @nocommit
 
                 for i, endpoint in enumerate(endpoints):
@@ -48,6 +48,9 @@ def create_service(app: str, override=None):
                     else:
                         try:
                             resp = requests.post(endpoint, json=kwargs)
+                            if i != len(endpoints) - 1:
+                                # if a PR build reports failure, try the prod build
+                                resp.raise_for_status()
                         except:
                             if i != len(endpoints) - 1:
                                 # on a PR build, try the main endpoint next
