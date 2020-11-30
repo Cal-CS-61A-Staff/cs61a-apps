@@ -1,0 +1,29 @@
+.Entries {
+	align-items: left;
+	display: flex;
+	flex-direction: column;
+	font-size: 14px;
+	width: -webkit-fill-available;
+}
+
+.Footer {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	font-size: 14px;
+	width: -webkit-fill-available;
+}
+
+.Header {
+	display: flex;
+	color: black;
+	font-weight: bold;
+	font-size: 20px;
+	width: -webkit-fill-available;
+}
+
+#Title {
+	color: black;
+	font-weight: bold;
+	font-size: 16px;
+}

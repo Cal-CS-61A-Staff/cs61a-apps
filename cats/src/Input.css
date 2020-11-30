@@ -1,0 +1,18 @@
+.Input {
+    width: 100%;
+    text-align: left;
+}
+
+.InputBox {
+    border: green 2px solid;
+    padding: 10px;
+    cursor: text;
+}
+
+.InputField {
+    display: inline-block;
+    height: 24px;
+    border: none;
+    outline: none;
+    min-width: 5px;
+}

@@ -5,8 +5,9 @@ import yaml
 
 from common.shell_utils import tmp_directory
 
-WEB_DEPLOY_TYPES = {"flask", "flask-pandas", "docker", "static"}
+WEB_DEPLOY_TYPES = {"flask", "flask-pandas", "docker", "hosted", "static"}
 CLOUD_RUN_DEPLOY_TYPES = {"flask", "flask-pandas", "docker"}
+PR_LINKED_DEPLOY_TYPES = {*CLOUD_RUN_DEPLOY_TYPES, "hosted"}
 
 
 class Config(TypedDict):
@@ -14,7 +15,15 @@ class Config(TypedDict):
         "create_react_app", "oh_queue", "webpack", "61a_website", "hugo", "none"
     ]
     deploy_type: Literal[
-        "flask", "flask-pandas", "docker", "pypi", "cloud_function", "static", "none"
+        "flask",
+        "flask-pandas",
+        "docker",
+        "pypi",
+        "cloud_function",
+        "static",
+        "service",
+        "hosted",
+        "none",
     ]
     build_image: Optional[str]
     cpus: int
@@ -26,6 +35,7 @@ class Config(TypedDict):
     repo: Optional[str]
     package_name: str
     static_consumers: List[str]
+    service: "Service"
 
 
 class Task(TypedDict):
@@ -37,6 +47,13 @@ class Dependency(TypedDict):
     repo: str
     src: str
     dest: str
+
+
+class Service(TypedDict):
+    host: str
+    root: str
+    zone: str
+    name: str
 
 
 @dataclass
@@ -67,6 +84,7 @@ class App:
                     "static_consumers", []
                 )
                 self.config["repo"] = self.config.get("repo")
+                self.config["service"] = self.config.get("service")
 
     def __str__(self):
         return self.name

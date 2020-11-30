@@ -17,5 +17,5 @@ setup(
     include_package_data=True,
     entry_points={"console_scripts": ["sicp=sicp.__main__:cli"]},
     python_requires=">=3.8",
-    install_requires=["click"],
+    install_requires=["click", "watchdog", "crcmod"],
 )

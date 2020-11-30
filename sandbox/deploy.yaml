@@ -1,0 +1,4 @@
+build_type: none
+deploy_type: hosted
+first_party_domains:
+  - sb.cs61a.org

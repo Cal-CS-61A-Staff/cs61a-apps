@@ -2,7 +2,8 @@ import json
 import os
 import shutil
 import socket
-import subprocess
+
+from common.shell_utils import sh
 
 CONFIG = f"{os.getcwd()}/data/config.json"
 NGINX_ENABLED = f"{os.getcwd()}/data/nginx-confs"
@@ -24,37 +25,17 @@ def delete_nginx(app_name):
     apps = get_config()
     for domain in apps[app_name]["domains"]:
         os.remove(f"{NGINX_ENABLED}/{domain}")
-        process = subprocess.Popen(
-            ["sudo", "certbot", "delete", "--cert-name", domain],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        _, _ = process.communicate()
+        sh("sudo", "certbot", "delete", "--cert-name", domain)
 
-    process = subprocess.Popen(
-        ["sudo", "nginx", "-s", "reload"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    _, _ = process.communicate()
+    sh("sudo", "nginx", "-s", "reload")
 
 
 def write_nginx(domain, port):
     contents = NGINX_TEMPLATE.replace("{domain}", domain).replace("{port}", str(port))
     with open(f"{NGINX_ENABLED}/{domain}", "w") as a:
         a.write(contents)
-    process = subprocess.Popen(
-        ["sudo", "nginx", "-s", "reload"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    _, _ = process.communicate()
-    process = subprocess.Popen(
-        ["sudo", "certbot", "--nginx", "-d", domain, "--non-interactive"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    _, _ = process.communicate()
+    sh("sudo", "nginx", "-s", "reload")
+    sh("sudo", "certbot", "--nginx", "-d", domain, "--non-interactive")
 
 
 def get_empty_port():

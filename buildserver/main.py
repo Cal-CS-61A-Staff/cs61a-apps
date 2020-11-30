@@ -15,13 +15,12 @@ from common.rpc.buildserver import (
 )
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
+from conf import GITHUB_REPO
 from deploy import delete_unused_services
 from github_utils import BuildStatus, pack, set_pr_comment
 from scheduling import report_build_status
 from target_determinator import determine_targets
 from worker import land_commit
-
-GITHUB_REPO = "Cal-CS-61A-Staff/cs61a-apps"
 
 app = Flask(__name__)
 if __name__ == "__main__":

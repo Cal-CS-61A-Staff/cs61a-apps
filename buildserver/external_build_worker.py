@@ -6,7 +6,7 @@ from github import Github
 from app_config import App
 from build import clone_commit
 from common.rpc.secrets import get_secret
-from main import GITHUB_REPO
+from conf import GITHUB_REPO
 from worker import land_app_worker
 
 if __name__ == "__main__":
