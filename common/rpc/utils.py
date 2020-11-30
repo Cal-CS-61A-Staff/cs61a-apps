@@ -1,4 +1,5 @@
 import json
+import traceback
 from functools import wraps
 
 import flask
@@ -69,6 +70,7 @@ def create_service(app: str, override=None):
                         except PermissionError as e:
                             return str(e), 401
                         except Exception as e:
+                            traceback.print_exc()
                             return str(e), 500
 
                     app.add_url_rule(path, func.__name__, handler, methods=["POST"])

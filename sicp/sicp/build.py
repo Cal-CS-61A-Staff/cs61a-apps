@@ -18,7 +18,13 @@ from watchdog.events import (
 from watchdog.observers import Observer
 
 from common.rpc.auth_utils import set_token_path
-from common.rpc.sandbox import get_server_hashes, run_incremental_build, update_file
+from common.rpc.sandbox import (
+    get_server_hashes,
+    initialize_sandbox,
+    is_sandbox_initialized,
+    run_incremental_build,
+    update_file,
+)
 from common.shell_utils import sh
 
 # TODO: Properly indicate if the extension is not installed
@@ -37,6 +43,14 @@ def build():
     global internal_hashma, do_build
     os.chdir(TARGET)
     set_token_path(".token")
+    if not is_sandbox_initialized():
+        print("Sandbox is not initialized.")
+        if click.confirm(
+            "Do you want to initialize your sandbox? It will take about 10 minutes."
+        ):
+            initialize_sandbox()
+        else:
+            return
     print("Scanning local directory...")
     synchronize_from(get_server_hashes, show_progress=True)
     while True:

@@ -27,3 +27,15 @@ def get_server_hashes():
 @service.route("/api/run_incremental_build")
 def run_incremental_build():
     ...
+
+
+@requires_access_token
+@service.route("/api/is_sandbox_initialized")
+def is_sandbox_initialized():
+    ...
+
+
+@requires_access_token
+@service.route("/api/initialize_sandbox")
+def initialize_sandbox(force=True):
+    ...
