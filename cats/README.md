@@ -1,4 +1,4 @@
-## How to develop:
+# Cats
 
 `yarn` to install dependencies - do this when you first download it!
 
