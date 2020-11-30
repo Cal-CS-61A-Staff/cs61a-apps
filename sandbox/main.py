@@ -4,19 +4,14 @@ from contextlib import contextmanager
 from functools import wraps
 from os.path import abspath
 from pathlib import Path
-from sys import stderr
 from typing import Optional
 
 import requests
-from flask import Flask, g, redirect, request, safe_join, send_from_directory
+from flask import Flask, g, redirect, safe_join, send_from_directory
 
 from common.course_config import get_endpoint
 from common.db import connect_db
 from common.oauth_client import AUTHORIZED_ROLES, create_oauth_client, is_staff
-from common.rpc.secrets import get_secret
-from common.shell_utils import sh
-from common.url_for import get_host, url_for
-from sicp.build import get_hash, hash_all
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
@@ -24,6 +19,10 @@ from common.rpc.sandbox import (
     run_incremental_build,
     update_file,
 )
+from common.rpc.secrets import get_secret
+from common.shell_utils import sh
+from common.url_for import get_host, url_for
+from sicp.build import get_hash, hash_all
 
 app = Flask(__name__)
 if __name__ == "__main__":
