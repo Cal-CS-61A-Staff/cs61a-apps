@@ -14,7 +14,16 @@ server {
         include proxy_params;
         proxy_pass http://127.0.0.1:{port};
     }
+{ssl}
 }
+"""
+NGINX_HOSTED_SSL = """
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/hosted.cs61a.org-0001/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/hosted.cs61a.org-0001/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 """
 
 if not os.path.exists(NGINX_ENABLED):
@@ -25,17 +34,22 @@ def delete_nginx(app_name):
     apps = get_config()
     for domain in apps[app_name]["domains"]:
         os.remove(f"{NGINX_ENABLED}/{domain}")
-        sh("sudo", "certbot", "delete", "--cert-name", domain)
+        if not domain.endswith(".hosted.cs61a.org"):
+            sh("sudo", "certbot", "delete", "--cert-name", domain)
 
     sh("sudo", "nginx", "-s", "reload")
 
 
 def write_nginx(domain, port):
     contents = NGINX_TEMPLATE.replace("{domain}", domain).replace("{port}", str(port))
+    contents = contents.replace(
+        "{ssl}", NGINX_HOSTED_SSL if domain.endswith(".hosted.cs61a.org") else ""
+    )
     with open(f"{NGINX_ENABLED}/{domain}", "w") as a:
         a.write(contents)
     sh("sudo", "nginx", "-s", "reload")
-    sh("sudo", "certbot", "--nginx", "-d", domain, "--non-interactive")
+    if not domain.endswith(".hosted.cs61a.org"):
+        sh("sudo", "certbot", "--nginx", "-d", domain, "--non-interactive")
 
 
 def get_empty_port():

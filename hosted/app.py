@@ -1,7 +1,16 @@
 import docker
 from flask import Flask
 
-from common.rpc.hosted import add_domain, delete, list_apps, new, run, stop
+from common.rpc.hosted import (
+    add_domain,
+    delete,
+    list_apps,
+    new,
+    run,
+    stop,
+    service_log,
+    container_log,
+)
 from common.rpc.secrets import only
 from utils import *
 
@@ -142,6 +151,26 @@ def add_domain(name, domain, force=False):
         return dict(success=True)
 
     return dict(success=False, reason="That container doesn't exist.")
+
+
+@service_log.bind(app)
+@only("logs")
+def service_log():
+    logs = sh("journalctl", "-u", "dockerapi", "-n", "100", quiet=True).decode("utf-8")
+    return dict(success=True, logs=logs)
+
+
+@container_log.bind(app)
+@only("logs")
+def container_log(name):
+    apps = get_config()
+
+    if name in apps:
+        c = client.containers.get(name)
+        logs = c.logs(tail=100, timestamps=True).decode("utf-8")
+        return dict(success=True, logs=logs)
+    else:
+        return dict(success=False, reason="That container doesn't exist.")
 
 
 if __name__ == "__main__":
