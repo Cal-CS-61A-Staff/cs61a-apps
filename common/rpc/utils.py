@@ -6,6 +6,7 @@ import requests
 from cachetools import TTLCache
 from flask import has_request_context, jsonify, request
 
+from common.rpc.auth_utils import get_token, refresh_token
 from common.secrets import get_master_secret
 
 
@@ -31,6 +32,12 @@ def create_service(app: str, override=None):
                             pr = parts[0]
                             endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
                 endpoints.append(f"https://{app}.cs61a.org{path}")
+
+                if app == "sb":
+                    endpoints = [
+                        f"http://localhost:5000{path}"
+                    ]  # FIXME DO NOT MERGE @nocommit
+
                 for i, endpoint in enumerate(endpoints):
                     if noreply:
                         try:
@@ -40,13 +47,16 @@ def create_service(app: str, override=None):
                     else:
                         try:
                             resp = requests.post(endpoint, json=kwargs)
-                            resp.raise_for_status()
                         except:
                             if i != len(endpoints) - 1:
                                 # on a PR build, try the main endpoint next
                                 continue
                             else:
                                 raise
+                        if resp.status_code == 401:
+                            raise PermissionError(resp.text)
+                        elif resp.status_code == 500:
+                            raise Exception(resp.text)
                         resp.raise_for_status()
                         return resp.json()
 
@@ -54,7 +64,12 @@ def create_service(app: str, override=None):
                 def decorator(func):
                     def handler():
                         kwargs = request.json
-                        return jsonify(func(**kwargs))
+                        try:
+                            return jsonify(func(**kwargs))
+                        except PermissionError as e:
+                            return str(e), 401
+                        except Exception as e:
+                            return str(e), 500
 
                     app.add_url_rule(path, func.__name__, handler, methods=["POST"])
                     return func
@@ -74,6 +89,18 @@ def requires_master_secret(func):
     @wraps(func)
     def wrapped(**kwargs):
         return func(**kwargs, master_secret=get_master_secret())
+
+    return wrapped
+
+
+def requires_access_token(func):
+    @wraps(func)
+    def wrapped(**kwargs):
+        try:
+            return func(**kwargs, access_token=get_token())
+        except PermissionError:
+            refresh_token()
+            return func(**kwargs, access_token=get_token())
 
     return wrapped
 

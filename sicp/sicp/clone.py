@@ -1,6 +1,6 @@
 import click
 
-from sicp.common.shell_utils import sh
+from common.shell_utils import sh
 import os
 
 
