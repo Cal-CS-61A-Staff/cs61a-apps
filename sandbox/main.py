@@ -142,24 +142,22 @@ def index(path="index.html"):
     if path.endswith(".html"):
         with open(path, "r") as f:
             out = f.read()
-        out += """<script src="hot_reloader.js"> </script>"""
+        out += """<script src="/hot_reloader.js"> </script>"""
         return out
     else:
         return send_file(path)
 
 
-def get_latest_revision():
+def get_status():
     with connect_db() as db:
         version = db(
-            "SELECT version FROM sandboxes WHERE username=%s",
-            [get_user()["email"][: -len("@berkeley.edu")]]
-            if is_prod_build()
-            else DEFAULT_USER,
+            "SELECT version, locked FROM sandboxes WHERE username=%s",
+            get_host().split(".")[0] if is_prod_build() else DEFAULT_USER,
         ).fetchone()
         if version is None:
-            return 0
+            return 0, False
         else:
-            return version[0]
+            return list(version)
 
 
 @app.route("/hot_reloader.js")
@@ -168,13 +166,14 @@ def hot_reloader():
         return redirect(url_for("login"))
 
     with open(HOT_RELOAD_SCRIPT_PATH) as f:
-        out = f.read().replace("VERSION", str(get_latest_revision()))
+        out = f.read().replace("VERSION", str(get_status()[0]))
     return out
 
 
 @app.route("/latest_revision", methods=["POST"])
 def latest_revision():
-    return jsonify(get_latest_revision())
+    version, building = get_status()
+    return jsonify(dict(version=version, isLoading=building))
 
 
 @update_file.bind(app)

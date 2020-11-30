@@ -51,8 +51,10 @@ def build():
             initialize_sandbox()
         else:
             return
+    print("Please wait until synchronization completes...")
     print("Scanning local directory...")
     synchronize_from(get_server_hashes, show_progress=True)
+    print("Synchronization completed! You can now begin developing.")
     while True:
         observer = Observer()
         try:
@@ -124,9 +126,9 @@ def synchronize_from(remote_state, show_progress=False):
 
     for path in tqdm(to_update) if show_progress else to_update:
         print(
-            "Synchronizing, curr={}, remote={}",
-            current_state.get(path),
-            remote_state.get(path),
+            "Synchronizing, curr={}, remote={}".format(
+                current_state.get(path), remote_state.get(path)
+            )
         )
         synchronize(path)
 
