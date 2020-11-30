@@ -4,14 +4,20 @@ from contextlib import contextmanager
 from functools import wraps
 from os.path import abspath
 from pathlib import Path
+from random import randrange
 from typing import Optional
 
 import requests
-from flask import Flask, g, redirect, safe_join, send_from_directory
+from flask import Flask, g, jsonify, redirect, safe_join, send_file
 
 from common.course_config import get_endpoint
 from common.db import connect_db
-from common.oauth_client import AUTHORIZED_ROLES, create_oauth_client, is_staff
+from common.oauth_client import (
+    AUTHORIZED_ROLES,
+    create_oauth_client,
+    get_user,
+    is_staff,
+)
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
@@ -29,6 +35,7 @@ if __name__ == "__main__":
     app.debug = True
 
 WORKING_DIRECTORY = abspath("tmp") if app.debug else "/save"
+HOT_RELOAD_SCRIPT_PATH = abspath("hot_reloader.js")
 REPO = "Cal-CS-61A-Staff/berkeley-cs61a"
 
 create_oauth_client(app, "61a-sandbox")
@@ -38,7 +45,8 @@ with connect_db() as db:
         """CREATE TABLE IF NOT EXISTS sandboxes (
     username varchar(128),
     initialized boolean,
-    locked boolean
+    locked boolean,
+    version integer
 )"""
     )
 
@@ -128,7 +136,41 @@ def index(path="index.html"):
     target = get_working_directory() + "/published/" + path
     if os.path.isdir(target):
         return index(path + "/index.html")
-    return send_from_directory(get_working_directory() + "/published/", path)
+    path = safe_join(get_working_directory(), "published", path)
+    if path.endswith(".html"):
+        with open(path, "r") as f:
+            out = f.read()
+        out += """<script src="hot_reloader.js"> </script>"""
+        return out
+    else:
+        return send_file(path)
+
+
+def get_latest_revision():
+    with connect_db() as db:
+        version = db(
+            "SELECT version FROM sandboxes WHERE username=%s",
+            [get_user()["email"][: -len("@berkeley.edu")]],
+        ).fetchone()
+        if version is None:
+            return 0
+        else:
+            return version[0]
+
+
+@app.route("/hot_reloader.js")
+def hot_reloader():
+    if not is_staff("cs61a"):
+        return redirect(url_for("login"))
+
+    with open(HOT_RELOAD_SCRIPT_PATH) as f:
+        out = f.read().replace("VERSION", str(get_latest_revision()))
+    return out
+
+
+@app.route("/latest_revision", methods=["POST"])
+def latest_revision():
+    return jsonify(get_latest_revision())
 
 
 @update_file.bind(app)
@@ -173,6 +215,11 @@ def run_incremental_build():
         os.chdir(get_working_directory())
         os.chdir("src")
         sh("make", "VIRTUAL_ENV=../env", "all", "unreleased")
+    with connect_db() as db:
+        db(
+            "UPDATE sandboxes SET version=%s WHERE username=%s",
+            [randrange(1000), g.username],
+        )
 
 
 @get_server_hashes.bind(app)
