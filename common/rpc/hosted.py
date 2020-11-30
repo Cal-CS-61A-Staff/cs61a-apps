@@ -39,3 +39,15 @@ def delete(*, name: str):
 @service.route("/api/add_domain")
 def add_domain(*, name: str, domain: str, force: bool = False):
     ...
+
+
+@requires_master_secret
+@service.route("/api/service_log")
+def service_log():
+    ...
+
+
+@requires_master_secret
+@service.route("/api/container_log")
+def container_log(*, name: str):
+    ...
