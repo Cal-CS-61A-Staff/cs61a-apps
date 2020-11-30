@@ -38,6 +38,8 @@ WORKING_DIRECTORY = abspath("tmp") if app.debug else "/save"
 HOT_RELOAD_SCRIPT_PATH = abspath("hot_reloader.js")
 REPO = "Cal-CS-61A-Staff/berkeley-cs61a"
 
+DEFAULT_USER = "rahularya"
+
 create_oauth_client(app, "61a-sandbox")
 
 with connect_db() as db:
@@ -150,7 +152,9 @@ def get_latest_revision():
     with connect_db() as db:
         version = db(
             "SELECT version FROM sandboxes WHERE username=%s",
-            [get_user()["email"][: -len("@berkeley.edu")]],
+            [get_user()["email"][: -len("@berkeley.edu")]]
+            if is_prod_build()
+            else DEFAULT_USER,
         ).fetchone()
         if version is None:
             return 0
