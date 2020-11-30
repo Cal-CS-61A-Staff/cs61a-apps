@@ -173,7 +173,7 @@ def run_incremental_build():
     with sandbox_lock():
         os.chdir(get_working_directory())
         os.chdir("src")
-        sh("make", "VIRTUAL_ENV=../env", "unreleased")
+        sh("make", "VIRTUAL_ENV=../env", "all", "unreleased")
 
 
 @get_server_hashes.bind(app)
@@ -206,7 +206,8 @@ def initialize_sandbox(force=False):
             raise Exception("Sandbox is already initialized")
         elif initialized:
             sh("rm", "-rf", get_working_directory())
-        os.mkdir(get_working_directory())
+        Path(get_working_directory()).mkdir(parents=True, exist_ok=True)
+        os.chdir(get_working_directory())
         sh("git", "init")
         sh(
             "git",
