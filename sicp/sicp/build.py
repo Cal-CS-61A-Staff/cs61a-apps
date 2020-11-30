@@ -18,7 +18,7 @@ from watchdog.events import (
 from watchdog.observers import Observer
 
 from common.rpc.auth_utils import set_token_path
-from common.rpc.sandbox import get_server_hashes, update_file
+from common.rpc.sandbox import get_server_hashes, run_incremental_build, update_file
 from common.shell_utils import sh
 
 # TODO: Properly indicate if the extension is not installed
@@ -29,26 +29,30 @@ SYMLINK = "SYMLINK"
 
 internal_hashmap = {}
 
+do_build = True
+
 
 @click.command()
 def build():
-    global internal_hashmap
+    global internal_hashma, do_build
     os.chdir(TARGET)
     set_token_path(".token")
+    print("Scanning local directory...")
     synchronize_from(get_server_hashes, show_progress=True)
-    observer = Observer()
-    observer.schedule(Handler(), TARGET, recursive=True)
-    try:
-        observer.start()
-        while True:
+    while True:
+        observer = Observer()
+        try:
+            observer.schedule(Handler(), TARGET, recursive=True)
+            observer.start()
             for _ in range(15):
                 time.sleep(1)
-            print("Doing full synchronization")
+                if do_build:
+                    do_build = False
+                    run_incremental_build()
             full_synchronization()
-            print("Full synchronization completed")
-    finally:
-        observer.stop()
-        observer.join()
+        finally:
+            observer.stop()
+            observer.join()
 
 
 class Handler(FileSystemEventHandler):
@@ -60,6 +64,7 @@ class Handler(FileSystemEventHandler):
 
 
 def synchronize(path: str):
+    global do_build
     os.chdir(TARGET)
     path = relpath(path)
     if isinstance(path, bytes):
@@ -78,6 +83,7 @@ def synchronize(path: str):
         elif not os.path.exists(path):
             update_file(path=path, delete=True)
         internal_hashmap[path] = get_hash(path)
+        do_build = True
     except Exception as e:
         raise
         traceback.print_exc()
@@ -93,6 +99,8 @@ def synchronize_from(remote_state, show_progress=False):
     current_state = hash_all(show_progress=show_progress)
     if callable(remote_state):
         # When we want to fetch it lazily
+        if show_progress:
+            print("Fetching server state...")
         remote_state = remote_state()
     paths = set(current_state) | set(remote_state)
     to_update = []
@@ -127,18 +135,16 @@ def get_hash(path):
         return
 
 
-def hash_all(show_progress=False, norepo=False):
-    if norepo:
-        sh("git", "init")
+def hash_all(show_progress=False):
     files = (
         sh(
-            "git", "ls-files", capture_output=True, quiet=True
+            "git", "ls-files", "--exclude-standard", capture_output=True, quiet=True
         ).splitlines()  # All tracked files
         + sh(
             "git",
             "ls-files",
             "-o",
-            *([] if norepo else ["--exclude-standard"]),
+            "--exclude-standard",
             capture_output=True,
             quiet=True,
         ).splitlines()  # Untracked but not ignored files
@@ -149,6 +155,4 @@ def hash_all(show_progress=False, norepo=False):
         if isinstance(file, bytes):
             file = file.decode("ascii")
         out[relpath(file)] = h
-    if norepo:
-        sh("rm", "-rf", ".git")
     return out

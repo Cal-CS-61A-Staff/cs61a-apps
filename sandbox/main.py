@@ -17,11 +17,10 @@ from sicp.build import get_hash, hash_all
 from common.rpc.sandbox import get_server_hashes, run_incremental_build, update_file
 
 app = Flask(__name__, static_folder="", static_url_path="")
-# if __name__ == "__main__":
-#     app.debug = True
+if __name__ == "__main__":
+    app.debug = True
 
-WORKING_DIRECTORY = abspath("tmp")  # if app.debug else "/save"
-print(WORKING_DIRECTORY)
+WORKING_DIRECTORY = abspath("tmp") if app.debug else "/save"
 
 create_oauth_client(app, "61a-sandbox")
 
@@ -120,10 +119,11 @@ def update_file(
 
 
 @run_incremental_build.bind(app)
+@verifies_access_token
 def run_incremental_build():
     os.chdir(get_working_directory())
     os.chdir("src")
-    sh("make", "unreleased")
+    sh("make", "VIRTUAL_ENV=../env", "unreleased")
 
 
 @get_server_hashes.bind(app)
@@ -131,7 +131,7 @@ def run_incremental_build():
 def get_server_hashes():
     base = get_working_directory()
     os.chdir(base)
-    return hash_all(norepo=True)
+    return hash_all()
 
 
 if __name__ == "__main__":
