@@ -36,8 +36,8 @@ def create_service(app: str, override=None):
 
                 if app == "sb":
                     endpoints = [
-                        # f"https://121.sandbox.pr.cs61a.org{path}"
-                        f"http://localhost:5000{path}"
+                        f"https://121.sandbox.pr.cs61a.org{path}"
+                        # f"http://localhost:5000{path}"
                     ]  # FIXME DO NOT MERGE @nocommit
 
                 for i, endpoint in enumerate(endpoints):

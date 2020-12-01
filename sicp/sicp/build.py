@@ -31,21 +31,42 @@ from common.shell_utils import sh
 
 # TODO: Properly indicate if the extension is not installed
 
-TARGET = "/Users/rahularya/PyCharmProjects/berkeley-cs61a"
+
+REPO = "berkeley-cs61a"
 
 SYMLINK = "SYMLINK"
 
 internal_hashmap = {}
-
 recent_files = LRUCache(15)
-
 do_build = True
+
+
+def find_target():
+    if not hasattr(find_target, "out"):
+        remote = sh(
+            "git",
+            "config",
+            "--get",
+            "remote.origin.url",
+            capture_output=True,
+            quiet=True,
+        ).decode("utf-8")
+        if REPO not in remote:
+            raise Exception(
+                "You must run this command in the berkeley-cs61a repo directory"
+            )
+        find_target.out = (
+            sh("git", "rev-parse", "--show-toplevel", capture_output=True, quiet=True)
+            .decode("utf-8")
+            .strip()
+        )
+    return find_target.out
 
 
 @click.command()
 def build():
     global do_build
-    os.chdir(TARGET)
+    os.chdir(find_target())
     set_token_path(".token")
     if not is_sandbox_initialized():
         print("Sandbox is not initialized.")
@@ -64,7 +85,7 @@ def build():
     while True:
         observer = Observer()
         try:
-            observer.schedule(Handler(), TARGET, recursive=True)
+            observer.schedule(Handler(), find_target(), recursive=True)
             observer.start()
             for _ in range(15):
                 time.sleep(1)
@@ -101,7 +122,7 @@ class Handler(FileSystemEventHandler):
 
 def synchronize(path: str):
     global do_build
-    os.chdir(TARGET)
+    os.chdir(find_target())
     path = relpath(path)
     if isinstance(path, bytes):
         path = path.decode("ascii")
@@ -130,7 +151,6 @@ def full_synchronization():
 def recent_synchronization():
     for path in recent_files.keys():
         if internal_hashmap.get(path) != get_hash(path):
-            print("LRU sync")
             synchronize(path)
 
 
