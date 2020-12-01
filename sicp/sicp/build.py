@@ -35,6 +35,7 @@ from common.shell_utils import sh
 REPO = "berkeley-cs61a"
 
 SYMLINK = "SYMLINK"
+SUCCESS = "SUCCESS"
 
 internal_hashmap = {}
 recent_files = LRUCache(15)
@@ -83,7 +84,9 @@ def build(clean=False):
     if clean and click.confirm(
         "Do you want to rebuild everything on your sandbox from scratch?"
     ):
-        run_incremental_build(clean=True)
+        for line in run_incremental_build(clean=True):
+            print(line, end="")
+        print("\nRebuild completed!")
     Thread(target=catchup_synchronizer_thread, daemon=True).start()
     Thread(target=catchup_full_synchronizer_thread, daemon=True).start()
     print("Synchronization completed! You can now begin developing.")
@@ -97,7 +100,9 @@ def build(clean=False):
                 if do_build:
                     do_build = False
                     try:
-                        run_incremental_build()
+                        for line in run_incremental_build():
+                            print(line, end="")
+                        print()
                     except Exception as e:
                         print(str(e))
         finally:
@@ -154,7 +159,7 @@ def full_synchronization():
 
 
 def recent_synchronization():
-    for path in recent_files.keys():
+    for path in set(recent_files.keys()):  # set() is needed to avoid concurrency issues
         if internal_hashmap.get(path) != get_hash(path):
             synchronize(path)
 

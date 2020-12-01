@@ -223,19 +223,16 @@ def run_incremental_build(clean=False):
     with sandbox_lock():
         os.chdir(get_working_directory())
         os.chdir("src")
-        try:
-            if clean:
-                sh("make", "VIRTUAL_ENV=../env", "clean")
-            sh(
-                "make",
-                "VIRTUAL_ENV=../env",
-                "all",
-                "unreleased",
-                capture_output=True,
-                env=ENV,
-            )
-        except CalledProcessError as e:
-            raise Exception(e.stdout.decode("utf-8") + "\n" + e.stderr.decode("utf-8"))
+        if clean:
+            sh("make", "VIRTUAL_ENV=../env", "clean")
+        yield from sh(
+            "make",
+            "VIRTUAL_ENV=../env",
+            "all",
+            "unreleased",
+            env=ENV,
+            stream_output=True,
+        )
     with connect_db() as db:
         db(
             "UPDATE sandboxes SET version=%s WHERE username=%s",
