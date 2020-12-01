@@ -64,7 +64,8 @@ def find_target():
 
 
 @click.command()
-def build():
+@click.option("--clean", is_flag=True)
+def build(clean=False):
     global do_build
     os.chdir(find_target())
     set_token_path(".token")
@@ -79,6 +80,10 @@ def build():
     print("Please wait until synchronization completes...")
     print("Scanning local directory...")
     synchronize_from(get_server_hashes, show_progress=True)
+    if clean and click.confirm(
+        "Do you want to rebuild everything on your sandbox from scratch?"
+    ):
+        run_incremental_build(clean=True)
     Thread(target=catchup_synchronizer_thread, daemon=True).start()
     Thread(target=catchup_full_synchronizer_thread, daemon=True).start()
     print("Synchronization completed! You can now begin developing.")

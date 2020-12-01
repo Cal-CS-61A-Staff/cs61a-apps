@@ -95,16 +95,17 @@ def is_prod_build():
 
 @contextmanager
 def sandbox_lock():
+    username = g.username if is_prod_build() else DEFAULT_USER
     try:
         with connect_db() as db:
             locked = db(
-                "SELECT locked FROM sandboxes WHERE username=%s", [g.username]
+                "SELECT locked FROM sandboxes WHERE username=%s", [username]
             ).fetchone()
             if locked is None:
                 # sandbox does not exist
                 db(
                     "INSERT INTO sandboxes (username, initialized, locked) VALUES (%s, FALSE, TRUE)",
-                    [g.username],
+                    [username],
                 )
                 yield
             else:
@@ -117,13 +118,13 @@ def sandbox_lock():
                 else:
                     db(
                         "UPDATE sandboxes SET locked=TRUE WHERE username=%s",
-                        [g.username],
+                        [username],
                     )
                     yield
 
     finally:
         with connect_db() as db:
-            db("UPDATE sandboxes SET locked=FALSE WHERE username=%s", [g.username])
+            db("UPDATE sandboxes SET locked=FALSE WHERE username=%s", [username])
 
 
 def get_working_directory(username=None):
