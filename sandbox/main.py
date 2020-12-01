@@ -39,9 +39,7 @@ WORKING_DIRECTORY = abspath("tmp") if app.debug else "/save"
 HOT_RELOAD_SCRIPT_PATH = abspath("hot_reloader.js")
 REPO = "Cal-CS-61A-Staff/berkeley-cs61a"
 
-ENV = dict(
-    _CLOUD_STORAGE_BUCKET="website-base.buckets.cs61a.org"
-)  # fixme: repo needs to install cloud storage in makefile
+ENV = dict(CLOUD_STORAGE_BUCKET="website-base.buckets.cs61a.org")
 
 DEFAULT_USER = "rahularya"
 
