@@ -5,7 +5,7 @@ from functools import wraps
 import flask
 import requests
 from cachetools import TTLCache
-from flask import Response, has_request_context, jsonify, request
+from flask import Response, has_request_context, jsonify, request, stream_with_context
 
 from common.rpc.auth_utils import get_token, refresh_token
 from common.secrets import get_master_secret
@@ -111,7 +111,7 @@ def create_service(app: str, override=None):
                                     else:
                                         yield STATUS_MARKER
 
-                                return Response(generator())
+                                return Response(stream_with_context(generator()))
                             else:
                                 return jsonify(out)
                         except PermissionError as e:
