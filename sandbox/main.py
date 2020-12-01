@@ -5,6 +5,7 @@ from functools import wraps
 from os.path import abspath
 from pathlib import Path
 from random import randrange
+from subprocess import CalledProcessError
 from typing import Optional
 
 import requests
@@ -15,9 +16,9 @@ from common.db import connect_db
 from common.oauth_client import (
     AUTHORIZED_ROLES,
     create_oauth_client,
-    get_user,
     is_staff,
 )
+from common.rpc.hosted import add_domain
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
@@ -123,8 +124,7 @@ def sandbox_lock():
 
 def get_working_directory():
     if is_prod_build():
-        # TODO: check if user sandbox is provisioned
-        return WORKING_DIRECTORY
+        return os.path.join(WORKING_DIRECTORY, g.username)
     else:
         # Everyone shares the same working directory on dev / PR builds
         return WORKING_DIRECTORY
@@ -213,11 +213,16 @@ def update_file(
 
 @run_incremental_build.bind(app)
 @verifies_access_token
-def run_incremental_build():
+def run_incremental_build(clean=False):
     with sandbox_lock():
         os.chdir(get_working_directory())
         os.chdir("src")
-        sh("make", "VIRTUAL_ENV=../env", "all", "unreleased")
+        try:
+            if clean:
+                sh("make", "VIRTUAL_ENV=../env", "clean")
+            sh("make", "VIRTUAL_ENV=../env", "all", "unreleased", capture_output=True)
+        except CalledProcessError as e:
+            raise Exception(e.stdout.decode("utf-8") + "\n" + e.stderr.decode("utf-8"))
     with connect_db() as db:
         db(
             "UPDATE sandboxes SET version=%s WHERE username=%s",
@@ -236,21 +241,24 @@ def get_server_hashes():
 @is_sandbox_initialized.bind(app)
 @verifies_access_token
 def is_sandbox_initialized():
-    with sandbox_lock():
-        with connect_db() as db:
-            return db(
-                "SELECT initialized FROM sandboxes WHERE username=%s", [g.username]
-            ).fetchone()[0]
+    with connect_db() as db:
+        if not db(
+            "SELECT initialized FROM sandboxes WHERE username=%s", [g.username]
+        ).fetchone()[0]:
+            return False
+        if is_prod_build():
+            # sanity check that the working directory exists
+            return os.path.exists(get_working_directory())
+        else:
+            # temp directory always exists
+            return True
 
 
 @initialize_sandbox.bind(app)
 @verifies_access_token
 def initialize_sandbox(force=False):
     with sandbox_lock():
-        with connect_db() as db:
-            [initialized] = db(
-                "SELECT initialized FROM sandboxes WHERE username=%s", [g.username]
-            ).fetchone()
+        initialized = is_sandbox_initialized()
         if initialized and not force:
             raise Exception("Sandbox is already initialized")
         elif initialized:
@@ -266,6 +274,8 @@ def initialize_sandbox(force=False):
             "master",
         )
         sh("git", "checkout", "FETCH_HEAD", "-f")
+        if is_prod_build():
+            add_domain(name="sandbox", domain=f"{g.username}.sb.cs61a.org")
         with connect_db() as db:
             db("UPDATE sandboxes SET initialized=TRUE WHERE username=%s", [g.username])
 

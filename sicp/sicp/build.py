@@ -3,9 +3,11 @@ import time
 import traceback
 from base64 import b64encode
 from os.path import relpath
+from threading import Thread
 from typing import Union
 
 import click
+from cachetools import LRUCache
 from crcmod.crcmod import _usingExtension
 from crcmod.predefined import mkPredefinedCrcFun
 from tqdm import tqdm
@@ -35,12 +37,14 @@ SYMLINK = "SYMLINK"
 
 internal_hashmap = {}
 
+recent_files = LRUCache(15)
+
 do_build = True
 
 
 @click.command()
 def build():
-    global internal_hashma, do_build
+    global do_build
     os.chdir(TARGET)
     set_token_path(".token")
     if not is_sandbox_initialized():
@@ -54,6 +58,8 @@ def build():
     print("Please wait until synchronization completes...")
     print("Scanning local directory...")
     synchronize_from(get_server_hashes, show_progress=True)
+    Thread(target=catchup_synchronizer_thread, daemon=True).start()
+    Thread(target=catchup_full_synchronizer_thread, daemon=True).start()
     print("Synchronization completed! You can now begin developing.")
     while True:
         observer = Observer()
@@ -64,11 +70,25 @@ def build():
                 time.sleep(1)
                 if do_build:
                     do_build = False
-                    run_incremental_build()
-            full_synchronization()
+                    try:
+                        run_incremental_build()
+                    except Exception as e:
+                        print(str(e))
         finally:
             observer.stop()
             observer.join()
+
+
+def catchup_synchronizer_thread():
+    while True:
+        recent_synchronization()
+        time.sleep(1)
+
+
+def catchup_full_synchronizer_thread():
+    while True:
+        full_synchronization()
+        time.sleep(15)
 
 
 class Handler(FileSystemEventHandler):
@@ -86,28 +106,32 @@ def synchronize(path: str):
     if isinstance(path, bytes):
         path = path.decode("ascii")
     print("Synchronizing " + path)
-    try:
-        # path is a path to either a file or a symlink, NOT a directory
-        if os.path.islink(path):
-            print("Path is a symlink " + path)
-            update_file(path=path, symlink=os.readlink(path))
-        elif os.path.isfile(path):
-            with open(path, "rb") as f:
-                update_file(
-                    path=path, encoded_file_contents=b64encode(f.read()).decode("ascii")
-                )
-        elif not os.path.exists(path):
-            update_file(path=path, delete=True)
-        internal_hashmap[path] = get_hash(path)
-        do_build = True
-    except Exception as e:
-        raise
-        traceback.print_exc()
-        os._exit(1)
+    recent_files[
+        path
+    ] = None  # path is a path to either a file or a symlink, NOT a directory
+    if os.path.islink(path):
+        print("Path is a symlink " + path)
+        update_file(path=path, symlink=os.readlink(path))
+    elif os.path.isfile(path):
+        with open(path, "rb") as f:
+            update_file(
+                path=path, encoded_file_contents=b64encode(f.read()).decode("ascii")
+            )
+    elif not os.path.exists(path):
+        update_file(path=path, delete=True)
+    internal_hashmap[path] = get_hash(path)
+    do_build = True
 
 
 def full_synchronization():
     synchronize_from(internal_hashmap)
+
+
+def recent_synchronization():
+    for path in recent_files.keys():
+        if internal_hashmap.get(path) != get_hash(path):
+            print("LRU sync")
+            synchronize(path)
 
 
 def synchronize_from(remote_state, show_progress=False):
@@ -125,11 +149,6 @@ def synchronize_from(remote_state, show_progress=False):
             to_update.append(path)
 
     for path in tqdm(to_update) if show_progress else to_update:
-        print(
-            "Synchronizing, curr={}, remote={}".format(
-                current_state.get(path), remote_state.get(path)
-            )
-        )
         synchronize(path)
 
     internal_hashmap = current_state
