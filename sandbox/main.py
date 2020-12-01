@@ -217,13 +217,21 @@ def update_file(
 @run_incremental_build.bind(app)
 @verifies_access_token
 def run_incremental_build(clean=False):
+    env = dict(CLOUD_STORAGE_BUCKET="website-base.buckets.cs61a.org")
     with sandbox_lock():
         os.chdir(get_working_directory())
         os.chdir("src")
         try:
             if clean:
                 sh("make", "VIRTUAL_ENV=../env", "clean")
-            sh("make", "VIRTUAL_ENV=../env", "all", "unreleased", capture_output=True)
+            sh(
+                "make",
+                "VIRTUAL_ENV=../env",
+                "all",
+                "unreleased",
+                capture_output=True,
+                env=env,
+            )
         except CalledProcessError as e:
             raise Exception(e.stdout.decode("utf-8") + "\n" + e.stderr.decode("utf-8"))
     with connect_db() as db:
@@ -245,16 +253,17 @@ def get_server_hashes():
 @verifies_access_token
 def is_sandbox_initialized():
     with connect_db() as db:
-        if not db(
+        initialized = db(
             "SELECT initialized FROM sandboxes WHERE username=%s", [g.username]
-        ).fetchone()[0]:
-            return False
-        if is_prod_build():
-            # sanity check that the working directory exists
-            return os.path.exists(get_working_directory())
-        else:
-            # temp directory always exists
-            return True
+        ).fetchone()
+    if initialized is None or not initialized[0]:
+        return False
+    if is_prod_build():
+        # sanity check that the working directory exists
+        return os.path.exists(get_working_directory())
+    else:
+        # temp directory always exists
+        return True
 
 
 @initialize_sandbox.bind(app)
