@@ -104,10 +104,14 @@ def create_service(app: str, override=None):
                                 def generator():
                                     try:
                                         for x in out:
-                                            yield bytes(x, encoding="ascii")
+                                            yield bytes(
+                                                x, encoding="ascii", errors="replace"
+                                            )
                                     except Exception as e:
                                         yield STATUS_MARKER
-                                        yield bytes(str(e), encoding="ascii")
+                                        yield bytes(
+                                            str(e), encoding="ascii", errors="replace"
+                                        )
                                     else:
                                         yield STATUS_MARKER
 
