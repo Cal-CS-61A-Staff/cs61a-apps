@@ -122,9 +122,9 @@ def sandbox_lock():
             db("UPDATE sandboxes SET locked=FALSE WHERE username=%s", [g.username])
 
 
-def get_working_directory():
+def get_working_directory(username=None):
     if is_prod_build():
-        return os.path.join(WORKING_DIRECTORY, g.username)
+        return os.path.join(WORKING_DIRECTORY, username or g.username)
     else:
         # Everyone shares the same working directory on dev / PR builds
         return WORKING_DIRECTORY
@@ -135,10 +135,13 @@ def get_working_directory():
 def index(path="index.html"):
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
-    target = get_working_directory() + "/published/" + path
+    base_directory = get_working_directory(
+        get_host().split(".")[0] if is_prod_build() else DEFAULT_USER
+    )
+    target = base_directory + "/published/" + path
     if os.path.isdir(target):
         return index(path + "/index.html")
-    path = safe_join(get_working_directory(), "published", path)
+    path = safe_join(base_directory, "published", path)
     if path.endswith(".html"):
         with open(path, "r") as f:
             out = f.read()
