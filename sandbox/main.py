@@ -252,6 +252,10 @@ def get_server_hashes():
 @is_sandbox_initialized.bind(app)
 @verifies_access_token
 def is_sandbox_initialized():
+    return check_sandbox_initialized()
+
+
+def check_sandbox_initialized():
     with connect_db() as db:
         initialized = db(
             "SELECT initialized FROM sandboxes WHERE username=%s", [g.username]
@@ -270,7 +274,7 @@ def is_sandbox_initialized():
 @verifies_access_token
 def initialize_sandbox(force=False):
     with sandbox_lock():
-        initialized = is_sandbox_initialized()
+        initialized = check_sandbox_initialized()
         if initialized and not force:
             raise Exception("Sandbox is already initialized")
         elif initialized:
