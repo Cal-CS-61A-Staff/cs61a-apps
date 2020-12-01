@@ -14,13 +14,18 @@ def sh(*args, env={}, capture_output=False, stream_output=False, quiet=False):
     env = {**os.environ, **env, "ENV": "dev"}
     if stream_output:
         out = subprocess.Popen(
-            args, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            args,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1,
         )
 
         def generator():
             while True:
                 line = out.stdout.readline()
-                yield line.decode("utf-8")
+                yield line
                 returncode = out.poll()
                 if returncode is not None:
                     if returncode != 0:
