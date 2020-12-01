@@ -39,6 +39,10 @@ WORKING_DIRECTORY = abspath("tmp") if app.debug else "/save"
 HOT_RELOAD_SCRIPT_PATH = abspath("hot_reloader.js")
 REPO = "Cal-CS-61A-Staff/berkeley-cs61a"
 
+ENV = dict(
+    _CLOUD_STORAGE_BUCKET="website-base.buckets.cs61a.org"
+)  # fixme: repo needs to install cloud storage in makefile
+
 DEFAULT_USER = "rahularya"
 
 create_oauth_client(app, "61a-sandbox")
@@ -217,7 +221,6 @@ def update_file(
 @run_incremental_build.bind(app)
 @verifies_access_token
 def run_incremental_build(clean=False):
-    env = dict(CLOUD_STORAGE_BUCKET="website-base.buckets.cs61a.org")
     with sandbox_lock():
         os.chdir(get_working_directory())
         os.chdir("src")
@@ -230,14 +233,14 @@ def run_incremental_build(clean=False):
                 "all",
                 "unreleased",
                 capture_output=True,
-                env=env,
+                env=ENV,
             )
         except CalledProcessError as e:
             raise Exception(e.stdout.decode("utf-8") + "\n" + e.stderr.decode("utf-8"))
     with connect_db() as db:
         db(
             "UPDATE sandboxes SET version=%s WHERE username=%s",
-            [randrange(1000), g.username],
+            [randrange(1000), g.username if is_prod_build() else DEFAULT_USER],
         )
 
 
