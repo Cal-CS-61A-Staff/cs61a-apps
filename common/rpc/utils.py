@@ -34,6 +34,8 @@ def create_service(app: str, override=None):
                             endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
                 endpoints.append(f"https://{app}.cs61a.org{path}")
 
+                endpoints = [f"https://121.sandbox.pr.cs61a.org{path}"]
+
                 for i, endpoint in enumerate(endpoints):
                     if noreply:
                         try:
