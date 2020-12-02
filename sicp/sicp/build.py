@@ -160,8 +160,10 @@ def synchronize(path: str):
             )
     elif not os.path.exists(path):
         update_file(path=path, delete=True)
+    old_hash = internal_hashmap.get(path)
     internal_hashmap[path] = get_hash(path)
-    do_build = True
+    if old_hash != internal_hashmap[path]:
+        do_build = True
 
 
 def full_synchronization():
