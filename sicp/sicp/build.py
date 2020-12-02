@@ -8,6 +8,7 @@ from typing import Union
 
 import click
 from cachetools import LRUCache
+from colorama import Fore, Style
 from crcmod.crcmod import _usingExtension
 from crcmod.predefined import mkPredefinedCrcFun
 from tqdm import tqdm
@@ -73,7 +74,7 @@ def build(clean=False):
     if not is_sandbox_initialized():
         print("Sandbox is not initialized.")
         if click.confirm(
-            "Do you want to initialize your sandbox? It will take about 10 minutes."
+            "You need to initialize your sandbox first. It will probably take no more than 10 minutes."
         ):
             initialize_sandbox()
         else:
@@ -86,7 +87,7 @@ def build(clean=False):
     ):
         for line in run_incremental_build(clean=True):
             print(line, end="")
-        print("\nRebuild completed!")
+        print(f"\n🎉{Fore.GREEN}{Style.BRIGHT} Rebuild completed! {Style.RESET_ALL}🎉\n")
     Thread(target=catchup_synchronizer_thread, daemon=True).start()
     Thread(target=catchup_full_synchronizer_thread, daemon=True).start()
     print("Synchronization completed! You can now begin developing.")
@@ -104,7 +105,13 @@ def build(clean=False):
                             print(line, end="")
                         print()
                     except Exception as e:
+                        print(Fore.RED)
                         print(str(e))
+                        print(f"\n{Style.BRIGHT}😿 Build failed 😿{Style.RESET_ALL}\n")
+                    else:
+                        print(
+                            f"\n🎉{Fore.GREEN}{Style.BRIGHT} Build completed! 🎉{Style.RESET_ALL}\n"
+                        )
         except KeyboardInterrupt:
             print("Interrupt signal received.")
             sys.exit(0)
