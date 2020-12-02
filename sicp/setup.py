@@ -25,5 +25,6 @@ setup(
         "flask",
         "cachetools",
         "colorama",
+        "requests",
     ],
 )
