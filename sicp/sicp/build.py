@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import traceback
 from base64 import b64encode
@@ -65,6 +66,10 @@ def find_target():
     return find_target.out
 
 
+def pretty_print(emoji, msg):
+    print(f"\n{emoji}{Style.BRIGHT} {msg} {Style.RESET_ALL}{emoji}\n")
+
+
 @click.command()
 @click.option("--clean", is_flag=True)
 def build(clean=False):
@@ -107,11 +112,13 @@ def build(clean=False):
                     except Exception as e:
                         print(Fore.RED)
                         print(str(e))
-                        print(f"\n{Style.BRIGHT}😿 Build failed 😿{Style.RESET_ALL}\n")
+                        pretty_print("😿", "Build failed.")
                     else:
-                        print(
-                            f"\n🎉{Fore.GREEN}{Style.BRIGHT} Build completed! 🎉{Style.RESET_ALL}\n"
-                        )
+                        print(Fore.GREEN)
+                        pretty_print("🎉", "Build completed!")
+        except KeyboardInterrupt:
+            pretty_print("👋", "Interrupt signal received, have a nice day!")
+            sys.exit(0)
         finally:
             observer.stop()
             observer.join()
