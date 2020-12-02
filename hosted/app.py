@@ -133,7 +133,7 @@ def delete(name):
 
 
 @add_domain.bind(app)
-@only("buildserver")
+@only(["buildserver", "sandbox"])
 def add_domain(name, domain, force=False):
     apps = get_config()
 

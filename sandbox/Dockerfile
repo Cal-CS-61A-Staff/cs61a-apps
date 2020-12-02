@@ -4,6 +4,7 @@ RUN pip install -U pip && pip install pipenv
 RUN apt-get update \
   && apt install -y --no-install-recommends texlive-full \
   && apt-get install -y latexmk
+RUN apt-get update && apt-get install -y rsync
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
