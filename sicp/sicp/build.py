@@ -1,5 +1,7 @@
 import os
+import sys
 import time
+import signal
 import traceback
 from base64 import b64encode
 from os.path import relpath
@@ -40,6 +42,8 @@ SUCCESS = "SUCCESS"
 internal_hashmap = {}
 recent_files = LRUCache(15)
 do_build = True
+
+signal.signal(signal.SIGINT, lambda _, _: sys.exit(0))
 
 
 def find_target():
