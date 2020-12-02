@@ -85,7 +85,7 @@ def _make_token_post(server, data):
     return body
 
 
-def _make_code_post(server, code, redirect_uri):
+def _make_code_post(server, code, redirect_uri="urn:ietf:wg:oauth:2.0:oob"):
     data = {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
@@ -136,12 +136,12 @@ def _get_code():
     try:
         assert webbrowser.open_new(url)
     except AssertionError:
-        print("Couldn't open a web browser, performing manual authentication.")
-        print("Please navigate to https://okpy.org/oauth/login to generate a ")
-        print("login code. Then, paste that login code below to authenticate!")
+        print("Couldn't open a web browser, performing manual authentication\n")
+        print("Please navigate to https://go.cs61a.org/auth-code to generate a")
+        print("login code. Then, paste that code below to finish logging in!")
         code = input("Login code: ")
         try:
-            code_response = _make_code_post(server, code, redirect_uri)
+            code_response = _make_code_post(server, code)
             return code_response
         except OAuthException as e:
             raise e
