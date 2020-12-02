@@ -112,6 +112,7 @@ def build(clean=False):
                         print(
                             f"\n🎉{Fore.GREEN}{Style.BRIGHT} Build completed! 🎉{Style.RESET_ALL}\n"
                         )
+                        print(str(e))
         finally:
             observer.stop()
             observer.join()
