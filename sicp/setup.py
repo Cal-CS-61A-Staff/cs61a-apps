@@ -7,7 +7,7 @@ with open("README.md") as f:
 setup(
     name="sicp",
     version="0.1.*",
-    author="Rahul Arya",
+    author="Rahul Arya, Vanshaj Singhania",
     author_email="rahularya@berkeley.edu",
     long_description=readme,
     long_description_content_type="text/markdown",
