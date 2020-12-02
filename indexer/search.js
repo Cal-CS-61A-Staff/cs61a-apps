@@ -1,5 +1,5 @@
 const html = `
-    <link rel='stylesheet' href='https://search.app.cs61a.org/search.css' type='text/css'>
+    <link rel='stylesheet' href='https://indexer.cs61a.org/search.css' type='text/css'>
     <input class="cs61a-search-input" placeholder='Search for resources or posts on Piazza'/>
     <div class="cs61a-search-results"></div>
     <ul class="cs61a-search-expander list-inline hidden">
