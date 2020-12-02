@@ -85,7 +85,7 @@ def _make_token_post(server, data):
     return body
 
 
-def _make_code_post(server, code, redirect_uri):
+def _make_code_post(server, code, redirect_uri="urn:ietf:wg:oauth:2.0:oob"):
     data = {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
@@ -128,11 +128,23 @@ def _get_code():
         "scope": OAUTH_SCOPE,
     }
     url = "{}{}?{}".format(OK_SERVER_URL, AUTH_ENDPOINT, urlencode(params))
-    assert webbrowser.open_new(url)
 
     server = OK_SERVER_URL
     code_response = None
     oauth_exception = None
+
+    try:
+        assert webbrowser.open_new(url)
+    except AssertionError:
+        print("Couldn't open a web browser, performing manual authentication\n")
+        print("Please navigate to https://go.cs61a.org/auth-code to generate a")
+        print("login code. Then, paste that code below to finish logging in!\n")
+        code = input("Paste login code here: ")
+        try:
+            code_response = _make_code_post(server, code)
+            return code_response
+        except OAuthException as e:
+            raise e
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
         def send_redirect(self, location):
