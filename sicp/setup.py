@@ -7,7 +7,7 @@ with open("README.md") as f:
 setup(
     name="sicp",
     version="0.1.*",
-    author="Rahul Arya",
+    author="Rahul Arya, Vanshaj Singhania",
     author_email="rahularya@berkeley.edu",
     long_description=readme,
     long_description_content_type="text/markdown",
@@ -17,5 +17,5 @@ setup(
     include_package_data=True,
     entry_points={"console_scripts": ["sicp=sicp.__main__:cli"]},
     python_requires=">=3.8",
-    install_requires=["click", "watchdog", "crcmod", "tqdm", "colorama"],
+    install_requires=["click", "watchdog", "crcmod", "tqdm", "flask", "cachetools", "colorama"],
 )
