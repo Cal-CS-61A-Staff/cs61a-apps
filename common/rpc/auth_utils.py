@@ -128,11 +128,23 @@ def _get_code():
         "scope": OAUTH_SCOPE,
     }
     url = "{}{}?{}".format(OK_SERVER_URL, AUTH_ENDPOINT, urlencode(params))
-    assert webbrowser.open_new(url)
 
     server = OK_SERVER_URL
     code_response = None
     oauth_exception = None
+
+    try:
+        assert webbrowser.open_new(url)
+    except AssertionError:
+        print("Couldn't open a web browser, performing manual authentication.")
+        print("Please navigate to https://okpy.org/oauth/login to generate a ")
+        print("login code. Then, paste that login code below to authenticate!")
+        code = input("Login code: ")
+        try:
+            code_response = _make_code_post(server, code, redirect_uri)
+            return code_response
+        except OAuthException as e:
+            raise e
 
     class CodeHandler(http.server.BaseHTTPRequestHandler):
         def send_redirect(self, location):
