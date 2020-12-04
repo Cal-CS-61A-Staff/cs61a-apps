@@ -11,7 +11,7 @@ REQ = "requirements.txt"
 @click.argument("dir", default="./")
 @click.argument("req", default="./")
 @click.option("--reset", is_flag=True)
-def env(dir, req, reset):
+def venv(dir, req, reset):
     """Create a virtual environment in DIR.
 
     DIR is the location of the virtual env
