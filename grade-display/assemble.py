@@ -41,8 +41,6 @@ def assemble(gscope, recovery=False, sections=False):
     roster = csv(ROSTER).rename(columns={"sid": "SID", "email": "Email"})
     grades = csv(GRADES)
 
-    grades = grades.drop("Tutorial Attendance (Total)", axis=1)
-
     # Fall 2020 Tutorials
     if sections:
         tutorials = csv(TUTORIALS)
