@@ -3,4 +3,4 @@ PyMySQL==0.10.0
 requests==2.25.0
 cachetools==4.1.1
 flask_oauthlib==0.9.5
-Werkzeug==1.0.1
+werkzeug==0.16.1
