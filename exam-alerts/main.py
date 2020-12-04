@@ -306,12 +306,7 @@ def index(request):
         )
         messages = sorted(
             [
-                {
-                    "email": email,
-                    "messages": sorted(
-                        messages, key=lambda x: x["timestamp"], reverse=True
-                    ),
-                }
+                {"email": email, **message}
                 for email, messages in group_messages(
                     [
                         {**message.to_dict(), "id": message.id}
@@ -321,11 +316,12 @@ def index(request):
                         .stream()
                     ]
                 ).items()
+                for message in messages
             ],
-            key=lambda x: (
-                all(len(message["responses"]) > 0 for message in x["messages"]),
-                -x["messages"][-1]["timestamp"],
-                x["email"],
+            key=lambda message: (
+                len(message["responses"]) > 0,
+                -message["timestamp"],
+                message["email"],
             ),
         )
 
