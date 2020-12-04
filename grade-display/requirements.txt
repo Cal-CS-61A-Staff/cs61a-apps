@@ -15,7 +15,6 @@ py-mini-racer==0.4.0
 pycparser==2.20
 PyYAML==5.3.1
 requests==2.25.0
-six==1.15.0
 soupsieve==2.0.1
 urllib3==1.26.2
 Werkzeug==1.0.1
