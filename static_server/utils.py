@@ -18,12 +18,17 @@ def get_bucket(app_lookup: Dict[str, str], default_app: str):
         pr = int(pr)
         if app not in app_lookup:
             abort(404)
-        return f"{app_lookup[app]}-pr{pr}.buckets.cs61a.org"
+        bucket = f"{app_lookup[app]}-pr{pr}.buckets.cs61a.org"
+        try:
+            storage.Client().get_bucket(bucket)
+            return bucket
+        except NotFound:
+            pass
     else:
         app, *_ = host.split(".")
         if app not in app_lookup:
             abort(404)
-        return f"{app_lookup[app]}.buckets.cs61a.org"
+    return f"{app_lookup[app]}.buckets.cs61a.org"
 
 
 def serve_path(bucket, root, path):
@@ -36,7 +41,10 @@ def serve_path(bucket, root, path):
         blob = bucket.blob(filename)
         with tempfile.NamedTemporaryFile() as temp:
             blob.download_to_filename(temp.name)
-            return send_file(temp.name, attachment_filename=filename)
+            mimetype = None
+            if filename.endswith(".scm"):
+                mimetype = "text/x-scheme"
+            return send_file(temp.name, attachment_filename=filename, mimetype=mimetype)
     except NotFound:
         if filename.endswith("404.html"):
             abort(404)
