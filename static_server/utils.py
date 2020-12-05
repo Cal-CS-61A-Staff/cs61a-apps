@@ -24,9 +24,10 @@ def get_bucket(app_lookup: Dict[str, str], default_app: str):
             return bucket
         except NotFound:
             pass
-    app, *_ = host.split(".")
-    if app not in app_lookup:
-        abort(404)
+    else:
+        app, *_ = host.split(".")
+        if app not in app_lookup:
+            abort(404)
     return f"{app_lookup[app]}.buckets.cs61a.org"
 
 
