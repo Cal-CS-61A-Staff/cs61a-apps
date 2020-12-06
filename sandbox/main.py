@@ -7,6 +7,7 @@ from os.path import abspath
 from pathlib import Path
 from random import randrange
 from subprocess import CalledProcessError
+from sys import stderr
 from typing import Optional
 
 import requests
@@ -20,6 +21,7 @@ from common.oauth_client import (
     is_staff,
 )
 from common.rpc.hosted import add_domain
+from common.rpc.paste import get_paste, get_paste_url, paste_text
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
@@ -69,7 +71,6 @@ with connect_db() as db:
         """CREATE TABLE IF NOT EXISTS builds (
         username varchar(128),
         target varchar(256),
-        logs varchar(128),
         pending boolean
     );"""
     )
@@ -78,6 +79,7 @@ with connect_db() as db:
         """CREATE TABLE IF NOT EXISTS targets (
         username varchar(128),
         target varchar(256),
+        logs varchar(128),
         version integer
     )"""
     )
@@ -154,11 +156,7 @@ def sandbox_lock(username):
 
 
 def get_working_directory(username):
-    if is_prod_build():
-        return os.path.join(WORKING_DIRECTORY, username)
-    else:
-        # Everyone shares the same working directory on dev / PR builds
-        return WORKING_DIRECTORY
+    return os.path.join(WORKING_DIRECTORY, username)
 
 
 def get_host_username():
@@ -184,6 +182,11 @@ def index(path="index.html"):
     path = safe_join(base_directory, "published", path)
     if not is_up_to_date(username, target):
         build(username, target)
+    else:
+        logs = get_logs(username, target)
+        if logs is not None:
+            name, data = logs
+            return f"<code>{data}</code><a href={get_paste_url(name)}>{get_paste_url(name)}</a>"
 
     if path.endswith(".html"):
         if os.path.exists(path):
@@ -306,11 +309,7 @@ def run_make_command(target):
     os.chdir(get_working_directory(g.username))
     os.chdir("src")
 
-    with connect_db() as db:
-        db(
-            "UPDATE builds SET pending=FALSE WHERE username=%s",
-            [g.username],
-        )
+    clear_pending_builds(g.username)
 
     yield from sh(
         "make",
@@ -320,10 +319,14 @@ def run_make_command(target):
         stream_output=True,
     )
 
+    increment_manual_version(g.username)
+
+
+def increment_manual_version(username):
     with connect_db() as db:
         db(
             "UPDATE sandboxes SET manual_version=%s, version=%s WHERE username=%s",
-            [randrange(1, 1000), randrange(1, 1000), g.username],
+            [randrange(1, 1000), randrange(1, 1000), username],
         )
 
 
@@ -336,6 +339,14 @@ def get_pending_targets(username):
                 [username],
             ).fetchall()
         ]
+
+
+def clear_pending_builds(username):
+    with connect_db() as db:
+        db(
+            "UPDATE builds SET pending=FALSE WHERE username=%s",
+            [username],
+        )
 
 
 def build(username, target):
@@ -366,18 +377,18 @@ def get_version(username, target):
             return version[0]
 
 
-def update_version(username, target, src_version):
+def update_version(username, target, version, logs=None):
     old_version = get_version(username, target)
     with connect_db() as db:
         if old_version:
             db(
-                "UPDATE targets SET version=%s WHERE username=%s AND target=%s",
-                [src_version, username, target],
+                "UPDATE targets SET version=%s, logs=%s WHERE username=%s AND target=%s",
+                [version, logs, username, target],
             )
         else:
             db(
-                "INSERT INTO targets (username, target, version) VALUES (%s, %s, %s)",
-                [username, target, src_version],
+                "INSERT INTO targets (username, target, version, logs) VALUES (%s, %s, %s, %s)",
+                [username, target, version, logs],
             )
 
 
@@ -387,48 +398,72 @@ def is_up_to_date(username, target):
     return src_version == curr_version
 
 
+def get_logs(username, target):
+    with connect_db() as db:
+        logs = db(
+            "SELECT logs FROM targets WHERE username=%s AND target=%s",
+            [username, target],
+        ).fetchone()
+        if logs is not None:
+            return logs[0], get_paste(name=logs[0])
+        else:
+            return None
+
+
 def build_worker(username):
     # Note that we are not necessarily running in an app context
     with sandbox_lock(username):
-        while True:
-            targets = get_pending_targets(username)
-            if not targets:
-                break
-            target = targets[0]
-            src_version = get_src_version(username)
-            os.chdir(get_working_directory(username))
-            os.chdir("src")
-            ok = False
-            try:
-                sh("make", "-n", "VIRTUAL_ENV=../env", target, env=ENV)
-            except CalledProcessError:
-                # target does not exist, no need to build
-                ok = True
-            else:
-                # target exists, time to build!
+        try:
+            while True:
+                targets = get_pending_targets(username)
+                if not targets:
+                    break
+                target = targets[0]
+                src_version = get_src_version(username)
+                os.chdir(get_working_directory(username))
+                os.chdir("src")
+                ok = False
                 try:
-                    sh(
-                        "make",
-                        "VIRTUAL_ENV=../env",
-                        target,
-                        env=ENV,
-                    )
-                except CalledProcessError:
-                    # kill all builds due to failure
+                    sh("make", "-n", "VIRTUAL_ENV=../env", target, env=ENV)
+                except CalledProcessError as e:
+                    if e.returncode == 2:
+                        # target does not exist, no need to build
+                        ok = True
+                if not ok:
+                    # target exists, time to build!
+                    try:
+                        sh(
+                            "make",
+                            "VIRTUAL_ENV=../env",
+                            target,
+                            env=ENV,
+                            capture_output=True,
+                            quiet=True,
+                        )
+                    except CalledProcessError as e:
+                        # kill all builds due to failure
+                        log_name = paste_text(
+                            data=(
+                                (e.stdout or b"").decode("utf-8")
+                                + (e.stderr or b"").decode("utf-8")
+                            )
+                        )
+                        update_version(username, target, src_version, log_name)
+                        clear_pending_builds(username)
+                    else:
+                        ok = True
+                if ok:
                     with connect_db() as db:
                         db(
-                            "UPDATE builds SET pending=FALSE WHERE username=%s",
-                            [username],
+                            "UPDATE builds SET pending=FALSE WHERE username=%s AND target=%s",
+                            [username, target],
                         )
-                else:
-                    ok = True
-            if ok:
-                with connect_db() as db:
-                    db(
-                        "UPDATE builds SET pending=FALSE WHERE username=%s AND target=%s",
-                        [username, target],
-                    )
-                update_version(username, target, src_version)
+                    update_version(username, target, src_version)
+        except:
+            # in the event of failure, cancel all builds and trigger refresh
+            increment_manual_version(username)
+        finally:
+            clear_pending_builds(username)
 
 
 @get_server_hashes.bind(app)
@@ -452,12 +487,8 @@ def check_sandbox_initialized(username):
         ).fetchone()
     if initialized is None or not initialized[0]:
         return False
-    if is_prod_build():
-        # sanity check that the working directory exists
-        return os.path.exists(get_working_directory(username))
-    else:
-        # temp directory always exists
-        return True
+    # sanity check that the working directory exists
+    return os.path.exists(get_working_directory(username))
 
 
 @initialize_sandbox.bind(app)

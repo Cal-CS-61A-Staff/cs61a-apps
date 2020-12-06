@@ -36,10 +36,10 @@ def sh(*args, env={}, capture_output=False, stream_output=False, quiet=False):
                         return ""
 
         return generator()
-    elif quiet:
-        out = subprocess.run(args, env=env, stdout=subprocess.PIPE)
-    else:
+    elif capture_output:
         out = subprocess.run(args, env=env, capture_output=capture_output)
+    else:
+        out = subprocess.run(args, env=env, stdout=subprocess.PIPE)
     if capture_output and not quiet:
         print(out.stdout, file=sys.stdout)
         print(out.stderr, file=sys.stderr)
