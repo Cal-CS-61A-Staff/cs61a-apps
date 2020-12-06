@@ -182,14 +182,16 @@ def index(path="index.html"):
     path = safe_join(base_directory, "published", path)
     if not is_up_to_date(username, target):
         build(username, target)
-    else:
+
+    if path.endswith(".html"):
         logs = get_logs(username, target)
         if logs is not None:
             name, data = logs
-            return f"<code>{data}</code><a href={get_paste_url(name)}>{get_paste_url(name)}</a>"
-
-    if path.endswith(".html"):
-        if os.path.exists(path):
+            out = f"""
+                <pre>{data}</pre>
+                <a href={get_paste_url(name)}>{get_paste_url(name)}</a>
+                """
+        elif os.path.exists(path):
             with open(path, "r") as f:
                 out = f.read()
         else:
@@ -404,7 +406,7 @@ def get_logs(username, target):
             "SELECT logs FROM targets WHERE username=%s AND target=%s",
             [username, target],
         ).fetchone()
-        if logs is not None:
+        if logs is not None and logs[0] is not None:
             return logs[0], get_paste(name=logs[0])
         else:
             return None
@@ -412,58 +414,54 @@ def get_logs(username, target):
 
 def build_worker(username):
     # Note that we are not necessarily running in an app context
-    with sandbox_lock(username):
-        try:
-            while True:
-                targets = get_pending_targets(username)
-                if not targets:
-                    break
-                target = targets[0]
-                src_version = get_src_version(username)
-                os.chdir(get_working_directory(username))
-                os.chdir("src")
-                ok = False
-                try:
-                    sh("make", "-n", "VIRTUAL_ENV=../env", target, env=ENV)
-                except CalledProcessError as e:
-                    if e.returncode == 2:
-                        # target does not exist, no need to build
-                        ok = True
-                if not ok:
-                    # target exists, time to build!
-                    try:
-                        sh(
-                            "make",
-                            "VIRTUAL_ENV=../env",
-                            target,
-                            env=ENV,
-                            capture_output=True,
-                            quiet=True,
-                        )
-                    except CalledProcessError as e:
-                        # kill all builds due to failure
-                        log_name = paste_text(
-                            data=(
-                                (e.stdout or b"").decode("utf-8")
-                                + (e.stderr or b"").decode("utf-8")
-                            )
-                        )
-                        update_version(username, target, src_version, log_name)
-                        clear_pending_builds(username)
-                    else:
-                        ok = True
-                if ok:
-                    with connect_db() as db:
-                        db(
-                            "UPDATE builds SET pending=FALSE WHERE username=%s AND target=%s",
-                            [username, target],
-                        )
+    try:
+        while True:
+            targets = get_pending_targets(username)
+            if not targets:
+                break
+            target = targets[0]
+            src_version = get_src_version(username)
+            os.chdir(get_working_directory(username))
+            os.chdir("src")
+            ok = False
+            try:
+                sh("make", "-n", "VIRTUAL_ENV=../env", target, env=ENV)
+            except CalledProcessError as e:
+                if e.returncode == 2:
+                    # target does not exist, no need to build
                     update_version(username, target, src_version)
-        except:
-            # in the event of failure, cancel all builds and trigger refresh
-            increment_manual_version(username)
-        finally:
-            clear_pending_builds(username)
+                    ok = True
+            if not ok:
+                # target exists, time to build!
+                try:
+                    sh(
+                        "make",
+                        "VIRTUAL_ENV=../env",
+                        target,
+                        env=ENV,
+                        capture_output=True,
+                        quiet=True,
+                    )
+                except CalledProcessError as e:
+                    log_name = paste_text(
+                        data=(
+                            (e.stdout or b"").decode("utf-8")
+                            + (e.stderr or b"").decode("utf-8")
+                        )
+                    )
+                    update_version(username, target, src_version, log_name)
+                else:
+                    update_version(username, target, src_version)
+            with connect_db() as db:
+                db(
+                    "UPDATE builds SET pending=FALSE WHERE username=%s AND target=%s",
+                    [username, target],
+                )
+    except:
+        # in the event of failure, cancel all builds and trigger refresh
+        increment_manual_version(username)
+        clear_pending_builds(username)
+        raise
 
 
 @get_server_hashes.bind(app)
