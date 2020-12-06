@@ -11,7 +11,7 @@ if __name__ == "__main__":
     app.debug = True
 
 
-create_oauth_client(app, "61a-paste")
+create_oauth_client(app, "61a-logs")
 
 
 @app.route("/")
