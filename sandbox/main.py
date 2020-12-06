@@ -1,4 +1,5 @@
 import os
+import threading
 from base64 import b64decode
 from contextlib import contextmanager
 from functools import wraps
@@ -9,7 +10,7 @@ from subprocess import CalledProcessError
 from typing import Optional
 
 import requests
-from flask import Flask, g, jsonify, redirect, safe_join, send_file
+from flask import Flask, abort, g, jsonify, redirect, request, safe_join, send_file
 
 from common.course_config import get_endpoint
 from common.db import connect_db
@@ -23,7 +24,7 @@ from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
     is_sandbox_initialized,
-    run_incremental_build,
+    run_make_command,
     update_file,
 )
 from common.rpc.secrets import get_secret
@@ -43,6 +44,14 @@ ENV = dict(CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org")
 
 DEFAULT_USER = "rahularya"
 
+HOT_RELOAD_INLINE_SCRIPT = """
+<script>
+    const version=VERSION; 
+    const manualVersion=MANUAL_VERSION;
+</script>
+<script src="/hot_reloader.js"></script>
+"""
+
 create_oauth_client(app, "61a-sandbox")
 
 with connect_db() as db:
@@ -51,8 +60,26 @@ with connect_db() as db:
     username varchar(128),
     initialized boolean,
     locked boolean,
-    version integer
-)"""
+    version integer, -- updated every time we sync a file
+    manual_version integer -- updated after every manual make command
+);"""
+    )
+
+    db(
+        """CREATE TABLE IF NOT EXISTS builds (
+        username varchar(128),
+        target varchar(256),
+        logs varchar(128),
+        pending boolean
+    );"""
+    )
+
+    db(
+        """CREATE TABLE IF NOT EXISTS targets (
+        username varchar(128),
+        target varchar(256),
+        version integer
+    )"""
     )
 
 
@@ -81,7 +108,9 @@ def verifies_access_token(func):
             "@berkeley.edu"
         ):
             raise PermissionError
-        g.username = g.email[: -len("@berkeley.edu")]
+        g.username = (
+            g.email[: -len("@berkeley.edu")] if is_prod_build() else DEFAULT_USER
+        )
         return func(**kwargs)
 
     return decorated
@@ -92,8 +121,7 @@ def is_prod_build():
 
 
 @contextmanager
-def sandbox_lock():
-    username = g.username if is_prod_build() else DEFAULT_USER
+def sandbox_lock(username):
     try:
         with connect_db() as db:
             locked = db(
@@ -125,12 +153,20 @@ def sandbox_lock():
             db("UPDATE sandboxes SET locked=FALSE WHERE username=%s", [username])
 
 
-def get_working_directory(username=None):
+def get_working_directory(username):
     if is_prod_build():
-        return os.path.join(WORKING_DIRECTORY, username or g.username)
+        return os.path.join(WORKING_DIRECTORY, username)
     else:
         # Everyone shares the same working directory on dev / PR builds
         return WORKING_DIRECTORY
+
+
+def get_host_username():
+    return get_host().split(".")[0] if is_prod_build() else DEFAULT_USER
+
+
+def path_to_target(path):
+    return safe_join("../published", path)
 
 
 @app.route("/")
@@ -138,32 +174,59 @@ def get_working_directory(username=None):
 def index(path="index.html"):
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
-    base_directory = get_working_directory(
-        get_host().split(".")[0] if is_prod_build() else DEFAULT_USER
-    )
-    target = base_directory + "/published/" + path
-    if os.path.isdir(target):
+    username = get_host_username()
+    base_directory = get_working_directory(username)
+
+    if "." not in path:
         return index(path + "/index.html")
+
+    target = path_to_target(path)
     path = safe_join(base_directory, "published", path)
+    if not is_up_to_date(username, target):
+        build(username, target)
+
     if path.endswith(".html"):
-        with open(path, "r") as f:
-            out = f.read()
-        out += """<script src="/hot_reloader.js"> </script>"""
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                out = f.read()
+        else:
+            out = ""
+        out += HOT_RELOAD_INLINE_SCRIPT.replace(
+            "MANUAL_VERSION", str(get_manual_version(username))
+        ).replace(
+            "VERSION",
+            str(get_version(username, target)),
+        )
         return out
     else:
-        return send_file(path)
+        try:
+            return send_file(path)
+        except FileNotFoundError:
+            return "", 404
 
 
-def get_status():
+def get_src_version(username):
     with connect_db() as db:
         version = db(
-            "SELECT version, locked FROM sandboxes WHERE username=%s",
-            get_host().split(".")[0] if is_prod_build() else DEFAULT_USER,
+            "SELECT version FROM sandboxes WHERE username=%s",
+            [username],
         ).fetchone()
         if version is None:
-            return 0, False
+            return 0
         else:
-            return list(version)
+            return version[0] or 0
+
+
+def get_manual_version(username):
+    with connect_db() as db:
+        manual_version = db(
+            "SELECT manual_version FROM sandboxes WHERE username=%s",
+            [username],
+        ).fetchone()
+        if manual_version is None:
+            return 0
+        else:
+            return manual_version[0] or 0
 
 
 @app.route("/hot_reloader.js")
@@ -171,15 +234,29 @@ def hot_reloader():
     if not is_staff("cs61a"):
         return redirect(url_for("login"))
 
-    with open(HOT_RELOAD_SCRIPT_PATH) as f:
-        out = f.read().replace("VERSION", str(get_status()[0]))
-    return out
+    return send_file(HOT_RELOAD_SCRIPT_PATH)
 
 
-@app.route("/latest_revision", methods=["POST"])
-def latest_revision():
-    version, building = get_status()
-    return jsonify(dict(version=version, isLoading=building))
+@app.route("/get_revision", methods=["POST"])
+def get_revision():
+    if not is_staff("cs61a"):
+        abort(403)
+    path = request.json["path"]
+    src_version = get_src_version(get_host_username())
+    manual_version = get_manual_version(get_host_username())
+    version = get_version(get_host_username(), path_to_target(path))
+    return jsonify(
+        dict(pubVersion=version, srcVersion=src_version, manualVersion=manual_version)
+    )
+
+
+@app.route("/rebuild_path", methods=["POST"])
+def rebuild_path():
+    if not is_staff("cs61a"):
+        abort(403)
+    path = request.json["path"]
+    build(get_host_username(), path_to_target(path))
+    return ""
 
 
 @update_file.bind(app)
@@ -190,7 +267,7 @@ def update_file(
     symlink: Optional[str] = None,
     delete: bool = False,
 ):
-    base = get_working_directory()
+    base = get_working_directory(g.username)
     target = safe_join(base, path)
     del path
     if delete:
@@ -216,34 +293,148 @@ def update_file(
 
         assert get_hash(target) is not None
 
-
-@run_incremental_build.bind(app)
-@verifies_access_token
-def run_incremental_build(clean=False):
-    with sandbox_lock():
-        os.chdir(get_working_directory())
-        os.chdir("src")
-        if clean:
-            sh("make", "VIRTUAL_ENV=../env", "clean")
-        yield from sh(
-            "make",
-            "VIRTUAL_ENV=../env",
-            "all",
-            "unreleased",
-            env=ENV,
-            stream_output=True,
-        )
     with connect_db() as db:
         db(
             "UPDATE sandboxes SET version=%s WHERE username=%s",
-            [randrange(1000), g.username if is_prod_build() else DEFAULT_USER],
+            [randrange(1, 1000), g.username],
         )
+
+
+@run_make_command.bind(app)
+@verifies_access_token
+def run_make_command(target):
+    os.chdir(get_working_directory(g.username))
+    os.chdir("src")
+
+    with connect_db() as db:
+        db(
+            "UPDATE builds SET pending=FALSE WHERE username=%s",
+            [g.username],
+        )
+
+    yield from sh(
+        "make",
+        "VIRTUAL_ENV=../env",
+        target,
+        env=ENV,
+        stream_output=True,
+    )
+
+    with connect_db() as db:
+        db(
+            "UPDATE sandboxes SET manual_version=%s, version=%s WHERE username=%s",
+            [randrange(1, 1000), randrange(1, 1000), g.username],
+        )
+
+
+def get_pending_targets(username):
+    with connect_db() as db:
+        return [
+            target
+            for [target] in db(
+                "SELECT target FROM builds WHERE username=%s AND pending=TRUE",
+                [username],
+            ).fetchall()
+        ]
+
+
+def build(username, target):
+    pending = get_pending_targets(username)
+    if target in pending:
+        # target is already scheduled to be built
+        return
+    with connect_db() as db:
+        db(
+            "INSERT INTO builds (username, target, pending) VALUES (%s, %s, %s)",
+            [username, target, True],
+        )
+    if not pending:
+        # We need to start the build ourselves
+        with app.app_context():
+            threading.Thread(target=build_worker, args=[username]).start()
+
+
+def get_version(username, target):
+    with connect_db() as db:
+        version = db(
+            "SELECT version FROM targets WHERE username=%s AND target=%s",
+            [username, target],
+        ).fetchone()
+        if version is None:
+            return 0
+        else:
+            return version[0]
+
+
+def update_version(username, target, src_version):
+    old_version = get_version(username, target)
+    with connect_db() as db:
+        if old_version:
+            db(
+                "UPDATE targets SET version=%s WHERE username=%s AND target=%s",
+                [src_version, username, target],
+            )
+        else:
+            db(
+                "INSERT INTO targets (username, target, version) VALUES (%s, %s, %s)",
+                [username, target, src_version],
+            )
+
+
+def is_up_to_date(username, target):
+    src_version = get_src_version(username)
+    curr_version = get_version(username, target)
+    return src_version == curr_version
+
+
+def build_worker(username):
+    # Note that we are not necessarily running in an app context
+    with sandbox_lock(username):
+        while True:
+            targets = get_pending_targets(username)
+            if not targets:
+                break
+            target = targets[0]
+            src_version = get_src_version(username)
+            os.chdir(get_working_directory(username))
+            os.chdir("src")
+            ok = False
+            try:
+                sh("make", "-n", "VIRTUAL_ENV=../env", target, env=ENV)
+            except CalledProcessError:
+                # target does not exist, no need to build
+                ok = True
+            else:
+                # target exists, time to build!
+                try:
+                    sh(
+                        "make",
+                        "VIRTUAL_ENV=../env",
+                        target,
+                        env=ENV,
+                    )
+                except CalledProcessError:
+                    # kill all builds due to failure
+                    with connect_db() as db:
+                        db(
+                            "UPDATE builds SET pending=FALSE WHERE username=%s",
+                            [username],
+                        )
+                else:
+                    ok = True
+            if ok:
+                with connect_db() as db:
+                    db(
+                        "UPDATE builds SET pending=FALSE WHERE username=%s AND target=%s",
+                        [username, target],
+                    )
+                update_version(username, target, src_version)
 
 
 @get_server_hashes.bind(app)
 @verifies_access_token
 def get_server_hashes():
-    base = get_working_directory()
+    base = get_working_directory(g.username)
     os.chdir(base)
     return hash_all()
 
@@ -251,19 +442,19 @@ def get_server_hashes():
 @is_sandbox_initialized.bind(app)
 @verifies_access_token
 def is_sandbox_initialized():
-    return check_sandbox_initialized()
+    return check_sandbox_initialized(g.username)
 
 
-def check_sandbox_initialized():
+def check_sandbox_initialized(username):
     with connect_db() as db:
         initialized = db(
-            "SELECT initialized FROM sandboxes WHERE username=%s", [g.username]
+            "SELECT initialized FROM sandboxes WHERE username=%s", [username]
         ).fetchone()
     if initialized is None or not initialized[0]:
         return False
     if is_prod_build():
         # sanity check that the working directory exists
-        return os.path.exists(get_working_directory())
+        return os.path.exists(get_working_directory(username))
     else:
         # temp directory always exists
         return True
@@ -272,14 +463,14 @@ def check_sandbox_initialized():
 @initialize_sandbox.bind(app)
 @verifies_access_token
 def initialize_sandbox(force=False):
-    with sandbox_lock():
-        initialized = check_sandbox_initialized()
+    with sandbox_lock(g.username):
+        initialized = check_sandbox_initialized(g.username)
         if initialized and not force:
             raise Exception("Sandbox is already initialized")
         elif initialized:
-            sh("rm", "-rf", get_working_directory())
-        Path(get_working_directory()).mkdir(parents=True, exist_ok=True)
-        os.chdir(get_working_directory())
+            sh("rm", "-rf", get_working_directory(g.username))
+        Path(get_working_directory(g.username)).mkdir(parents=True, exist_ok=True)
+        os.chdir(get_working_directory(g.username))
         sh("git", "init")
         sh(
             "git",
