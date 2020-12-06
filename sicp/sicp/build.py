@@ -1,13 +1,14 @@
 import os
 import sys
 import time
-import traceback
+import webbrowser
 from base64 import b64encode
 from os.path import relpath
 from threading import Thread
 from typing import Union
 
 import click
+import requests
 from cachetools import LRUCache
 from colorama import Fore, Style
 from crcmod.crcmod import _usingExtension
@@ -21,12 +22,12 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from common.rpc.auth_utils import set_token_path
+from common.rpc.auth_utils import get_token, set_token_path
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
     is_sandbox_initialized,
-    run_incremental_build,
+    run_make_command,
     update_file,
 )
 from common.shell_utils import sh
@@ -67,19 +68,24 @@ def find_target():
 
 
 def pretty_print(emoji, msg):
-    print(f"\n{emoji}{Style.BRIGHT} {msg} {Style.RESET_ALL}{emoji}\n")
+    print(f"{emoji}{Style.BRIGHT} {msg} {Style.RESET_ALL}{emoji}")
+
+
+def get_sandbox_url():
+    username = requests.get(
+        "https://okpy.org/api/v3/user/", params={"access_token": get_token()}
+    ).json()["data"]["email"][: -len("@berkeley.edu")]
+    return f"https://{username}.sb.cs61a.org"
 
 
 @click.command()
-@click.option("--clean", is_flag=True)
-def build(clean=False):
-    global do_build
+def build():
     os.chdir(find_target())
     set_token_path(".token")
     if not is_sandbox_initialized():
         print("Sandbox is not initialized.")
         if click.confirm(
-            "You need to initialize your sandbox first. It will probably take no more than 10 minutes."
+            "You need to initialize your sandbox first. Continue?", default=True
         ):
             initialize_sandbox()
         else:
@@ -87,15 +93,16 @@ def build(clean=False):
     print("Please wait until synchronization completes...")
     print("Scanning local directory...")
     synchronize_from(get_server_hashes, show_progress=True)
-    if clean and click.confirm(
-        "Do you want to rebuild everything on your sandbox from scratch?"
-    ):
-        for line in run_incremental_build(clean=True):
-            print(line, end="")
-        print(f"\n🎉{Fore.GREEN}{Style.BRIGHT} Rebuild completed! {Style.RESET_ALL}🎉\n")
+    sandbox_url = get_sandbox_url()
+    print(
+        f"Synchronization completed! You can now begin developing. Preview your changes at {sandbox_url}"
+    )
+    webbrowser.open(sandbox_url)
+
     Thread(target=catchup_synchronizer_thread, daemon=True).start()
     Thread(target=catchup_full_synchronizer_thread, daemon=True).start()
-    print("Synchronization completed! You can now begin developing.")
+    Thread(target=input_thread, daemon=True).start()
+
     while True:
         observer = Observer()
         try:
@@ -103,25 +110,30 @@ def build(clean=False):
             observer.start()
             for _ in range(15):
                 time.sleep(1)
-                if do_build:
-                    do_build = False
-                    try:
-                        for line in run_incremental_build():
-                            print(line, end="")
-                        print()
-                    except Exception as e:
-                        print(Fore.RED)
-                        print(str(e))
-                        pretty_print("😿", "Build failed.")
-                    else:
-                        print(Fore.GREEN)
-                        pretty_print("🎉", "Build completed!")
         except KeyboardInterrupt:
             pretty_print("👋", "Interrupt signal received, have a nice day!")
             sys.exit(0)
         finally:
             observer.stop()
             observer.join()
+
+
+def input_thread():
+    while True:
+        print(Style.BRIGHT)
+        target = input("make> ")
+        print(Style.RESET_ALL)
+        try:
+            for line in run_make_command(target=target):
+                print(line, end="")
+            print()
+        except Exception as e:
+            print(Fore.RED)
+            print(str(e))
+            pretty_print("😿", "Build failed.")
+        else:
+            print(Fore.GREEN)
+            pretty_print("🎉", "Build completed!")
 
 
 def catchup_synchronizer_thread():
@@ -150,12 +162,10 @@ def synchronize(path: str):
     path = relpath(path)
     if isinstance(path, bytes):
         path = path.decode("ascii")
-    print("Synchronizing " + path)
     recent_files[
         path
     ] = None  # path is a path to either a file or a symlink, NOT a directory
     if os.path.islink(path):
-        print("Path is a symlink " + path)
         update_file(path=path, symlink=os.readlink(path))
     elif os.path.isfile(path):
         with open(path, "rb") as f:

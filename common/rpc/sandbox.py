@@ -24,8 +24,8 @@ def get_server_hashes():
 
 
 @requires_access_token
-@service.route("/api/run_incremental_build", streaming=True)
-def run_incremental_build(*, clean=True):
+@service.route("/api/run_make_command", streaming=True)
+def run_make_command(*, target: str):
     ...
 
 
