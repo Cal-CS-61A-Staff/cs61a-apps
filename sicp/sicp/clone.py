@@ -48,6 +48,6 @@ def run_apps_clone(dir, protocol):
 
 def run_61a_clone(dir, protocol):
     print("======== Cloning berkeley-cs61a ========")
-    sh("git", "clone", "{protocol}Cal-CS-61A-Staff/berkeley-cs61a", dir)
+    sh("git", "clone", f"{protocol}Cal-CS-61A-Staff/berkeley-cs61a", dir)
 
     print("================ Done! =================")
