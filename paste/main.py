@@ -1,7 +1,7 @@
 from random import choice
 from string import ascii_lowercase
 
-from flask import Flask, abort, redirect
+from flask import Flask, abort, redirect, request
 
 from common.db import connect_db
 from common.oauth_client import create_oauth_client, is_staff
@@ -26,7 +26,31 @@ with connect_db() as db:
     )
 
 
-@app.route("/<str:name>")
+@app.route("/")
+def index():
+    if not is_staff("cs61a"):
+        return redirect(url_for("login"))
+    return f"""
+    <h1>61A Paste</h1>
+    Paste text here: 
+    <br/><p>
+    <form action="{url_for("submit")}" method="POST">
+    <textarea name="data" rows="30" cols="50" name="comment" ></textarea>
+    </p>
+    <input type="submit"></input>
+    </form>
+    """
+
+
+@app.route("/save", methods=["POST"])
+def submit():
+    if not is_staff("cs61a"):
+        return redirect(url_for("login"))
+    data = request.form["data"]
+    return redirect(url_for("load_formatted", name=paste_worker(data)))
+
+
+@app.route("/<string:name>")
 def load_formatted(name):
     out = load(name)
     if isinstance(out, str):
@@ -35,7 +59,7 @@ def load_formatted(name):
         return out
 
 
-@app.route("/<str:name>/raw")
+@app.route("/<string:name>/raw")
 def load_raw(name):
     return load(name)
 
@@ -50,19 +74,24 @@ def load(name, skip_auth=False):
             return data[0]
     if not skip_auth and not is_staff("cs61a"):
         return redirect(url_for("login"))
-    data = db(
-        "SELECT data FROM pastes WHERE name=%s",
-        [name],
-    ).fetchone()
-    if data:
-        return data[0]
-    else:
-        abort(404)
+    with connect_db() as db:
+        data = db(
+            "SELECT data FROM pastes WHERE name=%s",
+            [name],
+        ).fetchone()
+        if data:
+            return data[0]
+        else:
+            abort(404)
 
 
 @paste_text.bind(app)
 @validates_master_secret
 def paste_text(app, is_staging, data: str, name: str = None, is_private: bool = False):
+    return paste_worker(data, name, is_private)
+
+
+def paste_worker(data: str, name: str = None, is_private: bool = False):
     if name is None:
         name = "".join(choice(ascii_lowercase) for _ in range(12))
     with connect_db() as db:
@@ -71,6 +100,7 @@ def paste_text(app, is_staging, data: str, name: str = None, is_private: bool = 
             "INSERT INTO pastes (name, data, private) VALUES (%s, %s, %s)",
             [name, data, is_private],
         )
+    return name
 
 
 def get_paste(app, is_staging, name: str):
