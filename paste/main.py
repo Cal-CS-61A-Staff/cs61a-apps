@@ -5,7 +5,7 @@ from flask import Flask, abort, redirect, request
 
 from common.db import connect_db
 from common.oauth_client import create_oauth_client, is_staff
-from common.rpc.paste import paste_text
+from common.rpc.paste import get_paste, paste_text
 from common.rpc.secrets import validates_master_secret
 from common.url_for import url_for
 
@@ -54,7 +54,7 @@ def submit():
 def load_formatted(name):
     out = load(name)
     if isinstance(out, str):
-        return "<code>" + load(name) + "</code>"
+        return "<pre>" + load(name) + "</pre>"
     else:
         return out
 
@@ -65,13 +65,14 @@ def load_raw(name):
 
 
 def load(name, skip_auth=False):
+    out = None
     with connect_db() as db:
         data = db(
             "SELECT data FROM pastes WHERE name=%s AND private=FALSE",
             [name],
         ).fetchone()
         if data:
-            return data[0]
+            out = data[0]
     if not skip_auth and not is_staff("cs61a"):
         return redirect(url_for("login"))
     with connect_db() as db:
@@ -80,9 +81,13 @@ def load(name, skip_auth=False):
             [name],
         ).fetchone()
         if data:
-            return data[0]
-        else:
-            abort(404)
+            out = data[0]
+    if out is None:
+        abort(404)
+    elif isinstance(out, bytes):
+        return out.decode("utf-8")
+    else:
+        return out
 
 
 @paste_text.bind(app)
@@ -103,6 +108,8 @@ def paste_worker(data: str, name: str = None, is_private: bool = False):
     return name
 
 
+@get_paste.bind(app)
+@validates_master_secret
 def get_paste(app, is_staging, name: str):
     return load(name, skip_auth=True)
 
