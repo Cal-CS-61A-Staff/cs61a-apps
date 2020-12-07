@@ -40,7 +40,8 @@ REPO = "berkeley-cs61a"
 SYMLINK = "SYMLINK"
 SUCCESS = "SUCCESS"
 
-internal_hashmap = {}
+tracked_files = set()
+remote_state = {}
 recent_files = LRUCache(15)
 do_build = True
 
@@ -92,7 +93,7 @@ def build():
             return
     print("Please wait until synchronization completes...")
     print("Scanning local directory...")
-    synchronize_from(get_server_hashes, show_progress=True)
+    full_synchronize_with_remote(get_server_hashes, show_progress=True)
     sandbox_url = get_sandbox_url()
     print(
         f"Synchronization completed! You can now begin developing. Preview your changes at {sandbox_url}"
@@ -160,7 +161,7 @@ def catchup_synchronizer_thread():
 
 def catchup_full_synchronizer_thread():
     while True:
-        full_synchronization()
+        full_synchronize_with_remote()
         time.sleep(15)
 
 
@@ -173,18 +174,16 @@ class Handler(FileSystemEventHandler):
 
 
 def synchronize(path: str):
-    global do_build
     os.chdir(find_target())
     path = relpath(path)
     if isinstance(path, bytes):
         path = path.decode("ascii")
-    if path not in internal_hashmap:
+    if path not in tracked_files:
         # do not synchronize untracked files
         # if this is a file just created, it will be tracked on the next full_synchronization pass
         return
-    recent_files[
-        path
-    ] = None  # path is a path to either a file or a symlink, NOT a directory
+    recent_files[path] = None
+    # path is a path to either a file or a symlink, NOT a directory
     if os.path.islink(path):
         update_file(path=path, symlink=os.readlink(path))
     elif os.path.isfile(path):
@@ -194,30 +193,23 @@ def synchronize(path: str):
             )
     elif not os.path.exists(path):
         update_file(path=path, delete=True)
-    old_hash = internal_hashmap.get(path)
-    internal_hashmap[path] = get_hash(path)
-    if old_hash != internal_hashmap[path]:
-        do_build = True
-
-
-def full_synchronization():
-    synchronize_from(internal_hashmap)
+    remote_state[path] = get_hash(path)
 
 
 def recent_synchronization():
     for path in set(recent_files.keys()):  # set() is needed to avoid concurrency issues
-        if internal_hashmap.get(path) != get_hash(path):
+        if remote_state.get(path) != get_hash(path):
             synchronize(path)
 
 
-def synchronize_from(remote_state, show_progress=False):
-    global internal_hashmap
+def full_synchronize_with_remote(remote_state_getter=None, show_progress=False):
+    global remote_state
     current_state = hash_all(show_progress=show_progress)
-    if callable(remote_state):
+    if callable(remote_state_getter):
         # When we want to fetch it lazily
         if show_progress:
             print("Fetching server state...")
-        remote_state = remote_state()
+        remote_state = remote_state_getter()
     paths = set(current_state) | set(remote_state)
     to_update = []
     for path in paths:
@@ -227,7 +219,7 @@ def synchronize_from(remote_state, show_progress=False):
     for path in tqdm(to_update) if show_progress else to_update:
         synchronize(path)
 
-    internal_hashmap = current_state
+    remote_state = current_state
 
 
 def get_hash(path):
@@ -247,6 +239,7 @@ def get_hash(path):
 
 
 def hash_all(show_progress=False):
+    global tracked_files
     files = (
         sh(
             "git", "ls-files", "--exclude-standard", capture_output=True, quiet=True
@@ -266,4 +259,5 @@ def hash_all(show_progress=False):
         if isinstance(file, bytes):
             file = file.decode("ascii")
         out[relpath(file)] = h
+    tracked_files = set(out) | set(remote_state)
     return out
