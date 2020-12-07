@@ -26,32 +26,6 @@ if (path.indexOf(".") === -1) {
   }
 }
 
-const scrollKey = "scroll_" + path;
-
-function getPDFContainer() {
-  const iframes = document.getElementsByTagName("iframe");
-  if (iframes.length > 0) {
-    return iframes[0].contentWindow.document.getElementById("viewerContainer");
-  }
-}
-
-function fixPDFScroll() {
-  const scrollTop = localStorage.getItem(scrollKey);
-  if (scrollTop != null) {
-    const container = getPDFContainer();
-    if (container.scrollHeight > 500) {
-      container.scrollTop = scrollTop;
-      console.log("Fixing...", container.scrollTop, scrollTop);
-      if (container.scrollTop == scrollTop) {
-        console.log("Fixing...", container.scrollTop);
-        clearInterval(pdfFixer);
-      }
-    }
-  }
-}
-
-// const pdfFixer = setInterval(fixPDFScroll, 100);
-
 async function poller() {
   let latestVersion;
   try {
@@ -94,14 +68,6 @@ async function poller() {
         rebuilding = true;
       }
     }
-  }
-  if (data.pubVersion !== version) {
-    const pdfContainer = getPDFContainer();
-    if (pdfContainer != null) {
-      localStorage.setItem(scrollKey, pdfContainer.scrollTop);
-      console.log("Saving", pdfContainer.scrollTop);
-    }
-    window.location.reload();
   }
 }
 
