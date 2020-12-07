@@ -22,7 +22,7 @@ __pycache__/
 .Python
 env/
 venv/
-build/
+build/*
 develop-eggs/
 dist/
 downloads/
@@ -84,3 +84,6 @@ cloud_sql_proxy
 
 # wiki theme "submodule"
 wiki-base/themes
+
+# include everything from pdfjs
+!pdfjs/
