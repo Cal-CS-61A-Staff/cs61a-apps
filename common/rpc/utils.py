@@ -38,6 +38,7 @@ def create_service(app: str, override=None):
 
                 if app == "sb":
                     endpoints = [f"https://136.sandbox.pr.cs61a.org{path}"]
+                    # endpoints = [f"http://localhost:5000{path}"]
 
                 for i, endpoint in enumerate(endpoints):
                     if noreply:

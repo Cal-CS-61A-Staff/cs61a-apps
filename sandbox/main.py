@@ -7,7 +7,6 @@ from os.path import abspath
 from pathlib import Path
 from random import randrange
 from subprocess import CalledProcessError
-from sys import stderr
 from typing import Optional
 
 import requests
@@ -40,11 +39,24 @@ if __name__ == "__main__":
 
 WORKING_DIRECTORY = abspath("tmp") if app.debug else "/save"
 HOT_RELOAD_SCRIPT_PATH = abspath("hot_reloader.js")
+PDFJS_DIRECTORY = abspath("pdfjs")
 REPO = "Cal-CS-61A-Staff/berkeley-cs61a"
 
 ENV = dict(CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org")
 
 DEFAULT_USER = "rahularya"
+
+PDF_INLINE_SCRIPT = """
+<div style="width: 100%; height: 100%;">
+    <iframe 
+        src="/pdfjs/web/viewer.html?file=SRC_PATH" 
+        style="width: 100%; height: 100%;" 
+        frameborder="0" 
+        scrolling="no"
+    >
+    </iframe>
+</div>
+"""
 
 HOT_RELOAD_INLINE_SCRIPT = """
 <script>
@@ -178,12 +190,13 @@ def index(path="index.html"):
     if "." not in path:
         return index(path + "/index.html")
 
+    original_path = path
     target = path_to_target(path)
     path = safe_join(base_directory, "published", path)
     if not is_up_to_date(username, target):
         build(username, target)
 
-    if path.endswith(".html"):
+    if path.endswith(".html") or path.endswith(".pdf"):
         logs = get_logs(username, target)
         if logs is not None:
             name, data = logs
@@ -192,22 +205,49 @@ def index(path="index.html"):
                 <a href={get_paste_url(name)}>{get_paste_url(name)}</a>
                 """
         elif os.path.exists(path):
-            with open(path, "r") as f:
-                out = f.read()
+            if path.endswith(".pdf"):
+                out = PDF_INLINE_SCRIPT.replace("SRC_PATH", "/raw/" + original_path)
+            else:
+                with open(path, "r") as f:
+                    out = f.read()
         else:
             out = ""
-        out += HOT_RELOAD_INLINE_SCRIPT.replace(
-            "MANUAL_VERSION", str(get_manual_version(username))
-        ).replace(
-            "VERSION",
-            str(get_version(username, target)),
+        out = (
+            HOT_RELOAD_INLINE_SCRIPT.replace(
+                "MANUAL_VERSION", str(get_manual_version(username))
+            ).replace(
+                "VERSION",
+                str(get_version(username, target)),
+            )
+            + out
         )
         return out
     else:
         try:
-            return send_file(path)
+            return send_file(path, cache_timeout=-1)
         except FileNotFoundError:
             return "", 404
+
+
+@app.route("/raw/<path:path>")
+def raw(path):
+    if not is_staff("cs61a"):
+        abort(403)
+
+    path = safe_join(get_working_directory(get_host_username()), "published", path)
+    try:
+        return send_file(path, cache_timeout=-1)
+    except FileNotFoundError:
+        return "", 404
+
+
+@app.route("/pdfjs/<path:path>")
+def pdfjs(path):
+    path = safe_join(PDFJS_DIRECTORY, path)
+    try:
+        return send_file(path)
+    except FileNotFoundError:
+        return "", 404
 
 
 def get_src_version(username):
@@ -237,7 +277,7 @@ def get_manual_version(username):
 @app.route("/hot_reloader.js")
 def hot_reloader():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        abort(403)
 
     return send_file(HOT_RELOAD_SCRIPT_PATH)
 
@@ -313,15 +353,17 @@ def run_make_command(target):
 
     clear_pending_builds(g.username)
 
-    yield from sh(
-        "make",
-        "VIRTUAL_ENV=../env",
-        target,
-        env=ENV,
-        stream_output=True,
-    )
+    try:
+        yield from sh(
+            "make",
+            "VIRTUAL_ENV=../env",
+            target,
+            env=ENV,
+            stream_output=True,
+        )
 
-    increment_manual_version(g.username)
+    finally:
+        increment_manual_version(g.username)
 
 
 def increment_manual_version(username):
@@ -438,7 +480,7 @@ def build_worker(username):
                         "make",
                         "VIRTUAL_ENV=../env",
                         target,
-                        env=ENV,
+                        env={**ENV, "LAZY_LOADING": "true"},
                         capture_output=True,
                         quiet=True,
                     )
@@ -509,6 +551,7 @@ def initialize_sandbox(force=False):
             "master",
         )
         sh("git", "checkout", "FETCH_HEAD", "-f")
+        os.mkdir("published")  # needed for lazy-loading builds
         if is_prod_build():
             add_domain(name="sandbox", domain=f"{g.username}.sb.cs61a.org")
         with connect_db() as db:

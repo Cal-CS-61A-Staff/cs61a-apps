@@ -101,8 +101,45 @@ def build():
 
     Thread(target=catchup_synchronizer_thread, daemon=True).start()
     Thread(target=catchup_full_synchronizer_thread, daemon=True).start()
-    Thread(target=input_thread, daemon=True).start()
+    Thread(target=file_events_thread, daemon=True).start()
 
+    # run this thread on the main thread to handle KeyboardInterrupts
+    input_thread()
+
+
+def input_thread():
+    try:
+        import readline
+    except ImportError:
+        # todo: use pyreadline on windows
+        pass
+
+    try:
+        while True:
+            print(Style.BRIGHT, end="")
+            target = input("make> ")
+            print(Style.RESET_ALL, end="")
+            if not target.strip():
+                continue
+            try:
+                for line in run_make_command(target=target):
+                    print(line, end="")
+            except KeyboardInterrupt:
+                print(Fore.RED)
+                pretty_print("🚫", "Build cancelled.")
+            except Exception as e:
+                print(Fore.RED)
+                print(str(e))
+                pretty_print("😿", "Build failed.")
+            else:
+                print(Fore.GREEN)
+                pretty_print("🎉", "Build completed!")
+    except KeyboardInterrupt:
+        pretty_print("👋", "Interrupt signal received, have a nice day!")
+        sys.exit(0)
+
+
+def file_events_thread():
     while True:
         observer = Observer()
         try:
@@ -110,30 +147,9 @@ def build():
             observer.start()
             for _ in range(15):
                 time.sleep(1)
-        except KeyboardInterrupt:
-            pretty_print("👋", "Interrupt signal received, have a nice day!")
-            sys.exit(0)
         finally:
             observer.stop()
             observer.join()
-
-
-def input_thread():
-    while True:
-        print(Style.BRIGHT)
-        target = input("make> ")
-        print(Style.RESET_ALL)
-        try:
-            for line in run_make_command(target=target):
-                print(line, end="")
-            print()
-        except Exception as e:
-            print(Fore.RED)
-            print(str(e))
-            pretty_print("😿", "Build failed.")
-        else:
-            print(Fore.GREEN)
-            pretty_print("🎉", "Build completed!")
 
 
 def catchup_synchronizer_thread():
