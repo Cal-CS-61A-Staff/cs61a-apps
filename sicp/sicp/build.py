@@ -150,6 +150,10 @@ def synchronize(path: str):
     path = relpath(path)
     if isinstance(path, bytes):
         path = path.decode("ascii")
+    if path not in internal_hashmap:
+        # do not synchronize untracked files
+        # if this is a file just created, it will be tracked on the next full_synchronization pass
+        return
     print("Synchronizing " + path)
     recent_files[
         path
