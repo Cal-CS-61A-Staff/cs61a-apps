@@ -69,6 +69,9 @@ async function poller() {
       }
     }
   }
+  if (data.pubVersion !== version) {
+    window.location.reload();
+  }
 }
 
 const interval = setInterval(poller, 700);
