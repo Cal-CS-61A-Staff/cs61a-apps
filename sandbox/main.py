@@ -212,14 +212,11 @@ def index(path="index.html"):
                     out = f.read()
         else:
             out = ""
-        out = (
-            HOT_RELOAD_INLINE_SCRIPT.replace(
-                "MANUAL_VERSION", str(get_manual_version(username))
-            ).replace(
-                "VERSION",
-                str(get_version(username, target)),
-            )
-            + out
+        out += HOT_RELOAD_INLINE_SCRIPT.replace(
+            "MANUAL_VERSION", str(get_manual_version(username))
+        ).replace(
+            "VERSION",
+            str(get_version(username, target)),
         )
         return out
     else:
