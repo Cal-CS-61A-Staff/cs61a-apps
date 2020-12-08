@@ -73,15 +73,16 @@ def load(name, skip_auth=False):
         ).fetchone()
         if data:
             out = data[0]
-    if not skip_auth and not is_staff("cs61a"):
-        return redirect(url_for("login"))
-    with connect_db() as db:
-        data = db(
-            "SELECT data FROM pastes WHERE name=%s",
-            [name],
-        ).fetchone()
-        if data:
-            out = data[0]
+    if out is None:
+        if not skip_auth and not is_staff("cs61a"):
+            return redirect(url_for("login"))
+        with connect_db() as db:
+            data = db(
+                "SELECT data FROM pastes WHERE name=%s",
+                [name],
+            ).fetchone()
+            if data:
+                out = data[0]
     if out is None:
         abort(404)
     elif isinstance(out, bytes):
