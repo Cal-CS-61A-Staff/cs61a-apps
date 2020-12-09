@@ -21,7 +21,10 @@ def csv(name):
 
 # exam recovery calculations
 def attendance(row):
-    return row["Tutorial Attendance (Total)"]  # special formula for FA20 restructure
+    return max(
+        row["Tutorial Attendance (Total)"],
+        row["Tutorial Attendance CS Scholars (Total)"],
+    )  # special formula for FA20 restructure
 
 
 #    return sum(row["Discussion {} (Total)".format(i)] for i in range(1, 13) if i != 8)
