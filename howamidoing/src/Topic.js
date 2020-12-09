@@ -31,6 +31,10 @@ export default class Topic extends Component {
         continue;
       }
 
+      if (!this.props.future && elem.hiddenifzero && displayedScore === 0) {
+        continue;
+      }
+
       if (
         !elem.isTopic ||
         (elem.lockedChildren &&

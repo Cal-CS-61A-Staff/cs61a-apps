@@ -102,6 +102,11 @@ export function Hidden(elem) {
   return elem;
 }
 
+export function HiddenIfZero(elem) {
+  elem.hiddenifzero = true;
+  return elem;
+}
+
 export function OnlyDefault(elem) {
   elem.default = true;
   return elem;
