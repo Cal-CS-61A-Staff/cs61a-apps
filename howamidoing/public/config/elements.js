@@ -102,8 +102,13 @@ export function Hidden(elem) {
   return elem;
 }
 
-export function HiddenIfZero(elem) {
-  elem.hiddenifzero = true;
+export function HideChildren(elem) {
+  elem.hideChildren = true;
+  return elem;
+}
+
+export function HideIfZero(elem) {
+  elem.hideIfZero = true;
   return elem;
 }
 
