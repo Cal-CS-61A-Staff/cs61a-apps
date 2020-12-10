@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y latexmk && git config --global core.sym
 
 RUN apt install -y hugo
 
+RUN apt-get update && apt-get install -y groff
+
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
