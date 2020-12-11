@@ -7,7 +7,6 @@ from common.oauth_client import create_oauth_client, is_staff
 from common.jobs import job
 from common.db import connect_db
 from common.url_for import url_for
-from update_job import update
 
 from auth import authenticate, update_storage
 from datetime import datetime
@@ -153,6 +152,8 @@ def delete_assign():
 @job(app, "update_grades")
 @app.route("/update_grades")
 def run():
+    from update_job import update  # fresh import to ensure up-to-date data from db
+
     start = datetime.now()
     print(f"Grade update triggered at {str(start)}.", file=sys.stderr)
     update()
