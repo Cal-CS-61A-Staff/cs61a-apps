@@ -42,7 +42,9 @@ HOT_RELOAD_SCRIPT_PATH = abspath("hot_reloader.js")
 PDFJS_DIRECTORY = abspath("pdfjs")
 REPO = "Cal-CS-61A-Staff/berkeley-cs61a"
 
-ENV = dict(CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org")
+ENV = dict(
+    CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org", IN_SANDBOX="true"
+)
 
 DEFAULT_USER = "rahularya"
 
