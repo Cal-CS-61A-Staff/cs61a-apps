@@ -14,27 +14,6 @@ export default class Topic extends Component {
   };
 
   render() {
-    if (this.props.schema.hideChildren) {
-      return (
-        <Row
-          name={this.props.schema.name}
-          score={this.props.data[this.props.schema.name]}
-          plannedScore={this.props.planned[this.props.schema.name]}
-          placeholder={this.props.plannedTotals[this.props.schema.name]}
-          readOnly={this.props.readOnly}
-          maxScore={this.props.schema.maxScore}
-          onClick={this.toggleCollapse}
-          noScore={this.props.schema.noScore}
-          future={this.props.schema.future}
-          indent={this.props.indent}
-          collapsed={this.props.collapsed}
-          onChange={this.props.onFutureScoreChange}
-          hidden={this.props.schema.hidden}
-          booleanValued={this.props.schema.booleanValued}
-        />
-      );
-    }
-
     const rows = [];
 
     const readOnly = false;
