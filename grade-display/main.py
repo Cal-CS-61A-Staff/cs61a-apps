@@ -46,12 +46,13 @@ def config():
             "SELECT name, gs_code FROM gscope",
             [],
         ).fetchall()
-        acadh: List[Tuple[str, str]] =  db(
+        acadh: List[Tuple[str, str]] = db(
             "SELECT url, sheet FROM acadh",
             [],
         ).fetchall()
 
-    return """
+    return (
+        """
     <h1>Grade Display Config</h1>
     <p>
         Add a Gradescope assignment: 
@@ -69,8 +70,9 @@ def config():
             <button type="submit">Submit</button>
         </form>
     </p>
-    """ + "".join(
-        f"""<p>
+    """
+        + "".join(
+            f"""<p>
             <form 
                 style="display: inline" 
                 action="{url_for("delete_assign", name=name)}" 
@@ -79,9 +81,10 @@ def config():
                 {name} ({gs_code})
                 <input type="submit" value="Remove">
         </form>"""
-        for name, gs_code in gscope
-    ) + "".join(
-        f"""<p>
+            for name, gs_code in gscope
+        )
+        + "".join(
+            f"""<p>
             <form
                 style="display: inline"
                 action="{url_for("delete_acadh")}"
@@ -90,7 +93,8 @@ def config():
                 Academic Dishonesty Penalties: {url} ({sheet})
                 <input type="submit" value="Remove">
         </form>"""
-        for url, sheet in acadh
+            for url, sheet in acadh
+        )
     )
 
 
@@ -110,6 +114,7 @@ def create_assign():
             [name, gs_code],
         )
     return redirect(url_for("config"))
+
 
 @app.route("/set_acadh", methods=["POST"])
 def set_acadh():
@@ -134,6 +139,7 @@ def delete_assign(name):
     with connect_db() as db:
         db("DELETE FROM gscope WHERE name=%s", [name])
     return redirect(url_for("config"))
+
 
 @app.route("/delete_acadh", methods=["POST"])
 def delete_assign():

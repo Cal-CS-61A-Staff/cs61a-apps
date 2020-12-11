@@ -19,6 +19,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 def csv(name):
     return pd.read_csv(os.path.join(__location__, name), dtype={"sid": str, "SID": str})
 
+
 def web_csv(url, sheet):
     resp = read_spreadsheet(course="cs61a", url=url, sheet_name=sheet)
     cols = resp[0]
@@ -28,7 +29,9 @@ def web_csv(url, sheet):
 
 # exam recovery calculations
 def attendance(row):
-    return row["Tutorial Attendance (Raw)"] # special formula for FA20 restructure
+    return row["Tutorial Attendance (Raw)"]  # special formula for FA20 restructure
+
+
 #    return sum(row["Discussion {} (Total)".format(i)] for i in range(1, 13) if i != 8)
 
 
@@ -52,8 +55,17 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
         tutorials.fillna(0)
         grades = pd.merge(grades, tutorials, how="left", on="Email")
 
-        grades["Tutorial Attendance (Raw)"] = grades[["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]].values.max(1)
-        grades = grades.drop(["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)", "Tutorial Attendance (Might be outdated, check tutorials.cs61a.org and howamidoing.cs61a.org) (Total)"], axis=1)
+        grades["Tutorial Attendance (Raw)"] = grades[
+            ["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]
+        ].values.max(1)
+        grades = grades.drop(
+            [
+                "Tutorial Attendance (Total)",
+                "Tutorial Attendance CS Scholars (Total)",
+                "Tutorial Attendance (Might be outdated, check tutorials.cs61a.org and howamidoing.cs61a.org) (Total)",
+            ],
+            axis=1,
+        )
 
     if gscope:
         for name in gscope:

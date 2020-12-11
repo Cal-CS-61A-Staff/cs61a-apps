@@ -55,7 +55,9 @@ def update():
 
     print("=================================================")
     adj = list(acadh[0]) if acadh else []
-    assemble.assemble(gscope=gs_assignments, recovery=True, sections=sections, adjustments=adj)
+    assemble.assemble(
+        gscope=gs_assignments, recovery=True, sections=sections, adjustments=adj
+    )
 
     print("=================================================")
 
