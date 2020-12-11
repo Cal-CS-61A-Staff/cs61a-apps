@@ -22,6 +22,12 @@ with connect_db() as db:
     gs_code varchar(128)
 )"""
     )
+    db(
+        """CREATE TABLE IF NOT EXISTS acadh (
+    url text,
+    sheet text
+)"""
+    )
 
 
 @app.route("/")
@@ -40,6 +46,10 @@ def config():
             "SELECT name, gs_code FROM gscope",
             [],
         ).fetchall()
+        acadh: List[Tuple[str, str]] =  db(
+            "SELECT url, sheet FROM acadh",
+            [],
+        ).fetchall()
 
     return """
     <h1>Grade Display Config</h1>
@@ -48,6 +58,14 @@ def config():
         <form action="/create_assign" method="POST">
             <input name="name" placeholder="Shortname (no spaces!)" /> 
             <input name="gs_code" placeholder="Gradescope code" /> 
+            <button type="submit">Submit</button>
+        </form>
+    </p>
+    <p>
+        Set the Academic Dishonesty Spreadsheet URL: 
+        <form action="/set_acadh" method="POST">
+            <input name="url" placeholder="Full URL" />
+            <input name="sheet" placeholder="Sheet Name" />
             <button type="submit">Submit</button>
         </form>
     </p>
@@ -62,6 +80,17 @@ def config():
                 <input type="submit" value="Remove">
         </form>"""
         for name, gs_code in gscope
+    ) + "".join(
+        f"""<p>
+            <form
+                style="display: inline"
+                action="{url_for("delete_acadh")}"
+                method="post"
+            >
+                Academic Dishonesty Penalties: {url} ({sheet})
+                <input type="submit" value="Remove">
+        </form>"""
+        for url, sheet in acadh
     )
 
 
@@ -82,6 +111,21 @@ def create_assign():
         )
     return redirect(url_for("config"))
 
+@app.route("/set_acadh", methods=["POST"])
+def set_acadh():
+    if not is_staff("cs61a"):
+        return redirect(url_for("config"))
+
+    url = request.form["url"]
+    sheet = request.form["sheet"]
+    with connect_db() as db:
+        db("TRUNCATE TABLE acadh")
+        db(
+            "INSERT INTO acadh (url, sheet) VALUES (%s, %s)",
+            [url, sheet],
+        )
+    return redirect(url_for("config"))
+
 
 @app.route("/delete_assign/<name>", methods=["POST"])
 def delete_assign(name):
@@ -89,6 +133,14 @@ def delete_assign(name):
         return redirect(url_for("config"))
     with connect_db() as db:
         db("DELETE FROM gscope WHERE name=%s", [name])
+    return redirect(url_for("config"))
+
+@app.route("/delete_acadh", methods=["POST"])
+def delete_assign():
+    if not is_staff("cs61a"):
+        return redirect(url_for("config"))
+    with connect_db() as db:
+        db("TRUNCATE TABLE acadh")
     return redirect(url_for("config"))
 
 
