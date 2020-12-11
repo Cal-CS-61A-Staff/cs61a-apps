@@ -100,7 +100,7 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
         print("Applying adjustments...")
         adj = web_csv(*adjustments)
         out = pd.merge(out, adj, how="left", on="Email")
-        columns.append(adjustments[1])
+        columns.append(adj.columns[1])
 
     # finalize
     out = out[columns]
