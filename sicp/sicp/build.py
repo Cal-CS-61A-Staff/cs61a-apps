@@ -1,13 +1,14 @@
 import os
 import sys
 import time
-import traceback
+import webbrowser
 from base64 import b64encode
 from os.path import relpath
 from threading import Thread
 from typing import Union
 
 import click
+import requests
 from cachetools import LRUCache
 from colorama import Fore, Style
 from crcmod.crcmod import _usingExtension
@@ -21,12 +22,12 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from common.rpc.auth_utils import set_token_path
+from common.rpc.auth_utils import get_token, set_token_path
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
     is_sandbox_initialized,
-    run_incremental_build,
+    run_make_command,
     update_file,
 )
 from common.shell_utils import sh
@@ -39,7 +40,8 @@ REPO = "berkeley-cs61a"
 SYMLINK = "SYMLINK"
 SUCCESS = "SUCCESS"
 
-internal_hashmap = {}
+tracked_files = set()
+remote_state = {}
 recent_files = LRUCache(15)
 do_build = True
 
@@ -67,35 +69,81 @@ def find_target():
 
 
 def pretty_print(emoji, msg):
-    print(f"\n{emoji}{Style.BRIGHT} {msg} {Style.RESET_ALL}{emoji}\n")
+    print(f"{emoji}{Style.BRIGHT} {msg} {Style.RESET_ALL}{emoji}")
+
+
+def get_sandbox_url():
+    username = requests.get(
+        "https://okpy.org/api/v3/user/", params={"access_token": get_token()}
+    ).json()["data"]["email"][: -len("@berkeley.edu")]
+    return f"https://{username}.sb.cs61a.org"
 
 
 @click.command()
-@click.option("--clean", is_flag=True)
-def build(clean=False):
-    global do_build
+def build():
     os.chdir(find_target())
     set_token_path(".token")
     if not is_sandbox_initialized():
         print("Sandbox is not initialized.")
         if click.confirm(
-            "You need to initialize your sandbox first. It will probably take no more than 10 minutes."
+            "You need to initialize your sandbox first. Continue?", default=True
         ):
             initialize_sandbox()
+            for line in run_make_command(target="virtualenv"):
+                print(line, end="")
+            print()
         else:
             return
     print("Please wait until synchronization completes...")
     print("Scanning local directory...")
-    synchronize_from(get_server_hashes, show_progress=True)
-    if clean and click.confirm(
-        "Do you want to rebuild everything on your sandbox from scratch?"
-    ):
-        for line in run_incremental_build(clean=True):
-            print(line, end="")
-        print(f"\n🎉{Fore.GREEN}{Style.BRIGHT} Rebuild completed! {Style.RESET_ALL}🎉\n")
+    full_synchronize_with_remote(get_server_hashes, show_progress=True)
+    sandbox_url = get_sandbox_url()
+    print(
+        f"Synchronization completed! You can now begin developing. Preview your changes at {sandbox_url}"
+    )
+    webbrowser.open(sandbox_url)
+
     Thread(target=catchup_synchronizer_thread, daemon=True).start()
     Thread(target=catchup_full_synchronizer_thread, daemon=True).start()
-    print("Synchronization completed! You can now begin developing.")
+    Thread(target=file_events_thread, daemon=True).start()
+
+    # run this thread on the main thread to handle KeyboardInterrupts
+    input_thread()
+
+
+def input_thread():
+    try:
+        import readline
+    except ImportError:
+        # todo: use pyreadline on windows
+        pass
+
+    try:
+        while True:
+            print(Style.BRIGHT, end="")
+            target = input("make> ")
+            print(Style.RESET_ALL, end="")
+            if not target.strip():
+                continue
+            try:
+                for line in run_make_command(target=target):
+                    print(line, end="")
+            except KeyboardInterrupt:
+                print(Fore.RED)
+                pretty_print("🚫", "Build cancelled.")
+            except Exception as e:
+                print(Fore.RED)
+                print(str(e))
+                pretty_print("😿", "Build failed.")
+            else:
+                print(Fore.GREEN)
+                pretty_print("🎉", "Build completed!")
+    except KeyboardInterrupt:
+        pretty_print("👋", "Interrupt signal received, have a nice day!")
+        sys.exit(0)
+
+
+def file_events_thread():
     while True:
         observer = Observer()
         try:
@@ -103,22 +151,6 @@ def build(clean=False):
             observer.start()
             for _ in range(15):
                 time.sleep(1)
-                if do_build:
-                    do_build = False
-                    try:
-                        for line in run_incremental_build():
-                            print(line, end="")
-                        print()
-                    except Exception as e:
-                        print(Fore.RED)
-                        print(str(e))
-                        pretty_print("😿", "Build failed.")
-                    else:
-                        print(Fore.GREEN)
-                        pretty_print("🎉", "Build completed!")
-        except KeyboardInterrupt:
-            pretty_print("👋", "Interrupt signal received, have a nice day!")
-            sys.exit(0)
         finally:
             observer.stop()
             observer.join()
@@ -132,7 +164,7 @@ def catchup_synchronizer_thread():
 
 def catchup_full_synchronizer_thread():
     while True:
-        full_synchronization()
+        full_synchronize_with_remote()
         time.sleep(15)
 
 
@@ -145,21 +177,17 @@ class Handler(FileSystemEventHandler):
 
 
 def synchronize(path: str):
-    global do_build
     os.chdir(find_target())
     path = relpath(path)
     if isinstance(path, bytes):
         path = path.decode("ascii")
-    if path not in internal_hashmap:
+    if path not in tracked_files:
         # do not synchronize untracked files
         # if this is a file just created, it will be tracked on the next full_synchronization pass
         return
-    print("Synchronizing " + path)
-    recent_files[
-        path
-    ] = None  # path is a path to either a file or a symlink, NOT a directory
+    recent_files[path] = None
+    # path is a path to either a file or a symlink, NOT a directory
     if os.path.islink(path):
-        print("Path is a symlink " + path)
         update_file(path=path, symlink=os.readlink(path))
     elif os.path.isfile(path):
         with open(path, "rb") as f:
@@ -168,30 +196,23 @@ def synchronize(path: str):
             )
     elif not os.path.exists(path):
         update_file(path=path, delete=True)
-    old_hash = internal_hashmap.get(path)
-    internal_hashmap[path] = get_hash(path)
-    if old_hash != internal_hashmap[path]:
-        do_build = True
-
-
-def full_synchronization():
-    synchronize_from(internal_hashmap)
+    remote_state[path] = get_hash(path)
 
 
 def recent_synchronization():
     for path in set(recent_files.keys()):  # set() is needed to avoid concurrency issues
-        if internal_hashmap.get(path) != get_hash(path):
+        if remote_state.get(path) != get_hash(path):
             synchronize(path)
 
 
-def synchronize_from(remote_state, show_progress=False):
-    global internal_hashmap
+def full_synchronize_with_remote(remote_state_getter=None, show_progress=False):
+    global remote_state
     current_state = hash_all(show_progress=show_progress)
-    if callable(remote_state):
+    if callable(remote_state_getter):
         # When we want to fetch it lazily
         if show_progress:
             print("Fetching server state...")
-        remote_state = remote_state()
+        remote_state = remote_state_getter()
     paths = set(current_state) | set(remote_state)
     to_update = []
     for path in paths:
@@ -201,7 +222,7 @@ def synchronize_from(remote_state, show_progress=False):
     for path in tqdm(to_update) if show_progress else to_update:
         synchronize(path)
 
-    internal_hashmap = current_state
+    remote_state = current_state
 
 
 def get_hash(path):
@@ -221,6 +242,7 @@ def get_hash(path):
 
 
 def hash_all(show_progress=False):
+    global tracked_files
     files = (
         sh(
             "git", "ls-files", "--exclude-standard", capture_output=True, quiet=True
@@ -240,4 +262,5 @@ def hash_all(show_progress=False):
         if isinstance(file, bytes):
             file = file.decode("ascii")
         out[relpath(file)] = h
+    tracked_files = set(out) | set(remote_state)
     return out
