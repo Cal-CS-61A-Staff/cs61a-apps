@@ -141,7 +141,7 @@ def delete_assign(name):
 
 
 @app.route("/delete_acadh", methods=["POST"])
-def delete_assign():
+def delete_acadh():
     if not is_staff("cs61a"):
         return redirect(url_for("config"))
     with connect_db() as db:
