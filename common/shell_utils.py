@@ -6,10 +6,15 @@ from shutil import rmtree
 from typing import List
 
 
-def sh(*args, env={}, capture_output=False, stream_output=False, quiet=False):
+def sh(
+    *args, env={}, capture_output=False, stream_output=False, quiet=False, shell=False
+):
     assert not (
         capture_output and stream_output
     ), "Cannot both capture and stream output"
+
+    if shell:
+        args = [" ".join(args)]
 
     env = {**os.environ, **env, "ENV": "dev"}
     if stream_output:
@@ -20,6 +25,7 @@ def sh(*args, env={}, capture_output=False, stream_output=False, quiet=False):
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             bufsize=1,
+            shell=shell,
         )
 
         def generator():
@@ -37,9 +43,9 @@ def sh(*args, env={}, capture_output=False, stream_output=False, quiet=False):
 
         return generator()
     elif capture_output:
-        out = subprocess.run(args, env=env, capture_output=capture_output)
+        out = subprocess.run(args, env=env, capture_output=capture_output, shell=shell)
     else:
-        out = subprocess.run(args, env=env, stdout=subprocess.PIPE)
+        out = subprocess.run(args, env=env, stdout=subprocess.PIPE, shell=shell)
     if capture_output and not quiet:
         print(out.stdout, file=sys.stdout)
         print(out.stderr, file=sys.stderr)

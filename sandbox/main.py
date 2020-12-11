@@ -359,6 +359,7 @@ def run_make_command(target):
             target,
             env=ENV,
             stream_output=True,
+            shell=True,
         )
 
     finally:
