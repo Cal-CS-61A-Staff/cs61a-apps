@@ -89,6 +89,9 @@ def build():
             "You need to initialize your sandbox first. Continue?", default=True
         ):
             initialize_sandbox()
+            for line in run_make_command(target="virtualenv"):
+                print(line, end="")
+            print()
         else:
             return
     print("Please wait until synchronization completes...")
