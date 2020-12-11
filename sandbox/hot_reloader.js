@@ -1,5 +1,3 @@
-let version = VERSION;
-
 console.info("Hot reloader enabled...");
 
 const elem = document.createElement("div");
@@ -18,22 +16,62 @@ elem.style.fontFamily = '"Inconsolata", monospace';
 elem.style.fontSize = "18pt";
 elem.style.borderRadius = "0 0 30px 30px";
 
-async function poller() {
-  const latestVersion = await fetch("/latest_revision", {
-    method: "POST",
-    cache: "no-cache",
-  });
-
-  if (!latestVersion.ok) {
-    // todo
+let rebuilding = false;
+let path = window.location.pathname.slice(1);
+if (path.indexOf(".") === -1) {
+  if (path.length > 0) {
+    path += "/index.html";
   } else {
-    const data = await latestVersion.json();
-    if (data.version !== version) {
-      window.location.reload();
-    } else if (data.isLoading) {
-      document.body.appendChild(elem);
-    }
+    path += "index.html";
   }
 }
 
-setInterval(poller, 700);
+async function poller() {
+  let latestVersion;
+  try {
+    latestVersion = await fetch("/get_revision", {
+      method: "POST",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ path }),
+    });
+  } catch {
+    latestVersion = { ok: false };
+  }
+  let data = null;
+  if (latestVersion.ok) {
+    data = await latestVersion.json();
+  }
+  if (data == null || data.manualVersion !== manualVersion) {
+    // a manual make invocation has taken place
+    // disable auto-reload
+    document.body.appendChild(elem);
+    elem.style.background = "red";
+    elem.innerText = "Refresh to update";
+    clearInterval(interval);
+    return;
+  }
+  if (data.pubVersion !== data.srcVersion) {
+    document.body.appendChild(elem);
+    if (!rebuilding) {
+      const resp = await fetch("/rebuild_path", {
+        method: "POST",
+        cache: "no-cache",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ path }),
+      });
+      if (resp.ok) {
+        rebuilding = true;
+      }
+    }
+  }
+  if (data.pubVersion !== version) {
+    window.location.reload();
+  }
+}
+
+const interval = setInterval(poller, 700);
