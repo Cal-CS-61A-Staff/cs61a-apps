@@ -7,7 +7,6 @@ from common.oauth_client import create_oauth_client, is_staff
 from common.jobs import job
 from common.db import connect_db
 from common.url_for import url_for
-from update_job import update
 
 from auth import authenticate, update_storage
 from datetime import datetime
@@ -20,6 +19,12 @@ with connect_db() as db:
         """CREATE TABLE IF NOT EXISTS gscope (
     name varchar(128),
     gs_code varchar(128)
+)"""
+    )
+    db(
+        """CREATE TABLE IF NOT EXISTS acadh (
+    url text,
+    sheet text
 )"""
     )
 
@@ -40,8 +45,13 @@ def config():
             "SELECT name, gs_code FROM gscope",
             [],
         ).fetchall()
+        acadh: List[Tuple[str, str]] = db(
+            "SELECT url, sheet FROM acadh",
+            [],
+        ).fetchall()
 
-    return """
+    return (
+        """
     <h1>Grade Display Config</h1>
     <p>
         Add a Gradescope assignment: 
@@ -51,8 +61,17 @@ def config():
             <button type="submit">Submit</button>
         </form>
     </p>
-    """ + "".join(
-        f"""<p>
+    <p>
+        Set the Academic Dishonesty Spreadsheet URL: 
+        <form action="/set_acadh" method="POST">
+            <input name="url" placeholder="Full URL" />
+            <input name="sheet" placeholder="Sheet Name" />
+            <button type="submit">Submit</button>
+        </form>
+    </p>
+    """
+        + "".join(
+            f"""<p>
             <form 
                 style="display: inline" 
                 action="{url_for("delete_assign", name=name)}" 
@@ -61,7 +80,20 @@ def config():
                 {name} ({gs_code})
                 <input type="submit" value="Remove">
         </form>"""
-        for name, gs_code in gscope
+            for name, gs_code in gscope
+        )
+        + "".join(
+            f"""<p>
+            <form
+                style="display: inline"
+                action="{url_for("delete_acadh")}"
+                method="post"
+            >
+                Academic Dishonesty Penalties: {url} ({sheet})
+                <input type="submit" value="Remove">
+        </form>"""
+            for url, sheet in acadh
+        )
     )
 
 
@@ -83,6 +115,22 @@ def create_assign():
     return redirect(url_for("config"))
 
 
+@app.route("/set_acadh", methods=["POST"])
+def set_acadh():
+    if not is_staff("cs61a"):
+        return redirect(url_for("config"))
+
+    url = request.form["url"]
+    sheet = request.form["sheet"]
+    with connect_db() as db:
+        db("TRUNCATE TABLE acadh")
+        db(
+            "INSERT INTO acadh (url, sheet) VALUES (%s, %s)",
+            [url, sheet],
+        )
+    return redirect(url_for("config"))
+
+
 @app.route("/delete_assign/<name>", methods=["POST"])
 def delete_assign(name):
     if not is_staff("cs61a"):
@@ -92,9 +140,20 @@ def delete_assign(name):
     return redirect(url_for("config"))
 
 
+@app.route("/delete_acadh", methods=["POST"])
+def delete_acadh():
+    if not is_staff("cs61a"):
+        return redirect(url_for("config"))
+    with connect_db() as db:
+        db("TRUNCATE TABLE acadh")
+    return redirect(url_for("config"))
+
+
 @job(app, "update_grades")
 @app.route("/update_grades")
 def run():
+    from update_job import update  # fresh import to ensure up-to-date data from db
+
     start = datetime.now()
     print(f"Grade update triggered at {str(start)}.", file=sys.stderr)
     update()

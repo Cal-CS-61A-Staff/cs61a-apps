@@ -37,7 +37,7 @@ export default function Row(props) {
     );
 
   const maxScore =
-    !props.booleanValued && props.maxScore
+    !props.booleanValued && props.maxScore && Number.isFinite(props.maxScore)
       ? ` / ${formatScore(props.maxScore)}`
       : "";
 

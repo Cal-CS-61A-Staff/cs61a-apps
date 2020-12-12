@@ -21,6 +21,10 @@ with connect_db() as db:
         "SELECT name, gs_code FROM gscope",
         [],
     ).fetchall()
+    acadh: List[Tuple[str, str]] = db(
+        "SELECT url, sheet FROM acadh",
+        [],
+    ).fetchall()
 
 
 def update():
@@ -50,7 +54,10 @@ def update():
         sections_export.export()
 
     print("=================================================")
-    assemble.assemble(gscope=gs_assignments, recovery=True, sections=sections)
+    adj = list(acadh[0]) if acadh else []
+    assemble.assemble(
+        gscope=gs_assignments, recovery=True, sections=sections, adjustments=adj
+    )
 
     print("=================================================")
 

@@ -31,6 +31,10 @@ export default class Topic extends Component {
         continue;
       }
 
+      if (elem.hideIfZero && this.props.data[elem.name] === 0) {
+        continue;
+      }
+
       if (
         !elem.isTopic ||
         (elem.lockedChildren &&
