@@ -21,7 +21,7 @@ def csv(name):
 
 
 def web_csv(url, sheet):
-    resp = read_spreadsheet(course="cs61a", url=url, sheet_name=sheet)
+    resp = read_spreadsheet(url=url, sheet_name=sheet)
     cols = resp[0]
     data = [x[: len(cols)] for x in resp[1:]]
     return pd.DataFrame(data, columns=cols)
