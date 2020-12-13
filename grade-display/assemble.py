@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 import requests
 
 from common.rpc.howamidoing import upload_grades
@@ -24,6 +25,9 @@ def web_csv(url, sheet):
     resp = read_spreadsheet(url=url, sheet_name=sheet)
     cols = resp[0]
     data = [x[: len(cols)] for x in resp[1:]]
+    for row in data:
+        while len(row) < len(cols):
+            row.append(0)
     return pd.DataFrame(data, columns=cols)
 
 
@@ -52,7 +56,7 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     # Fall 2020 Tutorials
     if sections:
         tutorials = csv(TUTORIALS)
-        tutorials.fillna(0)
+        tutorials = tutorials.fillna(0)
         grades = pd.merge(grades, tutorials, how="left", on="Email")
 
         grades["Tutorial Attendance (Raw)"] = grades[
@@ -70,7 +74,7 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     if gscope:
         for name in gscope:
             scores = csv(f"data/{name}.csv")[["SID", "Total Score"]]
-            scores.fillna(0)
+            scores = scores.fillna(0)
             grades = pd.merge(grades, scores, how="left", on="SID").rename(
                 columns={"Total Score": f"{gscope[name]} (Raw)"}
             )
@@ -99,11 +103,13 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     if adjustments:
         print("Applying adjustments...")
         adj = web_csv(*adjustments)
+        adj = adj.fillna(0)
         out = pd.merge(out, adj, how="left", on="Email")
-        columns.append(adj.columns[1])
+        columns.extend(adj.columns[1:])
 
     # finalize
     out = out[columns]
+    out = out.replace("", np.nan)
 
     finalized = out.fillna(0)
     finalized = finalized.rename(columns={"name": "Name"})
