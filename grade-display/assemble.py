@@ -52,7 +52,7 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     # Fall 2020 Tutorials
     if sections:
         tutorials = csv(TUTORIALS)
-        tutorials.fillna(0)
+        tutorials = tutorials.fillna(0)
         grades = pd.merge(grades, tutorials, how="left", on="Email")
 
         grades["Tutorial Attendance (Raw)"] = grades[
@@ -70,7 +70,7 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     if gscope:
         for name in gscope:
             scores = csv(f"data/{name}.csv")[["SID", "Total Score"]]
-            scores.fillna(0)
+            scores = scores.fillna(0)
             grades = pd.merge(grades, scores, how="left", on="SID").rename(
                 columns={"Total Score": f"{gscope[name]} (Raw)"}
             )
@@ -99,8 +99,9 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     if adjustments:
         print("Applying adjustments...")
         adj = web_csv(*adjustments)
+        adj = adj.fillna(0)
         out = pd.merge(out, adj, how="left", on="Email")
-        columns.append(adj.columns[1])
+        columns.append(adj.columns[1:])
 
     # finalize
     out = out[columns]
