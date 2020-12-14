@@ -5,7 +5,12 @@ import FailText from "./FailText";
 import LoadingButton from "./LoadingButton";
 import post from "./post";
 
-export default function StaffMessageReplyBox({ exam, message, onUpdate }) {
+export default function StaffMessageReplyBox({
+  exam,
+  compact,
+  message,
+  onUpdate,
+}) {
   const [reply, setReply] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [failText, setFailText] = useState("");
@@ -17,7 +22,7 @@ export default function StaffMessageReplyBox({ exam, message, onUpdate }) {
         exam,
         id: message,
         token: getToken(),
-        reply,
+        reply: compact ? "Staff has read your message" : reply,
       });
       const data = await resp.json();
       if (!data.success) {
@@ -35,22 +40,26 @@ export default function StaffMessageReplyBox({ exam, message, onUpdate }) {
 
   return (
     <>
-      <Form.Group>
-        <Form.Control
-          as="textarea"
-          rows={3}
-          value={reply}
-          placeholder="Reply to the private message."
-          onChange={(e) => setReply(e.target.value)}
-        />
-      </Form.Group>
+      {!compact && (
+        <Form.Group>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            value={reply}
+            placeholder="Reply to the private message."
+            onChange={(e) => setReply(e.target.value)}
+          />
+        </Form.Group>
+      )}
       <Form.Group>
         <LoadingButton
           loading={isLoading}
           disabled={isLoading}
           onClick={submit}
+          size={compact && "sm"}
+          variant={compact ? "warning" : "primary"}
         >
-          Send
+          {compact ? "✔" : "Send"}
         </LoadingButton>
         <FailText text={failText} suffixType="alerts" />
       </Form.Group>

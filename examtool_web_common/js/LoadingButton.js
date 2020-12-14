@@ -7,13 +7,16 @@ export default function LoadingButton({
   disabled,
   onClick,
   style,
+  variant = "primary",
+  size = undefined,
 }) {
   return (
     <Button
-      variant="primary"
+      variant={variant}
       onClick={onClick}
       disabled={disabled}
       style={style}
+      size={size}
     >
       {loading && (
         <Spinner
