@@ -15,7 +15,7 @@ CLIENT_SECRET = "KH0mvknMUWT5w3U7zvz6wsUQZoy6UmQ"
 OAUTH_SCOPE = "email"
 
 # Localhost
-REDIRECT_HOST = "127.0.0.1"
+REDIRECT_HOST = "localhost"
 REDIRECT_PORT = 6265
 
 # OAuth post timeout
