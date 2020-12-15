@@ -68,6 +68,9 @@ def write_exam(
             question_for_text = question
         for line in question_for_text["text"].split("\n"):
             out(line)
+        
+        if question["id"] == "PEJJCSLWQAIVYCYPDBOOIYFOLKNEHVVE":
+            pdf.add_page()
 
         out("\nANSWER")
 
