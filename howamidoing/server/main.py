@@ -218,7 +218,7 @@ def create_client(app):
             for [score] in data:
                 score = json.loads(score)
                 scores.append(score)
-            return jsonify({"header": header, "scores": scores})
+            return {"header": header, "scores": scores}
 
 
 def print_to_stderr(print_function):
