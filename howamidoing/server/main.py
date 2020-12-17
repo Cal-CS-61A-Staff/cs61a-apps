@@ -6,6 +6,7 @@ from common.course_config import get_course
 from common.db import connect_db, transaction_db
 from common.oauth_client import create_oauth_client, get_user, is_logged_in, is_staff
 from common.rpc.howamidoing import upload_grades as rpc_upload_grades
+from common.rpc.howamidoing import download_grades as rpc_download_grades
 from common.rpc.secrets import only
 from common.rpc.auth import validate_secret
 from setup_functions import set_default_config, set_grades
@@ -201,6 +202,23 @@ def create_client(app):
     def upload_grades(data: str):
         with transaction_db() as db:
             set_grades(data, get_course(), db)
+
+    @rpc_download_grades.bind(app)
+    @only("grade-display", allow_staging=True)
+    def download_grades():
+        with connect_db() as db:
+            [header] = db(
+                "SELECT header FROM headers WHERE courseCode=%s", [get_course()]
+            ).fetchone()
+            header = json.loads(header)
+            data = db(
+                "SELECT data FROM students WHERE courseCode=%s", get_course()
+            ).fetchall()
+            scores = []
+            for [score] in data:
+                score = json.loads(score)
+                scores.append(score)
+            return jsonify({"header": header, "scores": scores})
 
 
 def print_to_stderr(print_function):

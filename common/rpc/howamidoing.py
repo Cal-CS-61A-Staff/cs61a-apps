@@ -9,3 +9,9 @@ service = create_service(__name__)
 @service.route("/api/upload_grades")
 def upload_grades(*, data: str):
     ...
+
+
+@requires_master_secret
+@service.route("/api/download_grades")
+def download_grades():
+    ...

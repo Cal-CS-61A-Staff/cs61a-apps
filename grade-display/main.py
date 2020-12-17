@@ -7,6 +7,7 @@ from common.oauth_client import create_oauth_client, is_staff
 from common.jobs import job
 from common.db import connect_db
 from common.url_for import url_for
+from common.rpc.howamidoing import download_grades
 
 from auth import authenticate, update_storage
 from datetime import datetime
@@ -147,6 +148,13 @@ def delete_acadh():
     with connect_db() as db:
         db("TRUNCATE TABLE acadh")
     return redirect(url_for("config"))
+
+
+@app.route("/export")
+def export_grades():
+    if not is_staff("cs61a"):
+        return redirect(url_for("config"))
+    return download_grades()
 
 
 @job(app, "update_grades")
