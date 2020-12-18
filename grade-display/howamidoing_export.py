@@ -14,7 +14,7 @@ def export():
     df["Exams"] = df["Midterm 1"] + df["Midterm 2"]
 
     hw_calc = lambda row: min(
-        18, np.sum([row[f"Homework {i} (Total)"] for i in range(1, 10)])
+        18, np.sum([row[f"Homework {i} (Total)"] for i in range(1, 11)])
     )
     df["Homework"] = df.apply(hw_calc, axis=1)
 
@@ -52,7 +52,11 @@ def export():
     dis_calc = lambda row: min(6, row["Tutorial Attendance (Raw)"])
     df["Discussion"] = df.apply(dis_calc, axis=1)
 
-    df["Adjustments"] = df["Hog Contest"] + df["Academic Dishonesty Penalty"]
+    df["Adjustments"] = (
+        df["Hog Contest"]
+        + df["Academic Dishonesty Penalty"]
+        + df["Homework 10 Extra Credit Point (Total)"]
+    )
 
     df["Raw Score"] = (
         df["Exams"]
