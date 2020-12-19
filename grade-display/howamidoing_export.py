@@ -11,7 +11,11 @@ def export():
 
     df["Midterm 1"] = df["Midterm 1 (Raw)"] + df["Midterm 1 (Recovery)"]
     df["Midterm 2"] = df["Midterm 2 (Raw)"] + df["Midterm 2 (Recovery)"]
-    df["Exams"] = df["Midterm 1"] + df["Midterm 2"]
+
+    final_calc = lambda row: min(75, row["Final (Raw)"])
+
+    df["Final"] = df.apply(final_calc, axis=1)
+    df["Exams"] = df["Midterm 1"] + df["Midterm 2"] + df["Final"]
 
     hw_calc = lambda row: min(
         18, np.sum([row[f"Homework {i} (Total)"] for i in range(1, 11)])

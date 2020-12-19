@@ -149,10 +149,7 @@ def create_client(app):
             pass
         return jsonify({"success": False, "retry": False})
 
-    @app.route("/allScores", methods=["POST"])
-    def all_scores():
-        if not is_staff(get_course()):
-            return jsonify({"success": False})
+    def get_scores():
         with connect_db() as db:
             [header] = db(
                 "SELECT header FROM headers WHERE courseCode=%s", [get_course()]
@@ -165,7 +162,18 @@ def create_client(app):
             for [score] in data:
                 score = json.loads(score)
                 scores.append(score)
-            return jsonify({"header": header, "scores": scores})
+            return {"header": header, "scores": scores}
+
+    @app.route("/allScores", methods=["POST"])
+    def all_scores():
+        if not is_staff(get_course()):
+            return jsonify({"success": False})
+        return jsonify(get_scores())
+
+    @rpc_download_grades.bind(app)
+    @only("grade-display", allow_staging=True)
+    def download_grades():
+        return get_scores()
 
     @app.route("/setConfig", methods=["POST"])
     def set_config():
@@ -202,23 +210,6 @@ def create_client(app):
     def upload_grades(data: str):
         with transaction_db() as db:
             set_grades(data, get_course(), db)
-
-    @rpc_download_grades.bind(app)
-    @only("grade-display", allow_staging=True)
-    def download_grades():
-        with connect_db() as db:
-            [header] = db(
-                "SELECT header FROM headers WHERE courseCode=%s", [get_course()]
-            ).fetchone()
-            header = json.loads(header)
-            data = db(
-                "SELECT data FROM students WHERE courseCode=%s", get_course()
-            ).fetchall()
-            scores = []
-            for [score] in data:
-                score = json.loads(score)
-                scores.append(score)
-            return {"header": header, "scores": scores}
 
 
 def print_to_stderr(print_function):
