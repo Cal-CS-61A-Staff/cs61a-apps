@@ -41,7 +41,7 @@ def search_css():
 
 
 @index_piazza.bind(app)
-@only("course-deploy")
+@only(["course-deploy", "buildserver"])
 def index_piazza():
     print("Starting to scrape Piazza")
 
@@ -83,14 +83,14 @@ def index_piazza():
 
 
 @clear_resources.bind(app)
-@only("course-deploy")
+@only(["course-deploy", "buildserver"])
 def clear_resources():
     clear_resources_worker()
     return {"success": True}
 
 
 @upload_resources.bind(app)
-@only("course-deploy")
+@only(["course-deploy", "buildserver"])
 def upload_resources(resources):
     print("Starting to scrape resource batch")
     buffer = []
