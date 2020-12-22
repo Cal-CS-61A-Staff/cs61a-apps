@@ -3,7 +3,6 @@ from shutil import copytree, rmtree
 from urllib.parse import urlparse
 
 from app_config import App
-from common.db import connect_db
 from common.rpc.secrets import get_secret
 from common.shell_utils import clean_all_except, sh, tmp_directory
 
@@ -33,20 +32,9 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
             clone()
 
 
-def build(app: App, pr_number: int = 0):
+def build(app: App):
     with tmp_directory():
-        try:
-            os.chdir(app.name)
-        except FileNotFoundError:
-            # app has been deleted in PR
-            with connect_db() as db:
-                db(
-                    "DELETE FROM services WHERE app=%s AND pr_number=%s",
-                    [app.name, pr_number],
-                )
-                if pr_number == 0:
-                    db("DELETE FROM apps WHERE app=%s", [app.name])
-            return
+        os.chdir(app.name)
 
         app_dir = app.name
 
