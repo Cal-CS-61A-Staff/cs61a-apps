@@ -2,8 +2,16 @@ import React, { useState } from "react";
 import Select2 from "react-select2-wrapper";
 import $ from "jquery";
 
+import ExportModal from "./ExportModal.js";
+
 export default function StudentTargetSelector({ onSubmit, students }) {
   const [selected, setSelected] = useState(null);
+
+  const exportModalRef = React.createRef();
+
+  const handleExportModalClick = () => {
+    $(exportModalRef.current).modal();
+  };
 
   return (
     <form
@@ -33,6 +41,15 @@ export default function StudentTargetSelector({ onSubmit, students }) {
         {" "}
         View Histogram{" "}
       </a>
+      <a
+        href="#"
+        onClick={handleExportModalClick}
+        style={{ marginLeft: "10px" }}
+        className="btn btn-success text-white"
+      >
+        Export Scores
+      </a>
+      <ExportModal ref={exportModalRef} />
     </form>
   );
 }
