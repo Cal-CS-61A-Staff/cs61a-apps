@@ -154,7 +154,11 @@ def get_pr_subdomains(app: App, pr_number: int) -> List[Hostname]:
             out.append(PRHostname(consumer, pr_number, hostname))
         if not app.config["static_consumers"]:
             out.append(
-                PRHostname(app.name, pr_number, gen_service_name(STATIC_SERVER, 0))
+                PRHostname(
+                    app.name,
+                    pr_number,
+                    get_hostname(gen_service_name(STATIC_SERVER, 0)),
+                )
             )
     elif app.config["deploy_type"] == "hosted":
         out.append(
