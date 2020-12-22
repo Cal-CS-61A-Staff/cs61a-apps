@@ -1,0 +1,23 @@
+.Category {
+    border: 1px solid gray;
+    margin-top: 10px;
+    padding: 10px;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    transition: opacity 0.2s ease-in;
+}
+
+.activated {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.deactivated {
+    opacity: 0.5;
+}
+
+.deactivated:hover {
+    cursor: pointer;
+    /*box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);*/
+    opacity: 1;
+}
+
