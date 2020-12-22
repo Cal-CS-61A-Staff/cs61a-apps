@@ -1,4 +1,4 @@
 build_type: none
 deploy_type: static
 static_consumers:
-  - static_server
+  - static-server
