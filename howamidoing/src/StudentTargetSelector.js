@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import Select2 from "react-select2-wrapper";
 import $ from "jquery";
 
-import buildExportURI from "./scoreExporter.js";
+import ExportModal from "./ExportModal.js";
 
 export default function StudentTargetSelector({ onSubmit, students }) {
   const [selected, setSelected] = useState(null);
+
+  const exportModalRef = React.createRef();
+
+  const handleExportModalClick = () => {
+    $(exportModalRef.current).modal();
+  };
 
   return (
     <form
@@ -35,29 +41,15 @@ export default function StudentTargetSelector({ onSubmit, students }) {
         {" "}
         View Histogram{" "}
       </a>
-      <button
-        type="button"
-        className="btn btn-success text-white"
+      <a
+        href="#"
+        onClick={handleExportModalClick}
         style={{ marginLeft: "10px" }}
-        id="exportButton"
-        onClick={(e) => {
-          e.preventDefault();
-
-          $("#exportButton").html("Building export...");
-          $("#exportButton").prop("disabled", true);
-
-          const link = document.createElement("a");
-          link.download = "export.csv";
-          link.href = buildExportURI();
-
-          $("#exportButton").prop("disabled", false);
-          $("#exportButton").html("Export Scores");
-
-          link.click();
-        }}
+        className="btn btn-success text-white"
       >
         Export Scores
-      </button>
+      </a>
+      <ExportModal ref={exportModalRef} />
     </form>
   );
 }
