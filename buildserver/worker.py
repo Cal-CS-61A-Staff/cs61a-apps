@@ -10,6 +10,7 @@ from app_config import (
     WEB_DEPLOY_TYPES,
 )
 from build import build, clone_commit
+from common.db import connect_db
 from common.rpc.buildserver import clear_queue
 from dependency_loader import load_dependencies
 from deploy import deploy_commit, update_service_routes
@@ -30,6 +31,10 @@ def land_app(
     sha: str,
     repo: Repository,
 ):
+    if app.config is None:
+        delete_app(app, pr_number)
+        return
+
     update_config(app, pr_number)
     if app.config["build_image"]:
         run_highcpu_build(app, pr_number, sha, repo)
@@ -44,8 +49,18 @@ def land_app_worker(
     repo: Repository,
 ):
     load_dependencies(app, sha, repo)
-    build(app, pr_number)
+    build(app)
     deploy_commit(app, pr_number)
+
+
+def delete_app(app: App, pr_number: int):
+    with connect_db() as db:
+        db(
+            "DELETE FROM services WHERE app=%s AND pr_number=%s",
+            [app.name, pr_number],
+        )
+        if pr_number == 0:
+            db("DELETE FROM apps WHERE app=%s", [app.name])
 
 
 def land_commit(
