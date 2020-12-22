@@ -33,6 +33,15 @@ function AdminConfigManager({ state: { config } }) {
               </td>
             </tr>
             <tr>
+              <td>Should only students on the roster be allowed to log in?</td>
+              <td className="col-md-1">
+                <ConfigLinkedToggle
+                  config={config}
+                  configKey="only_registered_students"
+                />
+              </td>
+            </tr>
+            <tr>
               <td>Should staff members see a link to recent OKPy backups?</td>
               <td className="col-md-1">
                 <ConfigLinkedToggle
