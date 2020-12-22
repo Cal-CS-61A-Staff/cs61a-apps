@@ -1,7 +1,9 @@
 import tempfile
+from os import getenv
 from typing import Dict
+from urllib.parse import urlparse, urlunparse
 
-from flask import abort, current_app, redirect, safe_join, send_file
+from flask import abort, current_app, redirect, request, safe_join, send_file
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
 
@@ -53,7 +55,17 @@ def serve_path(bucket, root, path):
         else:
             if path and not path.endswith("/"):
                 if bucket.blob(filename + "/" + "index.html").exists():
-                    return redirect("https://" + get_host() + "/" + path + "/", 301)
+                    target = urlunparse(
+                        (
+                            "https" if getenv("ENV") == "prod" else "http",
+                            get_host(),
+                            "/" + path + "/",
+                            urlparse(request.url).params,
+                            urlparse(request.url).query,
+                            urlparse(request.url).fragment,
+                        )
+                    )
+                    return redirect(target, 301)
                 else:
                     return serve_path(bucket, root, "404.html"), 404
             return serve_path(bucket, root, path + "index.html")

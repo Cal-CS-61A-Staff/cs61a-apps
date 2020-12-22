@@ -11,7 +11,7 @@ if __name__ == "__main__":
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>", methods=["GET"])
 def get(path):
-    bucket = get_bucket({"time": "time"})
+    bucket = get_bucket({"time": "time"}, "time")
     return serve_path(bucket, "/", path)
 
 
