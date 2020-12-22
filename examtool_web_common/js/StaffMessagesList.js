@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Modal, ListGroup } from "react-bootstrap";
+import { Button, Card, Form, Modal, ListGroup } from "react-bootstrap";
 import { useTime } from "./AlertsContext";
 import { getToken } from "./auth";
 import { Group, postRenderFormat } from "./Exam";
@@ -17,6 +17,7 @@ export default function StaffMessagesList({
 
   const [showModal, setShowModal] = useState(false);
   const [questionData, setQuestionData] = useState(null);
+  const [compactMode, setCompactMode] = useState(false);
 
   const loadQuestion = async (id, student) => {
     setQuestionData(null);
@@ -40,9 +41,28 @@ export default function StaffMessagesList({
 
   useEffect(postRenderFormat, [questionData]);
 
+  const makeReplyBox = (id, compact) => (
+    <StaffMessageReplyBox
+      message={id}
+      compact={compact}
+      exam={selectedExam}
+      onUpdate={onUpdate}
+    />
+  );
+
   return (
     <>
       <h3>Private Messages</h3>
+      <Form.Group>
+        <Form.Check
+          id="staffCheckbox"
+          custom
+          type="checkbox"
+          label="Compact Mode"
+          value={compactMode}
+          onChange={(e) => setCompactMode(e.target.checked)}
+        />
+      </Form.Group>
       {staffData.messages.map(
         ({
           id,
@@ -64,6 +84,12 @@ export default function StaffMessagesList({
                     : "Resolved Thread"}
                 </b>{" "}
                 [{question || "Overall Exam"}]{" "}
+                {responses.length === 0 && (
+                  <span style={{ float: "right", marginLeft: 10 }}>
+                    {" "}
+                    {makeReplyBox(id, true)}{" "}
+                  </span>
+                )}
                 {question != null && (
                   <Button
                     style={{ float: "right" }}
@@ -98,13 +124,11 @@ export default function StaffMessagesList({
                     </ListGroup.Item>
                   )
                 )}
-                <ListGroup.Item style={{ whiteSpace: "pre-wrap" }}>
-                  <StaffMessageReplyBox
-                    message={id}
-                    exam={selectedExam}
-                    onUpdate={onUpdate}
-                  />
-                </ListGroup.Item>
+                {!compactMode && (
+                  <ListGroup.Item style={{ whiteSpace: "pre-wrap" }}>
+                    {makeReplyBox(id, false)}
+                  </ListGroup.Item>
+                )}
               </ListGroup>
             </Card>
             <br />

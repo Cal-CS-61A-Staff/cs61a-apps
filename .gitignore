@@ -84,3 +84,5 @@ cloud_sql_proxy
 
 # wiki theme "submodule"
 wiki-base/themes
+
+pdfjs/
