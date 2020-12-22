@@ -68,14 +68,14 @@ def index():
 
 
 @clear_piazza.bind(app)
-@only("indexer")
+@only("indexer", allow_staging=True)
 def clear_piazza():
     requests.delete(f"{ELASTIC_SEARCH}/{PIAZZA_INDEX}").json()
     return requests.put(f"{ELASTIC_SEARCH}/{PIAZZA_INDEX}", json=config).json()
 
 
 @insert_piazza.bind(app)
-@only("indexer")
+@only("indexer", allow_staging=True)
 def insert_piazza(posts):
     for post in posts:
         id = post["id"]
@@ -84,14 +84,14 @@ def insert_piazza(posts):
 
 
 @clear_resources.bind(app)
-@only("indexer")
+@only("indexer", allow_staging=True)
 def clear_resources():
     requests.delete(f"{ELASTIC_SEARCH}/{RESOURCE_INDEX}").json()
     return requests.put(f"{ELASTIC_SEARCH}/{RESOURCE_INDEX}", json=config).json()
 
 
 @insert_resources.bind(app)
-@only("indexer")
+@only("indexer", allow_staging=True)
 def insert_resources(resources):
     for resource in resources:
         requests.post(f"{ELASTIC_SEARCH}/{RESOURCE_INDEX}/_doc", json=resource)
