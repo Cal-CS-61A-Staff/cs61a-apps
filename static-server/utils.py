@@ -1,14 +1,16 @@
 import tempfile
+from os import getenv
 from typing import Dict
+from urllib.parse import urlparse, urlunparse
 
-from flask import abort, current_app, redirect, safe_join, send_file
+from flask import abort, current_app, redirect, request, safe_join, send_file
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
 
 from common.url_for import get_host
 
 
-def get_bucket(app_lookup: Dict[str, str], default_app: str):
+def get_bucket(app_lookup: Dict[str, str], default_app: str = None):
     if current_app.debug:
         return f"{default_app}.buckets.cs61a.org"
 
@@ -53,7 +55,17 @@ def serve_path(bucket, root, path):
         else:
             if path and not path.endswith("/"):
                 if bucket.blob(filename + "/" + "index.html").exists():
-                    return redirect("/" + path + "/", 301)
+                    target = urlunparse(
+                        (
+                            "https" if getenv("ENV") == "prod" else "http",
+                            get_host(),
+                            "/" + path + "/",
+                            urlparse(request.url).params,
+                            urlparse(request.url).query,
+                            urlparse(request.url).fragment,
+                        )
+                    )
+                    return redirect(target, 301)
                 else:
                     return serve_path(bucket, root, "404.html"), 404
             return serve_path(bucket, root, path + "index.html")
