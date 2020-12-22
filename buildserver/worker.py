@@ -120,7 +120,9 @@ def land_commit(
                     pr_number,
                     pack(repo.clone_url, sha),
                     BuildStatus.success,
-                    ",".join(
+                    None
+                    if app.config is None
+                    else ",".join(
                         f"{pr_number}.{name}.pr.cs61a.org"
                         for name in (
                             [app.name]
@@ -134,7 +136,9 @@ def land_commit(
                     if pr is not None and app.config["deploy_type"] == "pypi"
                     else None,
                 )
-            update_service_routes([app], pr_number)
+
+            if app.config is not None:
+                update_service_routes([app], pr_number)
     if grouped_targets:
         # because we ran a build, we need to clear the queue of anyone we blocked
         # we run this in a new worker to avoid timing out
