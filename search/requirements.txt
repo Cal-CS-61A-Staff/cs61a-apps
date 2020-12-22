@@ -1,4 +1,4 @@
 Flask
 gunicorn
-requests
 flask-cors
+-r common/requirements.txt
