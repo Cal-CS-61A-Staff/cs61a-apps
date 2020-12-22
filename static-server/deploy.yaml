@@ -2,3 +2,6 @@ build_type: none
 deploy_type: flask
 first_party_domains:
   - time.cs61a.org
+  - ok-help.cs61a.org
+  - loom.cs61a.org
+  - react.cs61a.org
