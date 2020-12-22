@@ -11,4 +11,4 @@ COPY . ./
 
 SHELL [ "/usr/bin/scl", "enable", "rh-python36" ]
 RUN pip install -r requirements.txt
-CMD gunicorn --bind :5000 --workers 1 --threads 8 app:app --daemon & /usr/local/bin/docker-entrypoint.sh
+CMD gunicorn --bind :5000 --workers 1 --threads 8 main:app --daemon & /usr/local/bin/docker-entrypoint.sh
