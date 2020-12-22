@@ -8,7 +8,7 @@ from google.cloud.exceptions import NotFound
 from common.url_for import get_host
 
 
-def get_bucket(app_lookup: Dict[str, str], default_app: str):
+def get_bucket(app_lookup: Dict[str, str], default_app: str = None):
     if current_app.debug:
         return f"{default_app}.buckets.cs61a.org"
 
