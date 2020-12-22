@@ -4,16 +4,13 @@ from github.File import File
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from app_config import (
-    App,
-    PR_LINKED_DEPLOY_TYPES,
-    WEB_DEPLOY_TYPES,
-)
+from app_config import App
 from build import build, clone_commit
 from common.db import connect_db
 from common.rpc.buildserver import clear_queue
 from dependency_loader import load_dependencies
-from deploy import deploy_commit, update_service_routes
+from deploy import deploy_commit
+from external_build import run_highcpu_build
 from external_repo_utils import update_config
 from github_utils import (
     BuildStatus,
@@ -21,7 +18,7 @@ from github_utils import (
     unpack,
 )
 from scheduling import enqueue_builds, report_build_status
-from external_build import run_highcpu_build
+from service_management import get_pr_subdomains, update_service_routes
 from target_determinator import determine_targets
 
 
@@ -123,18 +120,9 @@ def land_commit(
                     None
                     if app.config is None
                     else ",".join(
-                        f"{pr_number}.{name}.pr.cs61a.org"
-                        for name in (
-                            [app.name]
-                            if app.config["deploy_type"] in PR_LINKED_DEPLOY_TYPES
-                            else []
-                        )
-                        + app.config["static_consumers"]
-                    )
-                    if app.config["deploy_type"] in WEB_DEPLOY_TYPES
-                    else f"pypi.org/project/{app.config['package_name']}/{app.deployed_pypi_version}"
-                    if pr is not None and app.config["deploy_type"] == "pypi"
-                    else None,
+                        hostname.to_str()
+                        for hostname in get_pr_subdomains(app, pr_number)
+                    ),
                 )
 
             if app.config is not None:
