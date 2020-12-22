@@ -22,7 +22,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && rm -rf deploy && mkdir deploy && mv build deploy",
+    "build": "react-scripts build && rm -rf deploy && mv build deploy",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
