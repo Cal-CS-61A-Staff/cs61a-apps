@@ -9,10 +9,15 @@ from flask import Flask
 
 from common.rpc.auth import PiazzaNetwork, piazza_course_id
 from common.rpc.indexer import clear_resources, index_piazza, upload_resources
-from common.rpc.secrets import get_secret, only
+from common.rpc.search import (
+    clear_piazza,
+    clear_resources as clear_resources_worker,
+    insert_piazza,
+    insert_resources,
+)
+from common.rpc.secrets import only
 
 SITE_DOMAIN = "https://cs61a.org"
-SEARCH_DOMAIN = "https://search-worker.app.cs61a.org"
 
 PIAZZA_TEMPLATE = "https://piazza.com/class/{}?cid={}"
 
@@ -35,13 +40,6 @@ def search_css():
     return app.send_static_file("search.css")
 
 
-def do(path, data={}):
-    requests.post(
-        "{}/{}".format(SEARCH_DOMAIN, path),
-        json={**data, "secret": get_secret(secret_name="WORKER_SECRET")},
-    ).raise_for_status()
-
-
 @index_piazza.bind(app)
 @only("course-deploy")
 def index_piazza():
@@ -53,7 +51,7 @@ def index_piazza():
 
     course_id = piazza_course_id()
 
-    do("clear/piazza")
+    clear_piazza()
 
     posts = []
     for post in feed:
@@ -79,7 +77,7 @@ def index_piazza():
 
         posts.append(indexedPost)
 
-    do("insert/piazza", {"data": posts})
+    insert_piazza(posts=posts)
     print("Piazza scraping completed")
     return {"success": True}
 
@@ -87,7 +85,7 @@ def index_piazza():
 @clear_resources.bind(app)
 @only("course-deploy")
 def clear_resources():
-    do("clear/resources")
+    clear_resources_worker()
     return {"success": True}
 
 
@@ -147,7 +145,7 @@ def upload_resources(resources):
         buffer.append(resource)
 
         if buffer_length > 10 ** 5 or resource == resources[-1]:
-            do("insert/resources", {"resources": buffer})
+            insert_resources(resources=buffer)
             buffer = []
             buffer_length = 0
 
