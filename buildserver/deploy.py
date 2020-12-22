@@ -2,19 +2,13 @@ import json
 import os
 import shutil
 from subprocess import CalledProcessError
-from time import sleep
-from typing import List
-from urllib.parse import urlparse
 
-import requests
 import sqlalchemy
 import sqlalchemy.engine.url
 
 from build import gen_working_dir
-from app_config import App, CLOUD_RUN_DEPLOY_TYPES, WEB_DEPLOY_TYPES
-from common.db import connect_db
-from common.rpc.auth import post_slack_message
-from common.rpc.hosted import add_domain, delete, list_apps, new
+from app_config import App, CLOUD_RUN_DEPLOY_TYPES
+from common.rpc.hosted import add_domain, new
 from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
 from common.shell_utils import sh, tmp_directory
 from conf import DB_INSTANCE_NAME, DB_IP_ADDRESS
@@ -306,136 +300,3 @@ def run_hosted_deploy(app: App, pr_number: int):
 
 def run_noop_deploy(_app: App, _pr_number: int):
     pass
-
-
-def delete_unused_services(pr_number: int = None):
-    services = json.loads(
-        sh(
-            "gcloud",
-            "run",
-            "services",
-            "list",
-            "--platform",
-            "managed",
-            "--region",
-            "us-west1",
-            "--format",
-            "json",
-            "-q",
-            capture_output=True,
-        )
-    )
-    with connect_db() as db:
-        if pr_number is None:
-            active_services = db("SELECT app, pr_number FROM services", []).fetchall()
-        else:
-            active_services = db(
-                "SELECT app, pr_number FROM services WHERE pr_number != %s", [pr_number]
-            ).fetchall()
-
-    active_service_names = set(
-        gen_service_name(app, pr_number) for app, pr_number in active_services
-    )
-
-    for service in services:
-        if service["metadata"]["name"] not in active_service_names:
-            if "pr" not in service["metadata"]["name"]:
-                post_slack_message(
-                    course="cs61a",
-                    message=f"<!channel> Service `{service['metadata']['name']}` was not detected in master, and the "
-                    "buildserver attepted to delete it. For safety reasons, the buildserver will not delete "
-                    "a production service. Please visit the Cloud Run console and shut the service down "
-                    "manually, or review the most recent push to master if you believe that something has "
-                    "gone wrong.",
-                    purpose="infra",
-                )
-            else:
-                sh(
-                    "gcloud",
-                    "run",
-                    "services",
-                    "delete",
-                    service["metadata"]["name"],
-                    "--platform",
-                    "managed",
-                    "--region",
-                    "us-west1",
-                    "-q",
-                )
-
-    services = list_apps()
-    for service in services:
-        if service not in active_service_names:
-            delete(name=service)
-
-    if pr_number is not None:
-        with connect_db() as db:
-            db("DELETE FROM services WHERE pr_number=%s", [pr_number])
-
-
-def update_service_routes(apps: List[App], pr_number: int):
-    if pr_number == 0:
-        return  # no updates needed for deploys to master
-
-    services = json.loads(
-        sh(
-            "gcloud",
-            "run",
-            "services",
-            "list",
-            "--platform",
-            "managed",
-            "--format",
-            "json",
-            capture_output=True,
-        )
-    )
-    for app in apps:
-
-        def get_hostname(service_name):
-            for service in services:
-                if service["metadata"]["name"] == service_name:
-                    return urlparse(service["status"]["address"]["url"]).netloc
-            return None
-
-        if app.config["deploy_type"] not in WEB_DEPLOY_TYPES:
-            continue
-        if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES:
-            hostname = get_hostname(gen_service_name(app.name, pr_number))
-            assert hostname is not None
-            create_subdomain(app.name, pr_number, hostname)
-        elif app.config["deploy_type"] == "static":
-            for consumer in app.config["static_consumers"]:
-                hostname = get_hostname(gen_service_name(consumer, pr_number))
-                if hostname is None:
-                    # consumer does not have a PR build, point to master build
-                    hostname = get_hostname(gen_service_name(consumer, 0))
-                    assert (
-                        hostname is not None
-                    ), "Invalid static resource consumer service"
-                create_subdomain(consumer, pr_number, hostname)
-        elif app.config["deploy_type"] == "hosted":
-            create_subdomain(
-                app.name,
-                pr_number,
-                f"{gen_service_name(app.name, pr_number)}.hosted.cs61a.org",
-            )
-        else:
-            assert False, "Unknown deploy type, failed to create PR domains"
-
-
-def create_subdomain(app_name: str, pr_number: int, hostname: str):
-    for _ in range(2):
-        try:
-            requests.post(
-                "https://pr.cs61a.org/create_subdomain",
-                json=dict(
-                    app=app_name,
-                    pr_number=pr_number,
-                    pr_host=hostname,
-                    secret=get_secret(secret_name="PR_WEBHOOK_SECRET"),
-                ),
-            )
-        except requests.exceptions.ConnectionError:
-            # pr_proxy will throw when nginx restarts, but that's just expected
-            sleep(5)  # let nginx restart
