@@ -12,7 +12,13 @@ if __name__ == "__main__":
 @app.route("/<path:path>", methods=["GET"])
 def get(path):
     bucket = get_bucket(
-        {"time": "time", "loom": "loom", "react": "react", "ok-help": "ok-help"},
+        {
+            "time": "time",
+            "loom": "loom",
+            "react": "react",
+            "ok-help": "ok-help",
+            "wiki": "wiki",
+        },
         "react-pr153",
     )
     return serve_path(bucket, "/", path)
