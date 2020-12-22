@@ -6,7 +6,7 @@ from werkzeug import security
 
 from common.course_config import get_course
 from common.url_for import url_for
-from oh_queue.models import db, User
+from oh_queue.models import db, User, ConfigEntry
 
 auth = Blueprint("auth", __name__)
 auth.config = {}
@@ -114,8 +114,27 @@ def authorized():
     is_staff = False
     offering = get_endpoint()
     for p in info["participations"]:
-        if p["course"]["offering"] == offering and p["role"] != "student":
-            is_staff = True
+        if p["course"]["offering"] == offering:
+            if p["role"] != "student":
+                is_staff = True
+            else:
+                is_staff = False
+            break
+    else:
+        if (
+            ConfigEntry.query.filter_by(
+                course=get_course(), key="only_registered_students"
+            )
+            .one()
+            .value
+            == "true"
+        ):
+            return redirect(
+                url_for(
+                    "error",
+                    message="Only registered students can log in",
+                )
+            )
     user = user_from_email(name, email, is_staff)
     return authorize_user(user)
 

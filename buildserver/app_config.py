@@ -5,9 +5,15 @@ import yaml
 
 from common.shell_utils import tmp_directory
 
-WEB_DEPLOY_TYPES = {"flask", "flask-pandas", "docker", "hosted", "static"}
 CLOUD_RUN_DEPLOY_TYPES = {"flask", "flask-pandas", "docker"}
-PR_LINKED_DEPLOY_TYPES = {*CLOUD_RUN_DEPLOY_TYPES, "hosted"}
+WEB_DEPLOY_TYPES = {
+    "flask",
+    "flask-pandas",
+    "docker",
+    "hosted",
+    "static",
+    "cloud_function",
+}
 
 
 class Config(TypedDict):
@@ -59,7 +65,7 @@ class Service(TypedDict):
 @dataclass
 class App:
     name: str
-    config: Config
+    config: Optional[Config]
 
     # updated by deploy.py, since PyPI takes a while to update
     deployed_pypi_version: Optional[str]
@@ -68,23 +74,29 @@ class App:
         self.name = name
         self.deployed_pypi_version = None
         with tmp_directory():
-            with open(f"{name}/deploy.yaml") as f:
-                self.config = Config(**yaml.safe_load(f))
-                self.config["build_image"] = self.config.get("build_image", None)
-                self.config["cpus"] = self.config.get("cpus", 1)
-                self.config["memory_limit"] = self.config.get("memory_limit", "256M")
-                self.config["first_party_domains"] = self.config.get(
-                    "first_party_domains", [f"{name}.cs61a.org"]
-                )
-                self.config["concurrency"] = self.config.get("concurrency", 80)
-                self.config["tasks"] = self.config.get("tasks", [])
-                self.config["dependencies"] = self.config.get("dependencies", [])
-                self.config["package_name"] = self.config.get("package_name", name)
-                self.config["static_consumers"] = self.config.get(
-                    "static_consumers", []
-                )
-                self.config["repo"] = self.config.get("repo")
-                self.config["service"] = self.config.get("service")
+            try:
+                with open(f"{name}/deploy.yaml") as f:
+                    self.config = Config(**yaml.safe_load(f))
+                    self.config["build_image"] = self.config.get("build_image", None)
+                    self.config["cpus"] = self.config.get("cpus", 1)
+                    self.config["memory_limit"] = self.config.get(
+                        "memory_limit", "256M"
+                    )
+                    self.config["first_party_domains"] = self.config.get(
+                        "first_party_domains", [f"{name}.cs61a.org"]
+                    )
+                    self.config["concurrency"] = self.config.get("concurrency", 80)
+                    self.config["tasks"] = self.config.get("tasks", [])
+                    self.config["dependencies"] = self.config.get("dependencies", [])
+                    self.config["package_name"] = self.config.get("package_name", name)
+                    self.config["static_consumers"] = self.config.get(
+                        "static_consumers", []
+                    )
+                    self.config["repo"] = self.config.get("repo")
+                    self.config["service"] = self.config.get("service")
+            except FileNotFoundError:
+                # app has been deleted in PR
+                self.config = None
 
     def __str__(self):
         return self.name

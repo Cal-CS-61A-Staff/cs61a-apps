@@ -448,6 +448,14 @@ def init_config():
             key="recommend_appointments", value="true", public=True, course=get_course()
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="only_registered_students",
+            value="false",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 
@@ -456,6 +464,7 @@ def init_config():
 @app.route("/<path:path>")
 @app.route("/tickets/<int:ticket_id>/")
 @app.route("/groups/<int:group_id>/")
+@app.route("/error", endpoint="error")
 def index(*args, **kwargs):
     check = db.session.query(ConfigEntry).filter_by(course=get_course()).first()
     if not check:

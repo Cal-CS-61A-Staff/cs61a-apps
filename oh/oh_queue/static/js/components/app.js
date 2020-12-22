@@ -88,6 +88,7 @@ class App extends React.Component {
         "party_enabled",
         "allow_private_party_tickets",
         "recommend_appointments",
+        "only_registered_students",
       ]) {
         this.state.config[key] = JSON.parse(this.state.config[key]);
       }
