@@ -1,4 +1,2 @@
 build_type: none
-deploy_type: static
-static_consumers:
-  - static-server
+deploy_type: flask
