@@ -1,6 +1,5 @@
 import os
 import urllib.parse
-from sys import stderr
 
 import flask
 import requests
@@ -40,6 +39,11 @@ def is_staff(course):
         # fail safe!
         print(e)
         return False
+
+
+def login():
+    session[REDIRECT_KEY] = request.url
+    return redirect(url_for("login"))
 
 
 def create_oauth_client(
@@ -95,7 +99,6 @@ def create_oauth_client(
 
     @app.route("/oauth/login")
     def login():
-        session[REDIRECT_KEY] = request.referrer
         if app.debug:
             response = remote.authorize(callback=url_for("authorized", _external=True))
         else:
@@ -120,7 +123,7 @@ def create_oauth_client(
         target = session.get(REDIRECT_KEY)
         if target:
             session.pop(REDIRECT_KEY)
-            return redirect(url_for(target))
+            return redirect(target)
         return redirect(url_for("index"))
 
     @app.route("/api/user", methods=["POST"])

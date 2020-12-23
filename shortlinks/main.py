@@ -5,7 +5,7 @@ import urllib.parse as urlparse
 from common.course_config import get_course
 from common.db import connect_db
 from common.html import error, html, make_row
-from common.oauth_client import create_oauth_client, is_staff
+from common.oauth_client import create_oauth_client, is_staff, login
 from common.rpc.auth import read_spreadsheet
 from common.url_for import url_for
 
@@ -59,7 +59,7 @@ def handler(path):
     if not url:
         return index()
     if secure and not is_staff(get_course()):
-        return redirect(url_for("login"))
+        return login()
     return redirect(add_url_params(url, request.query_string.decode("utf-8")))
 
 
@@ -69,7 +69,7 @@ def preview(path):
     if url is None:
         return html("No such link exists.")
     if secure and not is_staff(get_course()):
-        return redirect(url_for("login"))
+        return login()
     return 'Points to <a href="{0}">{0}</a> by {1}'.format(
         add_url_params(url, request.query_string.decode("utf-8")), creator
     )
