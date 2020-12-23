@@ -1,6 +1,5 @@
 build_type: none
 deploy_type: flask
 first_party_domains:
-  - 189.cs61a.org
-  - go.eecs189.org
-  - links.eecs189.org
+  - go.cs61a.org
+  - links.cs61a.org
