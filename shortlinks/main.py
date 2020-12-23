@@ -59,7 +59,7 @@ def lookup(path):
 def handler(path):
     url, creator, secure = lookup(path)
     if not url:
-        return index()
+        return error("Target not found!")
     if secure and not is_staff(get_course()):
         return login()
     return redirect(add_url_params(url, request.query_string.decode("utf-8")))
@@ -178,11 +178,10 @@ def refresh():
             creator = row[headers.index("creator")]
             data.append([shortlink, url, creator, secure, get_course()])
     with connect_db() as db:
-        for row in data:
-            db(
-                "INSERT INTO shortlinks (shortlink, url, creator, secure, course) VALUES (%s, %s, %s, %s, %s)",
-                row,
-            )
+        db(
+            "INSERT INTO shortlinks (shortlink, url, creator, secure, course) VALUES (%s, %s, %s, %s, %s)",
+            data,
+        )
     return html("Links updated")
 
 
