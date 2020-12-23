@@ -59,29 +59,35 @@ def config():
     <h1>Grade Display Config</h1>
     <p>
         Add a Gradescope assignment:
-        """ +
-        make_row("""<input name="name" placeholder="Shortname (no spaces!)" />
-            <input name="gs_code" placeholder="Gradescope code" />
-        """, url_for("create_assign"), "Submit") +
         """
+        + make_row(
+            """<input name="name" placeholder="Shortname (no spaces!)" />
+            <input name="gs_code" placeholder="Gradescope code" />
+        """,
+            url_for("create_assign"),
+            "Submit",
+        )
+        + """
     </p>
     <p>
         Set the Adjustments Spreadsheet URL:
-        """ +
-        make_row("""<input name="url" placeholder="Full URL" />
-            <input name="sheet" placeholder="Sheet Name" />
-        """, url_for("set_acadh"), "Submit") +
         """
+        + make_row(
+            """<input name="url" placeholder="Full URL" />
+            <input name="sheet" placeholder="Sheet Name" />
+        """,
+            url_for("set_acadh"),
+            "Submit",
+        )
+        + """
     </p>
     """
         + "".join(
-            "<p>" +
-            make_row(f"{name} ({gs_code})", url_for("delete_assign", name=name))
+            "<p>" + make_row(f"{name} ({gs_code})", url_for("delete_assign", name=name))
             for name, gs_code in gscope
         )
         + "".join(
-            "<p>" +
-            make_row(f"Adjustments: {url} ({sheet})", url_for("delete_acadh"))
+            "<p>" + make_row(f"Adjustments: {url} ({sheet})", url_for("delete_acadh"))
             for url, sheet in acadh
         )
     )
