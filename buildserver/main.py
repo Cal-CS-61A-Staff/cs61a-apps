@@ -5,7 +5,8 @@ from github import Github
 
 import api
 from common.db import connect_db
-from common.oauth_client import create_oauth_client, get_user, is_staff
+from common.html import html
+from common.oauth_client import create_oauth_client, get_user, is_staff, login
 from common.rpc.auth import is_admin
 from common.rpc.buildserver import (
     clear_queue,
@@ -50,7 +51,7 @@ with connect_db() as db:
 @app.route("/")
 def index():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     email = get_user()["email"]
     if not is_admin(course="cs61a", email=email):
         abort(401)
@@ -60,8 +61,8 @@ def index():
             "SELECT app, pr_number FROM services WHERE pr_number>0 ORDER BY pr_number DESC",
             [],
         ).fetchall()
-    return f"""
-        <h1>61A Buildserver</h1>
+    return html(
+        f"""
         This service manages the deployment of the 61A website and various apps.
         {"".join(f'''
         <form action="/deploy_prod_app">
@@ -78,18 +79,20 @@ def index():
         <form action="/delete_unused_services" method="post">
             <input type="submit" value="Delete unused services" />
        </form>
-"""
+    """
+    )
 
 
 @app.route("/deploy_prod_app")
 def deploy_prod_app():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     email = get_user()["email"]
     if not is_admin(course="cs61a", email=email):
         abort(401)
-    deploy_prod_app_sync(target_app=request.args["app"], noreply=True)
-    return ""
+    app = request.args["app"]
+    deploy_prod_app_sync(target_app=app, noreply=True)
+    return html(f"Deploying <code>{app}</code> from master!")
 
 
 @deploy_prod_app_sync.bind(app)
@@ -111,7 +114,7 @@ def handle_deploy_prod_app_sync(app, is_staging, target_app):
 @app.route("/trigger_build")
 def trigger_build():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     email = get_user()["email"]
     if not is_admin(course="cs61a", email=email):
         abort(401)
@@ -122,7 +125,7 @@ def trigger_build():
     trigger_build_sync(
         pr_number=int(request.args["pr_number"]), target_app=target, noreply=True
     )
-    return ""
+    return html(f"Building PR <code>{request.args['pr_number']}</code>!")
 
 
 @trigger_build_sync.bind(app)
@@ -156,10 +159,10 @@ def clear_queue(repo: str, pr_number: int):
 @app.route("/delete_unused_services", methods=["POST"])
 def delete_unused_services_handler():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     email = get_user()["email"]
     if not is_admin(course="cs61a", email=email):
-        return redirect(url_for("login"))
+        return login()
     delete_unused_services()
     return redirect(url_for("index"))
 

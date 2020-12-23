@@ -3,9 +3,9 @@ import hmac
 import time
 from functools import wraps
 
-from flask import session, request, current_app, url_for, redirect, abort
+from flask import abort, request
 
-from common.oauth_client import get_user
+from common.oauth_client import get_user, login
 from common.rpc.secrets import get_secret
 
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
@@ -53,7 +53,7 @@ def logged_in(route):
     @wraps(route)
     def wrapped(*args, **kwargs):
         if not list(get_staff_endpoints()):
-            return redirect(url_for("login"))
+            return login()
         return route(*args, **kwargs)
 
     return wrapped

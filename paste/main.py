@@ -4,7 +4,7 @@ from string import ascii_lowercase
 from flask import Flask, abort, redirect, request
 
 from common.db import connect_db
-from common.oauth_client import create_oauth_client, is_staff
+from common.oauth_client import create_oauth_client, is_staff, login
 from common.rpc.paste import get_paste, paste_text
 from common.rpc.secrets import validates_master_secret
 from common.url_for import url_for
@@ -29,7 +29,7 @@ with connect_db() as db:
 @app.route("/")
 def index():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     return f"""
     <h1>61A Paste</h1>
     Paste text here: 
@@ -45,7 +45,7 @@ def index():
 @app.route("/save", methods=["POST"])
 def submit():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     data = request.form["data"]
     return redirect(url_for("load_formatted", name=paste_worker(data)))
 
@@ -75,7 +75,7 @@ def load(name, skip_auth=False):
             out = data[0]
     if out is None:
         if not skip_auth and not is_staff("cs61a"):
-            return redirect(url_for("login"))
+            return login()
         with connect_db() as db:
             data = db(
                 "SELECT data FROM pastes WHERE name=%s",

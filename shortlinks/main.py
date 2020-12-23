@@ -82,7 +82,7 @@ def preview(path):
 @app.route("/")
 def index():
     if not is_staff(get_course()):
-        return redirect(url_for("login"))
+        return login()
     with connect_db() as db:
         sources = db(
             "SELECT url, sheet, secure FROM sources WHERE course=%s", [get_course()]
@@ -127,7 +127,7 @@ def index():
 @app.route("/add_source", methods=["POST"])
 def add_source():
     if not is_staff(get_course()):
-        return redirect(url_for("login"))
+        return login()
 
     url = request.form["url"]
     sheet = request.form["sheet"]
@@ -145,7 +145,7 @@ def add_source():
 @app.route("/remove_source", methods=["POST"])
 def remove_source():
     if not is_staff(get_course()):
-        return redirect(url_for("login"))
+        return login()
 
     url = request.form["url"]
     sheet = request.form["sheet"]

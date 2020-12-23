@@ -7,7 +7,7 @@ from typing import List, Tuple
 from flask import Flask, abort, redirect, request, url_for
 
 from common.course_config import is_admin
-from common.oauth_client import create_oauth_client, get_user
+from common.oauth_client import create_oauth_client, get_user, login
 from common.db import connect_db
 from common.oauth_client import is_staff
 from common.rpc.secrets import (
@@ -127,7 +127,7 @@ def display_hash(secret: str):
 @app.route("/")
 def index():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     with connect_db() as db:
         secrets: List[Tuple[str, str, str, str]] = db(
             "SELECT app, name, public_value, staging_value FROM secrets"
@@ -168,7 +168,7 @@ def index():
 @app.route("/create_secret", methods=["POST"])
 def create_secret():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     app = request.form["app"]
     name = request.form["name"]
     public = request.form["public"]
@@ -189,7 +189,7 @@ def create_secret():
 @app.route("/delete_secret/<app_name>/<secret_name>", methods=["POST"])
 def delete_secret(app_name, secret_name):
     if not is_admin(get_user()["email"], "cs61a"):
-        return redirect(url_for("login"))
+        return login()
     with connect_db() as db:
         db("DELETE FROM secrets WHERE app=%s AND name=%s", [app_name, secret_name])
     return redirect(url_for("index"))

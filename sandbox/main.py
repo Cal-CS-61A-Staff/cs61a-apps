@@ -10,7 +10,7 @@ from subprocess import CalledProcessError
 from typing import Optional
 
 import requests
-from flask import Flask, abort, g, jsonify, redirect, request, safe_join, send_file
+from flask import Flask, abort, g, jsonify, request, safe_join, send_file
 
 from common.course_config import get_endpoint
 from common.db import connect_db
@@ -18,6 +18,7 @@ from common.oauth_client import (
     AUTHORIZED_ROLES,
     create_oauth_client,
     is_staff,
+    login,
 )
 from common.rpc.hosted import add_domain
 from common.rpc.paste import get_paste, get_paste_url, paste_text
@@ -185,7 +186,7 @@ def path_to_target(path):
 @app.route("/<path:path>", strict_slashes=False)
 def index(path="index.html"):
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
     username = get_host_username()
     base_directory = get_working_directory(username)
 

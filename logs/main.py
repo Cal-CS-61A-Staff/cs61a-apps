@@ -1,9 +1,9 @@
 from html import escape
 from json import loads
 
-from flask import Flask, abort, redirect
+from flask import Flask, abort
 
-from common.oauth_client import create_oauth_client, is_staff
+from common.oauth_client import create_oauth_client, is_staff, login
 from common.shell_utils import sh
 from common.url_for import url_for
 
@@ -18,7 +18,7 @@ create_oauth_client(app, "61a-logs")
 @app.route("/")
 def index():
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
 
     service_list = "\n".join(
         f"<p /><a href={url_for('create_secret', service=service)}>{service}</a>"
@@ -34,7 +34,7 @@ def index():
 @app.route("/service/<service>")
 def create_secret(service):
     if not is_staff("cs61a"):
-        return redirect(url_for("login"))
+        return login()
 
     if service not in list_services():
         abort(404)

@@ -8,7 +8,7 @@ from flask import Flask, abort, redirect, request
 from common.course_config import format_coursecode, is_admin
 from common.db import connect_db
 from common.html import html
-from common.oauth_client import create_oauth_client, get_user, is_logged_in
+from common.oauth_client import create_oauth_client, get_user, is_logged_in, login
 from common.rpc.buildserver import get_base_hostname
 from common.rpc.secrets import get_secret, validates_master_secret
 from common.url_for import url_for
@@ -66,7 +66,7 @@ with connect_db() as db:
 @app.route("/")
 def index():
     if not is_logged_in():
-        return redirect(url_for("login"))
+        return login()
     return html(
         """
     Select course: 
@@ -83,7 +83,7 @@ def view_course(course=None):
         course = request.form["course"]
         return redirect(url_for("canonical_view_course", course=course))
     if not is_logged_in():
-        return redirect(url_for("login"))
+        return login()
     email = get_user()["email"]
     if not is_admin(email, course):
         abort(403)
