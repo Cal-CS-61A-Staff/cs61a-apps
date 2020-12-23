@@ -17,7 +17,7 @@ def get_course(domain=None):
     if not domain:
         domain = get_domain()
     if "pr" in domain:
-        DOMAIN_COURSES[domain] = "cs61a"
+        DOMAIN_COURSES[domain] = "cs88"  # @nocommit
     if domain not in DOMAIN_COURSES:
         DOMAIN_COURSES[domain] = rpc.auth.get_course(domain=domain)
     return DOMAIN_COURSES[domain]
