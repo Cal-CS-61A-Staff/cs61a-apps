@@ -132,4 +132,5 @@ export function BooleanValued(elem) {
 
 export function Uncapped(elem) {
   elem.uncapped = true;
+  return elem;
 }
