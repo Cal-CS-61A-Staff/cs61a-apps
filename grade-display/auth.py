@@ -89,7 +89,7 @@ def update_storage(data):
     cur_time = int(time.time())
 
     with connect_db() as db:
-        db("TRUNCATE TABLE tokens")
+        db("DELETE FROM tokens")
         db(
             "INSERT INTO tokens (access_token, expires_at, refresh_token) VALUES (%s, %s, %s)",
             [access_token, cur_time + expires_in, refresh_token],
