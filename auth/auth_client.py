@@ -7,7 +7,7 @@ from flask import redirect, request
 from auth_utils import admin_oauth_secure, course_oauth_secure, get_name
 from common.db import connect_db
 from common.url_for import url_for
-from html_utils import make_row
+from common.html import make_row
 
 
 def init_db():

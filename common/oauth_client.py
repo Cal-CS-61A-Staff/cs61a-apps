@@ -14,6 +14,8 @@ from common.url_for import url_for
 
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
 
+REDIRECT_KEY = "REDIRECT_KEY"
+
 
 def get_user():
     g.user_data = g.get("user_data") or current_app.remote.get("user")
@@ -93,6 +95,7 @@ def create_oauth_client(
 
     @app.route("/oauth/login")
     def login():
+        session[REDIRECT_KEY] = request.referrer
         if app.debug:
             response = remote.authorize(callback=url_for("authorized", _external=True))
         else:
@@ -114,6 +117,10 @@ def create_oauth_client(
         if success_callback:
             success_callback()
 
+        target = session.get(REDIRECT_KEY)
+        if target:
+            session.pop(REDIRECT_KEY)
+            return redirect(url_for(target))
         return redirect(url_for("index"))
 
     @app.route("/api/user", methods=["POST"])

@@ -5,7 +5,7 @@ from common.db import connect_db
 from common.rpc.auth import get_course
 from common.rpc.domains import add_domain
 from common.url_for import url_for
-from html_utils import make_row
+from common.html import make_row
 
 
 def init_db():

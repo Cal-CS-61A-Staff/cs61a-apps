@@ -17,7 +17,7 @@ from auth_utils import (
 )
 from common.rpc.auth import get_endpoint, get_endpoint_id, list_courses, validate_secret
 from common.url_for import url_for
-from html_utils import make_row
+from common.html import make_row
 
 
 def init_db():

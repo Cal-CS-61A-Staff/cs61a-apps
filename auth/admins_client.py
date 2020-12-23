@@ -4,7 +4,7 @@ from auth_utils import course_oauth_secure, get_name, key_secure, get_email
 from common.db import connect_db
 from common.rpc.auth import is_admin, list_admins
 from common.url_for import url_for
-from html_utils import make_row
+from common.html import make_row
 
 
 def init_db():
