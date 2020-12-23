@@ -3,6 +3,7 @@ from piazza_api import Piazza
 
 from auth_utils import key_secure, course_oauth_secure
 from common.db import connect_db
+from common.html import html
 from common.rpc.auth import perform_piazza_action, piazza_course_id
 
 
@@ -126,10 +127,11 @@ def create_piazza_client(app):
     @app.route("/piazza/<course>/config", methods=["GET"])
     @course_oauth_secure()
     def piazza_config(course):
-        return """
+        return html(
+            f"""
             Enter account details for Piazza service accounts. Leave fields blank to avoid updating them.
             Ensure that these accounts are enrolled in the appropriate Piazzas!
-            <form action="/piazza/{}/set_config" method="post">
+            <form action="/piazza/{course}/set_config" method="post">
                 <label>
                     Piazza course ID <br />
                     <input name="course_id" type="text"> <br />
@@ -159,8 +161,7 @@ def create_piazza_client(app):
                 <label>
                 <input type="submit">
             </form>
-        """.format(
-            course
+        """
         )
 
     @app.route("/piazza/<course>/set_config", methods=["POST"])

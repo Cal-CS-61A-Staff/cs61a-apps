@@ -7,6 +7,7 @@ from flask import Flask, abort, redirect, request
 
 from common.course_config import format_coursecode, is_admin
 from common.db import connect_db
+from common.html import html
 from common.oauth_client import create_oauth_client, get_user, is_logged_in
 from common.rpc.buildserver import get_base_hostname
 from common.rpc.secrets import get_secret, validates_master_secret
@@ -21,6 +22,8 @@ APP_LOOKUP = {
     "howamidoing": "howamidoing",
     "status": "howamidoing",
     "seating": "seating",
+    "links": "shortlinks",
+    "go": "shortlinks",
     # legacy prefixes
     "me100": "oh",
     "csenrolltest": "oh",
@@ -64,11 +67,13 @@ with connect_db() as db:
 def index():
     if not is_logged_in():
         return redirect(url_for("login"))
-    return """
+    return html(
+        """
     Select course: 
     <form method="post" action="/view_course">
         <input placeholder="cs61a" name="course"> <input type="submit" value="Login">
     </form>"""
+    )
 
 
 @app.route("/view_course", methods=["POST"])
@@ -88,10 +93,12 @@ def view_course(course=None):
             "SELECT domain, app, status FROM hosted_apps WHERE course=(%s)", [course]
         ).fetchall()
 
-    return f"""
+    return html(
+        f"""
         <h2>Hosted Apps for {format_coursecode(course)}</h2>
         {"<p>".join(f"<code>{domain}</code> ({app}) - {status}" for domain, app, status in apps)}
     """
+    )
 
 
 def set_status(domain: str, status: Status):

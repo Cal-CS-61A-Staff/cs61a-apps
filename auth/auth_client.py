@@ -4,10 +4,10 @@ from random import SystemRandom
 
 from flask import redirect, request
 
-from auth_utils import admin_oauth_secure, course_oauth_secure, get_name
+from auth_utils import course_oauth_secure, get_name
 from common.db import connect_db
 from common.url_for import url_for
-from common.html import make_row
+from common.html import html, make_row
 
 
 def init_db():
@@ -84,7 +84,7 @@ def create_auth_client(app):
                 "INSERT INTO auth_keys VALUES (%s, %s, %s, %s, %s, %s)",
                 [name, key, get_name(), course, "all", True],
             )
-        return key
+        return html(f"<pre>{key}</pre>")
 
     @app.route("/auth/<course>/revoke_key", methods=["POST"])
     @course_oauth_secure()
@@ -102,12 +102,4 @@ def create_auth_client(app):
     def revoke_all_unused_keys(course):
         with connect_db() as db:
             db("DELETE FROM auth_keys WHERE unused = TRUE and course = (%s)", [course])
-        return "All unused keys revoked."
-
-    @app.route("/auth/DANGEROUS_revoke_all_keys", methods=["POST"])
-    @admin_oauth_secure(app)
-    def revoke_all_keys():
-        with connect_db() as db:
-            db("DROP TABLE auth_keys")
-            init_db()
-        return "ALL keys revoked. Any tools depending on 61A Auth will no longer work."
+        return html("All unused keys revoked.")

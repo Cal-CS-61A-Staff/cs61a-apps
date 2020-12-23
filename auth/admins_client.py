@@ -4,7 +4,7 @@ from auth_utils import course_oauth_secure, get_name, key_secure, get_email
 from common.db import connect_db
 from common.rpc.auth import is_admin, list_admins
 from common.url_for import url_for
-from common.html import make_row
+from common.html import error, make_row
 
 
 def init_db():
@@ -57,7 +57,7 @@ def create_admins_client(app):
                 [email, course],
             ).fetchone()
         if check:
-            return "User is already an admin", 409
+            return error("User is already an admin"), 409
         with connect_db() as db:
             db(
                 "INSERT INTO course_admins VALUES (%s, %s, %s, %s)",
