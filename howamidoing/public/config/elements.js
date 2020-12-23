@@ -71,6 +71,8 @@ export function Topic(
     futureMaxScore = cappedScore;
   }
 
+  const uncapped = children.some((child) => child.uncapped);
+
   return {
     isTopic: true,
     name,
@@ -79,6 +81,7 @@ export function Topic(
     futureMaxScore,
     customCalculator,
     future,
+    uncapped,
   };
 }
 
@@ -124,5 +127,10 @@ export function LockedChildren(elem) {
 
 export function BooleanValued(elem) {
   elem.booleanValued = true;
+  return elem;
+}
+
+export function Uncapped(elem) {
+  elem.uncapped = true;
   return elem;
 }
