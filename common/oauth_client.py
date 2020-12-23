@@ -1,6 +1,5 @@
 import os
 import urllib.parse
-from sys import stderr
 
 import flask
 import requests
@@ -13,6 +12,8 @@ from common.rpc.secrets import get_secret
 from common.url_for import url_for
 
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
+
+REDIRECT_KEY = "REDIRECT_KEY"
 
 
 def get_user():
@@ -38,6 +39,11 @@ def is_staff(course):
         # fail safe!
         print(e)
         return False
+
+
+def login():
+    session[REDIRECT_KEY] = request.url
+    return redirect(url_for("login"))
 
 
 def create_oauth_client(
@@ -114,6 +120,10 @@ def create_oauth_client(
         if success_callback:
             success_callback()
 
+        target = session.get(REDIRECT_KEY)
+        if target:
+            session.pop(REDIRECT_KEY)
+            return redirect(target)
         return redirect(url_for("index"))
 
     @app.route("/api/user", methods=["POST"])

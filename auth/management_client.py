@@ -17,7 +17,7 @@ from auth_utils import (
 )
 from common.rpc.auth import get_endpoint, get_endpoint_id, list_courses, validate_secret
 from common.url_for import url_for
-from html_utils import make_row
+from common.html import html, make_row
 
 
 def init_db():
@@ -196,7 +196,7 @@ def create_management_client(app):
             ).fetchall():
                 if is_staff(course):
                     out.append(app.help_info.render(course))
-        return "".join(out)
+        return html("".join(out))
 
     @app.route("/api/add_course", methods=["POST"])
     @admin_oauth_secure(app)

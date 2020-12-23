@@ -5,7 +5,7 @@ from common.db import connect_db
 from common.rpc.auth import get_course
 from common.rpc.domains import add_domain
 from common.url_for import url_for
-from html_utils import make_row
+from common.html import make_row
 
 
 def init_db():
@@ -40,6 +40,7 @@ def create_domains_client(app):
 
             View the status of your domain setup at 
             <a href="https://domains.cs61a.org/">domains.cs61a.org</a>
+            <br />
         """
         return "<h3>Domains</h3>" + register_domain + "<p>".join(client_names)
 

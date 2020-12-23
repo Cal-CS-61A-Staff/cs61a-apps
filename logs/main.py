@@ -1,3 +1,4 @@
+from html import escape
 from json import loads
 
 from flask import Flask, abort, redirect
@@ -40,7 +41,7 @@ def create_secret(service):
 
     out = reversed(
         [
-            entry["timestamp"] + " " + entry["textPayload"]
+            entry["timestamp"] + " " + escape(entry["textPayload"])
             for entry in loads(
                 sh(
                     "gcloud",
