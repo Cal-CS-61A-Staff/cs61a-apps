@@ -71,7 +71,7 @@ export function Topic(
     futureMaxScore = cappedScore;
   }
 
-  const uncapped = children.map((child) => child.uncapped).some();
+  const uncapped = children.some((child) => child.uncapped);
 
   return {
     isTopic: true,
