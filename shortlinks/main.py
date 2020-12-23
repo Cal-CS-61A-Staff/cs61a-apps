@@ -38,6 +38,8 @@ def add_url_params(url, params_string):
 
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
+
 if __name__ == "__main__":
     app.debug = True
 
