@@ -72,8 +72,10 @@ def preview(path):
         return html("No such link exists.")
     if secure and not is_staff(get_course()):
         return login()
-    return 'Points to <a href="{0}">{0}</a> by {1}'.format(
-        add_url_params(url, request.query_string.decode("utf-8")), creator
+    return html(
+        'Points to <a href="{0}">{0}</a> by {1}'.format(
+            add_url_params(url, request.query_string.decode("utf-8")), creator
+        )
     )
 
 
