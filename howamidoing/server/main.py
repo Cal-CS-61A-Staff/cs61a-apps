@@ -76,6 +76,10 @@ def create_client(app):
     def ohlord():
         return redirect("https://howamidoing.cs61a.org")
 
+    @app.route("/edit")
+    def config_editor():
+        return render_template("index.html", courseCode=get_course())
+
     @app.route("/config/config.js")
     def config():
         with connect_db() as db:

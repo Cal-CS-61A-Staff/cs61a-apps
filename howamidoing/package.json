@@ -7,6 +7,7 @@
     "concurrently": "^5.1.0",
     "lodash": "latest",
     "react": "^16.8.6",
+    "react-ace": "^9.2.1",
     "react-bootstrap": "^1.0.0-beta.17",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1"
@@ -40,10 +41,10 @@
     "katex": "^0.11.1",
     "nodemon": "^2.0.2",
     "popper.js": "^1.15.0",
+    "react-bootstrap": "latest",
     "react-latex": "^1.4.0",
     "react-select2-wrapper": "^1.0.4-beta6",
     "shipit-cli": "^5.0.0",
-    "shipit-deploy": "^5.0.0",
-    "react-bootstrap": "latest"
+    "shipit-deploy": "^5.0.0"
   }
 }
