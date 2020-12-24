@@ -1,13 +1,14 @@
 import json
 
 from examtool.api.database import get_exam
-from examtool.api.extract_questions import extract_questions
+from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import scramble, get_elements
 
 
 def find_unexpected_words(exam, logs):
     data = get_exam(exam=exam)
     exam_json = json.dumps(data)
+    original_questions = {q["id"]: q for q in extract_questions(json.loads(exam_json))}
     for i, (email, log) in enumerate(logs):
         all_alternatives = get_substitutions(data)
         scrambled_questions = {
@@ -39,13 +40,17 @@ def find_unexpected_words(exam, logs):
                         flagged_questions.add(question)
 
                         print(
-                            "Student {} used keyword {} for {}, when they should have used {}".format(
-                                email, variant, keyword, student_substitutions[keyword]
+                            "In question {}, Student {} used keyword {} for {}, when they should have used {}".format(
+                                get_name(original_questions[question]),
+                                email,
+                                variant,
+                                keyword,
+                                student_substitutions[keyword],
                             )
                         )
 
                         print(
-                            "\tThey wrote {}. Their substitutions were: {}".format(
+                            "\tThey wrote `{}`. Their substitutions were: {}".format(
                                 " ".join(answer.split()), student_substitutions
                             )
                         )
