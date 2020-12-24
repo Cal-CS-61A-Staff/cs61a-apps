@@ -37,6 +37,13 @@ export default function StudentTargetSelector({ onSubmit, students }) {
       >
         Submit
       </button>
+      <a
+        className="btn btn-primary"
+        style={{ marginRight: "10px" }}
+        href="/edit"
+      >
+        Edit Config
+      </a>
       <a className="btn btn-success text-white" href="/histogram">
         {" "}
         View Histogram{" "}
