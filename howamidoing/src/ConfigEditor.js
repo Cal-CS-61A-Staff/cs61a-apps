@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import $ from "jquery";
 
 import AceEditor from "react-ace";
@@ -6,24 +6,34 @@ import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/theme-github";
 
+var original = "";
+
+$.ajax("/config/config.js", { async: false, dataType: "text" }).done(
+  (origConfig) => {
+    original = origConfig;
+  }
+);
+
 export default function ConfigEditor() {
-  var config = "";
+  const editorRef = React.useRef();
+  const [modified, setModified] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const setConfig = (newConfig) => (config = newConfig);
-
-  $.ajax("/config/config.js", { async: false, dataType: "text" }).done(
-    (origConfig) => {
-      setConfig(origConfig);
-    }
-  );
+  const updateModified = () => {
+    const curr = editorRef.current.editor.getValue();
+    setModified(curr !== original);
+  };
 
   const postConfig = () => {
-    $("#saveButton").text("Saving...");
-    $("#saveButton").attr({ disabled: true });
+    setSaving(true);
 
-    $.post("/setConfig", { data: config, dataType: "text" }).done(() => {
-      $("#saveButton").attr({ disabled: false });
-      $("#saveButton").text("Save Configuration");
+    const newOrig = editorRef.current.editor.getValue().slice();
+
+    $.post("/setConfig", { data: newOrig, dataType: "text" }).done(() => {
+      setSaving(false);
+
+      original = newOrig;
+      updateModified();
     });
   };
 
@@ -32,14 +42,12 @@ export default function ConfigEditor() {
       <AceEditor
         mode="javascript"
         theme="github"
-        onChange={setConfig}
-        name="config_editor"
-        value={config}
+        ref={editorRef}
+        defaultValue={original.slice()}
+        name="configEditor"
+        onChange={updateModified}
         style={{
           width: "100%",
-        }}
-        editorProps={{
-          $blockScrolling: true,
         }}
         showPrintMargin={false}
         wrapEnabled={true}
@@ -56,8 +64,9 @@ export default function ConfigEditor() {
           postConfig();
         }}
         id="saveButton"
+        disabled={saving || !modified}
       >
-        Save Configuration
+        {saving ? "Saving..." : modified ? "Save Configuration" : "No Changes"}
       </button>
     </>
   );
