@@ -7,7 +7,7 @@ def get_question_substitutions(original_questions, scrambled_questions, question
     for original, replacement in scrambled_questions[question_id][
         "substitutions"
     ].items():
-        if original in original_question["text"] or True:
+        if original in original_question["text"]:
             substitutions[original] = replacement
     return substitutions
 
