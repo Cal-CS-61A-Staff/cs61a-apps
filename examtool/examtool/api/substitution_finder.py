@@ -1,9 +1,8 @@
 import json
 
 from examtool.api.database import get_exam
-from examtool.api.extract_questions import extract_questions
+from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import scramble, get_elements
-from examtool.api.substitutions import get_question_substitutions
 
 
 def find_unexpected_words(exam, logs):
@@ -15,7 +14,7 @@ def find_unexpected_words(exam, logs):
         scrambled_questions = {
             q["id"]: q
             for q in extract_questions(
-                scramble(email, json.loads(exam_json), keep_data=True)
+                scramble(email, json.loads(exam_json), keep_data=True), nest_all=True
             )
         }
         flagged_questions = set()
@@ -27,9 +26,7 @@ def find_unexpected_words(exam, logs):
             if question not in all_alternatives or question in flagged_questions:
                 continue
 
-            student_substitutions = get_question_substitutions(
-                original_questions, scrambled_questions, question
-            )
+            student_substitutions = scrambled_questions[question]["substitutions"]
 
             for keyword in student_substitutions:
                 for variant in all_alternatives[question][keyword]:
@@ -37,19 +34,23 @@ def find_unexpected_words(exam, logs):
                         continue
                     if variant in answer:
                         # check for false positives
-                        if variant in original_questions[question]["text"]:
+                        if variant in scrambled_questions[question]["text"]:
                             continue
 
                         flagged_questions.add(question)
 
                         print(
-                            "Student {} used keyword {} for {}, when they should have used {}".format(
-                                email, variant, keyword, student_substitutions[keyword]
+                            "In question {}, Student {} used keyword {} for {}, when they should have used {}".format(
+                                get_name(original_questions[question]),
+                                email,
+                                variant,
+                                keyword,
+                                student_substitutions[keyword],
                             )
                         )
 
                         print(
-                            "\tThey wrote {}. Their substitutions were: {}".format(
+                            "\tThey wrote `{}`. Their substitutions were: {}".format(
                                 " ".join(answer.split()), student_substitutions
                             )
                         )

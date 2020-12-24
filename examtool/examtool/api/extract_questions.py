@@ -6,16 +6,25 @@ def extract_questions(
     extract_public_bool: bool = True,
     top_level: bool = True,
     include_groups: bool = False,
+    nest_all: bool = False,
 ):
+    def merge_text(parent, child):
+        child["text"] = (
+            parent["name"] + "\n\n" + parent["text"] + "\n\n" + child["text"]
+        )
+
     def group_questions(group):
         out = _group_questions(group)
         try:
             first = next(out)
         except StopIteration:
             return
-        first["text"] = group["name"] + "\n\n" + group["text"] + "\n\n" + first["text"]
+        merge_text(group, first)
         yield first
-        yield from out
+        for child in out:
+            if nest_all:
+                merge_text(group, child)
+            yield child
 
     def _group_questions(group):
         for i, element in enumerate(
