@@ -22,7 +22,9 @@ def set_grades(data, course_code, db):
     data = []
     for row in reader:
         short_data = {x: row[header.index(x)] for x in ["Email", "SID", "Name"]}
-        data.append([course_code, row[email_index], json.dumps(short_data), json.dumps(row)])
+        data.append(
+            [course_code, row[email_index], json.dumps(short_data), json.dumps(row)]
+        )
     db(
         "INSERT INTO students VALUES (%s, %s, %s, %s)",
         data,
