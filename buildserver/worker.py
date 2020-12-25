@@ -1,3 +1,4 @@
+import traceback
 from typing import Iterable, Optional, Union
 
 from github.File import File
@@ -103,7 +104,9 @@ def land_commit(
         for app in apps:
             try:
                 land_app(app, pr_number, sha, repo)
-            except:
+            except Exception as e:
+                print(e)
+                traceback.print_exc()
                 report_build_status(
                     app.name,
                     pr_number,
