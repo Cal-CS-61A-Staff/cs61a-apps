@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hog Contest Leaderboard - CS 61A</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inconsolata|Roboto:300,400,500">
+    <link rel="stylesheet" href="/static/leaderboard.css">
+    <link rel="stylesheet" href="/static/winners.css">
+</head>
+<body>
+<div id="past-winners">
+    <h2>CS 61A</h2>
+    <h1><span class="emphasis">Hog Contest</span> Hall of Fame </h1>
+    <div id="past-semester-links">
+        <a href="/">Go to Current Contest.</a>
+    </div>
+    {% for semester, winners, _ in past_winners %}
+    <div class="win-semester">
+        <h2>{{ semester }}</h2>
+        <ol>
+            {% for winner in winners %}
+                <li>{{ winner|e }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+    {% endfor %}
+
+</div>
+</body>
+</html>

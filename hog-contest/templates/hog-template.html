@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hog Contest Leaderboard - CS 61A</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inconsolata|Roboto:300,400,500">
+    <link rel="stylesheet" href="/static/leaderboard.css">
+</head>
+<body>
+<div id="leaderboard" class="main">
+    <h2>CS 61A</h2>
+    <h1><span class="emphasis">Hog Contest</span> Leaderboard {{ suffix }}</h1>
+    <p id="timestamp">
+        As of
+        {{ timestamp }}
+    </p>
+    <p id="leaderboard-click-tip"><strong>Tip:</strong> Click any team to see win rates</p>
+    <div id="past-semester-links">
+        {% if links is defined %}
+            <strong>Old Stuff:</strong>
+            {% for name, semester in links %}
+                <a href="old_results/{{ name }}">{{ semester }}</a>
+            {% endfor %}
+            <a href="winners">Past Winners</a>
+        {% else %}
+            This is an old leaderboard.
+            <a href="/">Go to Current Contest.</a>
+        {% endif %}
+    </div>
+    <ol>
+        {% for rank, name, wins in ranking %}
+            <li id="team-{{ loop.index0 }}" class="rank rank-{{ rank }}">
+                {{ rank+1 }}. <strong>{{ name|e }}</strong> with {{ wins }} wins
+            </li>
+        {% endfor %}
+    </ol>
+    <a href="https://cs61a.org/proj/hog_contest/">contest spec</a>
+    <a href="/log">server log</a>
+</div>
+
+<div id="winrate" class="main">
+    <div id="winrate-ctrl-bar">
+        <a id="winrate-close">close</a>
+    </div>
+    <h3>Win Rates For Team:</h3>
+    <h1 id="winrate-team-name">Doriath</h1>
+    <ol id="winrate-table">
+        <li>10</li>
+    </ol>
+</div>
+
+<script>
+    (function() {
+        var winrate = document.getElementById("winrate");
+        var leaderboard = document.getElementById("leaderboard");
+        var winrate_team_name = document.getElementById("winrate-team-name");
+        var winrate_table = document.getElementById("winrate-table");
+        var closebtn = document.getElementById("winrate-close");
+        var winrate_mat = {{ winrate_mat|safe }};
+        var teams = {{ team_list|safe }};
+
+        var scrollTop = 0;
+
+        var onClickRank = function(e) {
+            winrate.style.display = "block";
+            let nd = e.target;
+            if (nd.tagName.toLocaleLowerCase() !== "li") {
+                nd = nd.parentNode;
+            }
+            name = nd.id;
+            name = name.substr(name.indexOf('-')+1);
+            tid = parseInt(name);
+            winrate_team_name.innerText = teams[tid];
+            winrate_table.innerHTML = "";
+            for (var i = 0; i < teams.length; i++) {
+                const row = document.createElement("li");
+                if (i === tid) {
+                    row.classList.add("winrate-self");
+                }
+                row.append(winrate_mat[tid][i].toFixed(12).toString() + " vs ");
+                const name = document.createElement("strong");
+                name.innerText = teams[i];
+                row.append(name);
+                winrate_table.appendChild(row);
+            }
+            var supportPageOffset = window.pageXOffset !== undefined;
+            var isCSS1Compat = ((document.compatMode || "") === "CSS1Compat");
+            scrollTop = supportPageOffset ? window.pageYOffset : isCSS1Compat ? document.documentElement.scrollTop : document.body.scrollTop;
+            leaderboard.style.display = "none";
+            window.scrollTo(0, 0);
+        }
+
+        var onClickClose = function(e) {
+            window.scrollTo(0, scrollTop);
+            leaderboard.style.display = "block";
+            winrate.style.display = "none";
+        }
+
+        var ranki = document.getElementsByClassName("rank")
+        for (var i = 0; i < ranki.length; i++) {
+            ranki[i].addEventListener("click", onClickRank);
+        }
+        closebtn.addEventListener("click", onClickClose);
+    })();
+</script>
+</body>
+</html>
