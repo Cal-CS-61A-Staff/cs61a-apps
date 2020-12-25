@@ -1,6 +1,6 @@
 build_type: none
 deploy_type: docker
-concurrency: 40
+concurrency: 30
 dependencies:
   - repo: Cal-CS-61A-Staff/hog-calc
     src: main.cpp
