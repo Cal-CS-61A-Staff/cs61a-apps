@@ -8,4 +8,4 @@ RUN g++ -std=c++17 -O3 main.cpp -o bacon
 
 RUN pip install -r requirements.txt
 
-CMD gunicorn -b :$PORT -w 8 gui:app -t 3000
+CMD gunicorn -b :$PORT -w 8 main:app -t 3000
