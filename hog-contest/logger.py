@@ -3,7 +3,7 @@ from datetime import datetime
 
 MAX_LOG_LEN = 100
 
-logs = deque(maxlen=100)
+logs = deque(maxlen=MAX_LOG_LEN)
 
 
 def log(msg):
