@@ -127,5 +127,8 @@ def submit_strategy():
 
 log("Main thread starting. If this message is duplicated, something has gone wrong.")
 
+tournament.post_tournament()
+
+
 if __name__ == "__main__":
     app.run()

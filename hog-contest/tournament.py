@@ -160,6 +160,3 @@ def run_tournament():
     last_updated = start_time
     post_tournament()
     log("Website updated")
-
-
-post_tournament()
