@@ -1,5 +1,5 @@
 build_type: none
-deploy_type: flask
+deploy_type: docker
 concurrency: 40
 dependencies:
   - repo: Cal-CS-61A-Staff/hog-calc
