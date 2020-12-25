@@ -1,0 +1,4 @@
+flask
+gunicorn
+pytz
+-r common/requirements.txt

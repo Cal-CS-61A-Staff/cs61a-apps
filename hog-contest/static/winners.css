@@ -1,0 +1,16 @@
+span.emphasis {
+    font-weight: 400;
+}
+
+.win-semester {
+    padding-top: 10px;
+}
+
+ol {
+    list-style-type: decimal;
+    margin: 4px 1px 15px 1px;
+}
+
+ol > li {
+    padding: 3px 10px;
+}

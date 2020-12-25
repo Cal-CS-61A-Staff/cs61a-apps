@@ -1,0 +1,11 @@
+FROM python:buster
+
+ENV APP_HOME /app
+WORKDIR $APP_HOME
+COPY . ./
+
+RUN g++ -std=c++17 -O3 main.cpp -o bacon
+
+RUN pip install -r requirements.txt
+
+CMD gunicorn -b :$PORT -w 4 gui:app -t 3000

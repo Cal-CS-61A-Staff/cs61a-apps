@@ -1,0 +1,6 @@
+build_type: none
+deploy_type: hosted
+dependencies:
+  - repo: Cal-CS-61A-Staff/hog-calc
+    src: main.cpp
+    dest: main.cpp
