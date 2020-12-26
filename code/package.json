@@ -11,18 +11,17 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "scheme-import": "python3 staff/scheme-dist/create-web.py | tee src/web-server/IGNORE_scheme_debug.py > src/languages/scheme/web/IGNORE_needed.py && cat src/languages/scheme/web/brython_suffix.py >> src/languages/scheme/web/IGNORE_needed.py",
     "dev": "electron-webpack dev",
     "compile": "electron-webpack",
     "dist": "yarn compile && electron-builder",
     "dist:dir": "yarn dist --dir -c.compression=store -c.mac.identity=null",
     "web-dev": "webpack-dev-server --hot --open --config webpack.web.config.js --mode development",
-    "web-scheme-compile": "webpack-dev-server --open --config webpack.web.config.js --mode development --env.SCHEME_COMPILE",
+    "web-scheme-compile": "cp src/web-server/IGNORE_scheme_debug.py src/languages/scheme/web/IGNORE_needed.py && cat src/languages/scheme/web/brython_suffix.py >> src/languages/scheme/web/IGNORE_needed.py && webpack-dev-server --open --config webpack.web.config.js --mode development --env.SCHEME_COMPILE",
     "web-dist": "webpack --config webpack.web.config.js --mode production",
     "web-deploy": "cd dist/web/ && rm -rf .git && git init && git add -A && git commit -m \"init\" && git remote add dokku dokku@app.cs61a.org:code && git push --force dokku master",
     "web-test": "python dist/web/app.py",
     "size-profile": "webpack --config webpack.size.config.js --mode production",
-    "build": "yarn scheme-import && yarn web-dist && rm -rf deploy && cp dist/web deploy"
+    "build": "yarn web-dist && rm -rf deploy && cp dist/web deploy"
   },
   "dependencies": {
     "firebase": "^8.2.1",
