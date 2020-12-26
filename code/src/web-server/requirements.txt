@@ -1,0 +1,6 @@
+black
+english-words
+flask
+gunicorn
+braceexpand
+-r common/requirements.txt
