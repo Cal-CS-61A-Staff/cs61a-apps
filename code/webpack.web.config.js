@@ -77,7 +77,7 @@ module.exports = (env) => ({
     }),
     new webpack.DefinePlugin({
       ELECTRON: false,
-      SCHEME_COMPILE: env?.SCHEME_COMPILE || false,
+      SCHEME_COMPILE: (env && env.SCHEME_COMPILE) || false,
       __static: JSON.stringify("/static"),
       VERSION: '"2.0.9"',
     }),
