@@ -1,6 +1,6 @@
 module.exports = {
   /* your base configuration of choice */
-  extends: "airbnb",
+  extends: ["airbnb", "prettier", "prettier/react"],
   parser: "babel-eslint",
   parserOptions: {
     sourceType: "module",
@@ -45,10 +45,6 @@ module.exports = {
       "WithStatement",
     ],
     "react/jsx-filename-extension": [1, { extensions: [".js", ".jsx"] }],
-    indent: ["error", 4],
-    "react/jsx-indent": ["error", 4],
-    "react/jsx-indent-props": ["error", 4],
-    quotes: ["error", "double"],
     "no-else-return": "off",
     "no-plusplus": "off",
     "react/destructuring-assignment": 0,

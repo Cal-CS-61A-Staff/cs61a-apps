@@ -23,9 +23,9 @@ class ProcessPool {
     }
 
     while (this.pool.get(target).length <= this.buffSize) {
-      // eslint-disable-next-line no-use-before-define
       let handlers = Array(3)
         .fill()
+        // eslint-disable-next-line no-use-before-define
         .map((_, i) => (x) => handlerBuffers[i].push(x));
       const handlerBuffers = handlers.map(() => []);
       const [interactCallback, killCallback, detachCallback] = this.factories[

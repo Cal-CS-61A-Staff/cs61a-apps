@@ -32,7 +32,7 @@ pipenv install # you may need to run sudo apt-get install libmysqlclient-dev or 
 cd ../..
 ```
 
-Then run `python src/web-server/app.py` to start the python backend.
+Then run `python src/web-server/main.py` to start the python backend.
 
 ## Local Editor (experimental!)
 To try, ensure that `python` is installed on your machine, and can be run with the `python3.6` command (will be made configurable in the future).
