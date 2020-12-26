@@ -6,6 +6,7 @@ import requests
 from flask import current_app, g, session, request, redirect, abort, jsonify
 from flask_oauthlib.client import OAuth
 from werkzeug import security
+from urllib.parse import urlparse
 
 from common.rpc.auth import get_endpoint
 from common.rpc.secrets import get_secret
@@ -42,9 +43,7 @@ def is_staff(course):
 
 
 def login():
-    session[REDIRECT_KEY] = (
-        urllib.urlparse.urlparse(request.url)._replace(netloc=get_host()).geturl()
-    )
+    session[REDIRECT_KEY] = urlparse(request.url)._replace(netloc=get_host()).geturl()
     return redirect(url_for("login"))
 
 
