@@ -12,6 +12,7 @@ let ipcRenderer;
 
 // // eslint-disable-next-line
 if (ELECTRON) {
+  // eslint-disable-next-line import/no-extraneous-dependencies
   ({ ipcRenderer } = require("electron"));
 } else {
   ipcRenderer = require("../../web/webBackend.js").default;

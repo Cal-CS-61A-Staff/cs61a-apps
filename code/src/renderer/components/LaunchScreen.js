@@ -20,7 +20,7 @@ import FileSelector from "./FileSelector.js";
 
 function closeTab() {
   if (ELECTRON) {
-    // eslint-disable-next-line global-require
+    // eslint-disable-next-line global-require,import/no-extraneous-dependencies
     const { remote } = require("electron");
     remote.getCurrentWindow().close();
   }

@@ -5,7 +5,7 @@ import { CLAIM_MENU } from "../../common/communicationEnums.js";
 
 let remote;
 if (ELECTRON) {
-  // eslint-disable-next-line global-require
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
   ({ remote } = require("electron"));
 }
 

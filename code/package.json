@@ -24,6 +24,7 @@
     "build": "yarn web-dist && rm -rf deploy && cp -r dist/web deploy"
   },
   "dependencies": {
+    "babel-eslint": "^10.1.0",
     "eslint-config-prettier": "^7.1.0",
     "firebase": "^8.2.1",
     "source-map-support": "^0.5.10"
@@ -51,6 +52,7 @@
     "css-loader": "^2.1.1",
     "eslint": "^5.16.0",
     "eslint-config-airbnb": "^17.1.0",
+    "eslint-loader": "^4.0.2",
     "eslint-plugin-import": "^2.17.3",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-react": "^7.13.0",
@@ -80,6 +82,7 @@
     "react-monaco-editor": "^0.26.2",
     "script-loader": "^0.7.2",
     "semantic-release": "^15.13.17",
+    "style-loader": "^2.0.0",
     "svg-pan-zoom": "^3.6.0",
     "svg.js": "^2.7.1",
     "temp": "^0.9.0",
@@ -87,6 +90,7 @@
     "url-loader": "^2.0.0",
     "webpack": "^4.34.0",
     "webpack-bundle-analyzer": "^3.3.2",
+    "webpack-cli": "^4.3.0",
     "webpack-dev-server": "^3.7.1",
     "workbox-webpack-plugin": "^4.3.1"
   },
