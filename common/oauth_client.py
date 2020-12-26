@@ -9,7 +9,7 @@ from werkzeug import security
 
 from common.rpc.auth import get_endpoint
 from common.rpc.secrets import get_secret
-from common.url_for import url_for
+from common.url_for import get_host, url_for
 
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
 
@@ -42,7 +42,9 @@ def is_staff(course):
 
 
 def login():
-    session[REDIRECT_KEY] = request.url
+    session[REDIRECT_KEY] = (
+        urllib.urlparse.urlparse(request.url)._replace(netloc=get_host()).geturl()
+    )
     return redirect(url_for("login"))
 
 
