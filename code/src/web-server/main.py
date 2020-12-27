@@ -14,6 +14,9 @@ from stored_files import create_stored_files
 
 app = Flask(__name__, template_folder=STATIC_FOLDER)
 
+if __name__ == "__main__":
+    app.debug = True
+
 
 @app.route("/")
 def root():
@@ -37,4 +40,4 @@ create_ok_server_interface(app)
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

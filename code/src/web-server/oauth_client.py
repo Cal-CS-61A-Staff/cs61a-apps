@@ -1,3 +1,4 @@
+import os
 import urllib.parse
 
 import requests
@@ -15,11 +16,23 @@ CONSUMER_KEY = "61a-web-repl"
 def create_oauth_client(app):
     oauth = OAuth(app)
 
-    app.secret_key = get_secret(secret_name="OKPY_OAUTH_SECRET")
+    if os.getenv("ENV") == "prod":
+        consumer_key = CONSUMER_KEY
+        app.secret_key = get_secret(secret_name="OKPY_OAUTH_SECRET")
+    else:
+        consumer_key = "local-dev-all"
+        app.secret_key = "kmSPJYPzKJglOOOmr7q0irMfBVMRFXN"
+
+    if not app.debug:
+        app.config.update(
+            SESSION_COOKIE_SECURE=True,
+            SESSION_COOKIE_HTTPONLY=True,
+            SESSION_COOKIE_SAMESITE="Lax",
+        )
 
     remote = oauth.remote_app(
         "ok-server",  # Server Name
-        consumer_key=CONSUMER_KEY,
+        consumer_key=consumer_key,
         consumer_secret=app.secret_key,
         request_token_params={"scope": "all", "state": lambda: security.gen_salt(10)},
         base_url="https://okpy.org/api/v3/",
