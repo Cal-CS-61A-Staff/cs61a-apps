@@ -1,11 +1,12 @@
 import urllib.parse
 
 import requests
-from flask import session, url_for, request, redirect, jsonify, abort
+from flask import session, request, redirect, jsonify, abort
 from flask_oauthlib.client import OAuth
 from werkzeug import security
 
 from common.rpc.secrets import get_secret
+from common.url_for import url_for
 from constants import COOKIE_IS_POPUP, COOKIE_SHORTLINK_REDIRECT
 
 CONSUMER_KEY = "61a-web-repl"
