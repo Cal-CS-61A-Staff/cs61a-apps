@@ -14,12 +14,12 @@ CONSUMER_KEY = "61a-web-repl"
 def create_oauth_client(app):
     oauth = OAuth(app)
 
-    app.secret = get_secret(secret_name="OKPY_OAUTH_SECRET")
+    app.secret_key = get_secret(secret_name="OKPY_OAUTH_SECRET")
 
     remote = oauth.remote_app(
         "ok-server",  # Server Name
         consumer_key=CONSUMER_KEY,
-        consumer_secret=app.secret,
+        consumer_secret=app.secret_key,
         request_token_params={"scope": "all", "state": lambda: security.gen_salt(10)},
         base_url="https://okpy.org/api/v3/",
         request_token_url=None,
