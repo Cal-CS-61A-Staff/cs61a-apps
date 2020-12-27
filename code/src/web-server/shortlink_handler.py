@@ -1,6 +1,7 @@
-from flask import jsonify, redirect, render_template, send_from_directory, url_for
+from flask import jsonify, redirect, render_template, send_from_directory
 from werkzeug.exceptions import NotFound
 
+from common.url_for import url_for
 from constants import (
     COOKIE_SHORTLINK_REDIRECT,
     NOT_AUTHORIZED,
