@@ -85,4 +85,9 @@ cloud_sql_proxy
 # wiki theme "submodule"
 wiki-base/themes
 
+# sandbox external dependencies
 pdfjs/
+
+# code external dependencies
+code/static/
+IGNORE_*
