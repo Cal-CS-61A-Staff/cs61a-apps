@@ -1,4 +1,5 @@
-import docker
+import os
+from dna import DNA
 from flask import Flask
 
 from common.rpc.hosted import (
@@ -12,145 +13,81 @@ from common.rpc.hosted import (
     container_log,
 )
 from common.rpc.secrets import only
-from utils import *
+from common.shell_utils import sh
 
 app = Flask(__name__)
-client = docker.from_env()
+dna = DNA("hosted")
 
 if not os.path.exists("data"):
     os.makedirs("data")
+
+if not os.path.exists("data/saves"):
+    os.makedirs("data/saves")
 
 
 @list_apps.bind(app)
 @only("buildserver")
 def list_apps():
-    containers = client.containers.list(all=True)
-    info = {}
-    apps = get_config()
-    for c in containers:
-        info[c.name] = {
-            "running": c.status == "running",
-            "image": c.image.tags[0] if c.image.tags else c.image.short_id[7:],
-            "domains": apps[c.name]["domains"],
+    return {
+        service.name: {
+            "image": service.image,
+            "domains": [d.url for d in service.domains],
         }
-    return info
+        for service in dna.services
+    }
 
 
 @new.bind(app)
 @only("buildserver")
 def new(img, name=None, env={}):
-    client.images.pull(img)
+    name = name if name else img.split("/")[-1]
 
-    if name is None:
-        name = img.split("/")[-1]
-
-    apps = get_config()
-
-    if name in apps:
-        for c in client.containers.list(all=True):
-            if c.name == name:
-                if c.status == "running":
-                    c.kill()
-                c.remove()
-                break
-        port = apps[name]["port"]
-    else:
-        port = get_empty_port()
-        configure(name, port)
+    [
+        _ for _ in dna.pull_image(img)
+    ]  # temporary fix until DNA supports pulling without streaming
 
     if "ENV" not in env:
         env["ENV"] = "prod"
     if "PORT" not in env:
         env["PORT"] = 8001
 
+    save = f"{os.getcwd()}/data/saves/{name}"
+    if not os.path.exists(save):
+        os.makedirs(save)
+
     volumes = {
-        f"{os.getcwd()}/data/saves/{name}": {
+        save: {
             "bind": "/save",
             "mode": "rw",
         },
     }
 
-    client.containers.run(
+    dna.run_deploy(
+        name,
         img,
-        detach=True,
+        "8001",
         environment=env,
-        ports={int(env["PORT"]): port},
         volumes=volumes,
-        name=name,
+    )
+    dna.add_domain(
+        name,
+        f"{name}.hosted.cs61a.org",
     )
 
-    return f"Running on {name}.hosted.cs61a.org!"
-
-
-@stop.bind(app)
-@only("buildserver")
-def stop(name):
-    apps = get_config()
-
-    if name in apps:
-        for c in client.containers.list():
-            if c.name == name:
-                c.kill()
-                return dict(success=True)
-
-    return dict(
-        success=False, reason="That container doesn't exist, or is not running."
-    )
-
-
-@run.bind(app)
-@only("buildserver")
-def run(name):
-    apps = get_config()
-
-    if name in apps:
-        for c in client.containers.list():
-            if c.name == name:
-                return dict(success=False, reason="That container is already running.")
-    else:
-        return dict(success=False, reason="That container doesn't exist.")
-
-    client.containers.get(name).start()
     return dict(success=True)
 
 
 @delete.bind(app)
 @only("buildserver")
 def delete(name):
-    apps = get_config()
-
-    if name in apps:
-        for c in client.containers.list(all=True):
-            if c.name == name:
-                if c.status == "running":
-                    c.kill()
-                c.remove()
-                break
-        deconfigure(name)
-        return dict(success=True)
-    else:
-        return dict(success=False, reason="That container doesn't exist.")
+    dna.delete_service(name)
+    return dict(success=True)
 
 
 @add_domain.bind(app)
 @only(["buildserver", "sandbox"])
-def add_domain(name, domain, force=False):
-    apps = get_config()
-
-    if not force:
-        for other_app in apps:
-            if domain in apps[other_app]["domains"]:
-                return dict(
-                    success=False,
-                    reason=f"That domain is already bound to {other_app}. Use 'force=True' to overwrite.",
-                )
-
-    if name in apps:
-        write_nginx(domain, apps[name]["port"])
-        redirect(domain, name)
-        return dict(success=True)
-
-    return dict(success=False, reason="That container doesn't exist.")
+def add_domain(name, domain, force_wildcard=False, force_provision=False):
+    return dict(success=dna.add_domain(name, domain, force_wildcard, force_provision))
 
 
 @service_log.bind(app)
@@ -163,14 +100,7 @@ def service_log():
 @container_log.bind(app)
 @only("logs")
 def container_log(name):
-    apps = get_config()
-
-    if name in apps:
-        c = client.containers.get(name)
-        logs = c.logs(tail=100, timestamps=True).decode("utf-8")
-        return dict(success=True, logs=logs)
-    else:
-        return dict(success=False, reason="That container doesn't exist.")
+    return dict(success=True, logs=dna.docker_logs(name))
 
 
 if __name__ == "__main__":

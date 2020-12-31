@@ -3,5 +3,5 @@ deploy_type: service
 service:
   host: hosted-apps
   zone: us-west2-a
-  root: /home/api/docker-api
-  name: dockerapi
+  root: /home/api/dna
+  name: dna
