@@ -1,4 +1,4 @@
-dna==0.6.1
+docker-dna==0.6.3
 Flask==1.1.2
 gunicorn==20.0.4
 -r common/requirements.txt
