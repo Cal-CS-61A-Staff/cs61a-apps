@@ -15,13 +15,11 @@ from common.rpc.hosted import (
 from common.rpc.secrets import only
 from common.shell_utils import sh
 
-CERTBOT_ARGS = (
-    [
-        "--dns-google",
-        "--dns-google-propagation-seconds",
-        "120",
-    ],
-)
+CERTBOT_ARGS = [
+    "--dns-google",
+    "--dns-google-propagation-seconds",
+    "120",
+]
 
 app = Flask(__name__)
 dna = DNA(
