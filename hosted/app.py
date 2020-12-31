@@ -42,7 +42,9 @@ def list_apps():
 def new(img, name=None, env={}):
     name = name if name else img.split("/")[-1]
 
-    dna.pull_image(img)
+    [
+        _ for _ in dna.pull_image(img)
+    ]  # temporary fix until DNA supports pulling without streaming
 
     if "ENV" not in env:
         env["ENV"] = "prod"
