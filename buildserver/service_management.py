@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from app_config import App, CLOUD_RUN_DEPLOY_TYPES
+from app_config import App, CLOUD_RUN_DEPLOY_TYPES, NO_PR_BUILD_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
 from common.rpc.hosted import delete, list_apps
@@ -170,7 +170,7 @@ def get_pr_subdomains(app: App, pr_number: int) -> List[Hostname]:
         )
     elif app.config["deploy_type"] == "pypi":
         out.append(PyPIHostname(app.config["package_name"], app.deployed_pypi_version))
-    elif app.config["deploy_type"] == "none":
+    elif app.config["deploy_type"] in NO_PR_BUILD_DEPLOY_TYPES:
         pass
     else:
         assert False, "Unknown deploy type, failed to create PR domains"
