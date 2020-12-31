@@ -18,7 +18,7 @@ from common.shell_utils import sh
 CERTBOT_ARGS = [
     "--dns-google",
     "--dns-google-propagation-seconds",
-    "120",
+    "180",
 ]
 
 app = Flask(__name__)
