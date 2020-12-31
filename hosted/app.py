@@ -24,6 +24,8 @@ if not os.path.exists("data"):
 if not os.path.exists("data/saves"):
     os.makedirs("data/saves")
 
+sh("chmod", "666", f"{os.getcwd()}/dna.sock")
+
 
 @list_apps.bind(app)
 @only("buildserver")
