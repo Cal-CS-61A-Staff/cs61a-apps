@@ -21,6 +21,9 @@ dna = DNA("hosted")
 if not os.path.exists("data"):
     os.makedirs("data")
 
+if not os.path.exists("data/saves"):
+    os.makedirs("data/saves")
+
 
 @list_apps.bind(app)
 @only("buildserver")
@@ -46,8 +49,12 @@ def new(img, name=None, env={}):
     if "PORT" not in env:
         env["PORT"] = 8001
 
+    save = f"{os.getcwd()}/data/saves/{name}"
+    if not os.path.exists(save):
+        os.makedirs(save)
+
     volumes = {
-        f"{os.getcwd()}/data/saves/{name}": {
+        save: {
             "bind": "/save",
             "mode": "rw",
         },
