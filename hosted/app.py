@@ -15,8 +15,19 @@ from common.rpc.hosted import (
 from common.rpc.secrets import only
 from common.shell_utils import sh
 
+CERTBOT_ARGS = (
+    [
+        "--dns-google",
+        "--dns-google-propagation-seconds",
+        "120",
+    ],
+)
+
 app = Flask(__name__)
-dna = DNA("hosted")
+dna = DNA(
+    "hosted",
+    cb_args=CERTBOT_ARGS,
+)
 
 if not os.path.exists("data"):
     os.makedirs("data")
@@ -103,6 +114,55 @@ def service_log():
 @only("logs")
 def container_log(name):
     return dict(success=True, logs=dna.docker_logs(name))
+
+
+# PR Proxy Setup
+from dna.utils import Certbot
+from dna.utils.nginx_utils import Server, Location
+from common.rpc.hosted import create_pr_subdomain
+
+proxy_cb = Certbot(CERTBOT_ARGS + ["-i", "nginx"])
+pr_confs = f"{os.getcwd()}/data/pr_proxy"
+
+if not os.path.exists(pr_confs):
+    os.makedirs(pr_confs)
+
+if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
+    with open(f"/etc/nginx/conf.d/hosted_pr_proxy.conf", "w") as f:
+        f.write(f"include {pr_confs}/*.conf;")
+
+
+@create_pr_subdomain.bind(app)
+@only("buildserver")
+def create_pr_subdomain(app, pr_number, pr_host):
+    nginx_config = Server(
+        Location(
+            "/",
+            proxy_pass=f"https://{pr_host}/",
+            proxy_read_timeout="1800",
+            proxy_connect_timeout="1800",
+            proxy_send_timeout="1800",
+            send_timeout="1800",
+            **{
+                "proxy_set_header Host": pr_host,
+                "proxy_set_header X-Forwarded-For-Host": f"{pr_number}.{app}.pr.cs61a.org",
+            },
+        ),
+        server_name=f"{pr_number}.{app}.pr.cs61a.org",
+        listen="80",
+    )
+
+    with open(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf", "w") as f:
+        f.write(str(nginx_config))
+    sh("nginx", "-s", "reload")
+
+    cert = proxy_cb.cert_else_false(f"*.{app}.pr.cs61a.org", force_exact=True)
+    if not cert:
+        proxy_cb.run_bot(domains=[f"*.{app}.pr.cs61a.org"], args=["certonly"])
+        cert = proxy_cb.cert_else_false(f"*.{app}.pr.cs61a.org", force_exact=True)
+    proxy_cb.attach_cert(cert, f"{pr_number}.{app}.pr.cs61a.org")
+
+    return dict(success=True)
 
 
 if __name__ == "__main__":
