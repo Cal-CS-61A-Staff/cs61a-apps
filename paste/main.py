@@ -1,9 +1,10 @@
 from random import choice
 from string import ascii_lowercase
 
-from flask import Flask, abort, redirect, request
+from flask import Flask, Response, abort, redirect, request
 
 from common.db import connect_db
+from common.html import html
 from common.oauth_client import create_oauth_client, is_staff, login
 from common.rpc.paste import get_paste, paste_text
 from common.rpc.secrets import validates_master_secret
@@ -30,8 +31,8 @@ with connect_db() as db:
 def index():
     if not is_staff("cs61a"):
         return login()
-    return f"""
-    <h1>61A Paste</h1>
+    return html(
+        f"""
     Paste text here: 
     <br/><p>
     <form action="{url_for("submit")}" method="POST">
@@ -40,6 +41,7 @@ def index():
     <input type="submit"></input>
     </form>
     """
+    )
 
 
 @app.route("/save", methods=["POST"])
@@ -54,14 +56,16 @@ def submit():
 def load_formatted(name):
     out = load(name)
     if isinstance(out, str):
-        return "<pre>" + load(name) + "</pre>"
+        return html(
+            f"<pre>{out}</pre> <a href=\"{url_for('load_raw', name=name)}\">(raw)</a>"
+        )
     else:
         return out
 
 
 @app.route("/<string:name>/raw")
 def load_raw(name):
-    return load(name)
+    return Response(load(name), mimetype="text")
 
 
 def load(name, skip_auth=False):
