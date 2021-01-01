@@ -1,7 +1,7 @@
 # This action will block merges for pull requests
 # where any of the files contain @blockmerge
 
-name: "Check @blockmerge"
+name: "Check @nocommit"
 on: [pull_request]
 
 jobs:
@@ -12,6 +12,6 @@ jobs:
       uses: JJ/github-pr-contains-action@releases/v0
       with:
         github-token: ${{github.token}}
-        bodyDoesNotContain: "@blockmerge"
+        bodyDoesNotContain: "@nocommit"
         filesChanged: 1
         linesChanged: 1
