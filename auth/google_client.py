@@ -4,6 +4,7 @@ from flask import request, redirect
 
 from auth_utils import key_secure, course_oauth_secure
 from common.db import connect_db
+from common.html import html
 from google_api import load_document, load_sheet, dump_sheet
 from common.rpc.auth import read_document, read_spreadsheet, write_spreadsheet
 
@@ -60,14 +61,14 @@ def create_google_client(app):
     @app.route("/google/<course>/config", methods=["GET"])
     @course_oauth_secure()
     def google_config(course):
-        return """
+        return html(
+            f"""
             Upload Google service worker JSON. This may break existing Google integrations!
-            <form action="/google/{}/set_auth_json" method="post" enctype="multipart/form-data">
+            <form action="/google/{course}/set_auth_json" method="post" enctype="multipart/form-data">
                 <input name="data" type="file">
                 <input type="submit">
             </form>
-        """.format(
-            course
+        """
         )
 
     @app.route("/google/<course>/set_auth_json", methods=["POST"])

@@ -9,7 +9,7 @@ LOOKUP = {
     "python": "https://code.cs61a.org/python",
     "scheme": "https://code.cs61a.org/scheme",
     "sql": "https://code.cs61a.org/sql",
-    "ok-help": "https://ok-help.app.cs61a.org",
+    "ok-help": "https://ok-help.cs61a.org",
 }
 
 

@@ -1,0 +1,42 @@
+.Command {
+    flex-grow: 1;
+    font-size: 24px;
+    width: calc(100% - 110px);
+    line-height: 42px;
+}
+
+.CopyButton {
+    width: 100px;
+    height: 42px;
+    margin-left: 5px;
+    vertical-align: middle;
+    color: white;
+    font-size: 18px;
+    font-family: Calibri, sans-serif;
+    float: right;
+}
+
+.copyButtonContainer {
+}
+
+.GeneratedCommand {
+    border: 2px black solid;
+    padding: 8px;
+    font-family: Inconsolata, monospace;
+    text-align: center;
+    user-select: all;
+    display: flex;
+    background: white;
+    width: 100%;
+    /*box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);*/
+ }
+
+.sticky {
+    top: -4px;
+    left: -2px;
+    right: -2px;
+    background: white;
+    position: fixed;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+}

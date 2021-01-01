@@ -1,18 +1,20 @@
 import os
 import urllib.parse
-from sys import stderr
 
 import flask
 import requests
 from flask import current_app, g, session, request, redirect, abort, jsonify
 from flask_oauthlib.client import OAuth
 from werkzeug import security
+from urllib.parse import urlparse
 
 from common.rpc.auth import get_endpoint
 from common.rpc.secrets import get_secret
-from common.url_for import url_for
+from common.url_for import get_host, url_for
 
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
+
+REDIRECT_KEY = "REDIRECT_KEY"
 
 
 def get_user():
@@ -38,6 +40,11 @@ def is_staff(course):
         # fail safe!
         print(e)
         return False
+
+
+def login():
+    session[REDIRECT_KEY] = urlparse(request.url)._replace(netloc=get_host()).geturl()
+    return redirect(url_for("login"))
 
 
 def create_oauth_client(
@@ -114,6 +121,10 @@ def create_oauth_client(
         if success_callback:
             success_callback()
 
+        target = session.get(REDIRECT_KEY)
+        if target:
+            session.pop(REDIRECT_KEY)
+            return redirect(target)
         return redirect(url_for("index"))
 
     @app.route("/api/user", methods=["POST"])

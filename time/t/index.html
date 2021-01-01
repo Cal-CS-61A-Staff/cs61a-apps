@@ -1,0 +1,53 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="shortcut icon" href="favicon.png" />
+    <title>In Your Timezone</title>
+  </head>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+
+  <body>
+    <center>
+      <h1>In Your Timezone</h1>
+      <div class="main">
+        <div class="description">Your timezone:</div>
+        <div class="value" id="zonevalue"></div>
+        <div class="description">Timestamp in your timezone:</div>
+        <div class="value" id="timevalue"></div>
+        <div class="description">Timestamp in UTC:</div>
+        <div class="value" id="utcTimevalue"></div>
+        <div class="description">Relative to now:</div>
+        <div class="value" id="relativeTime"></div>
+      </div>
+    </center>
+  </body>
+  <script>
+    function renderMoment(m) {
+      return m.format("dddd, MMMM Do YYYY, h:mm:ss a");
+    }
+    function toMoment(timestamp) {
+      return moment(parseInt(timestamp) * 1000);
+    }
+
+    function getQuery() {
+      const hash = window.location.hash.substring(1);
+      if (hash !== "") {
+        return hash;
+      }
+      const question_mark_parts = window.location.href.split("?");
+      const after_question_mark =
+        question_mark_parts[question_mark_parts.length - 1];
+      return after_question_mark;
+    }
+
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timestamp = toMoment(getQuery());
+    document.getElementById("zonevalue").innerHTML = timezone;
+    document.getElementById("timevalue").innerHTML = renderMoment(timestamp);
+    document.getElementById("utcTimevalue").innerHTML = renderMoment(
+      timestamp.utc()
+    );
+    document.getElementById("relativeTime").innerHTML = timestamp.fromNow();
+  </script>
+</html>

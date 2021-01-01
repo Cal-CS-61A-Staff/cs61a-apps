@@ -43,7 +43,7 @@ export default (assignments, scores, future) => {
 
     const limit = future ? curr.futureMaxScore : curr.maxScore;
 
-    if (limit) {
+    if (limit && !curr.uncapped) {
       out = Math.min(out, limit);
     }
 

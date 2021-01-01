@@ -1,5 +1,6 @@
 import http.server
 import logging
+from os.path import abspath
 
 import requests
 import sys
@@ -14,7 +15,7 @@ CLIENT_SECRET = "KH0mvknMUWT5w3U7zvz6wsUQZoy6UmQ"
 OAUTH_SCOPE = "email"
 
 # Localhost
-REDIRECT_HOST = "127.0.0.1"
+REDIRECT_HOST = "localhost"
 REDIRECT_PORT = 6265
 
 # OAuth post timeout
@@ -30,6 +31,8 @@ ERROR_ENDPOINT = "/oauth/errors"
 
 # URL to redirect user to upon OAuth success
 SUCCESS_ENDPOINT_URL = "https://okpy.org"  # temporary
+
+TOKEN_PATH = ".token"
 
 
 class OKException(Exception):
@@ -268,16 +271,21 @@ class OAuthSession:
         return self.access_token
 
 
+def set_token_path(path):
+    global TOKEN_PATH
+    TOKEN_PATH = abspath(path)
+
+
 def refresh_token():
     token = OAuthSession().auth()
-    with open(".token", "w+") as f:
+    with open(TOKEN_PATH, "w+") as f:
         f.write(token)
     return token
 
 
 def get_token():
     try:
-        with open(".token") as f:
+        with open(TOKEN_PATH) as f:
             return f.read()
     except FileNotFoundError:
         return refresh_token()

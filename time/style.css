@@ -107,7 +107,7 @@ a {
 }
 
 .main .description {
-  width: 50%;
+  width: 55%;
   display: inline-block;
   box-sizing: border-box;
   text-align: right;
@@ -116,7 +116,7 @@ a {
 .main .value {
   text-align: left;
   padding-left: 10px;
-  width: 50%;
+  width: 40%;
   display: inline-block;
   box-sizing: border-box;
 }

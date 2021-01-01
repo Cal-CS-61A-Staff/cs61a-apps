@@ -1,0 +1,19 @@
+.Entry {
+	text-align: left;
+}
+
+.Rank {
+	font-weight: bold;
+}
+
+.Rank::after {
+	content: ". ";
+}
+
+.Name {
+	font-style: italic;
+}
+
+.Score::after {
+	content: " wpm - ";
+}

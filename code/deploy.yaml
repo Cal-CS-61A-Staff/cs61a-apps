@@ -1,0 +1,14 @@
+build_type: create_react_app # lmao
+deploy_type: flask
+dependencies:
+  - repo: Cal-CS-61A-Staff/61a-code-compiled-scheme-js
+    src: scheme.js
+    dest: src/languages/scheme/web/IGNORE_scheme_transpiled.js
+
+  - repo: Cal-CS-61A-Staff/61a-code-compiled-scheme-js
+    src: scheme.py
+    dest: src/web-server/IGNORE_scheme_debug.py
+
+  - repo: Cal-CS-61A-Staff/61a-code-static-resources
+    src: static
+    dest: static

@@ -2,15 +2,32 @@ import argparse
 import json
 import socketserver
 import ssl
+import time
 import traceback
 import webbrowser
 import os
+from functools import wraps
 from http import HTTPStatus, server
 from http.server import HTTPServer
+from urllib.error import URLError
 from urllib.parse import unquote
 from urllib.request import Request, urlopen
 
 PATHS = {}
+
+
+def path_optional(decorator):
+    def wrapped(func_or_path):
+        if callable(func_or_path):
+            return decorator("/" + func_or_path.__name__)(func_or_path)
+        else:
+
+            def actual_decorator(f):
+                return decorator(func_or_path)(f)
+
+            return actual_decorator
+
+    return wrapped
 
 
 def route(path):
@@ -70,12 +87,26 @@ class Handler(server.BaseHTTPRequestHandler):
         pass
 
 
+class Server:
+    def __getattr__(self, item):
+        def f(**kwargs):
+            if IS_SERVER:
+                return PATHS["/" + item](**kwargs)
+            else:
+                return multiplayer_post(item, kwargs)
+
+        return f
+
+
+Server = Server()
+
+
 def multiplayer_post(path, data, server_url=None):
     """Post DATA to a multiplayer server PATH and return the response."""
     if not server_url:
         server_url = DEFAULT_SERVER
     data_bytes = bytes(json.dumps(data), encoding="utf-8")
-    request = Request(server_url + path, data_bytes, method="POST")
+    request = Request(server_url + "/" + path, data_bytes, method="POST")
     try:
         response = urlopen(request, context=ssl._create_unverified_context())
         text = response.read().decode("utf-8")
@@ -106,9 +137,37 @@ def multiplayer_route(path, server_path=None):
     return wrap
 
 
-def forward_to_server(data, send):
-    """Forward a request to the multiplayer server."""
-    return send(data)
+@path_optional
+def forward_to_server(path):
+    def wrap(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if IS_SERVER:
+                return f(*args, **kwargs)
+            else:
+                return multiplayer_post(path, kwargs)
+
+        return wrapped
+
+    return wrap
+
+
+def server_only(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        if IS_SERVER:
+            return f(*args, **kwargs)
+        else:
+            raise Exception("Method not available locally!")
+
+    return wrapped
+
+
+def sendto(f):
+    def wrapped(data):
+        return f(**data)
+
+    return wrapped
 
 
 def start_server():
@@ -157,7 +216,17 @@ def snakify(data):
     return out
 
 
-def start(port, default_server, gui_folder):
+@route("/kill")
+def kill():
+    if not IS_SERVER:
+        print("Exiting GUI")
+        exit(0)
+
+
+def start(port, default_server, gui_folder, db_init=None):
+    global DEFAULT_SERVER
+    DEFAULT_SERVER = default_server
+
     parser = argparse.ArgumentParser(description="Project GUI Server")
     parser.add_argument(
         "-s", help="Stand-alone: do not open browser", action="store_true"
@@ -167,11 +236,25 @@ def start(port, default_server, gui_folder):
 
     import __main__
 
-    if os.environ.get("ENV") != "prod" and not args.f:
+    if "gunicorn" not in os.environ.get("SERVER_SOFTWARE", "") and not args.f:
+        request = Request(
+            "http://127.0.0.1:{}/kill".format(port),
+            bytes(json.dumps({}), encoding="utf-8"),
+            method="POST",
+        )
+        try:
+            urlopen(request)
+            print("Killing existing gui process...")
+            time.sleep(1)
+        except URLError:
+            pass
+
         start_client(port, default_server, gui_folder, args.s)
     else:
+        if db_init:
+            db_init()
         app = start_server()
         if args.f:
-            app.run(port=port, threaded=False)
+            app.run(port=port, threaded=False, processes=1)
         else:
             return app

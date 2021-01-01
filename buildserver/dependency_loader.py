@@ -37,7 +37,7 @@ def load_dependencies(app: App, sha: str, repo: Repository):
                 copytree(
                     os.path.join(folder_name, dependency["src"]),
                     os.path.join(app.name, dependency["dest"]),
-                    symlinks=True,
+                    symlinks=False,
                     dirs_exist_ok=True,
                 )
             except NotADirectoryError:

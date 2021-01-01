@@ -1,0 +1,6 @@
+Flask==1.1.2
+gunicorn==20.0.4
+mysqlclient==2.0.1
+google-cloud-storage==1.33.0
+-e ./sicp
+-r common/requirements.txt

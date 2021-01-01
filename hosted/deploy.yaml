@@ -1,0 +1,7 @@
+build_type: none
+deploy_type: service
+service:
+  host: hosted-apps
+  zone: us-west2-a
+  root: /home/api/dna
+  name: dna

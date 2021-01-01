@@ -2,7 +2,33 @@ from flask import Flask, redirect, request
 
 import urllib.parse as urlparse
 
+from common.course_config import get_course
+from common.db import connect_db
+from common.html import error, html, make_row
+from common.oauth_client import create_oauth_client, is_staff, login
 from common.rpc.auth import read_spreadsheet
+from common.url_for import url_for
+
+
+with connect_db() as db:
+    db(
+        """CREATE TABLE IF NOT EXISTS shortlinks (
+    shortlink varchar(512),
+    url varchar(512),
+    creator varchar(512),
+    secure boolean,
+    course varchar(128)
+)"""
+    )
+
+    db(
+        """CREATE TABLE IF NOT EXISTS sources (
+    url varchar(512),
+    sheet varchar(256),
+    secure boolean,
+    course varchar(128)
+)"""
+    )
 
 
 def add_url_params(url, params_string):
@@ -12,56 +38,154 @@ def add_url_params(url, params_string):
 
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 
-links, author = {}, {}
+if __name__ == "__main__":
+    app.debug = True
 
-DOC_URL = "https://docs.google.com/spreadsheets/d/1mc4ygwGMLVtyL3cdAcYe5T9TsAXuKxnzKUe9-mlSgGQ/edit"
-SHEETS = ["Sheet1"]
+create_oauth_client(app, "61a-shortlinks")
+
+
+def lookup(path):
+    with connect_db() as db:
+        target = db(
+            "SELECT url, creator, secure FROM shortlinks WHERE shortlink=%s AND course=%s",
+            [path, get_course()],
+        ).fetchone()
+    return list(target) if target else (None, None, None)
 
 
 @app.route("/<path>/")
 def handler(path):
-    if not links:
-        refresh()
-    if path in links and links[path]:
-        return redirect(
-            add_url_params(links[path], request.query_string.decode("utf-8"))
-        )
-    return base()
+    url, creator, secure = lookup(path)
+    if not url:
+        return error("Target not found!")
+    if secure and not is_staff(get_course()):
+        return login()
+    return redirect(add_url_params(url, request.query_string.decode("utf-8")))
 
 
 @app.route("/preview/<path>/")
 def preview(path):
-    if not links:
-        refresh()
-    if path not in links:
-        return "No such link exists."
-    return 'Points to <a href="{0}">{0}</a> by {1}'.format(
-        add_url_params(links[path], request.query_string.decode("utf-8")), author[path]
+    url, creator, secure = lookup(path)
+    if url is None:
+        return html("No such link exists.")
+    if secure and not is_staff(get_course()):
+        return login()
+    return html(
+        'Points to <a href="{0}">{0}</a> by {1}'.format(
+            add_url_params(url, request.query_string.decode("utf-8")), creator
+        )
     )
 
 
 @app.route("/")
-def base():
-    return redirect("https://cs61a.org")
+def index():
+    if not is_staff(get_course()):
+        return login()
+    with connect_db() as db:
+        sources = db(
+            "SELECT url, sheet, secure FROM sources WHERE course=%s", [get_course()]
+        ).fetchall()
+
+    insert_fields = """<input placeholder="Spreadsheet URL" name="url"></input>
+        <input placeholder="Sheet Name" name="sheet"></input>
+        <label>
+            <input type="checkbox" name="secure"></input>
+            Require Authentication
+        </label>"""
+
+    sources = "<br/>".join(
+        make_row(
+            f'<a href="{url}">{url}</a> {sheet} (Secure: {secure})'
+            f'<input name="url" type="hidden" value="{url}"></input>'
+            f'<input name="sheet" type="hidden" value="{sheet}"></input>',
+            url_for("remove_source"),
+        )
+        for url, sheet, secure in sources
+    )
+
+    return html(
+        f"""
+    <h2>Course: <code>{get_course()}</code></h2>
+    Each spreadsheet should be shared with the 61A service account
+    <a href="mailto:secure-links@ok-server.iam.gserviceaccount.com">
+        secure-links@ok-server.iam.gserviceaccount.com</a>.
+    They should have three columns with the headers: "URL", "Shortlink", and "Creator".
+    <p>
+    Visit <a href="{url_for("refresh")}">{url_for("refresh")}</a> (no auth required) 
+    after adding a link to synchronize with the spreadsheets.
+
+    <h3>Sources</h3>
+    {sources}
+    <h3>Add Sources</h3>
+    {make_row(insert_fields, url_for("add_source"), "Add")}
+    """
+    )
+
+
+@app.route("/add_source", methods=["POST"])
+def add_source():
+    if not is_staff(get_course()):
+        return login()
+
+    url = request.form["url"]
+    sheet = request.form["sheet"]
+    secure = True if request.form.get("secure", False) else False
+
+    with connect_db() as db:
+        db(
+            "INSERT INTO sources VALUES (%s, %s, %s, %s)",
+            [url, sheet, secure, get_course()],
+        )
+
+    return redirect(url_for("index"))
+
+
+@app.route("/remove_source", methods=["POST"])
+def remove_source():
+    if not is_staff(get_course()):
+        return login()
+
+    url = request.form["url"]
+    sheet = request.form["sheet"]
+
+    with connect_db() as db:
+        db(
+            "DELETE FROM sources WHERE url=%s AND sheet=%s AND course=%s",
+            [url, sheet, get_course()],
+        )
+
+    return redirect(url_for("index"))
 
 
 @app.route("/_refresh/")
 def refresh():
-    links.clear()
-    author.clear()
-    for sheet_name in SHEETS:
-        csvr = read_spreadsheet(url=DOC_URL, sheet_name=sheet_name)
+    with connect_db() as db:
+        db("DELETE FROM shortlinks WHERE course=%s", [get_course()])
+        sheets = db(
+            "SELECT url, sheet, secure FROM sources WHERE course=(%s)", [get_course()]
+        ).fetchall()
+    data = []
+    for url, sheet, secure in sheets:
+        try:
+            csvr = read_spreadsheet(url=url, sheet_name=sheet)
+        except:
+            return error(f"Failed to read spreadsheet {url} (Sheet: {sheet})")
         headers = [x.lower() for x in csvr[0]]
         for row in csvr[1:]:
             row = row + [""] * 5
             shortlink = row[headers.index("shortlink")]
             url = row[headers.index("url")]
             creator = row[headers.index("creator")]
-            links[shortlink] = url
-            author[shortlink] = creator
-    return "Links updated"
+            data.append([shortlink, url, creator, secure, get_course()])
+    with connect_db() as db:
+        db(
+            "INSERT INTO shortlinks (shortlink, url, creator, secure, course) VALUES (%s, %s, %s, %s, %s)",
+            data,
+        )
+    return html("Links updated")
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

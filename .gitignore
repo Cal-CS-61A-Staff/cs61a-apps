@@ -22,7 +22,7 @@ __pycache__/
 .Python
 env/
 venv/
-build/
+build/*
 develop-eggs/
 dist/
 downloads/
@@ -84,3 +84,19 @@ cloud_sql_proxy
 
 # wiki theme "submodule"
 wiki-base/themes
+
+# sandbox external dependencies
+pdfjs/
+
+# code external dependencies
+code/static/
+IGNORE_*
+
+# Created by https://www.toptal.com/developers/gitignore/api/vscode
+# Edit at https://www.toptal.com/developers/gitignore?templates=vscode
+
+### vscode ###
+.vscode/*
+*.code-workspace
+
+# End of https://www.toptal.com/developers/gitignore/api/vscode

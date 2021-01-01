@@ -5,7 +5,7 @@ from common.db import connect_db
 from common.rpc.auth import post_slack_message, slack_workspace_name
 from common.rpc.slack import list_channels, post_message
 from common.url_for import url_for
-from html_utils import make_row
+from common.html import make_row
 
 
 def init_db():

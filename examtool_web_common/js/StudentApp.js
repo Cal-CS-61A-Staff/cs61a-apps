@@ -109,7 +109,7 @@ export default function StudentApp() {
         <br />
         <Row>
           <Col>
-            <h1>Midterm</h1>
+            <h1>Exam</h1>
           </Col>
         </Row>
         <Row>

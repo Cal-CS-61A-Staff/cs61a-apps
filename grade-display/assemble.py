@@ -1,8 +1,10 @@
 import os
 import pandas as pd
+import numpy as np
 import requests
 
 from common.rpc.howamidoing import upload_grades
+from common.rpc.auth import read_spreadsheet
 
 ROSTER = "data/roster.csv"
 GRADES = "data/okpy_grades.csv"
@@ -19,9 +21,19 @@ def csv(name):
     return pd.read_csv(os.path.join(__location__, name), dtype={"sid": str, "SID": str})
 
 
+def web_csv(url, sheet):
+    resp = read_spreadsheet(url=url, sheet_name=sheet)
+    cols = resp[0]
+    data = [x[: len(cols)] for x in resp[1:]]
+    for row in data:
+        while len(row) < len(cols):
+            row.append(0)
+    return pd.DataFrame(data, columns=cols)
+
+
 # exam recovery calculations
 def attendance(row):
-    return row["Tutorial Attendance (Total)"]  # special formula for FA20 restructure
+    return row["Tutorial Attendance (Raw)"]  # special formula for FA20 restructure
 
 
 #    return sum(row["Discussion {} (Total)".format(i)] for i in range(1, 13) if i != 8)
@@ -36,28 +48,39 @@ def exam_recovery(your_exam_score, attendance, max_exam_score, cap=10):
     return max_recovery * recovery_ratio
 
 
-def assemble(gscope, recovery=False, sections=False):
+def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     print("Loading scores data...")
     roster = csv(ROSTER).rename(columns={"sid": "SID", "email": "Email"})
     grades = csv(GRADES)
 
-    grades = grades.drop("Tutorial Attendance (Total)", axis=1)
-
     # Fall 2020 Tutorials
     if sections:
         tutorials = csv(TUTORIALS)
-        tutorials.fillna(0)
+        tutorials = tutorials.fillna(0)
         grades = pd.merge(grades, tutorials, how="left", on="Email")
+
+        grades["Tutorial Attendance (Raw)"] = grades[
+            ["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]
+        ].values.max(1)
+        grades = grades.drop(
+            [
+                "Tutorial Attendance (Total)",
+                "Tutorial Attendance CS Scholars (Total)",
+                "Tutorial Attendance (Might be outdated, check tutorials.cs61a.org and howamidoing.cs61a.org) (Total)",
+            ],
+            axis=1,
+        )
 
     if gscope:
         for name in gscope:
             scores = csv(f"data/{name}.csv")[["SID", "Total Score"]]
-            scores.fillna(0)
+            scores = scores.fillna(0)
             grades = pd.merge(grades, scores, how="left", on="SID").rename(
                 columns={"Total Score": f"{gscope[name]} (Raw)"}
             )
 
     out = pd.merge(roster, grades, how="left", on="Email")
+    columns = [*grades.columns, "name"]
 
     if recovery:
         print("Calculating recovery points...")
@@ -66,22 +89,27 @@ def assemble(gscope, recovery=False, sections=False):
                 lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40),
                 axis=1,
             )
+            columns.append("Midterm 1 (Recovery)")
 
         if "mt2" in gscope:
             out["Midterm 2 (Recovery)"] = out.apply(
                 lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50),
                 axis=1,
             )
+            columns.append("Midterm 2 (Recovery)")
 
     out = out.rename(columns={"SID_x": "SID"})
 
+    if adjustments:
+        print("Applying adjustments...")
+        adj = web_csv(*adjustments)
+        adj = adj.fillna(0)
+        out = pd.merge(out, adj, how="left", on="Email")
+        columns.extend(adj.columns[1:])
+
     # finalize
-    if recovery:
-        out = out[
-            [*grades.columns, "name", "Midterm 1 (Recovery)", "Midterm 2 (Recovery)"]
-        ]
-    else:
-        out = out[[*grades.columns, "name"]]
+    out = out[columns]
+    out = out.replace("", np.nan)
 
     finalized = out.fillna(0)
     finalized = finalized.rename(columns={"name": "Name"})

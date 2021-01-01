@@ -59,7 +59,7 @@ def make_refresh_post(refresh_token):
         "refresh_token": refresh_token,
     }
     info = make_token_post(server_url(), data)
-    return info["access_token"], int(info["expires_in"])
+    return info["access_token"], int(info["expires_in"]), info["refresh_token"]
 
 
 def get_storage():
@@ -89,7 +89,7 @@ def update_storage(data):
     cur_time = int(time.time())
 
     with connect_db() as db:
-        db("TRUNCATE TABLE tokens")
+        db("DELETE FROM tokens")
         db(
             "INSERT INTO tokens (access_token, expires_at, refresh_token) VALUES (%s, %s, %s)",
             [access_token, cur_time + expires_in, refresh_token],
@@ -101,7 +101,7 @@ def refresh_local_token():
     access_token, expires_at, refresh_token = get_storage()
     if cur_time < expires_at - 10:
         return access_token
-    access_token, expires_in = make_refresh_post(refresh_token)
+    access_token, expires_in, refresh_token = make_refresh_post(refresh_token)
     if not (access_token and expires_in):
         raise AuthenticationException(
             "Authentication failed and returned an empty token."
