@@ -122,8 +122,8 @@ def trigger_build():
         target = request.args["app"]
     else:
         target = None
-    trigger_build_sync(
-        pr_number=int(request.args["pr_number"]), target_app=target, noreply=True
+    handle_trigger_build_sync(
+        pr_number=int(request.args["pr_number"]), target_app=target  # , noreply=True
     )
     return html(f"Building PR <code>{request.args['pr_number']}</code>!")
 
@@ -216,6 +216,7 @@ def webhook():
                         pr.number,
                         pack(repo.clone_url, pr.head.sha),
                         BuildStatus.pushed,
+                        None,
                         None,
                     )
 
