@@ -121,7 +121,7 @@ def container_log(name):
 def check_auth(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        if not (is_logged_in() and is_admin(get_user()["email"])):
+        if not (is_logged_in() and is_admin(course="cs61a", email=get_user()["email"])):
             return login()
         return func(*args, **kwargs)
 
