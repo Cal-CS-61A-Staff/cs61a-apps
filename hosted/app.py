@@ -1,6 +1,7 @@
 import os
 from dna import DNA
-from flask import Flask
+from flask import Flask, abort
+from functools import wraps
 
 from common.rpc.hosted import (
     add_domain,
@@ -14,6 +15,12 @@ from common.rpc.hosted import (
 )
 from common.rpc.secrets import only
 from common.shell_utils import sh
+from common.oauth_client import (
+    create_oauth_client,
+    is_logged_in,
+    is_staff,
+    login,
+)
 
 CERTBOT_ARGS = [
     "--dns-google",
@@ -113,6 +120,23 @@ def service_log():
 def container_log(name):
     return dict(success=True, logs=dna.docker_logs(name))
 
+
+def check_auth(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if not is_logged_in():
+            return login()
+        if not is_staff("cs61a"):
+            abort(401)
+        return func(*args, **kwargs)
+
+    return wrapped
+
+
+create_oauth_client(app, "hosted-apps")
+
+dna_api = dna.create_api_client(precheck=check_auth)
+app.register_blueprint(dna_api, url_prefix="/api")
 
 # PR Proxy Setup
 from dna.utils import Certbot
