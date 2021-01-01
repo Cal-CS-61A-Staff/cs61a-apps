@@ -2,8 +2,10 @@ import os
 import subprocess
 import sys
 from contextlib import contextmanager
+from io import BytesIO
 from shutil import rmtree
-from typing import List
+from typing import List, TextIO, Union
+from typing.io import IO
 
 
 def sh(
@@ -74,3 +76,18 @@ def tmp_directory(*, clean=False):
         yield None
     finally:
         os.chdir(main_dir)
+
+
+@contextmanager
+def redirect_descriptor(
+    src: Union[IO, TextIO, BytesIO], target: Union[IO, TextIO, BytesIO]
+):
+    src_fd: int = src.fileno()
+    with os.fdopen(os.dup(src_fd), "wb") as saved:
+        src.flush()
+        os.dup2(target.fileno(), src_fd)
+        try:
+            yield src
+        finally:
+            src.flush()
+            os.dup2(saved.fileno(), src_fd)
