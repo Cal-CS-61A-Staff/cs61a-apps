@@ -91,15 +91,16 @@ def deploy_prod_app():
     if not is_admin(course="cs61a", email=email):
         abort(401)
     app = request.args["app"]
-    deploy_prod_app_sync(target_app=app, noreply=True)
-    return html(f"Deploying <code>{app}</code> from master!")
-
-
-@deploy_prod_app_sync.bind(app)
-@validates_master_secret
-def handle_deploy_prod_app_sync(app, is_staging, target_app):
-    if app != "buildserver" or is_staging:
-        abort(401)
+    target_app = app
+    #     deploy_prod_app_sync(target_app=app, noreply=True)
+    #     return html(f"Deploying <code>{app}</code> from master!")
+    #
+    #
+    # @deploy_prod_app_sync.bind(app)
+    # @validates_master_secret
+    # def handle_deploy_prod_app_sync(app, is_staging, target_app):
+    #     if app != "buildserver" or is_staging:
+    #         abort(401)
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     land_commit(
@@ -122,17 +123,17 @@ def trigger_build():
         target = request.args["app"]
     else:
         target = None
-    trigger_build_sync(
-        pr_number=int(request.args["pr_number"]), target_app=target, noreply=True
+    handle_trigger_build_sync(
+        pr_number=int(request.args["pr_number"]), target_app=target  # , noreply=True
     )
     return html(f"Building PR <code>{request.args['pr_number']}</code>!")
 
 
-@trigger_build_sync.bind(app)
-@validates_master_secret
-def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
-    if app not in ("slack", "buildserver") or is_staging:
-        abort(401)
+# @trigger_build_sync.bind(app)
+# @validates_master_secret
+def handle_trigger_build_sync(pr_number, target_app=None):
+    # if app not in ("slack", "buildserver") or is_staging:
+    #     abort(401)
 
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
@@ -216,6 +217,7 @@ def webhook():
                         pr.number,
                         pack(repo.clone_url, pr.head.sha),
                         BuildStatus.pushed,
+                        None,
                         None,
                     )
 
