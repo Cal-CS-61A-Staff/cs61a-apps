@@ -135,7 +135,7 @@ def check_auth(func):
 create_oauth_client(app, "hosted-apps")
 
 dna_api = dna.create_api_client(precheck=check_auth)
-app.register_blueprint(dna_api, url_prefix="/api")
+app.register_blueprint(dna_api, url_prefix="/dna")
 
 dna_logs = dna.create_logs_client(precheck=check_auth)
 app.register_blueprint(dna_logs, url_prefix="/logs")
