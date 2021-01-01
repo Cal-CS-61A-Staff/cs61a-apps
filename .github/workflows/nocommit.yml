@@ -13,5 +13,3 @@ jobs:
       with:
         github-token: ${{github.token}}
         bodyDoesNotContain: "@nocommit"
-        filesChanged: 1
-        linesChanged: 1
