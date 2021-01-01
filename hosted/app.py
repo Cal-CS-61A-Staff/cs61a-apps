@@ -88,6 +88,10 @@ def new(img, name=None, env={}):
         environment=env,
         volumes=volumes,
     )
+    dna.add_domain(
+        name,
+        f"{name}.hosted.cs61a.org",
+    )
 
     return dict(success=True)
 
