@@ -1,4 +1,6 @@
 import traceback
+from io import StringIO
+from contextlib import redirect_stderr, redirect_stdout
 from typing import Iterable, Optional, Union
 
 from github.File import File
@@ -102,8 +104,10 @@ def land_commit(
         )
         apps = [App(target) for target in targets]
         for app in apps:
+            logs = StringIO()
             try:
-                land_app(app, pr_number, sha, repo)
+                with redirect_stdout(logs), redirect_stderr(logs):
+                    land_app(app, pr_number, sha, repo)
             except Exception as e:
                 print(e)
                 traceback.print_exc()

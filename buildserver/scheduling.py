@@ -2,6 +2,7 @@ from time import time
 from typing import Dict, List, Optional
 
 from common.db import connect_db
+from common.rpc.paste import get_paste_url, paste_text
 from github_utils import BuildStatus, update_status
 
 
@@ -13,7 +14,8 @@ with connect_db() as db:
     pr_number int,
     status varchar(128),
     packed_ref varchar(256),
-    url varchar(256)
+    url varchar(256),
+    log_url varchar(256)
 );
 """
     )
@@ -102,7 +104,13 @@ def report_build_status(
     packed_ref: str,
     status: BuildStatus,
     url: Optional[str],
+    log_data: str,
 ):
+    log_url = get_paste_url(
+        paste_text(
+            data=log_data,
+        )
+    )
     with connect_db() as db:
         existing = db(
             "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND packed_ref=%s",
@@ -115,13 +123,13 @@ def report_build_status(
         if not existing:
             # we have just been pushed or manually triggered
             db(
-                "INSERT INTO builds VALUES (%s, %s, %s, %s, %s, %s)",
-                [time(), target, pr_number, status.name, packed_ref, url],
+                "INSERT INTO builds VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                [time(), target, pr_number, status.name, packed_ref, url, log_url],
             )
         else:
             db(
-                "UPDATE builds SET status=%s, url=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
-                [status.name, url, target, pr_number, packed_ref],
+                "UPDATE builds SET status=%s, url=%s, log_url=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+                [status.name, url, target, pr_number, packed_ref, log_url],
             )
     update_status(
         packed_ref,
