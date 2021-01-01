@@ -17,6 +17,7 @@ from common.rpc.secrets import only
 from common.shell_utils import sh
 from common.oauth_client import (
     create_oauth_client,
+    is_logged_in,
     login,
     get_user,
 )
@@ -120,7 +121,7 @@ def container_log(name):
 def check_auth(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        if not (get_user() and is_admin(get_user()["email"])):
+        if not (is_logged_in() and is_admin(get_user()["email"])):
             return login()
         return func(*args, **kwargs)
 
