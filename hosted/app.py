@@ -1,6 +1,6 @@
 import os
 from dna import DNA
-from flask import Flask, abort
+from flask import Flask
 from functools import wraps
 
 from common.rpc.hosted import (
