@@ -54,7 +54,7 @@ def enqueue_builds(
             if status is None:
                 # we have just been pushed or manually triggered
                 db(
-                    "INSERT INTO builds VALUES (%s, %s, %s, 'queued', %s, NULL)",
+                    "INSERT INTO builds VALUES (%s, %s, %s, 'queued', %s, NULL, NULL)",
                     [time(), target, pr_number, packed_ref],
                 )
             else:
@@ -129,7 +129,7 @@ def report_build_status(
         else:
             db(
                 "UPDATE builds SET status=%s, url=%s, log_url=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
-                [status.name, url, target, pr_number, packed_ref, log_url],
+                [status.name, url, log_url, target, pr_number, packed_ref],
             )
     update_status(
         packed_ref,

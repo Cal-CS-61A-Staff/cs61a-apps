@@ -128,9 +128,9 @@ def update_status(packed_ref: str, pr_number: int):
         message += (
             "**Successful Builds**\n"
             + "\n".join(
-                f" - [{host}](https://{host}) ([logs]({log_url})) [{sha}]"
+                f" - [{host}](https://{host}) ({sha}) [[logs]({log_url})]"
                 if host
-                else f" - `{app}` ([logs]({log_url})) [{sha}]"
+                else f" - `{app}` ({sha}) [[logs]({log_url})]"
                 for app, host, sha, log_url in success
             )
             + "\n\n"
@@ -140,7 +140,7 @@ def update_status(packed_ref: str, pr_number: int):
         message += (
             "**Failed Builds**\n"
             + "\n".join(
-                f" - `{app}` ([logs]({log_url})) [{sha}]"
+                f" - `{app}` ({sha}) [[logs]({log_url})]"
                 for app, sha, log_url in failure
             )
             + "\n\n"
