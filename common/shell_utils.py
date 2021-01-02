@@ -7,7 +7,13 @@ from typing import List
 
 
 def sh(
-    *args, env={}, capture_output=False, stream_output=False, quiet=False, shell=False
+    *args,
+    env={},
+    capture_output=False,
+    stream_output=False,
+    quiet=False,
+    shell=False,
+    cwd=None,
 ):
     assert not (
         capture_output and stream_output
@@ -26,6 +32,7 @@ def sh(
             universal_newlines=True,
             bufsize=1,
             shell=shell,
+            cwd=cwd,
         )
 
         def generator():
@@ -43,9 +50,13 @@ def sh(
 
         return generator()
     elif capture_output:
-        out = subprocess.run(args, env=env, capture_output=capture_output, shell=shell)
+        out = subprocess.run(
+            args, env=env, capture_output=capture_output, shell=shell, cwd=cwd
+        )
     else:
-        out = subprocess.run(args, env=env, stdout=subprocess.PIPE, shell=shell)
+        out = subprocess.run(
+            args, env=env, stdout=subprocess.PIPE, shell=shell, cwd=cwd
+        )
     if capture_output and not quiet:
         print(out.stdout, file=sys.stdout)
         print(out.stderr, file=sys.stderr)
