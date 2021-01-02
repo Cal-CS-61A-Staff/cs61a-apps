@@ -217,6 +217,7 @@ def webhook():
                         pack(repo.clone_url, pr.head.sha),
                         BuildStatus.pushed,
                         None,
+                        None,
                     )
 
         elif payload["action"] == "closed":

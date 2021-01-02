@@ -9,7 +9,7 @@ import requests
 from app_config import App, CLOUD_RUN_DEPLOY_TYPES, NO_PR_BUILD_DEPLOY_TYPES
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
-from common.rpc.hosted import delete, list_apps
+from common.rpc.hosted import delete, list_apps, create_pr_subdomain
 from common.rpc.secrets import get_secret
 from common.shell_utils import sh
 from conf import STATIC_SERVER
@@ -112,8 +112,10 @@ def update_service_routes(apps: List[App], pr_number: int):
     for app in apps:
         for hostname in get_pr_subdomains(app, pr_number):
             if isinstance(hostname, PRHostname):
-                create_subdomain(
-                    hostname.app_name, hostname.pr_number, hostname.target_hostname
+                create_pr_subdomain(
+                    app=hostname.app_name,
+                    pr_number=hostname.pr_number,
+                    pr_host=hostname.target_hostname,
                 )
 
 
@@ -176,20 +178,3 @@ def get_pr_subdomains(app: App, pr_number: int) -> List[Hostname]:
         assert False, "Unknown deploy type, failed to create PR domains"
 
     return out
-
-
-def create_subdomain(app_name: str, pr_number: int, hostname: str):
-    for _ in range(2):
-        try:
-            requests.post(
-                "https://pr.cs61a.org/create_subdomain",
-                json=dict(
-                    app=app_name,
-                    pr_number=pr_number,
-                    pr_host=hostname,
-                    secret=get_secret(secret_name="PR_WEBHOOK_SECRET"),
-                ),
-            )
-        except requests.exceptions.ConnectionError:
-            # pr_proxy will throw when nginx restarts, but that's just expected
-            sleep(5)  # let nginx restart

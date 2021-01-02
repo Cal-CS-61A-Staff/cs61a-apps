@@ -1,4 +1,6 @@
+import tempfile
 import traceback
+from sys import stderr, stdout
 from typing import Iterable, Optional, Union
 
 from github.File import File
@@ -9,6 +11,7 @@ from app_config import App
 from build import build, clone_commit
 from common.db import connect_db
 from common.rpc.buildserver import clear_queue
+from common.shell_utils import redirect_descriptor
 from dependency_loader import load_dependencies
 from deploy import deploy_commit
 from external_build import run_highcpu_build
@@ -102,31 +105,38 @@ def land_commit(
         )
         apps = [App(target) for target in targets]
         for app in apps:
-            try:
-                land_app(app, pr_number, sha, repo)
-            except Exception as e:
-                print(e)
-                traceback.print_exc()
-                report_build_status(
-                    app.name,
-                    pr_number,
-                    pack(repo.clone_url, sha),
-                    BuildStatus.failure,
-                    None,
-                )
-            else:
-                report_build_status(
-                    app.name,
-                    pr_number,
-                    pack(repo.clone_url, sha),
-                    BuildStatus.success,
-                    None
-                    if app.config is None
-                    else ",".join(
-                        hostname.to_str()
-                        for hostname in get_pr_subdomains(app, pr_number)
-                    ),
-                )
+            with tempfile.TemporaryFile("w+") as logs:
+                try:
+                    with redirect_descriptor(stdout, logs), redirect_descriptor(
+                        stderr, logs
+                    ):
+                        land_app(app, pr_number, sha, repo)
+                except:
+                    traceback.print_exc(file=logs)
+                    logs.seek(0)
+                    report_build_status(
+                        app.name,
+                        pr_number,
+                        pack(repo.clone_url, sha),
+                        BuildStatus.failure,
+                        None,
+                        logs.read(),
+                    )
+                else:
+                    logs.seek(0)
+                    report_build_status(
+                        app.name,
+                        pr_number,
+                        pack(repo.clone_url, sha),
+                        BuildStatus.success,
+                        None
+                        if app.config is None
+                        else ",".join(
+                            hostname.to_str()
+                            for hostname in get_pr_subdomains(app, pr_number)
+                        ),
+                        logs.read(),
+                    )
 
             if app.config is not None:
                 update_service_routes([app], pr_number)

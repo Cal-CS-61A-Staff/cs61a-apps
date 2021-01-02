@@ -43,7 +43,7 @@ def update_status(packed_ref: str, pr_number: int):
     elif all(status == BuildStatus.building for _, status in statuses):
         repo.get_commit(sha).create_status(
             "pending",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserver",
             "Pusher is building all modified services",
             "Pusher",
         )
@@ -51,7 +51,7 @@ def update_status(packed_ref: str, pr_number: int):
         # There are no failures, but not everything is building / built
         repo.get_commit(sha).create_status(
             "pending",
-            "https://buildserver.cs61a.org",
+            "https://logs.cs61a.org/service/buildserverg",
             "You must build all modified apps before merging",
             "Pusher",
         )
@@ -70,27 +70,27 @@ def update_status(packed_ref: str, pr_number: int):
     with connect_db() as db:
         for app in apps:
             successful_build = db(
-                "SELECT url, unix, packed_ref FROM builds WHERE app=%s AND pr_number=%s AND status='success' ORDER BY unix DESC LIMIT 1",
+                "SELECT url, log_url, unix, packed_ref FROM builds WHERE app=%s AND pr_number=%s AND status='success' ORDER BY unix DESC LIMIT 1",
                 [app, pr_number],
             ).fetchone()
             if successful_build:
-                url, success_unix, packed_ref = successful_build
+                url, log_url, success_unix, packed_ref = successful_build
                 _, sha = unpack(packed_ref)
                 if url:
                     for link in url.split(","):
-                        success.append((app, link, sha))
+                        success.append((app, link, sha, log_url))
                 else:
-                    success.append((app, None, sha))
+                    success.append((app, None, sha, log_url))
 
             failed_build = db(
-                "SELECT unix, packed_ref FROM builds WHERE app=%s AND pr_number=%s AND status='failure' ORDER BY unix DESC LIMIT 1",
+                "SELECT unix, log_url, packed_ref FROM builds WHERE app=%s AND pr_number=%s AND status='failure' ORDER BY unix DESC LIMIT 1",
                 [app, pr_number],
             ).fetchone()
             if failed_build:
-                unix, packed_ref = failed_build
+                unix, log_url, packed_ref = failed_build
                 if not successful_build or success_unix < unix:
                     _, sha = unpack(packed_ref)
-                    failure.append((app, sha))
+                    failure.append((app, sha, log_url))
 
             running_build = db(
                 "SELECT packed_ref FROM builds WHERE app=%s AND pr_number=%s AND status='building'",
@@ -128,10 +128,10 @@ def update_status(packed_ref: str, pr_number: int):
         message += (
             "**Successful Builds**\n"
             + "\n".join(
-                f" - [{host}](https://{host}) ({sha})"
+                f" - [{host}](https://{host}) ({sha}) [[logs]({log_url})]"
                 if host
-                else f" - `{app}` ({sha})"
-                for app, host, sha in success
+                else f" - `{app}` ({sha}) [[logs]({log_url})]"
+                for app, host, sha, log_url in success
             )
             + "\n\n"
         )
@@ -139,7 +139,10 @@ def update_status(packed_ref: str, pr_number: int):
     if failure:
         message += (
             "**Failed Builds**\n"
-            + "\n".join(f" - `{app}` ({sha})" for app, sha in failure)
+            + "\n".join(
+                f" - `{app}` ({sha}) [[logs]({log_url})]"
+                for app, sha, log_url in failure
+            )
             + "\n\n"
         )
 
@@ -155,11 +158,6 @@ def update_status(packed_ref: str, pr_number: int):
             "**Queued Builds**\n"
             + "\n".join(f" - `{app}` ({sha})" for app, sha in queued)
             + "\n\n"
-        )
-
-    if success or failure or running or queued:
-        message += (
-            "View detailed build logs at [logs.cs61a.org](https://logs.cs61a.org).\n\n"
         )
 
     if (success or failure or running or queued) and triggerable:
