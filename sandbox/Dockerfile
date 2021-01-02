@@ -2,8 +2,9 @@ FROM python:buster
 
 RUN pip install -U pip && pip install pipenv
 RUN apt-get update \
-  && apt install -y --no-install-recommends texlive-full \
-  && apt-get install -y latexmk
+ && apt-get install -y curl git vim nginx make build-essential
+ && apt install -y --no-install-recommends texlive-full \
+ && apt-get install -y latexmk
 RUN apt-get update && apt-get install -y rsync
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
@@ -13,4 +14,4 @@ COPY . ./
 
 RUN pip install -r requirements.txt
 
-CMD gunicorn -b :$PORT -w 4 main:app -t 3000
+CMD gunicorn -b :14789 -w 4 ide:app -t 3000
