@@ -5,11 +5,6 @@ __all__ = ["declare_bash_rule"]
 global callback
 
 
-def _inject_callback(injected_callback):
-    global callback
-    callback = injected_callback
-
-
 def declare_bash_rule(
     *,
     name: Optional[str] = None,
@@ -17,9 +12,13 @@ def declare_bash_rule(
     action: Optional[str] = None,
     outputs: Union[str, Sequence[str]] = (),
 ):
+    def impl(ctx):
+        if action:
+            ctx.sh(action)
+
     callback(
         name=name,
         deps=deps,
-        action=lambda ctx: (ctx.sh(action) if action else None),
+        action=impl,
         outputs=outputs,
     )

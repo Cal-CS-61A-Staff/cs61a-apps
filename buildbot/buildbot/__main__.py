@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 from abc import ABC
 from dataclasses import dataclass
 import os
 from pathlib import Path
-from queue import SimpleQueue
+from queue import Queue
+from shutil import SameFileError, copyfile, rmtree
+from threading import Lock, Thread
 from typing import Callable, Dict, List, Optional, Sequence, Union
 
 import click
@@ -23,8 +26,11 @@ class Context(ABC):
 
 
 class PreviewContext(Context):
+    def __init__(self):
+        self.log = []
+
     def sh(self, cmd: str):
-        return cmd
+        self.log.append(cmd.encode("utf-8"))
 
 
 class ExecutionContext(Context):
@@ -68,6 +74,9 @@ class RuntimeAction:
     outputs: Sequence[str]
     working_directory: str
 
+    # synchronization
+    lock: Lock
+
     # debugging
     name: str
 
@@ -80,6 +89,19 @@ class RuntimeAction:
 
 class BuildException(Exception):
     pass
+
+
+def find_root():
+    repo_root = os.path.abspath(os.path.curdir)
+    while True:
+        if "WORKSPACE" in os.listdir(repo_root):
+            return repo_root
+        repo_root = os.path.dirname(repo_root)
+        if repo_root == os.path.dirname(repo_root):
+            break
+    raise BuildException(
+        "Unable to find WORKSPACE file - are you in the project directory?"
+    )
 
 
 def get_repo_files():
@@ -104,8 +126,8 @@ def normalize_path(repo_root, build_root, path):
         path = os.path.join(repo_root, path[2:])
     else:
         path = os.path.join(build_root, path)
-    path = Path(path)
-    repo_root = Path(repo_root)
+    path = Path(path).absolute()
+    repo_root = Path(repo_root).absolute()
     if repo_root not in path.parents:
         raise BuildException(
             f"Target `{path}` is not in the root directory of the repo."
@@ -136,11 +158,13 @@ def make_callback(
         if isinstance(outputs, str):
             outputs = [outputs]
         action = PreparingAction(
-            name,
-            build_root,
-            [normalize_path(repo_root, build_root, dep) for dep in deps],
-            action,
-            outputs,
+            name=name,
+            location=build_root,
+            deps=[normalize_path(repo_root, build_root, dep) for dep in deps],
+            action=action,
+            outputs=[
+                normalize_path(repo_root, build_root, output) for output in outputs
+            ],
         )
         for output in outputs:
             add_target_action(normalize_path(repo_root, build_root, output), action)
@@ -151,15 +175,35 @@ def make_callback(
     return callback
 
 
+def copy_helper(*, src_root, dest_root, src_names, dest_names=None, symlink=False):
+    if not dest_names:
+        dest_names = src_names
+    assert len(src_names) == len(dest_names)
+    for src_name, dest_name in zip(src_names, dest_names):
+        src = Path(src_root).joinpath(src_name)
+        dest = Path(dest_root).joinpath(dest_name)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        try:
+            if symlink:
+                Path(dest).symlink_to(src)
+            else:
+                copyfile(src, dest)
+        except SameFileError:
+            pass
+
+
 @click.command()
 @click.argument("target")
-def cli(target):
+@click.option("--threads", "-t", default=4)
+@click.option("--cache-directory", default=".cache")
+def cli(target: str, threads: int, cache_directory: str):
     """
     This is a `make` alternative with a simpler syntax and some useful features.
     """
 
     # loading phase
-    repo_root = "."  # fixme look for a WORKSPACE file
+    repo_root = find_root()
+    os.chdir(repo_root)
 
     src_files = get_repo_files()
     build_files = [file for file in src_files if file.split("/")[-1] == "BUILD"]
@@ -181,7 +225,16 @@ def cli(target):
     preparing_to_runtime_action_lookup = {}
     for action in set(target_action_lookup.values()):
         preparing_to_runtime_action_lookup[action] = RuntimeAction(
-            [], [], [], action.action, [], action.outputs, action.location, str(action)
+            name=str(action),
+            action=action.action,
+            outputs=action.outputs,
+            working_directory=action.location,
+            lock=Lock(),
+            # to be filled in later
+            dependencies=[],
+            remaining_action_dependencies=[],
+            dependents=[],
+            inputs=[],
         )
 
     for preparing_action, runtime_action in preparing_to_runtime_action_lookup.items():
@@ -232,24 +285,106 @@ def cli(target):
         if not action.remaining_action_dependencies:
             start_actions.add(action)
 
-    find_dependencies(
-        preparing_to_runtime_action_lookup[target_action_lookup[target]], []
-    )
+    target_runtime_action = preparing_to_runtime_action_lookup[
+        target_action_lookup[target]
+    ]
+
+    find_dependencies(target_runtime_action, [])
 
     # execution phase
-    work_queue: SimpleQueue[RuntimeAction] = SimpleQueue()
+    work_queue: Queue[Optional[RuntimeAction]] = Queue()
     for action in start_actions:
         work_queue.put(action)
 
-    while True:
-        # fixme: does not terminate!
-        todo = work_queue.get()
-        context = ExecutionContext(todo.working_directory)
-        todo.action(context)
-        for dependent in todo.dependents:
-            dependent.remaining_action_dependencies.remove(todo)
-            if not dependent.remaining_action_dependencies:
-                work_queue.put(dependent)
+    def worker(index: int):
+        scratch_path = Path(repo_root).joinpath(Path(f".scratch_{index}"))
+        if scratch_path.exists():
+            rmtree(scratch_path)
+        while True:
+            todo = work_queue.get()
+            if todo is None:
+                return
+            # first check if it's cached
+            preview_context = PreviewContext()
+            todo.action(preview_context)
+            m = hashlib.md5()
+            for log in preview_context.log:
+                m.update(log)
+            for input_path in todo.inputs:
+                m.update(input_path.encode("utf-8"))
+                with open(input_path, "rb") as f:
+                    m.update(f.read())
+            for output_path in todo.outputs:
+                m.update(output_path.encode("utf-8"))
+            key = m.hexdigest()
+            cache_location = Path(cache_directory).joinpath(key)
+            cache_output_names = [
+                hashlib.md5(output_path.encode("utf-8")).hexdigest()
+                for output_path in todo.outputs
+            ]
+            if cache_location.exists():
+                try:
+                    copy_helper(
+                        src_root=cache_location,
+                        src_names=cache_output_names,
+                        dest_root=repo_root,
+                        dest_names=todo.outputs,
+                    )
+                except FileNotFoundError:
+                    raise BuildException(
+                        "Cache corrupted. This should never happen unless you modified the cache directory manually!"
+                    )
+            else:
+                scratch_path.mkdir(exist_ok=True)
+                copy_helper(
+                    src_root=repo_root,
+                    src_names=todo.inputs,
+                    dest_root=scratch_path,
+                    symlink=True,
+                )
+                todo.action(
+                    ExecutionContext(scratch_path.joinpath(todo.working_directory))
+                )
+                try:
+                    copy_helper(
+                        src_root=scratch_path,
+                        src_names=todo.outputs,
+                        dest_root=repo_root,
+                    )
+                except FileNotFoundError as e:
+                    raise BuildException(
+                        f"Output file {e.filename} from rule {todo} was not generated."
+                    )
+                copy_helper(
+                    src_root=scratch_path,
+                    src_names=todo.outputs,
+                    dest_root=cache_location,
+                    dest_names=cache_output_names,
+                )
+                rmtree(scratch_path)
+
+            for dependent in todo.dependents:
+                if dependent in needed:
+                    dependent.lock.acquire()
+                    dependent.remaining_action_dependencies.remove(todo)
+                    if not dependent.remaining_action_dependencies:
+                        work_queue.put(dependent)
+                    dependent.lock.release()
+            work_queue.task_done()
+
+    thread_instances = []
+    for i in range(threads):
+        thread = Thread(target=worker, args=(i,))
+        thread_instances.append(thread)
+        thread.start()
+
+    work_queue.join()
+
+    for _ in range(threads):
+        work_queue.put(None)
+
+    for thread in thread_instances:
+        thread.join()
 
 
 if __name__ == "__main__":

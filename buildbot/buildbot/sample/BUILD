@@ -1,16 +1,22 @@
 from rules import *
 
+
 declare_bash_rule(
-    name="hw2",
-    deps=["out.py"],
-    action="cat out.py > out2.py",
-    outputs="out2.py",
+    deps=["cat.py"],
+    action="mkdir temp && cat cat.py > temp/out_0.py",
+    outputs="temp/out_0.py",
 )
 
 
+for i in range(1, 1000):
+    declare_bash_rule(
+        name=f"hw_{i}",
+        deps=[f"temp/out_{i//2}.py"],
+        action=f"cat temp/out_{i//2}.py > temp/out_{i}.py",
+        outputs=f"temp/out_{i}.py",
+    )
+
 declare_bash_rule(
-    name="hw",
-    deps=["cat.py"],
-    action="cat cat.py > out.py",
-    outputs="out.py",
+    name=f"all",
+    deps=[f"temp/out_{i}.py" for i in range(1000)],
 )
