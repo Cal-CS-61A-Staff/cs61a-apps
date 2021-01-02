@@ -122,8 +122,8 @@ def trigger_build():
         target = request.args["app"]
     else:
         target = None
-    handle_trigger_build_sync(
-        pr_number=int(request.args["pr_number"]), target_app=target  # , noreply=True
+    trigger_build_sync(
+        pr_number=int(request.args["pr_number"]), target_app=target, noreply=True
     )
     return html(f"Building PR <code>{request.args['pr_number']}</code>!")
 
