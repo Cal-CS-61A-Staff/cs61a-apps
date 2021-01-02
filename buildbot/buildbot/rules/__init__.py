@@ -9,16 +9,16 @@ def declare_bash_rule(
     *,
     name: Optional[str] = None,
     deps: Sequence[str] = (),
-    action: Optional[str] = None,
+    cmd: Optional[str] = None,
     outputs: Union[str, Sequence[str]] = (),
 ):
     def impl(ctx):
-        if action:
-            ctx.sh(action)
+        if cmd:
+            ctx.sh(cmd)
 
     callback(
         name=name,
         deps=deps,
-        action=impl,
+        impl=impl,
         outputs=outputs,
     )
