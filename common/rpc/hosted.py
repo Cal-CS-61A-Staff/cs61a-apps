@@ -57,5 +57,5 @@ def container_log(*, name: str):
 
 @requires_master_secret
 @service.route("/api/create_pr_subdomain")
-def create_pr_subdomain(*, app: str, pr_number: str, pr_host: str):
+def create_pr_subdomain(*, app: str, pr_number: int, pr_host: str):
     ...

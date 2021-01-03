@@ -145,7 +145,8 @@ def get_pr_subdomains(app: App, pr_number: int) -> List[Hostname]:
     if app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES:
         hostname = get_hostname(gen_service_name(app.name, pr_number))
         assert hostname is not None
-        out.append(PRHostname(app.name, pr_number, hostname))
+        for pr_consumer in app.config["pr_consumers"]:
+            out.append(PRHostname(pr_consumer, pr_number, hostname))
     elif app.config["deploy_type"] == "static":
         for consumer in app.config["static_consumers"]:
             hostname = get_hostname(gen_service_name(consumer, pr_number))
@@ -163,13 +164,14 @@ def get_pr_subdomains(app: App, pr_number: int) -> List[Hostname]:
                 )
             )
     elif app.config["deploy_type"] == "hosted":
-        out.append(
-            PRHostname(
-                app.name,
-                pr_number,
-                f"{gen_service_name(app.name, pr_number)}.hosted.cs61a.org",
+        for pr_consumer in app.config["pr_consumers"]:
+            out.append(
+                PRHostname(
+                    pr_consumer,
+                    pr_number,
+                    f"{gen_service_name(app.name, pr_number)}.hosted.cs61a.org",
+                )
             )
-        )
     elif app.config["deploy_type"] == "pypi":
         out.append(PyPIHostname(app.config["package_name"], app.deployed_pypi_version))
     elif app.config["deploy_type"] in NO_PR_BUILD_DEPLOY_TYPES:

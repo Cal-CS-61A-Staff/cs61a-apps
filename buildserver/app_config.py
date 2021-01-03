@@ -43,6 +43,7 @@ class Config(TypedDict):
     package_name: str
     static_consumers: List[str]
     service: "Service"
+    pr_consumers: List[str]
 
 
 class Task(TypedDict):
@@ -95,6 +96,9 @@ class App:
                     )
                     self.config["repo"] = self.config.get("repo")
                     self.config["service"] = self.config.get("service")
+                    self.config["pr_consumers"] = self.config.get(
+                        "pr_consumers", [name]
+                    )
             except FileNotFoundError:
                 # app has been deleted in PR
                 self.config = None
