@@ -27,6 +27,13 @@ def main():
     proxy(f"ide.{HOSTNAME}", ide_port, f"ide.{HOSTNAME}")
     proxy(f"*.ide.pr.{HOSTNAME}", ide_port, f"ide.pr.{HOSTNAME}")
 
+    with open(f"/etc/nginx/sites-enabled/default", "w") as f:
+        f.write(
+            DEFAULT_SERVER.format(
+                ide_port=ide_port, sb_port=sandbox_port, nginx_port=NGINX_PORT
+            )
+        )
+
     sh("nginx", "-s", "reload")
 
     ide.communicate()  # make sure docker doesn't close this container
@@ -56,6 +63,22 @@ def proxy(domain, port, fn):
 
     with open(f"/etc/nginx/sites-enabled/{fn}", "w") as f:
         f.write(str(conf))
+
+
+DEFAULT_SERVER = """
+server {
+    location / {
+        include proxy_params
+        if ($http_x_forwarded_for_host ~ "^(.*)ide.(pr.)?cs61a.org(.*)") {
+            proxy_pass http://127.0.0.1:{ide_port};
+        }
+        if ($http_x_forwarded_for_host ~ "^(.*)sb.(pr.)?cs61a.org(.*)") {
+            proxy_pass http://127.0.0.1:{sb_port};
+        }
+    }
+    listen {nginx_port};
+    server_name default_server;
+"""
 
 
 if __name__ == "__main__":
