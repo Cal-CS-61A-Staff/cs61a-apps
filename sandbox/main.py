@@ -68,7 +68,7 @@ def proxy(domain, port, fn):
 DEFAULT_SERVER = """
 server {{
     location / {{
-        include proxy_params
+        include proxy_params;
         if ($http_x_forwarded_for_host ~ "^(.*)ide.(pr.)?cs61a.org(.*)") {{
             proxy_pass http://127.0.0.1:{ide_port};
         }}
