@@ -21,7 +21,7 @@ from common.oauth_client import (
     login,
     get_user,
 )
-from common.course_config import is_admin
+from common.rpc.auth import is_admin
 from common.rpc.slack import post_message
 
 CERTBOT_ARGS = [
@@ -133,7 +133,7 @@ def container_log(name):
 def check_auth(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        if not (is_staff() and is_admin(email=get_user()["email"])):
+        if not (is_staff("cs61a") and is_admin(email=get_user()["email"])):
             return login()
         return func(*args, **kwargs)
 
