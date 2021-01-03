@@ -119,6 +119,9 @@ def start():
             sanitized = os.environ.copy()
             del sanitized["DATABASE_URL"]
             del sanitized["APP_HOME"]
+            del sanitized["APP_MASTER_SECRET"]
+            del sanitized["ENV"]
+            del sanitized["INSTANCE_CONNECTION_NAME"]
 
             subprocess.Popen(get_server_cmd(username), env=sanitized)
             sh("sleep", "2")  # give the server a couple of seconds to start up
