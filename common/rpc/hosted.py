@@ -37,7 +37,9 @@ def delete(*, name: str):
 
 @requires_master_secret
 @service.route("/api/add_domain")
-def add_domain(*, name: str, domain: str, force: bool = False):
+def add_domain(
+    *, name: str, domain: str, force: bool = False, proxy_set_header: dict = {}
+):
     ...
 
 
