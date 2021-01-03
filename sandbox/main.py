@@ -1,5 +1,5 @@
 import subprocess, os, socket
-from nginx_utils import Server, Location
+from utils import Server, Location
 from common.shell_utils import sh
 from common.rpc.secrets import get_secret
 
