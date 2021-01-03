@@ -3,6 +3,9 @@ deploy_type: hosted
 first_party_domains:
   - sb.cs61a.org
   - ide.cs61a.org
+pr_consumers:
+  - sb
+  - ide
 dependencies:
   - repo: Cal-CS-61A-Staff/pdfjs-dist
     src: .

@@ -15,11 +15,13 @@ from common.rpc.hosted import add_domain
 from common.rpc.secrets import get_secret
 from common.shell_utils import sh
 from common.html import html
+from common.url_for import get_host
 from common.db import connect_db
 
 HOSTNAME = os.environ.get("HOSTNAME", "cs61a.org")
-SANDBOX = f"sb.{HOSTNAME}"
-CODESERVER = f"ide.{HOSTNAME}"
+NGINX_PORT = os.environ.get("PORT", "8001")
+
+DEFAULT_USER = "prbuild"
 
 app = Flask(__name__)
 
@@ -41,7 +43,7 @@ with connect_db() as db:
 @app.route("/")
 @auth_only
 def index():
-    username = get_user()["email"].split("@")[0]
+    username = get_username()
 
     out = "<h1>61A Sandbox IDE</h1>\n"
     out += f"Hi {get_user()['name'].split()[0]}! Your IDE is "
@@ -57,7 +59,7 @@ def index():
     config = get_config(username)
 
     out += "active.<br />"
-    out += f"""<form action="https://{username}.{CODESERVER}/login", method="POST" target="_blank">
+    out += f"""<form action="https://{username}.{get_host()}/login", method="POST" target="_blank">
     <input type="hidden" name="base" value="" /><input type="hidden" name="password" value="{config['password']}" />
     <input type="submit" value="Open in New Tab" />
     </form><form action="{url_for('kill')}" method="POST">
@@ -83,8 +85,8 @@ def start():
         sh("useradd", "-b", "/save", "-m", username, "-s", "/bin/bash")
         if HOSTNAME == "cs61a.org":
             add_domain(
-                name="sandbox",
-                domain=f"{username}.{CODESERVER}",
+                name=get_hosted_app_name(),
+                domain=f"{username}.{get_host()}",
                 proxy_set_header={
                     "Host": "$host",
                     "Upgrade": "$http_upgrade",
@@ -95,13 +97,13 @@ def start():
 
     if not get_server_pid(username):
         with db_lock("ide", username):
-            port, passwd = get_open_port(), gen_salt(24)
+            passwd = gen_salt(24)
 
             config = {
                 "socket": f"/tmp/ide-{username}.sock",
                 "auth": "password",
                 "password": passwd,
-                "home": f"https://{CODESERVER}",
+                "home": f"https://{get_host()}",
             }
 
             with open(f"/save/{username}/.code-server.yaml", "w") as csc:
@@ -123,20 +125,23 @@ def start():
                         "Accept-Encoding": "gzip",
                     },
                 ),
-                server_name=f"{username}.{CODESERVER}",
-                listen="8001",
-                error_page=f"502 http://{CODESERVER}",
+                server_name=f"{username}.{get_host()}",
+                listen=NGINX_PORT,
+                error_page=f"502 https://{get_host()}",
             )
 
-            with open(f"/etc/nginx/sites-enabled/{username}.{CODESERVER}", "w") as f:
+            with open(f"/etc/nginx/sites-enabled/{username}.{get_host()}", "w") as f:
                 f.write(str(conf))
             sh("nginx", "-s", "reload")
 
     if not os.path.exists(f"/save/{username}/berkeley-cs61a"):
-        shutil.copytree(
-            "/save/berkeley-cs61a", f"/save/{username}/berkeley-cs61a", symlinks=True
-        )
-        sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
+        if os.path.exists("/save/berkeley-cs61a"):
+            shutil.copytree(
+                "/save/berkeley-cs61a",
+                f"/save/{username}/berkeley-cs61a",
+                symlinks=True,
+            )
+            sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
 
     return redirect(url_for("index"))
 
@@ -163,19 +168,20 @@ def auth_only(func):
     return wrapped
 
 
+def is_prod_build():
+    return ".pr." not in get_host() and "cs61a" in get_host()
+
+
+def get_hosted_app_name():
+    return "sandbox" if is_prod_build() else f"sandbox-pr{get_host().split['.'][0]}"
+
+
+def get_username():
+    return get_user()["email"].split("@")[0] if is_prod_build() else DEFAULT_USER
+
+
 def is_berkeley():
     return get_user()["email"].endswith("@berkeley.edu")
-
-
-def get_open_port():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(("", 0))
-
-    s.listen(1)
-    port = s.getsockname()[1]
-
-    s.close()
-    return port
 
 
 def get_server_cmd(username):
