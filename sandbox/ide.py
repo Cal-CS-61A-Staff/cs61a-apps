@@ -170,7 +170,7 @@ def is_prod_build():
 
 
 def get_hosted_app_name():
-    return "sandbox" if is_prod_build() else f"sandbox-pr{get_host().split['.'][0]}"
+    return "sandbox" if is_prod_build() else f"sandbox-pr{get_host().split('.')[0]}"
 
 
 def get_username():
