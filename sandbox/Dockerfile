@@ -6,7 +6,8 @@ RUN apt-get update \
   && apt-get install -y latexmk
 RUN apt-get update && apt-get install -y rsync
 
-RUN apt-get install -y curl git vim nginx make build-essential
+RUN apt-get install -y curl git vim nginx \
+  && apt-get install -y make build-essential groff
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 ENV APP_HOME /app
