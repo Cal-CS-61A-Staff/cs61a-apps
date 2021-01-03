@@ -39,6 +39,16 @@ with connect_db() as db:
     )
 
 
+def auth_only(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if not is_staff("cs61a") or not is_berkeley():
+            return login()
+        return func(*args, **kwargs)
+
+    return wrapped
+
+
 @app.route("/")
 @auth_only
 def index():
@@ -155,16 +165,6 @@ def kill():
         sh("kill", pid.decode("utf-8")[:-1])
         sh("sleep", "2")  # give the server a couple of seconds to shutdown
     return redirect(url_for("index"))
-
-
-def auth_only(func):
-    @wraps(func)
-    def wrapped(*args, **kwargs):
-        if not is_staff("cs61a") or not is_berkeley():
-            return login()
-        return func(*args, **kwargs)
-
-    return wrapped
 
 
 def is_prod_build():
