@@ -22,7 +22,7 @@ NGINX_PORT = os.environ.get("PORT", "8001")
 
 DEFAULT_USER = "prbuild"
 
-app = Flask(__name__)
+app = Flask(__name__ + "-ide")
 
 create_oauth_client(
     app, "61a-ide", secret_key=get_secret(secret_name="OKPY_IDE_SECRET")
@@ -150,7 +150,7 @@ def start():
             )
             sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
 
-    return redirect(url_for("index"))
+    return redirect("/")
 
 
 @app.route("/kill", methods=["POST"])
@@ -162,7 +162,7 @@ def kill():
     if pid:
         sh("kill", pid.decode("utf-8")[:-1])
         sh("sleep", "2")  # give the server a couple of seconds to shutdown
-    return redirect(url_for("index"))
+    return redirect("/")
 
 
 def is_prod_build():
