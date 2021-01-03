@@ -3,7 +3,7 @@ from utils import Server, Location
 from common.shell_utils import sh
 from common.rpc.secrets import get_secret
 
-HOSTNAME = os.environ.get("HOSTNAME", "cs61a.org")
+HOSTNAME = "cs61a.org"
 NGINX_PORT = os.environ.get("PORT", "8001")
 
 

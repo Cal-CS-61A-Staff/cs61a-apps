@@ -18,7 +18,6 @@ from common.html import html
 from common.url_for import get_host
 from common.db import connect_db
 
-HOSTNAME = os.environ.get("HOSTNAME", "cs61a.org")
 NGINX_PORT = os.environ.get("PORT", "8001")
 
 DEFAULT_USER = "prbuild"
@@ -92,17 +91,16 @@ def start():
 
     if not user_exists:
         sh("useradd", "-b", "/save", "-m", username, "-s", "/bin/bash")
-        if HOSTNAME == "cs61a.org":
-            add_domain(
-                name=get_hosted_app_name(),
-                domain=f"{username}.{get_host()}",
-                proxy_set_header={
-                    "Host": "$host",
-                    "Upgrade": "$http_upgrade",
-                    "Connection": "upgrade",
-                    "Accept-Encoding": "gzip",
-                },
-            )
+        add_domain(
+            name=get_hosted_app_name(),
+            domain=f"{username}.{get_host()}",
+            proxy_set_header={
+                "Host": "$host",
+                "Upgrade": "$http_upgrade",
+                "Connection": "upgrade",
+                "Accept-Encoding": "gzip",
+            },
+        )
 
     if not get_server_pid(username):
         with db_lock("ide", username):
