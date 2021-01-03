@@ -150,7 +150,7 @@ def start():
             )
             sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
 
-    return redirect("/")
+    return redirect(url_for("index"))
 
 
 @app.route("/kill", methods=["POST"])
@@ -162,7 +162,7 @@ def kill():
     if pid:
         sh("kill", pid.decode("utf-8")[:-1])
         sh("sleep", "2")  # give the server a couple of seconds to shutdown
-    return redirect("/")
+    return redirect(url_for("index"))
 
 
 def is_prod_build():
