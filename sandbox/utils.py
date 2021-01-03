@@ -3,16 +3,16 @@ from common.db import connect_db
 
 
 @contextmanager
-def db_lock(db, username):
+def db_lock(active_db, username):
     try:
         with connect_db() as db:
             locked = db(
-                f"SELECT locked FROM {db} WHERE username=%s", [username]
+                f"SELECT locked FROM {active_db} WHERE username=%s", [username]
             ).fetchone()
             if locked is None:
                 # environment does not exist
                 db(
-                    f"INSERT INTO {db} (username, initialized, locked) VALUES (%s, FALSE, TRUE)",
+                    f"INSERT INTO {active_db} (username, initialized, locked) VALUES (%s, FALSE, TRUE)",
                     [username],
                 )
                 yield
@@ -21,18 +21,18 @@ def db_lock(db, username):
                 if locked:
                     # TODO: Some way to force an unlock from the CLI
                     raise BlockingIOError(
-                        f"Another operation is currently taking place on {db}"
+                        f"Another operation is currently taking place on {active_db}"
                     )
                 else:
                     db(
-                        f"UPDATE {db} SET locked=TRUE WHERE username=%s",
+                        f"UPDATE {active_db} SET locked=TRUE WHERE username=%s",
                         [username],
                     )
                     yield
 
     finally:
         with connect_db() as db:
-            db(f"UPDATE {db} SET locked=FALSE WHERE username=%s", [username])
+            db(f"UPDATE {active_db} SET locked=FALSE WHERE username=%s", [username])
 
 
 # Some utilities for NGINX follow. These are originally sourced from:
