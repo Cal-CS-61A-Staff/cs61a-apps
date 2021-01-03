@@ -25,7 +25,6 @@ DEFAULT_USER = "prbuild"
 
 app = Flask(__name__)
 
-# @nocommit because the okpy client doesn't exist yet
 create_oauth_client(
     app, "61a-ide", secret_key=get_secret(secret_name="OKPY_IDE_SECRET")
 )
