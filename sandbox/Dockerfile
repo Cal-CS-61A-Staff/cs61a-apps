@@ -14,4 +14,4 @@ COPY . ./
 
 RUN pip install -r requirements.txt
 
-CMD gunicorn -b :14789 -w 4 ide:app -t 3000
+CMD python main.py
