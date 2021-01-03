@@ -105,8 +105,14 @@ def delete(name):
 
 @add_domain.bind(app)
 @only(["buildserver", "sandbox"])
-def add_domain(name, domain, force_wildcard=False, force_provision=False):
-    return dict(success=dna.add_domain(name, domain, force_wildcard, force_provision))
+def add_domain(
+    name, domain, force_wildcard=False, force_provision=False, proxy_set_header={}
+):
+    return dict(
+        success=dna.add_domain(
+            name, domain, force_wildcard, force_provision, proxy_set_header
+        )
+    )
 
 
 @service_log.bind(app)
@@ -170,9 +176,9 @@ def create_pr_subdomain(app, pr_number, pr_host):
             proxy_connect_timeout="1800",
             proxy_send_timeout="1800",
             send_timeout="1800",
-            **{
-                "proxy_set_header Host": pr_host,
-                "proxy_set_header X-Forwarded-For-Host": f"{pr_number}.{app}.pr.cs61a.org",
+            proxy_set_header={
+                "Host": pr_host,
+                "X-Forwarded-For-Host": f"{pr_number}.{app}.pr.cs61a.org",
             },
         ),
         server_name=f"{pr_number}.{app}.pr.cs61a.org",
