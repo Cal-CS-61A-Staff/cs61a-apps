@@ -1,6 +1,6 @@
 import os, shutil, subprocess, sys, yaml, socket
 from contextlib import contextmanager
-from flask import Flask, request, url_for, redirect
+from flask import Flask, request, redirect
 from werkzeug.security import gen_salt
 from functools import wraps
 from utils import db_lock, Server, Location
@@ -15,7 +15,7 @@ from common.rpc.hosted import add_domain
 from common.rpc.secrets import get_secret
 from common.shell_utils import sh
 from common.html import html
-from common.url_for import get_host
+from common.url_for import get_host, url_for
 from common.db import connect_db
 
 NGINX_PORT = os.environ.get("PORT", "8001")
