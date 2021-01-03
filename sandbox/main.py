@@ -76,8 +76,8 @@ server {
             proxy_pass http://127.0.0.1:{sb_port};
         }
     }
-    listen {nginx_port};
-    server_name default_server;
+    listen {nginx_port} default_server;
+    server_name _;
 """
 
 
