@@ -1,5 +1,26 @@
-import os
+import os, yaml, requests
 from shutil import copyfile
+
+with open("metadata.yaml") as md:
+    metadata = yaml.load(md)
+
+metadata = metadata if metadata else {}
+users = {}
+
+
+def get_name(user):
+    if user not in users:
+        users[user] = (
+            requests.get(f"https://api.github.com/users/{user}").json().get("name", "")
+        )
+    return users[user]
+
+
+def get_user(user):
+    name = get_name(user)
+    if name:
+        return f"{name} (@{user})"
+    return f"@{user}"
 
 
 class WikiApp:
@@ -10,6 +31,12 @@ class WikiApp:
 
         self.name = name if name else self.lines[0][2:-1]
         self.dest = dest if dest else f"{self.path}/_index.md"
+        self.contrib = metadata.get(path, [])
+
+        self.contrib = [
+            f"<a href='https://github.com/{contrib}'>{get_user(contrib)}</a>"
+            for contrib in self.contrib
+        ]
 
 
 EXCLUDE = set(["node_modules", ".pytest_cache", "env"])
@@ -23,7 +50,6 @@ PATHS = {
     ),
     "sicp": WikiApp("sicp", "SICP"),
     "piazzaoncall": WikiApp("piazzaoncall", "Piazza Oncall"),
-    "pr_proxy": WikiApp("pr_proxy", "PR Proxy"),
 }
 
 if not os.path.exists("content"):
@@ -52,6 +78,7 @@ for app_raw in apps:
     with open(f"content/{app.dest}", "w") as c:
         c.write("---\n")
         c.write(f"title: {app.name}\n")
+        c.write(f"contrib: {app.contrib}\n")
         c.write("---\n\n")
         for l in app.lines[1:]:
             c.write(f"{l}")

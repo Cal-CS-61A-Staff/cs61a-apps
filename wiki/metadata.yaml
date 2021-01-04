@@ -1,0 +1,68 @@
+auth:
+  - rahularya50
+buildserver:
+  - rahularya50
+cats:
+  - rahularya50
+code:
+  - rahularya50
+common:
+  - rahularya50
+  - itsvs
+domains:
+  - rahularya50
+examtool:
+  - rahularya50
+grade-display:
+  - itsvs
+hog-calc:
+  - rahularya50
+hog-contest:
+  - rahularya50
+hosted:
+  - itsvs
+howamidoing:
+  - rahularya50
+  - itsvs
+indexer:
+  - rahularya50
+logs:
+  - rahularya50
+loom:
+  - rahularya50
+oh:
+  - rahularya50
+ok-help:
+  - rahularya50
+partnermatcher:
+  - rahularya50
+paste:
+  - rahularya50
+piazzaoncall:
+  - AnimeshAgrawal
+react:
+  - rahularya50
+redirect:
+  - rahularya50
+sandbox:
+  - rahularya50
+  - itsvs
+search:
+  - rahularya50
+secrets:
+  - rahularya50
+sections:
+  - rahularya50
+shortlinks:
+  - rahularya50
+sicp:
+  - rahularya50
+  - itsvs
+slack:
+  - rahularya50
+static-server:
+  - rahularya50
+time:
+  - kavigupta
+wiki:
+  - itsvs
