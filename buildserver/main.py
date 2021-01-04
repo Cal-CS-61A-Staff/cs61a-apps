@@ -137,6 +137,16 @@ def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     pr = repo.get_pull(pr_number)
+
+    if "DO NOT BUILD" in [l.name for l in pr.labels]:
+        repo.get_commit(pr.head.sha).create_status(
+            "failure",
+            "https://logs.cs61a.org/service/buildserver",
+            "This PR has a DO NOT BUILD label on it",
+            "Pusher",
+        )
+        abort(401)
+
     land_commit(pr.head.sha, repo, repo, pr, pr.get_files(), target_app=target_app)
 
 
@@ -205,6 +215,17 @@ def webhook():
         repo_id = payload["repository"]["id"]
         repo = g.get_repo(repo_id)
         pr = repo.get_pull(payload["pull_request"]["number"])
+
+        if repo.full_name != GITHUB_REPO and "DO NOT BUILD" in [
+            l.name for l in pr.labels
+        ]:
+            repo.get_commit(pr.head.sha).create_status(
+                "failure",
+                "https://logs.cs61a.org/service/buildserver",
+                "This PR has a DO NOT BUILD label on it",
+                "Pusher",
+            )
+            abort(401)
 
         if payload["action"] in ("opened", "synchronize", "reopened"):
             if repo.full_name != GITHUB_REPO:
