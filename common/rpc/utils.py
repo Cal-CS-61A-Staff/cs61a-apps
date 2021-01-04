@@ -137,12 +137,7 @@ def create_service(app: str, override=None):
 def requires_master_secret(func):
     @wraps(func)
     def wrapped(**kwargs):
-        try:
-            return func(
-                **kwargs, master_secret=get_master_secret(), access_token=get_token()
-            )
-        except PermissionError:
-            return func(**kwargs, master_secret=get_master_secret())
+        return func(**kwargs, master_secret=get_master_secret())
 
     return wrapped
 

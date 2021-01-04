@@ -28,9 +28,21 @@ def load_all_secrets(*, created_app_name):
 
 def validates_master_secret(func):
     @wraps(func)
-    def wrapped(*, master_secret, **kwargs):
-        app, is_staging = validate_master_secret(master_secret=master_secret)
-        return func(app=app, is_staging=is_staging, **kwargs)
+    def wrapped(
+        *,
+        master_secret=None,
+        _sudo_token=None,
+        _impersonate=None,
+        _is_staging=False,
+        **kwargs
+    ):
+        if master_secret:
+            app, is_staging = validate_master_secret(master_secret=master_secret)
+            return func(app=app, is_staging=is_staging, **kwargs)
+        elif _sudo_token and is_admin_token(_sudo_token):
+            return func(app=_impersonate, is_staging=_is_staging, **kwargs)
+
+        raise PermissionError
 
     return wrapped
 
@@ -39,9 +51,6 @@ def only(allowed_app, *, allow_staging=False):
     def decorator(func):
         @wraps(func)
         def wrapped(master_secret, **kwargs):
-            if "access_token" in kwargs:
-                if is_admin_token(kwargs.pop("access_token")):
-                    return func(**kwargs)
             app, is_staging = validate_master_secret(master_secret=master_secret)
             allowed_apps = (
                 [allowed_app] if isinstance(allowed_app, str) else allowed_app

@@ -16,11 +16,14 @@ def index(path):
     try:
         info = get_user()
         for p in info["participations"]:
-            if p["course"]["offering"] == get_endpoint("cs61a") and p["role"] == "student":	        
+            if (
+                p["course"]["offering"] == get_endpoint("cs61a")
+                and p["role"] == "student"
+            ):
                 return redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     except:
-        pass # don't let the rickroll crash anything else
-    
+        pass  # don't let the rickroll crash anything else
+
     if not is_staff("cs61a"):
         return login()
     bucket = get_bucket(
