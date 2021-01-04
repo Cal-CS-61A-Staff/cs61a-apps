@@ -91,12 +91,12 @@ def create_admins_client(app):
 
     @is_admin.bind(app)
     @key_secure
-    def handle_is_admin(course, email):
+    def handle_is_admin(course, email, force_course=None):
         with connect_db() as db:
             return bool(
                 db(
                     "SELECT * FROM course_admins WHERE email=(%s) AND course=(%s)",
-                    [email, course],
+                    [email, force_course if force_course else course],
                 ).fetchone()
             )
 

@@ -52,7 +52,7 @@ def is_admin(email, course=None):
         return True
     if not course:
         course = get_course()
-    return rpc.auth.is_admin(email=email, course=course)
+    return rpc.auth.is_admin(email=email, course=course, force_course="cs61a")
 
 
 def is_admin_token(access_token):
@@ -61,7 +61,6 @@ def is_admin_token(access_token):
     )
     return ret.status_code == 200 and is_admin(
         ret.json()["data"]["email"],
-        course="cs61a",
     )
 
 
