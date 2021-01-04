@@ -65,8 +65,11 @@ def cli(target: str, threads: int, cache_directory: str):
                     waiting_for_deps = True
                     if runtime_dep not in scheduled_but_not_ready:
                         # enqueue dependency
+                        print(f"Enqueueing dependency {runtime_dep}")
                         scheduled_but_not_ready.add(runtime_dep)
                         work_queue.put(runtime_dep)
+                    else:
+                        print(f"Waiting on already queued dependency {runtime_dep}")
                     # register task in the already queued / executing dependency
                     # so when it finishes we may be triggered
                     runtime_dep.runtime_dependents.append(rule)
@@ -79,8 +82,6 @@ def cli(target: str, threads: int, cache_directory: str):
                 # this input may be stale / unbuilt
                 # if so, do not read it, but instead throw MissingDependency
                 with scheduling_lock:
-                    if input_path not in target_rule_lookup:
-                        raise MissingDependency(input_path)
                     if target_rule_lookup[input_path] not in ready:
                         raise MissingDependency(input_path)
                     # so it's already ready for use!
@@ -96,9 +97,19 @@ def cli(target: str, threads: int, cache_directory: str):
         needed dependencies as possible, without *any* spurious dependencies.
         """
         hashstate = HashState()
+        print(f"Looking for static dependencies of {rule}")
         for dep in rule.deps:
+            if dep in target_rule_lookup:
+                with scheduling_lock:
+                    if target_rule_lookup[dep] not in ready:
+                        print(
+                            f"Static dependency {target_rule_lookup[dep]} of {rule} is not ready, skipping impl"
+                        )
+                        # static deps are not yet ready
+                        break
             hashstate.update(dep.encode("utf-8"))
             try:
+                dep_fetcher(dep, flags="rb")
                 with open(dep, "rb") as f:
                     hashstate.update(f.read())
             except FileNotFoundError:
@@ -114,22 +125,34 @@ def cli(target: str, threads: int, cache_directory: str):
             )
             ok = False
             try:
+                print(f"Running impl of {rule} to discover dynamic dependencies")
                 rule.impl(ctx)
+                print(f"Impl of {rule} completed with discovered deps: {ctx.inputs}")
                 ok = True
             except CacheMiss:
+                print(f"Cache miss while running impl of {rule}")
                 pass  # stops context execution
-            except MissingDependency:
+            except MissingDependency as e:
+                print(
+                    f"Dependencies {e.paths} were unavailable while running impl of {rule}"
+                )
                 pass  # dep already added to ctx.inputs
             # if `ok`, hash loaded dynamic dependencies
             if ok:
+                print(
+                    f"Runtime dependencies resolved for {rule}, now checking dynamic dependencies"
+                )
                 for input_path in ctx.inputs:
                     hashstate.update(input_path.encode("utf-8"))
                     try:
                         data = dep_fetcher(input_path, flags="rb")
-                    except MissingDependency:
+                    except MissingDependency as e:
                         # this dependency was not needed for deps calculation
                         # but is not verified to be up-to-date
                         ok = False
+                        print(
+                            f"Dynamic dependencies {e.paths} were not needed for the impl, but are not up to date"
+                        )
                         break
                     else:
                         with open(input_path, "rb") as f:
@@ -141,15 +164,14 @@ def cli(target: str, threads: int, cache_directory: str):
         return None, rule.deps
 
     def memorize(state: str, target: str, data: str):
-        Path(cache_directory).joinpath(state).joinpath(target).write_text(data)
+        cache_target = Path(cache_directory).joinpath(state).joinpath(target)
+        os.makedirs(os.path.dirname(cache_target), exist_ok=True)
+        cache_target.write_text(data)
 
     def worker(index: int):
         scratch_path = Path(repo_root).joinpath(Path(f".scratch_{index}"))
-
-        def load_deps(deps):
-            copy_helper(
-                src_root=repo_root, dest_root=scratch_path, src_names=deps, symlink=True
-            )
+        if scratch_path.exists():
+            rmtree(scratch_path)
 
         def build(rule: Rule):
             """
@@ -157,6 +179,20 @@ def cli(target: str, threads: int, cache_directory: str):
             obtained. Now we need to run. Either we will successfully finish everything,
             or we will get a missing dependency and have to requeue
             """
+
+            loaded_deps = set()
+
+            def load_deps(deps):
+                deps = set(deps) - loaded_deps
+                loaded_deps.update(deps)
+                print(f"Loading dependencies {deps} into sandbox")
+                copy_helper(
+                    src_root=repo_root,
+                    dest_root=scratch_path,
+                    src_names=deps,
+                    symlink=True,
+                )
+
             load_deps(deps)
             hashstate = HashState()
             for dep in rule.deps:
@@ -188,13 +224,24 @@ def cli(target: str, threads: int, cache_directory: str):
             if todo is None:
                 return
 
+            print(f"Target {todo} popped from queue by worker {i}")
+
             # only from caches, will never run a subprocess
             cache_key, deps = get_deps(todo)
 
             if cache_key is None:
                 # unable to compute cache_key, potentially because not all deps are ready
+                print(
+                    f"Target {todo} either has unbuilt dependencies, "
+                    f"or does not have a cached dynamic dependency resolved"
+                )
                 deps_ready = not enqueue_deps(todo, deps)
+                if deps_ready:
+                    print("Apparently it is missing an input cache in the impl")
+                else:
+                    print("Apparently it is waiting on unbuilt dependencies")
             else:
+                print(f"All the dependencies of target {todo} are ready: {deps}")
                 # if the cache_key is ready, *all* the deps must be ready, not just the discoverable deps!
                 deps_ready = True
 
@@ -208,6 +255,7 @@ def cli(target: str, threads: int, cache_directory: str):
                         for output_path in todo.outputs
                     ]
                     if cache_location.exists():
+                        print(f"Target {todo} is in the cache")
                         try:
                             copy_helper(
                                 src_root=cache_location,
@@ -222,24 +270,33 @@ def cli(target: str, threads: int, cache_directory: str):
                             )
                         else:
                             done = True
-                    else:
-                        # time to execute! but *not* inside the lock
-                        # when we release the lock, stuff may change outside, but
-                        # we don't care since *our* dependencies (so far) are all available
-                        try:
-                            build(todo)
-                            copy_helper(
-                                src_root=scratch_path,
-                                dest_root=cache_location,
-                                src_names=todo.outputs,
-                                dest_names=cache_output_names,
-                            )
-                            if scratch_path.exists():
-                                rmtree(scratch_path)
 
-                            done = True
-                        except MissingDependency as d:
-                            enqueue_deps(todo, d.paths)
+                if not done:
+                    # time to execute! but *not* inside the lock
+                    # when we release the lock, stuff may change outside, but
+                    # we don't care since *our* dependencies (so far) are all available
+                    print(f"Target {todo} is not in the cache, rerunning...")
+                    try:
+                        build(todo)
+                        print(
+                            f"Target {todo} has been built fully! Caching to {cache_location}"
+                        )
+                        copy_helper(
+                            src_root=scratch_path,
+                            dest_root=cache_location,
+                            src_names=todo.outputs,
+                            dest_names=cache_output_names,
+                        )
+                        if scratch_path.exists():
+                            rmtree(scratch_path)
+
+                        done = True
+                    except MissingDependency as d:
+                        print(
+                            f"Target {todo} failed to fully build because of the missing dynamic "
+                            f"dependencies: {d.paths}, requeuing"
+                        )
+                        enqueue_deps(todo, d.paths)
 
                 if done:
                     with scheduling_lock:

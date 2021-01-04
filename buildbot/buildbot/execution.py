@@ -46,10 +46,10 @@ class MemorizeContext(Context):
         self.hashstate.record("sh", cmd)
 
     def add_deps(self, deps: Sequence[str]):
-        pass
+        self.hashstate.record("add_deps", deps)
 
     def input(self, *, file: str, sh: str):
-        pass
+        self.hashstate.record("input", file, sh)
 
 
 class PreviewContext(MemorizeContext):
@@ -71,12 +71,14 @@ class PreviewContext(MemorizeContext):
     def add_deps(self, deps: List[str]):
         super().add_deps(deps)
         for dep in deps:
-            self.inputs.append(normalize_path(self.repo_root, self.cwd, dep))
+            self.inputs.append(self.resolve(dep))
 
     def input(self, *, file: str = None, sh: str = None):
         super().input(file=file, sh=sh)
         if file is not None:
-            self.inputs.append(normalize_path(self.repo_root, self.cwd, file))
+            path = self.resolve(file)
+            self.inputs.append(path)
+            return self.dep_fetcher(path)
         else:
             return self.cache_fetcher(
                 self.hashstate.state(),
@@ -103,121 +105,19 @@ class ExecutionContext(MemorizeContext):
 
     def add_deps(self, deps: Sequence[str]):
         super().add_deps(deps)
-        self.load_deps(deps)
+        self.load_deps([self.resolve(dep) for dep in deps])
 
-    def input(self, *, file: str, sh: str):
+    def input(self, *, file: str = None, sh: str = None):
         super().input(file=file, sh=sh)
         if file is not None:
-            self.add_dep(file)
-            with open(normalize_path(self.repo_root, self.cwd, file), "r") as f:
+            self.load_deps([self.resolve(file)])
+            with open(self.resolve(file), "r") as f:
                 return f.read()
         else:
-            out = run_shell(sh, shell=True, cwd=self.cwd, capture_output=True)
+            out = run_shell(sh, shell=True, cwd=self.cwd, capture_output=True).decode(
+                "utf-8"
+            )
             self.memorize(
                 self.hashstate.state(), hashlib.md5(sh.encode("utf-8")).hexdigest(), out
             )
             return out
-
-
-def execute_build(
-    start_rules: Set[RuntimeRule],
-    needed: Set[RuntimeRule],
-    num_threads,
-    cache_directory: str,
-):
-    repo_root = find_root()
-
-    work_queue: Queue[Optional[RuntimeRule]] = Queue()
-    for rule in start_rules:
-        work_queue.put(rule)
-
-    def worker(index: int):
-        scratch_path = Path(repo_root).joinpath(Path(f".scratch_{index}"))
-        if scratch_path.exists():
-            rmtree(scratch_path)
-        while True:
-            todo = work_queue.get()
-            if todo is None:
-                return
-            # first check if it's cached
-            preview_context = PreviewContext(
-                repo_root, todo.rule.location, dep_fetcher, cache_directory
-            )
-            todo.impl(preview_context)
-            m = hashlib.md5()
-            for log in preview_context.log:
-                m.update(log)
-            for input_path in list(todo.inputs) + preview_context.inputs:
-                m.update(input_path.encode("utf-8"))
-                with open(input_path, "rb") as f:
-                    m.update(f.read())
-            for output_path in list(todo.outputs) + preview_context.outputs:
-                m.update(output_path.encode("utf-8"))
-            key = m.hexdigest()
-            cache_location = Path(cache_directory).joinpath(key)
-            cache_output_names = [
-                hashlib.md5(output_path.encode("utf-8")).hexdigest()
-                for output_path in todo.outputs
-            ]
-            if cache_location.exists():
-                try:
-                    copy_helper(
-                        src_root=cache_location,
-                        src_names=cache_output_names,
-                        dest_root=repo_root,
-                        dest_names=todo.outputs,
-                    )
-                except FileNotFoundError:
-                    raise BuildException(
-                        "Cache corrupted. This should never happen unless you modified the cache directory manually!"
-                    )
-            else:
-                scratch_path.mkdir(exist_ok=True)
-                copy_helper(
-                    src_root=repo_root,
-                    src_names=todo.inputs,
-                    dest_root=scratch_path,
-                    symlink=True,
-                )
-                todo.impl(
-                    ExecutionContext(
-                        scratch_path, scratch_path.joinpath(todo.working_directory)
-                    )
-                )
-                try:
-                    copy_helper(
-                        src_root=scratch_path,
-                        src_names=todo.outputs,
-                        dest_root=repo_root,
-                    )
-                except FileNotFoundError as e:
-                    raise BuildException(
-                        f"Output file {e.filename} from rule {todo} was not generated."
-                    )
-                copy_helper(
-                    src_root=scratch_path,
-                    src_names=todo.outputs,
-                    dest_root=cache_location,
-                    dest_names=cache_output_names,
-                )
-                rmtree(scratch_path)
-
-            for dependent in todo.dependents:
-                if dependent in needed:
-                    dependent.lock.acquire()
-                    dependent.pending_rule_dependencies.remove(todo)
-                    if not dependent.pending_rule_dependencies:
-                        work_queue.put(dependent)
-                    dependent.lock.release()
-            work_queue.task_done()
-
-    thread_instances = []
-    for i in range(num_threads):
-        thread = Thread(target=worker, args=(i,))
-        thread_instances.append(thread)
-        thread.start()
-    work_queue.join()
-    for _ in range(num_threads):
-        work_queue.put(None)
-    for thread in thread_instances:
-        thread.join()
