@@ -1,4 +1,4 @@
-import re
+import re, requests
 from os import getenv
 
 from cachetools import TTLCache
@@ -53,6 +53,15 @@ def is_admin(email, course=None):
     if not course:
         course = get_course()
     return rpc.auth.is_admin(email=email, course=course)
+
+
+def is_admin_token(access_token, course=None):
+    ret = requests.get(
+        "https://okpy.org/api/v3/user/", params={"access_token": access_token}
+    )
+    return ret.status_code == 200 and is_admin(
+        ret.json()["data"]["email"], course=course
+    )
 
 
 def format_coursecode(course):
