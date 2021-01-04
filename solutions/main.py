@@ -1,8 +1,9 @@
-from flask import Flask
+from flask import Flask, redirect
 from flask_compress import Compress
 from static_server.utils import get_bucket, serve_path
 
-from common.oauth_client import create_oauth_client, is_staff, login
+from common.oauth_client import create_oauth_client, is_staff, login, get_user
+from common.course_config import get_endpoint
 
 app = Flask(__name__)
 if __name__ == "__main__":
@@ -12,6 +13,14 @@ if __name__ == "__main__":
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>", methods=["GET"])
 def index(path):
+    try:
+        info = get_user()
+        for p in info["participations"]:
+            if p["course"]["offering"] == get_endpoint("cs61a") and p["role"] == "student":	        
+                return redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    except:
+        pass # don't let the rickroll crash anything else
+    
     if not is_staff("cs61a"):
         return login()
     bucket = get_bucket(
