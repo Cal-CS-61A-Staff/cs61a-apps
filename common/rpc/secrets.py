@@ -62,7 +62,7 @@ def only(allowed_app, *, allow_staging=False):
             elif _sudo_token and is_admin_token(_sudo_token, course="cs61a"):
                 app, is_staging = _impersonate, _is_staging
             else:
-                abort(403)
+                raise PermissionError
 
             allowed_apps = (
                 [allowed_app] if isinstance(allowed_app, str) else allowed_app

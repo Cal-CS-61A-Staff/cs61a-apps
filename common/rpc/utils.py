@@ -37,7 +37,7 @@ def create_service(app: str, override=None):
                             endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
                 endpoints.append(f"https://{app}.cs61a.org{path}")
 
-                if not os.getenv("APP_MASTER_SECRET") and "_impersonate" in kwargs:
+                if not get_master_secret() and "_impersonate" in kwargs:
                     kwargs = dict(kwargs, _sudo_token=get_token())
 
                 for i, endpoint in enumerate(endpoints):
