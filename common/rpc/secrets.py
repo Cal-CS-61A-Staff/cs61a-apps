@@ -39,7 +39,7 @@ def validates_master_secret(func):
         if master_secret:
             app, is_staging = validate_master_secret(master_secret=master_secret)
             return func(app=app, is_staging=is_staging, **kwargs)
-        elif _sudo_token and is_admin_token(_sudo_token):
+        elif _sudo_token and is_admin_token(_sudo_token, course="cs61a"):
             return func(app=_impersonate, is_staging=_is_staging, **kwargs)
 
         raise PermissionError
