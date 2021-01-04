@@ -23,6 +23,13 @@ def is_admin(*, course: str, email: str):
     ...
 
 
+@cached
+@auth_endpoint
+@service.route("/admins/is_admin_token")
+def is_admin_token(*, access_token: str):
+    ...
+
+
 @cached()
 @auth_endpoint
 @service.route("/admins/list_admins")

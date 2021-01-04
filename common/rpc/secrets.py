@@ -4,6 +4,7 @@ from os import getenv
 from flask import abort
 
 from common.rpc.utils import cached, create_service, requires_master_secret
+from common.rpc.auth import is_admin_token
 
 service = create_service(__name__)
 
@@ -38,6 +39,9 @@ def only(allowed_app, *, allow_staging=False):
     def decorator(func):
         @wraps(func)
         def wrapped(master_secret, **kwargs):
+            if "access_token" in kwargs:
+                if is_admin_token(kwargs.pop("access_token")):
+                    return func(**kwargs)
             app, is_staging = validate_master_secret(master_secret=master_secret)
             allowed_apps = (
                 [allowed_app] if isinstance(allowed_app, str) else allowed_app

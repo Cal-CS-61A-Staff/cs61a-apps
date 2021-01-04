@@ -14,7 +14,7 @@ from common.rpc.buildserver import (
     get_base_hostname,
     trigger_build_sync,
 )
-from common.rpc.secrets import get_secret, only, validates_master_secret
+from common.rpc.secrets import get_secret, only, validates_master_secret, is_admin_token
 from common.url_for import url_for
 from conf import GITHUB_REPO
 from service_management import delete_unused_services
@@ -130,9 +130,15 @@ def trigger_build():
 
 @trigger_build_sync.bind(app)
 @validates_master_secret
-def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
-    if app not in ("slack", "buildserver") or is_staging:
+def handle_trigger_build_sync(
+    app, is_staging, pr_number, target_app=None, access_token=None
+):
+    if app not in ("slack", "buildserver", "sicp") or is_staging:
         abort(401)
+
+    if app == "sicp":
+        if not (access_token and is_admin_token(access_token)):
+            abort(401)
 
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)

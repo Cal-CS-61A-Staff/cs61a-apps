@@ -2,9 +2,11 @@ from flask import redirect, request
 
 from auth_utils import course_oauth_secure, get_name, key_secure, get_email
 from common.db import connect_db
-from common.rpc.auth import is_admin, list_admins
+from common.rpc.auth import is_admin, list_admins, is_admin_token
 from common.url_for import url_for
 from common.html import error, make_row
+
+import requests
 
 
 def init_db():
@@ -99,6 +101,14 @@ def create_admins_client(app):
                     [email, course],
                 ).fetchone()
             )
+
+    @is_admin_token.bind(app)
+    @key_secure
+    def handle_is_admin(access_token):
+        ret = requests.get(
+            "https://okpy.org/api/v3/user/", params={"access_token": access_token}
+        )
+        return ret.status_code == 200 and is_admin(ret.json()["data"]["email"])
 
     @list_admins.bind(app)
     @key_secure
