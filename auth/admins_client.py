@@ -92,6 +92,8 @@ def create_admins_client(app):
     @is_admin.bind(app)
     @key_secure
     def handle_is_admin(course, email, force_course=None):
+        if force_course and course != force_course:
+            raise PermissionError
         with connect_db() as db:
             return bool(
                 db(
