@@ -55,13 +55,13 @@ def is_admin(email, course=None):
     return rpc.auth.is_admin(email=email, course=course, force_course=course)
 
 
-def is_admin_token(access_token):
+def is_admin_token(access_token, course=None):
     ret = requests.get(
         "https://okpy.org/api/v3/user/", params={"access_token": access_token}
     )
     return ret.status_code == 200 and is_admin(
         ret.json()["data"]["email"],
-        course="cs61a",
+        course=course,
     )
 
 
