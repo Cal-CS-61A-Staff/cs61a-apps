@@ -6,8 +6,6 @@ from common.rpc.auth import is_admin, list_admins
 from common.url_for import url_for
 from common.html import error, make_row
 
-import requests
-
 
 def init_db():
     with connect_db() as db:
