@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from shutil import SameFileError, copyfile
+from typing import List
 
 from utils import BuildException
 
@@ -20,7 +21,7 @@ def find_root():
     )
 
 
-def get_repo_files():
+def get_repo_files() -> List[str]:
     return [
         file.decode("ascii") if isinstance(file, bytes) else file
         for file in sh(

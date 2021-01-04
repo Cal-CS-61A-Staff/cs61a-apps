@@ -6,59 +6,117 @@ from dataclasses import dataclass
 from pathlib import Path
 from queue import Queue
 from shutil import rmtree
-from threading import Lock, Thread
+from threading import Thread
 from typing import Callable, List, Optional, Sequence, Set
 
-from utils import BuildException
-from fs_utils import copy_helper, find_root
+from fs_utils import copy_helper, find_root, normalize_path
+from loader import Rule
+from utils import BuildException, HashState
 
-from common.shell_utils import sh
+from common.shell_utils import sh as run_shell
 
 
 class Context(ABC):
-    def sh(self, cmd: str):
-        raise NotImplemented
-
-
-class PreviewContext(Context):
-    def __init__(self):
-        self.log = []
-
-    def sh(self, cmd: str):
-        self.log.append(cmd.encode("utf-8"))
-
-
-class ExecutionContext(Context):
-    def __init__(self, cwd: str):
+    def __init__(self, repo_root: str, cwd: str):
+        self.repo_root = repo_root
         self.cwd = cwd
 
+    def resolve(self, path: str):
+        return normalize_path(self.repo_root, self.cwd, path)
+
     def sh(self, cmd: str):
-        sh(cmd, shell=True, cwd=self.cwd)
+        raise NotImplementedError
+
+    def add_dep(self, dep: str):
+        self.add_deps([dep])
+
+    def add_deps(self, deps: Sequence[str]):
+        raise NotImplementedError
+
+    def input(self, *, file: str, sh: str):
+        raise NotImplementedError
 
 
-@dataclass(eq=False)
-class RuntimeRule:
-    # scheduling fields
-    remaining_rule_dependencies: List[RuntimeRule]
-    dependents: List[RuntimeRule]  # includes dependents that are not actually needed
+class MemorizeContext(Context):
+    def __init__(self, repo_root: str, cwd: str, hashstate: HashState):
+        super().__init__(repo_root, cwd)
+        self.hashstate = hashstate
 
-    # execution fields
-    impl: Callable
-    inputs: Sequence[str]
-    outputs: Sequence[str]
-    working_directory: str
+    def sh(self, cmd: str):
+        self.hashstate.record("sh", cmd)
 
-    # synchronization
-    lock: Lock
+    def add_deps(self, deps: Sequence[str]):
+        pass
 
-    # debugging
-    name: str
+    def input(self, *, file: str, sh: str):
+        pass
 
-    def __hash__(self):
-        return hash(id(self))
 
-    def __str__(self):
-        return self.name
+class PreviewContext(MemorizeContext):
+    def __init__(
+        self,
+        repo_root: str,
+        cwd: str,
+        hashstate: HashState,
+        dep_fetcher: Callable[[str], str],
+        cache_fetcher: Callable[[str, str], str],
+    ):
+        super().__init__(repo_root, cwd, hashstate)
+
+        self.inputs = []
+        self.outputs = []
+        self.dep_fetcher = dep_fetcher
+        self.cache_fetcher = cache_fetcher
+
+    def add_deps(self, deps: List[str]):
+        super().add_deps(deps)
+        for dep in deps:
+            self.inputs.append(normalize_path(self.repo_root, self.cwd, dep))
+
+    def input(self, *, file: str = None, sh: str = None):
+        super().input(file=file, sh=sh)
+        if file is not None:
+            self.inputs.append(normalize_path(self.repo_root, self.cwd, file))
+        else:
+            return self.cache_fetcher(
+                self.hashstate.state(),
+                hashlib.md5(sh.encode("utf-8")).hexdigest(),
+            )
+
+
+class ExecutionContext(MemorizeContext):
+    def __init__(
+        self,
+        repo_root: str,
+        cwd: str,
+        hashstate: HashState,
+        load_deps: Callable[[Sequence[str]], None],
+        memorize: Callable[[str, str, str], None],
+    ):
+        super().__init__(repo_root, cwd, hashstate)
+        self.load_deps = load_deps
+        self.memorize = memorize
+
+    def sh(self, cmd: str):
+        super().sh(cmd)
+        run_shell(cmd, shell=True, cwd=self.cwd)
+
+    def add_deps(self, deps: Sequence[str]):
+        super().add_deps(deps)
+        self.load_deps(deps)
+
+    def input(self, *, file: str, sh: str):
+        super().input(file=file, sh=sh)
+        if file is not None:
+            self.add_dep(file)
+            with open(normalize_path(self.repo_root, self.cwd, file), "r") as f:
+                return f.read()
+        else:
+            out = run_shell(sh, shell=True, cwd=self.cwd, capture_output=True)
+            self.memorize(
+                self.hashstate.state(), hashlib.md5(sh.encode("utf-8")).hexdigest(), out
+            )
+            return out
 
 
 def execute_build(
@@ -82,16 +140,18 @@ def execute_build(
             if todo is None:
                 return
             # first check if it's cached
-            preview_context = PreviewContext()
+            preview_context = PreviewContext(
+                repo_root, todo.rule.location, dep_fetcher, cache_directory
+            )
             todo.impl(preview_context)
             m = hashlib.md5()
             for log in preview_context.log:
                 m.update(log)
-            for input_path in todo.inputs:
+            for input_path in list(todo.inputs) + preview_context.inputs:
                 m.update(input_path.encode("utf-8"))
                 with open(input_path, "rb") as f:
                     m.update(f.read())
-            for output_path in todo.outputs:
+            for output_path in list(todo.outputs) + preview_context.outputs:
                 m.update(output_path.encode("utf-8"))
             key = m.hexdigest()
             cache_location = Path(cache_directory).joinpath(key)
@@ -120,7 +180,9 @@ def execute_build(
                     symlink=True,
                 )
                 todo.impl(
-                    ExecutionContext(scratch_path.joinpath(todo.working_directory))
+                    ExecutionContext(
+                        scratch_path, scratch_path.joinpath(todo.working_directory)
+                    )
                 )
                 try:
                     copy_helper(
@@ -143,8 +205,8 @@ def execute_build(
             for dependent in todo.dependents:
                 if dependent in needed:
                     dependent.lock.acquire()
-                    dependent.remaining_rule_dependencies.remove(todo)
-                    if not dependent.remaining_rule_dependencies:
+                    dependent.pending_rule_dependencies.remove(todo)
+                    if not dependent.pending_rule_dependencies:
                         work_queue.put(dependent)
                     dependent.lock.release()
             work_queue.task_done()
