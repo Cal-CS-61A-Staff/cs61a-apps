@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from abc import ABC
-from dataclasses import dataclass
 from pathlib import Path
-from queue import Queue
-from shutil import rmtree
-from threading import Thread
-from typing import Callable, List, Optional, Sequence, Set
+from typing import Callable, Sequence
 
-from fs_utils import copy_helper, find_root, normalize_path
-from loader import Rule
-from utils import BuildException, HashState
+from fs_utils import normalize_path
+from utils import HashState
 
 from common.shell_utils import sh as run_shell
 
@@ -19,10 +15,17 @@ from common.shell_utils import sh as run_shell
 class Context(ABC):
     def __init__(self, repo_root: str, cwd: str):
         self.repo_root = repo_root
-        self.cwd = cwd
+        self.cwd = os.path.abspath(cwd)
 
-    def resolve(self, path: str):
+    def absolute(self, path: str):
         return normalize_path(self.repo_root, self.cwd, path)
+
+    def relative(self, path: str):
+        return str(
+            os.path.relpath(
+                Path(self.repo_root).joinpath(self.absolute(path)), self.cwd
+            )
+        )
 
     def sh(self, cmd: str):
         raise NotImplementedError
@@ -49,12 +52,12 @@ class MemorizeContext(Context):
     def add_deps(self, deps: Sequence[str]):
         self.hashstate.record("add_deps", deps)
         for dep in deps:
-            self.inputs.append(self.resolve(dep))
+            self.inputs.append(self.absolute(dep))
 
     def input(self, *, file: str, sh: str):
         self.hashstate.record("input", file, sh)
         if file is not None:
-            self.inputs.append(self.resolve(file))
+            self.inputs.append(self.absolute(file))
 
 
 class PreviewContext(MemorizeContext):
@@ -74,7 +77,7 @@ class PreviewContext(MemorizeContext):
     def input(self, *, file: str = None, sh: str = None):
         super().input(file=file, sh=sh)
         if file is not None:
-            return self.dep_fetcher(self.resolve(file))
+            return self.dep_fetcher(self.absolute(file))
         else:
             return self.cache_fetcher(
                 self.hashstate.state(),
@@ -101,13 +104,13 @@ class ExecutionContext(MemorizeContext):
 
     def add_deps(self, deps: Sequence[str]):
         super().add_deps(deps)
-        self.load_deps([self.resolve(dep) for dep in deps])
+        self.load_deps([self.absolute(dep) for dep in deps])
 
     def input(self, *, file: str = None, sh: str = None):
         super().input(file=file, sh=sh)
         if file is not None:
-            self.load_deps([self.resolve(file)])
-            with open(self.resolve(file), "r") as f:
+            self.load_deps([self.absolute(file)])
+            with open(self.absolute(file), "r") as f:
                 return f.read()
         else:
             out = run_shell(sh, shell=True, cwd=self.cwd, capture_output=True).decode(

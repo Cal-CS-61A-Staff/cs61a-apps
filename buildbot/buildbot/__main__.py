@@ -120,7 +120,7 @@ def cli(target: str, threads: int, cache_directory: str):
                 dep_fetcher(dep, flags="rb")
                 with open(dep, "rb") as f:
                     hashstate.update(f.read())
-            except FileNotFoundError:
+            except MissingDependency:
                 # get static deps before running the impl!
                 # this means that a source file is *missing*, but the error will be thrown in enqueue_deps
                 break
@@ -181,7 +181,7 @@ def cli(target: str, threads: int, cache_directory: str):
         if scratch_path.exists():
             rmtree(scratch_path)
 
-        def build(rule: Rule):
+        def build(rule: Rule, *, in_sandbox: bool):
             """
             All the dependencies that can be determined from caches have been
             obtained. Now we need to run. Either we will successfully finish everything,
@@ -199,19 +199,20 @@ def cli(target: str, threads: int, cache_directory: str):
                         with scheduling_lock:
                             if target_rule_lookup[dep] not in ready:
                                 missing_deps.append(dep)
+                    else:
+                        if dep not in source_files:
+                            raise BuildException(f"Dependency missing: {dep}")
                 if missing_deps:
                     raise MissingDependency(*missing_deps)
                 loaded_deps.update(deps)
-                print(f"Loading dependencies {deps} into sandbox")
-                try:
+                if in_sandbox:
+                    print(f"Loading dependencies {deps} into sandbox")
                     copy_helper(
                         src_root=repo_root,
                         dest_root=scratch_path,
                         src_names=deps,
                         symlink=True,
                     )
-                except FileNotFoundError as e:
-                    raise BuildException(f"Source file missing: {e.filename}")
 
             load_deps(deps)
             hashstate = HashState()
@@ -221,8 +222,10 @@ def cli(target: str, threads: int, cache_directory: str):
                     hashstate.update(f.read())
 
             ctx = ExecutionContext(
-                scratch_path,
-                scratch_path.joinpath(rule.location),
+                scratch_path if in_sandbox else repo_root,
+                scratch_path.joinpath(rule.location)
+                if in_sandbox
+                else Path(repo_root).joinpath(rule.location),
                 hashstate,
                 load_deps,
                 memorize,
@@ -230,16 +233,17 @@ def cli(target: str, threads: int, cache_directory: str):
 
             rule.impl(ctx)
 
-            try:
-                copy_helper(
-                    src_root=scratch_path,
-                    src_names=rule.outputs,
-                    dest_root=repo_root,
-                )
-            except FileNotFoundError as e:
-                raise BuildException(
-                    f"Output file {e.filename} from rule {todo} was not generated."
-                )
+            if in_sandbox:
+                try:
+                    copy_helper(
+                        src_root=scratch_path,
+                        src_names=rule.outputs,
+                        dest_root=repo_root,
+                    )
+                except FileNotFoundError as e:
+                    raise BuildException(
+                        f"Output file {e.filename} from rule {todo} was not generated."
+                    )
 
             for input_path in ctx.inputs:
                 hashstate.update(input_path.encode("utf-8"))
@@ -304,7 +308,41 @@ def cli(target: str, threads: int, cache_directory: str):
                     # we don't care since *our* dependencies (so far) are all available
                     print(f"Target {todo} is not in the cache, rerunning...")
                     try:
-                        cache_key = build(todo)
+                        # if cache_key is None, we haven't finished evaluating the impl, so we
+                        # don't know all the dependencies it could need. Therefore, we must
+                        # run it in the working directory, so the impl can find the dependencies it needs
+                        # Then, we run it *again*, to verify that the dependencies are accurate
+                        in_sandbox = cache_key is not None
+
+                        if not in_sandbox:
+                            print(
+                                f"We don't know the dependencies of {todo}, "
+                                f"so we are running the impl in the root directory to find out!"
+                            )
+                            cache_key = build(todo, in_sandbox=False)
+                            # now, if no exception has thrown, all the deps are available to the deps finder
+                            alt_cache_key, deps = get_deps(todo)
+                            assert (
+                                cache_key == alt_cache_key
+                            ), "An internal error has occurred"
+                            try:
+                                alt_cache_key = build(todo, in_sandbox=True)
+                            except MissingDependency:
+                                raise BuildException("An internal error has occurred.")
+                            except Exception as e:
+                                print(e)
+                                raise BuildException(
+                                    f"The dependencies for target {todo} are not fully specified, "
+                                    f"as it failed to build when provided only with them."
+                                )
+                            assert (
+                                cache_key == alt_cache_key
+                            ), "An internal error has occurred"
+                        else:
+                            print(
+                                f"We know all the dependencies of {todo}, so we can run it in a sandbox"
+                            )
+                            build(todo, in_sandbox=True)
                         cache_location, cache_output_names = get_cache_output_paths(
                             cache_directory, todo, cache_key
                         )
@@ -326,9 +364,9 @@ def cli(target: str, threads: int, cache_directory: str):
                             f"dependencies: {d.paths}, requeuing"
                         )
                         enqueue_deps(todo, d.paths)
-                    finally:
-                        if scratch_path.exists():
-                            rmtree(scratch_path)
+
+                    if scratch_path.exists():
+                        rmtree(scratch_path)
 
                 if done:
                     with scheduling_lock:

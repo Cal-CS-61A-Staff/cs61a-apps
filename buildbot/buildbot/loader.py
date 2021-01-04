@@ -71,7 +71,13 @@ def make_callback(
             add_target_rule(name, rule)
 
     def callback_glob(path):
-        return glob(normalize_path(repo_root, build_root, path), recursive=True)
+        return [
+            os.path.relpath(path, build_root)
+            for path in glob(
+                normalize_path(repo_root, build_root, path),
+                recursive=True,
+            )
+        ]
 
     callback.glob = callback_glob
 
