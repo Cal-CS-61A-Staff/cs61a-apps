@@ -53,21 +53,19 @@ def make_callback(
         name: Optional[str] = None,
         deps: Sequence[str] = (),
         impl: Callable,
-        outputs: Union[str, Sequence[str]] = (),
+        out: Union[str, Sequence[str]] = (),
     ):
-        if isinstance(outputs, str):
-            outputs = [outputs]
+        if isinstance(out, str):
+            out = [out]
         rule = Rule(
             name=name,
             location=build_root,
             deps=[normalize_path(repo_root, build_root, dep) for dep in deps],
             impl=impl,
-            outputs=[
-                normalize_path(repo_root, build_root, output) for output in outputs
-            ],
+            outputs=[normalize_path(repo_root, build_root, output) for output in out],
         )
-        for output in outputs:
-            add_target_rule(normalize_path(repo_root, build_root, output), rule)
+        for output in rule.outputs:
+            add_target_rule(output, rule)
 
         if name is not None:
             add_target_rule(name, rule)

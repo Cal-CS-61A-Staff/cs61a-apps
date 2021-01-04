@@ -15,6 +15,14 @@ from loader import Rule, load_rules
 from utils import BuildException, CacheMiss, HashState, MissingDependency
 
 
+def get_cache_output_paths(cache_directory: str, rule: Rule, cache_key: str):
+    cache_location = Path(cache_directory).joinpath(cache_key)
+    return cache_location, [
+        hashlib.md5(output_path.encode("utf-8")).hexdigest()
+        for output_path in rule.outputs
+    ]
+
+
 @click.command()
 @click.argument("target")
 @click.option("--threads", "-t", default=4)
@@ -114,6 +122,7 @@ def cli(target: str, threads: int, cache_directory: str):
                     hashstate.update(f.read())
             except FileNotFoundError:
                 # get static deps before running the impl!
+                # this means that a source file is *missing*, but the error will be thrown in enqueue_deps
                 break
         else:
             ctx = PreviewContext(
@@ -155,8 +164,7 @@ def cli(target: str, threads: int, cache_directory: str):
                         )
                         break
                     else:
-                        with open(input_path, "rb") as f:
-                            hashstate.update(data)
+                        hashstate.update(data)
             return (
                 hashstate.state() if ok else None,
                 ctx.inputs + rule.deps,
@@ -184,14 +192,26 @@ def cli(target: str, threads: int, cache_directory: str):
 
             def load_deps(deps):
                 deps = set(deps) - loaded_deps
+                # check that these deps are built! Since they have not been checked by the PreviewExecution.
+                missing_deps = []
+                for dep in deps:
+                    if dep in target_rule_lookup:
+                        with scheduling_lock:
+                            if target_rule_lookup[dep] not in ready:
+                                missing_deps.append(dep)
+                if missing_deps:
+                    raise MissingDependency(*missing_deps)
                 loaded_deps.update(deps)
                 print(f"Loading dependencies {deps} into sandbox")
-                copy_helper(
-                    src_root=repo_root,
-                    dest_root=scratch_path,
-                    src_names=deps,
-                    symlink=True,
-                )
+                try:
+                    copy_helper(
+                        src_root=repo_root,
+                        dest_root=scratch_path,
+                        src_names=deps,
+                        symlink=True,
+                    )
+                except FileNotFoundError as e:
+                    raise BuildException(f"Source file missing: {e.filename}")
 
             load_deps(deps)
             hashstate = HashState()
@@ -199,15 +219,17 @@ def cli(target: str, threads: int, cache_directory: str):
                 hashstate.update(dep.encode("utf-8"))
                 with open(dep, "rb") as f:
                     hashstate.update(f.read())
-            rule.impl(
-                ExecutionContext(
-                    scratch_path,
-                    scratch_path.joinpath(rule.location),
-                    hashstate,
-                    load_deps,
-                    memorize,
-                )
+
+            ctx = ExecutionContext(
+                scratch_path,
+                scratch_path.joinpath(rule.location),
+                hashstate,
+                load_deps,
+                memorize,
             )
+
+            rule.impl(ctx)
+
             try:
                 copy_helper(
                     src_root=scratch_path,
@@ -218,6 +240,13 @@ def cli(target: str, threads: int, cache_directory: str):
                 raise BuildException(
                     f"Output file {e.filename} from rule {todo} was not generated."
                 )
+
+            for input_path in ctx.inputs:
+                hashstate.update(input_path.encode("utf-8"))
+                with open(input_path, "rb") as f:
+                    hashstate.update(f.read())
+
+            return hashstate.state()
 
         while True:
             todo = work_queue.get()
@@ -249,11 +278,9 @@ def cli(target: str, threads: int, cache_directory: str):
                 done = False
                 # first check if we're already cached!
                 if cache_key:
-                    cache_location = Path(cache_directory).joinpath(cache_key)
-                    cache_output_names = [
-                        hashlib.md5(output_path.encode("utf-8")).hexdigest()
-                        for output_path in todo.outputs
-                    ]
+                    cache_location, cache_output_names = get_cache_output_paths(
+                        cache_directory, todo, cache_key
+                    )
                     if cache_location.exists():
                         print(f"Target {todo} is in the cache")
                         try:
@@ -277,7 +304,11 @@ def cli(target: str, threads: int, cache_directory: str):
                     # we don't care since *our* dependencies (so far) are all available
                     print(f"Target {todo} is not in the cache, rerunning...")
                     try:
-                        build(todo)
+                        cache_key = build(todo)
+                        cache_location, cache_output_names = get_cache_output_paths(
+                            cache_directory, todo, cache_key
+                        )
+
                         print(
                             f"Target {todo} has been built fully! Caching to {cache_location}"
                         )
@@ -287,8 +318,6 @@ def cli(target: str, threads: int, cache_directory: str):
                             src_names=todo.outputs,
                             dest_names=cache_output_names,
                         )
-                        if scratch_path.exists():
-                            rmtree(scratch_path)
 
                         done = True
                     except MissingDependency as d:
@@ -297,6 +326,9 @@ def cli(target: str, threads: int, cache_directory: str):
                             f"dependencies: {d.paths}, requeuing"
                         )
                         enqueue_deps(todo, d.paths)
+                    finally:
+                        if scratch_path.exists():
+                            rmtree(scratch_path)
 
                 if done:
                     with scheduling_lock:

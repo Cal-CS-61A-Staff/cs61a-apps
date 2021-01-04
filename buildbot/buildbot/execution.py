@@ -41,15 +41,20 @@ class MemorizeContext(Context):
     def __init__(self, repo_root: str, cwd: str, hashstate: HashState):
         super().__init__(repo_root, cwd)
         self.hashstate = hashstate
+        self.inputs = []
 
     def sh(self, cmd: str):
         self.hashstate.record("sh", cmd)
 
     def add_deps(self, deps: Sequence[str]):
         self.hashstate.record("add_deps", deps)
+        for dep in deps:
+            self.inputs.append(self.resolve(dep))
 
     def input(self, *, file: str, sh: str):
         self.hashstate.record("input", file, sh)
+        if file is not None:
+            self.inputs.append(self.resolve(file))
 
 
 class PreviewContext(MemorizeContext):
@@ -63,22 +68,13 @@ class PreviewContext(MemorizeContext):
     ):
         super().__init__(repo_root, cwd, hashstate)
 
-        self.inputs = []
-        self.outputs = []
         self.dep_fetcher = dep_fetcher
         self.cache_fetcher = cache_fetcher
-
-    def add_deps(self, deps: List[str]):
-        super().add_deps(deps)
-        for dep in deps:
-            self.inputs.append(self.resolve(dep))
 
     def input(self, *, file: str = None, sh: str = None):
         super().input(file=file, sh=sh)
         if file is not None:
-            path = self.resolve(file)
-            self.inputs.append(path)
-            return self.dep_fetcher(path)
+            return self.dep_fetcher(self.resolve(file))
         else:
             return self.cache_fetcher(
                 self.hashstate.state(),

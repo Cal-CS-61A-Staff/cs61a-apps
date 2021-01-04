@@ -20,7 +20,7 @@ def declare_bash_rule(
         name=name,
         deps=deps,
         impl=impl,
-        outputs=outputs,
+        out=outputs,
     )
 
 
@@ -58,7 +58,7 @@ def declare_templar_rule(
 
     callback(
         name=name,
-        deps=[config],
+        deps=[config, "src/make_dependency.py", source],
         impl=impl,
         out=destination,
     )
