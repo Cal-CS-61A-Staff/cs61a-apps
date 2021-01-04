@@ -57,9 +57,12 @@ def only(allowed_app, *, allow_staging=False):
             _is_staging=False,
             **kwargs
         ):
-            app, is_staging = validate_master_secret(master_secret=master_secret)
-            if _sudo_token and is_admin_token(_sudo_token, course="cs61a"):
+            if master_secret:
+                app, is_staging = validate_master_secret(master_secret=master_secret)
+            elif _sudo_token and is_admin_token(_sudo_token, course="cs61a"):
                 app, is_staging = _impersonate, _is_staging
+            else:
+                abort(403)
 
             allowed_apps = (
                 [allowed_app] if isinstance(allowed_app, str) else allowed_app
