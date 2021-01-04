@@ -60,6 +60,7 @@ def only(allowed_app, *, allow_staging=False):
             app, is_staging = validate_master_secret(master_secret=master_secret)
             if _sudo_token and is_admin_token(_sudo_token, course="cs61a"):
                 app, is_staging = _impersonate, _is_staging
+
             allowed_apps = (
                 [allowed_app] if isinstance(allowed_app, str) else allowed_app
             )
