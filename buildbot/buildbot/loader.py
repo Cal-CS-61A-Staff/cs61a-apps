@@ -95,7 +95,7 @@ def load_rules():
             callback = make_callback(
                 repo_root, os.path.dirname(build_file), target_rule_lookup
             )
-            frame = {**frame, "callback": callback}
-            exec("import rules; rules.callback = callback", frame)
+            __builtins__["callback"] = callback
+            frame = {**frame, "__builtins__": __builtins__}
             exec(f.read(), frame)
     return target_rule_lookup

@@ -1,88 +1,18 @@
 from __future__ import annotations
 
 import hashlib
-import os
-from abc import ABC
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Callable, Collection, Optional, Sequence
 
-from fs_utils import normalize_path
-from utils import HashState
+from cache import make_cache_memorize
+from context import MemorizeContext
+from fs_utils import copy_helper
+from loader import Rule
+from monitoring import log
+from utils import BuildException, HashState, MissingDependency
+from build_state import BuildState
 
 from common.shell_utils import sh as run_shell
-
-
-class Context(ABC):
-    def __init__(self, repo_root: str, cwd: str):
-        self.repo_root = repo_root
-        self.cwd = os.path.abspath(cwd)
-
-    def absolute(self, path: str):
-        return normalize_path(self.repo_root, self.cwd, path)
-
-    def relative(self, path: str):
-        return str(
-            os.path.relpath(
-                Path(self.repo_root).joinpath(self.absolute(path)), self.cwd
-            )
-        )
-
-    def sh(self, cmd: str):
-        raise NotImplementedError
-
-    def add_dep(self, dep: str):
-        self.add_deps([dep])
-
-    def add_deps(self, deps: Sequence[str]):
-        raise NotImplementedError
-
-    def input(self, *, file: str, sh: str):
-        raise NotImplementedError
-
-
-class MemorizeContext(Context):
-    def __init__(self, repo_root: str, cwd: str, hashstate: HashState):
-        super().__init__(repo_root, cwd)
-        self.hashstate = hashstate
-        self.inputs = []
-
-    def sh(self, cmd: str):
-        self.hashstate.record("sh", cmd)
-
-    def add_deps(self, deps: Sequence[str]):
-        self.hashstate.record("add_deps", deps)
-        for dep in deps:
-            self.inputs.append(self.absolute(dep))
-
-    def input(self, *, file: str, sh: str):
-        self.hashstate.record("input", file, sh)
-        if file is not None:
-            self.inputs.append(self.absolute(file))
-
-
-class PreviewContext(MemorizeContext):
-    def __init__(
-        self,
-        repo_root: str,
-        cwd: str,
-        hashstate: HashState,
-        dep_fetcher: Callable[[str], str],
-        cache_fetcher: Callable[[str, str], str],
-    ):
-        super().__init__(repo_root, cwd, hashstate)
-
-        self.dep_fetcher = dep_fetcher
-        self.cache_fetcher = cache_fetcher
-
-    def input(self, *, file: str = None, sh: str = None):
-        super().input(file=file, sh=sh)
-        if file is not None:
-            return self.dep_fetcher(self.absolute(file))
-        else:
-            return self.cache_fetcher(
-                self.hashstate.state(),
-                hashlib.md5(sh.encode("utf-8")).hexdigest(),
-            )
 
 
 class ExecutionContext(MemorizeContext):
@@ -100,7 +30,7 @@ class ExecutionContext(MemorizeContext):
 
     def sh(self, cmd: str):
         super().sh(cmd)
-        run_shell(cmd, shell=True, cwd=self.cwd)
+        run_shell(cmd, shell=True, cwd=self.cwd, quiet=True)
 
     def add_deps(self, deps: Sequence[str]):
         super().add_deps(deps)
@@ -113,10 +43,90 @@ class ExecutionContext(MemorizeContext):
             with open(self.absolute(file), "r") as f:
                 return f.read()
         else:
-            out = run_shell(sh, shell=True, cwd=self.cwd, capture_output=True).decode(
-                "utf-8"
-            )
+            out = run_shell(
+                sh, shell=True, cwd=self.cwd, capture_output=True, quiet=True
+            ).decode("utf-8")
             self.memorize(
                 self.hashstate.state(), hashlib.md5(sh.encode("utf-8")).hexdigest(), out
             )
             return out
+
+
+def build(
+    build_state: BuildState,
+    rule: Rule,
+    deps: Collection[str],
+    *,
+    scratch_path: Optional[Path],
+):
+    """
+    All the dependencies that can be determined from caches have been
+    obtained. Now we need to run. Either we will successfully finish everything,
+    or we will get a missing dependency and have to requeue
+    """
+    memorize = make_cache_memorize(build_state.cache_directory)
+
+    in_sandbox = scratch_path is not None
+
+    loaded_deps = set()
+
+    def load_deps(deps):
+        deps = set(deps) - loaded_deps
+        # check that these deps are built! Since they have not been checked by the PreviewExecution.
+        missing_deps = []
+        for dep in deps:
+            if dep in build_state.target_rule_lookup:
+                if build_state.target_rule_lookup[dep] not in build_state.ready:
+                    missing_deps.append(dep)
+            else:
+                if dep not in build_state.source_files:
+                    raise BuildException(f"Dependency missing: {dep}")
+        if missing_deps:
+            raise MissingDependency(*missing_deps)
+        loaded_deps.update(deps)
+        if in_sandbox:
+            log(f"Loading dependencies {deps} into sandbox")
+            copy_helper(
+                src_root=build_state.repo_root,
+                dest_root=scratch_path,
+                src_names=deps,
+                symlink=True,
+            )
+
+    load_deps(deps)
+    hashstate = HashState()
+    for dep in rule.deps:
+        hashstate.update(dep.encode("utf-8"))
+        with open(dep, "rb") as f:
+            hashstate.update(f.read())
+
+    ctx = ExecutionContext(
+        scratch_path if in_sandbox else build_state.repo_root,
+        scratch_path.joinpath(rule.location)
+        if in_sandbox
+        else Path(build_state.repo_root).joinpath(rule.location),
+        hashstate,
+        load_deps,
+        memorize,
+    )
+
+    rule.impl(ctx)
+
+    if in_sandbox:
+        try:
+            copy_helper(
+                src_root=scratch_path,
+                src_names=rule.outputs,
+                dest_root=build_state.repo_root,
+            )
+        except FileNotFoundError as e:
+            raise BuildException(
+                f"Output file {e.filename} from rule {rule} was not generated."
+            )
+
+    for input_path in ctx.inputs:
+        hashstate.update(input_path.encode("utf-8"))
+        with open(input_path, "rb") as f:
+            hashstate.update(f.read())
+
+    return hashstate.state()

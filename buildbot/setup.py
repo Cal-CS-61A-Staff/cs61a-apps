@@ -25,5 +25,6 @@ setup(
         "cachetools",
         "colorama",
         "requests",
+        "asciimatics",
     ],
 )

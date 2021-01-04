@@ -1,6 +1,6 @@
-import rules
 from rules import *
 
+global callback
 
 declare_bash_rule(
     deps=["cat.py"],
@@ -11,13 +11,13 @@ declare_bash_rule(
 declare_bash_rule(
     deps=["dependency_template"],
     cmd="mkdir temp && cp dependency_template temp/dependency_template",
-    outputs="temp/dependency_template",
+    outputs="dependency_template",
 )
 
 
 def declare_magic_bash_rule(i):
     def impl(ctx):
-        template = ctx.input(sh="cat temp/dependency_template").strip()
+        template = ctx.input(sh="cat dependency_template").strip()
         ctx.add_dep(template.format(i - 1))
 
         # cause a caching failure that is resolved in execution
@@ -25,8 +25,8 @@ def declare_magic_bash_rule(i):
 
         ctx.sh(f"cat temp/out_{i - 1}.py > temp/out_{i}.py")
 
-    rules.callback(
-        deps=["temp/dependency_template"],
+    callback(
+        deps=["dependency_template"],
         impl=impl,
         out=f"temp/out_{i}.py",
     )
