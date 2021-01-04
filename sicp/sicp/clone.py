@@ -1,7 +1,8 @@
 import click
 
 from common.shell_utils import sh
-import os
+import os, sys
+from subprocess import CalledProcessError
 
 HTTPS = "https://github.com/"
 SSH = "git@github.com:"
@@ -12,7 +13,7 @@ SSH = "git@github.com:"
 @click.argument("dest", default="")
 @click.option("--ssh", is_flag=True)
 def clone(repo, dest, ssh):
-    """Clone REPO to DEST.
+    """Clone REPO into DEST.
 
     REPO is the name of the 61a repo to set up.
     Currently, "apps" and "cs61a" are supported.
@@ -32,16 +33,23 @@ def run_apps_clone(dir, protocol):
     print("========== Cloning cs61a-apps ==========")
     sh("git", "clone", f"{protocol}Cal-CS-61A-Staff/cs61a-apps", dir)
 
-    print("====== Installing Black & Prettier =====")
-    if "black" not in sh("pip3", "list", quiet=True).decode("utf-8"):
-        sh("pip3", "install", "black")
-    if "prettier" not in sh("npm", "list", "-g", quiet=True).decode("utf-8"):
-        sh("npm", "install", "-g", "prettier")
-
     print("========== Linking .githooks ===========")
     os.chdir(dir)
     sh("chmod", "+x", ".githooks/pre-commit")
     sh("git", "config", "core.hooksPath", ".githooks")
+
+    print("====== Installing Black & Prettier =====")
+    if "black" not in sh("pip3", "list", quiet=True).decode("utf-8"):
+        sh("pip3", "install", "black")
+    try:
+        if "prettier" not in sh("npm", "list", "-g", quiet=True).decode("utf-8"):
+            sh("sudo", "npm", "install", "-g", "prettier")
+    except CalledProcessError:
+        print(
+            "Failed to install prettier globally as needed! " + \
+            "Make sure you have npm installed and have sudo privileges.",
+            file=sys.stderr,
+        )
 
     print("================ Done! =================")
 
