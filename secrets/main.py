@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 from flask import Flask, abort, redirect, request, url_for
 
-from common.course_config import is_admin, is_admin_token
+from common.course_config import is_admin
 from common.oauth_client import create_oauth_client, get_user, login
 from common.db import connect_db
 from common.oauth_client import is_staff
@@ -59,20 +59,9 @@ def validate_master_secret(master_secret):
 # the local version of validate_master_secret, not the RPC wrapper
 def validates_master_secret(func):
     @wraps(func)
-    def wrapped(
-        *,
-        master_secret=None,
-        _sudo_token=None,
-        _impersonate=None,
-        _is_staging=False,
-        **kwargs,
-    ):
-        if master_secret:
-            app, is_staging = validate_master_secret(master_secret=master_secret)
-            return func(app=app, is_staging=is_staging, **kwargs)
-        elif _sudo_token and is_admin_token(_sudo_token, course="cs61a"):
-            return func(app=_impersonate, is_staging=_is_staging, **kwargs)
-        raise PermissionError
+    def wrapped(*, master_secret, **kwargs):
+        app, is_staging = validate_master_secret(master_secret)
+        return func(app=app, is_staging=is_staging, **kwargs)
 
     return wrapped
 
