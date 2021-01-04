@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect
 from flask_compress import Compress
 from static_server.utils import get_bucket, serve_path
 
