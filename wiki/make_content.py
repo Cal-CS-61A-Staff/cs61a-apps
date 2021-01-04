@@ -52,6 +52,7 @@ class StubApp:
             else ["", "This app has not yet been documented."]
         )
         self.name = name if name else self.path.replace("-", " ").title()
+        self.name += " (Stub)"
         self.dest = f"{self.path}/_index.md"
         self.contrib = metadata.get(path, [])
 
@@ -90,7 +91,9 @@ We also plan on including installation guides so
 that you can use these tools in your own courses.
 
 This is a work in progress, so please *bear* with
-us while we put it together!
+us while we put it together! Apps marked `(Stub)`
+are currently missing documentation but are
+included to credit the code writers.
 """
 
 with open("content/_index.md", "w") as index:
