@@ -46,8 +46,8 @@ def run_apps_clone(dir, protocol):
             sh("sudo", "npm", "install", "-g", "prettier")
     except CalledProcessError:
         print(
-            "Failed to install prettier globally as needed! " + \
-            "Make sure you have npm installed and have sudo privileges.",
+            "Failed to install prettier globally as needed! "
+            + "Make sure you have npm installed and have sudo privileges.",
             file=sys.stderr,
         )
 
