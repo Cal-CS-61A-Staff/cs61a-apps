@@ -37,8 +37,21 @@ def create_service(app: str, override=None):
                             endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
                 endpoints.append(f"https://{app}.cs61a.org{path}")
 
-                if not get_master_secret() and "_impersonate" in kwargs:
-                    kwargs = dict(kwargs, _sudo_token=get_token())
+                if (
+                    not get_master_secret()
+                    and "_impersonate" in kwargs
+                    and not "_sudo_token" in kwargs
+                ):
+                    from common.rpc.secrets import (
+                        get_secret_from_server,
+                    )  # placed here to avoid circular imports
+
+                    sudo_secret = get_secret_from_server(
+                        secret_name="MASTER",
+                        _impersonate=kwargs.pop("_impersonate"),
+                        _sudo_token=get_token(),
+                    )
+                    kwargs["master_secret"] = sudo_secret
 
                 for i, endpoint in enumerate(endpoints):
                     if noreply:
