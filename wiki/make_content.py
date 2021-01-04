@@ -43,11 +43,33 @@ class WikiApp:
         ]
 
 
+class StubApp:
+    def __init__(self, path, name=None, description=None):
+        self.path = path
+        self.lines = (
+            description.split("\n")
+            if description
+            else ["", "This app has not yet been documented."]
+        )
+        self.name = name if name else self.path.replace("-", " ").title()
+        self.dest = f"{self.path}/_index.md"
+        self.contrib = metadata.get(path, [])
+
+        self.contrib = [
+            f"<a href='https://github.com/{contrib}' target='_blank'>{get_user(contrib)}</a>"
+            for contrib in self.contrib
+        ]
+
+
 EXCLUDE = set(["node_modules", ".pytest_cache", "env"])
 
 PATHS = {
+    "auth": WikiApp("auth", "Auth"),
+    "code": WikiApp("code", "Code"),
     "examtool": WikiApp("examtool", "Examtool"),
     "exam-write": WikiApp("exam-write", "Writing Exams", dest="examtool/writing.md"),
+    "grade-display": WikiApp("grade-display", "Grade Display"),
+    "howamidoing": WikiApp("howamidoing", "Howamidoing"),
     "oh": WikiApp("oh", "Office Hours Queue"),
     "oh/migrations": WikiApp(
         "oh/migrations", "Generating Migrations", dest="oh/migrations.md"
@@ -83,10 +105,8 @@ for root, dirs, files in os.walk("../"):
         if file == "README.md":
             apps.append(root[3:])
 
-for app_raw in apps:
-    app = PATHS.get(app_raw, WikiApp(app_raw))
-    print(app_raw)
 
+def write_app(app):
     if not os.path.exists(f"content/{app.dest.split('/')[0]}"):
         os.makedirs(f"content/{app.dest.split('/')[0]}")
 
@@ -97,3 +117,31 @@ for app_raw in apps:
         c.write("---\n\n")
         for l in app.lines[1:]:
             c.write(f"{l}")
+
+
+for app_raw in apps:
+    app = PATHS.get(app_raw, WikiApp(app_raw))
+    print(app_raw)
+    write_app(app)
+
+STUBS = [
+    StubApp("buildserver"),
+    StubApp("common"),
+    StubApp("domains"),
+    StubApp("hog-contest"),
+    StubApp("indexer"),
+    StubApp("logs"),
+    StubApp("partnermatcher", name="Partner Matcher"),
+    StubApp("paste"),
+    StubApp("search"),
+    StubApp("secrets"),
+    StubApp("sections"),
+    StubApp("shortlinks"),
+    StubApp("slack", name="Slackbot"),
+    StubApp("static-server"),
+    StubApp("wiki"),
+]
+
+for app in STUBS:
+    print(app.path)
+    write_app(app)

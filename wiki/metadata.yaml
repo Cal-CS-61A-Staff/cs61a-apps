@@ -1,7 +1,9 @@
 auth:
   - rahularya50
+  - itsvs
 buildserver:
   - rahularya50
+  - itsvs
 cats:
   - rahularya50
 code:
@@ -28,11 +30,7 @@ indexer:
   - rahularya50
 logs:
   - rahularya50
-loom:
-  - rahularya50
 oh:
-  - rahularya50
-ok-help:
   - rahularya50
 partnermatcher:
   - rahularya50
@@ -40,10 +38,6 @@ paste:
   - rahularya50
 piazzaoncall:
   - AnimeshAgrawal
-react:
-  - rahularya50
-redirect:
-  - rahularya50
 sandbox:
   - rahularya50
   - itsvs
