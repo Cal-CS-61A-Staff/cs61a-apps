@@ -23,6 +23,8 @@ from scheduling import report_build_status
 from target_determinator import determine_targets
 from worker import land_commit
 
+DO_NOT_BUILD = "DO NOT BUILD"
+
 app = Flask(__name__)
 if __name__ == "__main__":
     app.debug = True
@@ -129,8 +131,10 @@ def trigger_build():
     repo = g.get_repo(GITHUB_REPO)
     pr = repo.get_pull(pr_number)
 
-    if "DO NOT BUILD" in [l.name for l in pr.labels]:
-        return html(f"PR <code>{pr_number}</code> has a DO NOT BUILD label on it.")
+    if DO_NOT_BUILD in [l.name for l in pr.labels]:
+        return html(
+            f"PR <code>{pr_number}</code> has a DO NOT BUILD label on it, so it cannot be built. Remove this label to build the PR."
+        )
 
     trigger_build_sync(pr_number=pr_number, target_app=target, noreply=True)
     return html(f"Building PR <code>{pr_number}</code>!")
@@ -140,14 +144,14 @@ def trigger_build():
 @validates_master_secret
 def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
     if app not in ("slack", "buildserver") or is_staging:
-        abort(401)
+        raise PermissionError
 
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(GITHUB_REPO)
     pr = repo.get_pull(pr_number)
 
-    if "DO NOT BUILD" in [l.name for l in pr.labels]:
-        abort(403)
+    if DO_NOT_BUILD in [l.name for l in pr.labels]:
+        raise PermissionError
 
     land_commit(pr.head.sha, repo, repo, pr, pr.get_files(), target_app=target_app)
 
