@@ -5,7 +5,11 @@ with open("metadata.yaml") as md:
     metadata = yaml.load(md)
 
 metadata = metadata if metadata else {}
-users = {}
+users = {
+    "rahularya50": "Rahul Arya",
+    "itsvs": "Vanshaj Singhania",
+    "AnimeshAgrawal": "Animesh Agrawal",
+}
 
 
 def get_name(user):
@@ -34,7 +38,7 @@ class WikiApp:
         self.contrib = metadata.get(path, [])
 
         self.contrib = [
-            f"<a href='https://github.com/{contrib}'>{get_user(contrib)}</a>"
+            f"<a href='https://github.com/{contrib}' target='_blank'>{get_user(contrib)}</a>"
             for contrib in self.contrib
         ]
 
@@ -55,9 +59,20 @@ PATHS = {
 if not os.path.exists("content"):
     os.makedirs("content")
 
+INDEX = """# CS 61A Infra Wiki
+
+Welcome to the CS 61A Infrastructure Wiki! This
+wiki contains information about how various CS 61A
+software works and how you can contribute to it.
+We also plan on including installation guides so
+that you can use these tools in your own courses.
+
+This is a work in progress, so please *bear* with
+us while we put it together!
+"""
+
 with open("content/_index.md", "w") as index:
-    index.write("\n# CS 61A Infra Wiki\n")
-    index.write("Welcome to the CS 61A Infrastructure Wiki!\n")
+    index.write(INDEX)
 
 apps = []
 for root, dirs, files in os.walk("../"):
