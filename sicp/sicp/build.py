@@ -24,7 +24,7 @@ from watchdog.events import (
 from watchdog.observers import Observer
 
 from common.cli_utils import pretty_print
-from common.rpc.auth_utils import get_token, set_token_path
+from common.rpc.auth_utils import get_token
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
@@ -255,7 +255,6 @@ def hash_all(show_progress=False):
     )
     out = {}
     for file in tqdm(files) if show_progress else files:
-        # h = get_hash(file)
         h = get_hash(file)
         if isinstance(file, bytes):
             file = file.decode("ascii")
