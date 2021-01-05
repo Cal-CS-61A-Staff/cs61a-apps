@@ -4,7 +4,6 @@ from os import getenv
 from flask import abort
 
 from common.rpc.utils import cached, create_service, requires_master_secret
-from common.course_config import is_admin_token
 
 service = create_service(__name__)
 

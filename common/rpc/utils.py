@@ -45,11 +45,28 @@ def create_service(app: str, override=None):
                         get_secret_from_server,
                     )  # placed here to avoid circular imports
 
-                    sudo_secret = get_secret_from_server(
-                        secret_name="MASTER",
-                        _impersonate=kwargs.pop("_impersonate"),
-                        _sudo_token=get_token(),
-                    )
+                    print(f"Attempting to impersonate {kwargs.get('_impersonate')}")
+
+                    try:
+                        sudo_secret = get_secret_from_server(
+                            secret_name="MASTER",
+                            _impersonate=kwargs.pop("_impersonate"),
+                            _sudo_token=get_token(),
+                        )
+                    except PermissionError:
+                        refresh_token()
+                        try:  # second attempt, in case the first was just an expired token
+                            sudo_secret = get_secret_from_server(
+                                secret_name="MASTER",
+                                _impersonate=kwargs.pop("_impersonate"),
+                                _sudo_token=get_token(),
+                            )
+                        except PermissionError:
+                            raise PermissionError(
+                                "You must be logged in as an admin to do that."
+                            )
+                            return
+
                     kwargs["master_secret"] = sudo_secret
 
                 for i, endpoint in enumerate(endpoints):
