@@ -1,4 +1,5 @@
 from pathlib import Path
+from queue import Empty, Queue
 from shutil import rmtree
 from subprocess import CalledProcessError
 
@@ -12,12 +13,25 @@ from work_queue import enqueue_deps
 from state import BuildState
 
 
+def clear_queue(queue: Queue):
+    while not queue.empty():
+        try:
+            queue.get(False)
+        except Empty:
+            continue
+        queue.task_done()
+
+
 def worker(build_state: BuildState, index: int):
     scratch_path = Path(build_state.repo_root).joinpath(Path(f".scratch_{index}"))
     if scratch_path.exists():
-        rmtree(scratch_path)
+        rmtree(scratch_path, ignore_errors=True)
 
     while True:
+        if build_state.failure is not None:
+            # every thread needs to clear the queue since otherwise some other thread might still be filling it up
+            clear_queue(build_state.work_queue)
+            return  # some thread has failed, emergency stop
         todo = build_state.work_queue.get()
         if todo is None:
             return
@@ -149,7 +163,7 @@ def worker(build_state: BuildState, index: int):
                             build_state.status_monitor.move(total=1)
 
                     if scratch_path.exists():
-                        rmtree(scratch_path)
+                        rmtree(scratch_path, ignore_errors=True)
 
                 if done:
                     with build_state.scheduling_lock:
@@ -169,6 +183,9 @@ def worker(build_state: BuildState, index: int):
             # either way, we're done with this task for now
             build_state.status_monitor.move(curr=1)
             build_state.work_queue.task_done()
-        except Exception:
+        except Exception as e:
             build_state.status_monitor.stop()
-            raise
+            build_state.failure = BuildException(
+                f"Error while executing rule {todo}: " + str(e)
+            )
+            build_state.work_queue.task_done()

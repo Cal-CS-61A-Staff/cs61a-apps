@@ -1,8 +1,8 @@
 from threading import Thread
 
-from state import BuildState
 from build_worker import worker
 from monitoring import create_status_monitor
+from state import BuildState
 from utils import BuildException
 
 
@@ -26,6 +26,10 @@ def run_build(build_state: BuildState, target: str, num_threads: int):
         thread_instances.append(thread)
         thread.start()
     build_state.work_queue.join()
+
+    if build_state.failure is not None:
+        raise build_state.failure
+
     for _ in range(num_threads):
         build_state.work_queue.put(None)
     for thread in thread_instances:

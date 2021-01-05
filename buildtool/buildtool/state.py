@@ -27,6 +27,7 @@ class BuildState:
     ready: Set[Rule] = field(default_factory=set)
     scheduled_but_not_ready: Set[Rule] = field(default_factory=set)
     work_queue: Queue[Optional[Rule]] = field(default_factory=Queue)
+    failure: Optional[BuildException] = None
 
 
 @dataclass

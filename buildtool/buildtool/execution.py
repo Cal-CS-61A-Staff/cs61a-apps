@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from subprocess import CalledProcessError
 from typing import Callable, Collection, Optional, Sequence
+
+from colorama import Style
 
 from cache import make_cache_memorize
 from context import MemorizeContext
@@ -29,7 +32,7 @@ class ExecutionContext(MemorizeContext):
 
     def sh(self, cmd: str):
         super().sh(cmd)
-        run_shell(cmd, shell=True, cwd=self.cwd, quiet=True)
+        run_shell(cmd, shell=True, cwd=self.cwd, quiet=True, capture_output=True)
 
     def add_deps(self, deps: Sequence[str]):
         super().add_deps(deps)
@@ -107,7 +110,20 @@ def build(
         memorize,
     )
 
-    rule.impl(ctx)
+    try:
+        rule.impl(ctx)
+    except CalledProcessError as e:
+        raise BuildException(
+            "".join(
+                [
+                    str(e) + "\n",
+                    Style.RESET_ALL,
+                    f"Location: {scratch_path}\n",
+                    e.stdout.decode("utf-8"),
+                    e.stderr.decode("utf-8")[:-1],
+                ]
+            )
+        )
 
     if in_sandbox:
         try:

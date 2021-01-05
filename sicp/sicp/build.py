@@ -1,4 +1,5 @@
 import os
+import pathlib
 import sys
 import time
 import webbrowser
@@ -22,6 +23,7 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
+from common.cli_utils import pretty_print
 from common.rpc.auth_utils import get_token, set_token_path
 from common.rpc.sandbox import (
     get_server_hashes,
@@ -66,10 +68,6 @@ def find_target():
             .strip()
         )
     return find_target.out
-
-
-def pretty_print(emoji, msg):
-    print(f"{emoji}{Style.BRIGHT} {msg} {Style.RESET_ALL}{emoji}")
 
 
 def get_sandbox_url():
@@ -229,7 +227,7 @@ def get_hash(path):
     assert _usingExtension, "You must use the crcmod C extension"
     if isinstance(path, bytes):
         path = path.decode("ascii")
-    hash_func = mkPredefinedCrcFun("crc-32")
+    hash_func = hash  # mkPredefinedCrcFun("crc-32")
     if os.path.islink(path):
         return SYMLINK + os.readlink(path)
     try:
@@ -258,9 +256,14 @@ def hash_all(show_progress=False):
     )
     out = {}
     for file in tqdm(files) if show_progress else files:
-        h = get_hash(file)
-        if isinstance(file, bytes):
-            file = file.decode("ascii")
-        out[relpath(file)] = h
+        # h = get_hash(file)
+        if not os.path.islink(file):
+            with open(file, "rb") as f:
+                f.read()
+            if isinstance(file, bytes):
+                file = file.decode("ascii")
+            pathlib.Path(file).stat()
+        out[relpath(file)] = "cat"
+    exit(1)
     tracked_files = set(out) | set(remote_state)
     return out
