@@ -19,7 +19,7 @@ def auth_endpoint(func):
 @cached()
 @auth_endpoint
 @service.route("/admins/is_admin")
-def is_admin(*, course: str, email: str):
+def is_admin(*, course: str, email: str, force_course: str = None):
     ...
 
 

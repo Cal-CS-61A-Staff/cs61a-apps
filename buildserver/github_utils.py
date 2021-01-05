@@ -51,7 +51,7 @@ def update_status(packed_ref: str, pr_number: int):
         # There are no failures, but not everything is building / built
         repo.get_commit(sha).create_status(
             "pending",
-            "https://logs.cs61a.org/service/buildserverg",
+            "https://logs.cs61a.org/service/buildserver",
             "You must build all modified apps before merging",
             "Pusher",
         )
