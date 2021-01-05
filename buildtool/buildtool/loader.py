@@ -113,10 +113,10 @@ def load_rules():
     src_files = get_repo_files()
     build_files = [file for file in src_files if file.split("/")[-1] == "BUILD"]
     target_rule_lookup = TargetLookup()
-    frame = {}
     sys.path.insert(0, repo_root)
     for build_file in build_files:
         with open(build_file) as f:
+            frame = {}
             callback, find = make_callback(
                 repo_root, os.path.dirname(build_file), target_rule_lookup
             )
