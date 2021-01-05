@@ -1,16 +1,13 @@
 from __future__ import annotations
 
 import os
-from threading import Thread
 
 import click
+
 from build_coordinator import run_build
-from build_worker import worker
+from build_state import BuildState
 from fs_utils import find_root, get_repo_files
 from loader import load_rules
-from monitoring import create_status_monitor
-from utils import BuildException
-from build_state import BuildState
 
 
 @click.command()

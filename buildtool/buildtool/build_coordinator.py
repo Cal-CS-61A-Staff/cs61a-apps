@@ -8,7 +8,7 @@ from utils import BuildException
 
 def run_build(build_state: BuildState, target: str, num_threads: int):
     if target not in build_state.target_rule_lookup:
-        raise BuildException(f"Target `{target} not found in BUILD files.")
+        raise BuildException(f"Target {target} not found in BUILD files.")
     root_rule = build_state.target_rule_lookup[target]
 
     build_state.scheduled_but_not_ready.add(root_rule)
