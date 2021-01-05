@@ -43,13 +43,13 @@ def normalize_path(repo_root, build_root, path):
         path = os.path.join(repo_root, path[2:])
     else:
         path = os.path.join(build_root, path)
-    path = Path(path).absolute()
-    repo_root = Path(repo_root).absolute()
+    path = Path(path).absolute().resolve()
+    repo_root = Path(repo_root).absolute().resolve()
     if repo_root not in path.parents:
         raise BuildException(
             f"Target `{path}` is not in the root directory of the repo."
         )
-    return str(path.relative_to(repo_root))
+    return str(path.relative_to(repo_root).resolve())
 
 
 def copy_helper(*, src_root, dest_root, src_names, dest_names=None, symlink=False):
