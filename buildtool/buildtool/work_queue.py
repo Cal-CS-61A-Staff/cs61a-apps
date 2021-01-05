@@ -30,6 +30,7 @@ def enqueue_deps(
                     log(f"Enqueueing dependency {runtime_dep}")
                     build_state.scheduled_but_not_ready.add(runtime_dep)
                     build_state.work_queue.put(runtime_dep)
+                    build_state.status_monitor.move(total=1)
                 else:
                     log(f"Waiting on already queued dependency {runtime_dep}")
                 # register task in the already queued / executing dependency

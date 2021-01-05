@@ -5,14 +5,14 @@ from subprocess import CalledProcessError
 from cache import get_cache_output_paths
 from execution import build
 from fs_utils import copy_helper
-from monitoring import StatusMonitor, log
+from monitoring import log
 from preview_execution import get_deps
 from utils import BuildException, MissingDependency
 from work_queue import enqueue_deps
 from build_state import BuildState
 
 
-def worker(build_state: BuildState, status_monitor: StatusMonitor, index: int):
+def worker(build_state: BuildState, index: int):
     scratch_path = Path(build_state.repo_root).joinpath(Path(f".scratch_{index}"))
     if scratch_path.exists():
         rmtree(scratch_path)
@@ -23,7 +23,7 @@ def worker(build_state: BuildState, status_monitor: StatusMonitor, index: int):
             return
 
         try:
-            status_monitor.update(index, "Parsing: " + str(todo))
+            build_state.status_monitor.update(index, "Parsing: " + str(todo))
 
             log(f"Target {todo} popped from queue by worker {index}")
 
@@ -75,7 +75,7 @@ def worker(build_state: BuildState, status_monitor: StatusMonitor, index: int):
                     # when we release the lock, stuff may change outside, but
                     # we don't care since *our* dependencies (so far) are all available
                     log(f"Target {todo} is not in the cache, rerunning...")
-                    status_monitor.update(index, "Building: " + str(todo))
+                    build_state.status_monitor.update(index, "Building: " + str(todo))
                     try:
                         # if cache_key is None, we haven't finished evaluating the impl, so we
                         # don't know all the dependencies it could need. Therefore, we must
@@ -106,7 +106,7 @@ def worker(build_state: BuildState, status_monitor: StatusMonitor, index: int):
                             except MissingDependency:
                                 raise BuildException("An internal error has occurred.")
                             except CalledProcessError as e:
-                                status_monitor.stop()
+                                build_state.status_monitor.stop()
                                 print(e.cmd)
                                 print(e)
                                 raise BuildException(
@@ -146,6 +146,7 @@ def worker(build_state: BuildState, status_monitor: StatusMonitor, index: int):
                             # due to race conditions, our dependencies are actually all ready now!
                             # no one else will enqueue us, so it is safe to enqueue ourselves
                             build_state.work_queue.put(todo)
+                            build_state.status_monitor.move(total=1)
 
                     if scratch_path.exists():
                         rmtree(scratch_path)
@@ -163,9 +164,11 @@ def worker(build_state: BuildState, status_monitor: StatusMonitor, index: int):
                             if not dependent.pending_rule_dependencies:
                                 # this guy is ready to go
                                 build_state.work_queue.put(dependent)
+                                build_state.status_monitor.move(total=1)
 
             # either way, we're done with this task for now
+            build_state.status_monitor.move(curr=1)
             build_state.work_queue.task_done()
         except Exception:
-            status_monitor.stop()
+            build_state.status_monitor.stop()
             raise

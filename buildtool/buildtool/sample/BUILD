@@ -1,5 +1,3 @@
-from rules import *
-
 global callback
 
 declare_bash_rule(

@@ -1,32 +1,52 @@
 from dataclasses import dataclass
-from typing import Callable
+from threading import Lock
+from typing import Callable, Protocol
 
-from asciimatics.screen import Screen
+from tqdm import tqdm
 
 
 def log(*args):
     pass
 
 
+class MoveCallable(Protocol):
+    def __call__(self, *, curr: int = None, total: int = None) -> None:
+        ...
+
+
 @dataclass
 class StatusMonitor:
     update: Callable[[int, str], None]
+    move: MoveCallable
     stop: Callable[[], None]
 
 
 def create_status_monitor(num_threads: int):
     status = ["IDLE"] * num_threads
 
-    screen = Screen.open()
+    bar = tqdm(total=0)
+    lock = Lock()
+    pos = 0
+    tot = 0
 
     def update(index: int, msg: str):
         status[index] = msg
-        screen.clear()
-        for i, msg in enumerate(status):
-            screen.print_at(msg, 0, i)
-        screen.refresh()
+        # with lock:
+        #     bar.set_description(", ".join(status))
+
+    def move(*, curr: int = None, total: int = None):
+        nonlocal pos, tot
+        with lock:
+            if curr is not None:
+                pos += curr
+                bar.update(curr)
+            if total is not None:
+                tot += total
+                bar.total = tot
+                bar.refresh()
+        bar.set_description(str((pos, tot)))
 
     def stop():
-        screen.close(restore=True)
+        bar.close()
 
-    return StatusMonitor(update, stop)
+    return StatusMonitor(update, move, stop)

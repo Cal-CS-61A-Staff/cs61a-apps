@@ -11,16 +11,17 @@ def run_build(build_state: BuildState, target: str, num_threads: int):
         raise BuildException(f"Target {target} not found in BUILD files.")
     root_rule = build_state.target_rule_lookup[target]
 
+    build_state.status_monitor = create_status_monitor(num_threads)
+
     build_state.scheduled_but_not_ready.add(root_rule)
     build_state.work_queue.put(root_rule)
-
-    status_monitor = create_status_monitor(num_threads)
+    build_state.status_monitor.move(total=1)
 
     thread_instances = []
     for i in range(num_threads):
         thread = Thread(
             target=worker,
-            args=(build_state, status_monitor, i),
+            args=(build_state, i),
         )
         thread_instances.append(thread)
         thread.start()
@@ -30,7 +31,7 @@ def run_build(build_state: BuildState, target: str, num_threads: int):
     for thread in thread_instances:
         thread.join()
 
-    status_monitor.stop()
+    build_state.status_monitor.stop()
 
     if build_state.scheduled_but_not_ready:
         # there is a dependency cycle somewhere!

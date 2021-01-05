@@ -6,6 +6,7 @@ from threading import Lock
 from typing import Dict, Optional, Set
 
 from loader import Rule
+from monitoring import StatusMonitor
 
 
 @dataclass
@@ -15,6 +16,9 @@ class BuildState:
     target_rule_lookup: Dict[str, Rule]
     source_files: Set[str]
     repo_root: str
+
+    # logging
+    status_monitor: StatusMonitor = None
 
     # dynamic state
     scheduling_lock: Lock = field(default_factory=Lock)
