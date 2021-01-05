@@ -17,11 +17,12 @@ from common.rpc.secrets import only
 from common.shell_utils import sh
 from common.oauth_client import (
     create_oauth_client,
-    is_logged_in,
+    is_staff,
     login,
     get_user,
 )
-from common.course_config import is_admin
+from common.rpc.auth import is_admin
+from common.rpc.slack import post_message
 
 CERTBOT_ARGS = [
     "--dns-google",
@@ -87,6 +88,7 @@ def new(img, name=None, env={}):
         "8001",
         environment=env,
         volumes=volumes,
+        hostname=name,
     )
     dna.add_domain(
         name,
@@ -105,8 +107,14 @@ def delete(name):
 
 @add_domain.bind(app)
 @only(["buildserver", "sandbox"])
-def add_domain(name, domain, force_wildcard=False, force_provision=False):
-    return dict(success=dna.add_domain(name, domain, force_wildcard, force_provision))
+def add_domain(
+    name, domain, force_wildcard=False, force_provision=False, proxy_set_header={}
+):
+    return dict(
+        success=dna.add_domain(
+            name, domain, force_wildcard, force_provision, proxy_set_header
+        )
+    )
 
 
 @service_log.bind(app)
@@ -125,7 +133,7 @@ def container_log(name):
 def check_auth(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        if not (is_logged_in() and is_admin(course="cs61a", email=get_user()["email"])):
+        if not (is_staff("cs61a") and is_admin(email=get_user()["email"])):
             return login()
         return func(*args, **kwargs)
 
@@ -170,9 +178,9 @@ def create_pr_subdomain(app, pr_number, pr_host):
             proxy_connect_timeout="1800",
             proxy_send_timeout="1800",
             send_timeout="1800",
-            **{
-                "proxy_set_header Host": pr_host,
-                "proxy_set_header X-Forwarded-For-Host": f"{pr_number}.{app}.pr.cs61a.org",
+            proxy_set_header={
+                "Host": pr_host,
+                "X-Forwarded-For-Host": f"{pr_number}.{app}.pr.cs61a.org",
             },
         ),
         server_name=f"{pr_number}.{app}.pr.cs61a.org",
@@ -184,11 +192,18 @@ def create_pr_subdomain(app, pr_number, pr_host):
     sh("nginx", "-s", "reload")
 
     cert = proxy_cb.cert_else_false(f"*.{app}.pr.cs61a.org", force_exact=True)
-    if not cert:
+    for _ in range(2):
+        if cert:
+            break
         proxy_cb.run_bot(domains=[f"*.{app}.pr.cs61a.org"], args=["certonly"])
         cert = proxy_cb.cert_else_false(f"*.{app}.pr.cs61a.org", force_exact=True)
-    proxy_cb.attach_cert(cert, f"{pr_number}.{app}.pr.cs61a.org")
 
+    if not cert:
+        error = f"Hosted Apps failed to sign a certificate for *.{app}.pr.cs61a.org!"
+        post_message(message=error, channel="infra")
+        return dict(success=False, reason=error)
+
+    proxy_cb.attach_cert(cert, f"{pr_number}.{app}.pr.cs61a.org")
     return dict(success=True)
 
 
