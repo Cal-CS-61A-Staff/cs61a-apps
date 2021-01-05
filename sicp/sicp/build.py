@@ -22,7 +22,7 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from common.rpc.auth_utils import get_token, set_token_path
+from common.rpc.auth_utils import get_token
 from common.rpc.sandbox import (
     get_server_hashes,
     initialize_sandbox,
@@ -82,7 +82,6 @@ def get_sandbox_url():
 @click.command()
 def build():
     os.chdir(find_target())
-    set_token_path(f"{os.path.expanduser('~')}/.sicp_token")
     if not is_sandbox_initialized():
         print("Sandbox is not initialized.")
         if click.confirm(
