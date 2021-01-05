@@ -72,7 +72,7 @@ def make_callback(
 
     def find(path):
         return [
-            os.path.relpath(path, build_root)
+            "//" + os.path.relpath(path, build_root)
             for path in glob(
                 normalize_path(repo_root, build_root, path),
                 recursive=True,
