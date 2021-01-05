@@ -80,7 +80,6 @@ def get_sandbox_url():
 @click.command()
 def build():
     os.chdir(find_target())
-    set_token_path(".token")
     if not is_sandbox_initialized():
         print("Sandbox is not initialized.")
         if click.confirm(
