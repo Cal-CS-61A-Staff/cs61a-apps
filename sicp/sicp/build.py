@@ -226,7 +226,7 @@ def get_hash(path):
     assert _usingExtension, "You must use the crcmod C extension"
     if isinstance(path, bytes):
         path = path.decode("ascii")
-    hash_func = hash  # mkPredefinedCrcFun("crc-32")
+    hash_func = mkPredefinedCrcFun("crc-32")
     if os.path.islink(path):
         return SYMLINK + os.readlink(path)
     try:
@@ -256,13 +256,9 @@ def hash_all(show_progress=False):
     out = {}
     for file in tqdm(files) if show_progress else files:
         # h = get_hash(file)
-        if not os.path.islink(file):
-            with open(file, "rb") as f:
-                f.read()
-            if isinstance(file, bytes):
-                file = file.decode("ascii")
-            pathlib.Path(file).stat()
-        out[relpath(file)] = "cat"
-    exit(1)
+        h = get_hash(file)
+        if isinstance(file, bytes):
+            file = file.decode("ascii")
+        out[relpath(file)] = h
     tracked_files = set(out) | set(remote_state)
     return out
