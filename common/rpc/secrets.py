@@ -4,6 +4,7 @@ from os import getenv
 from flask import abort
 
 from common.rpc.utils import cached, create_service, requires_master_secret
+from common.course_config import is_admin_token
 
 service = create_service(__name__)
 
@@ -37,7 +38,7 @@ def validates_master_secret(func):
 def only(allowed_app, *, allow_staging=False):
     def decorator(func):
         @wraps(func)
-        def wrapped(master_secret, **kwargs):
+        def wrapped(*, master_secret, **kwargs):
             app, is_staging = validate_master_secret(master_secret=master_secret)
             allowed_apps = (
                 [allowed_app] if isinstance(allowed_app, str) else allowed_app
