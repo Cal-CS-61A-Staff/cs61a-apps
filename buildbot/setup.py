@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 
 setup(
-    name="buildbot",
+    name="hack",
     version="0.0.*",
     author="Rahul Arya",
     author_email="rahularya@berkeley.edu",
