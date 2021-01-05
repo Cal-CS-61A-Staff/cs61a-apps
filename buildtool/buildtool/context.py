@@ -24,6 +24,13 @@ class Context(ABC):
             )
         )
 
+    def chdir(self, dest: str):
+        self.cwd = os.path.abspath(
+            Path(self.repo_root).joinpath(
+                normalize_path(self.repo_root, self.cwd, dest)
+            )
+        )
+
     def sh(self, cmd: str):
         raise NotImplementedError
 
@@ -42,6 +49,10 @@ class MemorizeContext(Context):
         super().__init__(repo_root, cwd)
         self.hashstate = hashstate
         self.inputs = []
+
+    def chdir(self, dest: str):
+        super().chdir(dest)
+        self.hashstate.record("chdir", dest)
 
     def sh(self, cmd: str):
         self.hashstate.record("sh", cmd)
