@@ -13,12 +13,8 @@ def auth():
 
 @auth.command()
 def whoami():
-    """Get current user information.
-
-    NUM is the PR number you want to build targets
-    for, and TARGETS is the list of apps you want
-    to build within that PR. If no targets are passed
-    in, then all apps modified in the PR are built.
+    """
+    Get current user information.
     """
     r = requests.get(
         "https://okpy.org/api/v3/user/?access_token={}".format(get_token())
