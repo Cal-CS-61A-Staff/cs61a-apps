@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from shutil import SameFileError, copyfile
+from shutil import SameFileError, copyfile, copytree
 from typing import List
 
 from utils import BuildException
@@ -39,6 +39,7 @@ def get_repo_files() -> List[str]:
 
 
 def normalize_path(repo_root, build_root, path):
+    suffix = "/" if path.endswith("/") else ""
     if path.startswith("//"):
         path = Path(repo_root).joinpath(path[2:])
     else:
@@ -49,7 +50,7 @@ def normalize_path(repo_root, build_root, path):
         raise BuildException(
             f"Target `{path}` is not in the root directory of the repo."
         )
-    return str(path.relative_to(repo_root))
+    return str(path.relative_to(repo_root)) + suffix
 
 
 def copy_helper(*, src_root, dest_root, src_names, dest_names=None, symlink=False):
@@ -63,6 +64,8 @@ def copy_helper(*, src_root, dest_root, src_names, dest_names=None, symlink=Fals
         try:
             if symlink:
                 Path(dest).symlink_to(src)
+            elif src_name.endswith("/"):
+                copytree(src=src, dst=dest, dirs_exist_ok=True)
             else:
                 copyfile(src, dest)
         except SameFileError:

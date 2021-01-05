@@ -2,51 +2,35 @@ from __future__ import annotations
 
 import os
 import sys
-from dataclasses import dataclass, field
 from glob import glob
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from typing import Callable, Optional, Sequence, Union
 
+from state import Rule, TargetLookup
 from utils import BuildException
 from fs_utils import find_root, get_repo_files, normalize_path
-
-from context import Context
-
-
-@dataclass(eq=False)
-class Rule:
-    name: Optional[str]
-    location: str
-    deps: Sequence[str]
-    impl: Callable[[Context], None]
-    outputs: Sequence[str]
-
-    runtime_dependents: List[Rule] = field(default_factory=list)
-    pending_rule_dependencies: List[Rule] = field(default_factory=list)
-
-    def __hash__(self):
-        return hash(id(self))
-
-    def __str__(self):
-        if self.name:
-            return self.name
-        elif len(self.outputs) == 1:
-            return self.outputs[0]
-        else:
-            return f"<anonymous rule from {self.location}/BUILD>"
 
 
 def make_callback(
     repo_root: str,
     build_root: str,
     # output parameter
-    target_rule_lookup: Dict[str, Rule],
+    target_rule_lookup: TargetLookup,
 ):
+    def fail(target):
+        raise BuildException(
+            f"The target `{target}` is built by multiple rules. Targets can only be produced by a single rule."
+        )
+
     def add_target_rule(target, rule):
-        if target in target_rule_lookup:
-            raise BuildException(
-                f"The target `{target}` is built by multiple rules. Targets can only be produced by a single rule."
-            )
-        target_rule_lookup[target] = rule
+        if target.endswith("/"):
+            # it's a folder dependency
+            if target in target_rule_lookup.location_lookup:
+                fail(target)
+            target_rule_lookup.location_lookup[target] = rule
+        else:
+            if target in target_rule_lookup.direct_lookup:
+                fail(target)
+            target_rule_lookup.direct_lookup[target] = rule
 
     def callback(
         *,
@@ -60,7 +44,12 @@ def make_callback(
         rule = Rule(
             name=name,
             location=build_root,
-            deps=[normalize_path(repo_root, build_root, dep) for dep in deps],
+            deps=[
+                dep
+                if dep.startswith(":")
+                else normalize_path(repo_root, build_root, dep)
+                for dep in deps
+            ],
             impl=impl,
             outputs=[normalize_path(repo_root, build_root, output) for output in out],
         )
@@ -68,7 +57,7 @@ def make_callback(
             add_target_rule(output, rule)
 
         if name is not None:
-            add_target_rule(name, rule)
+            add_target_rule(":" + name, rule)
 
     def find(path):
         return [
@@ -123,7 +112,7 @@ def load_rules():
     repo_root = find_root()
     src_files = get_repo_files()
     build_files = [file for file in src_files if file.split("/")[-1] == "BUILD"]
-    target_rule_lookup: Dict[str, Rule] = {}
+    target_rule_lookup = TargetLookup()
     frame = {}
     sys.path.insert(0, repo_root)
     for build_file in build_files:

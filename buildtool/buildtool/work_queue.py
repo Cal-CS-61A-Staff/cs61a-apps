@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from collections import Collection
 
-from build_state import BuildState
-from loader import Rule
+from state import BuildState, Rule
 from monitoring import log
-from utils import BuildException
 
 
 def enqueue_deps(
@@ -19,9 +17,7 @@ def enqueue_deps(
                 # nothing to do
                 continue
 
-            if dep not in build_state.target_rule_lookup:
-                raise BuildException(f"Unknown dependency {dep}.")
-            runtime_dep: Rule = build_state.target_rule_lookup[dep]
+            runtime_dep: Rule = build_state.target_rule_lookup.lookup(build_state, dep)
 
             if runtime_dep not in build_state.ready:
                 waiting_for_deps = True

@@ -5,7 +5,7 @@ import os
 import click
 
 from build_coordinator import run_build
-from build_state import BuildState
+from state import BuildState
 from fs_utils import find_root, get_repo_files
 from loader import load_rules
 
@@ -22,8 +22,9 @@ def cli(target: str, threads: int, cache_directory: str):
     os.chdir(repo_root)
 
     target_rule_lookup = load_rules()
+    target_rule_lookup.verify()
     all_files = get_repo_files()
-    source_files = set(all_files) - target_rule_lookup.keys()
+    source_files = target_rule_lookup.find_source_files(all_files)
 
     run_build(
         BuildState(

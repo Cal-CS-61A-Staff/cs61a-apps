@@ -3,10 +3,9 @@ from typing import Callable, Union
 
 from cache import make_cache_fetcher
 from context import MemorizeContext
-from loader import Rule
 from monitoring import log
 from utils import CacheMiss, HashState, MissingDependency
-from build_state import BuildState
+from state import BuildState, Rule
 
 
 class PreviewContext(MemorizeContext):
@@ -37,10 +36,11 @@ class PreviewContext(MemorizeContext):
 def make_dep_fetcher(build_state: BuildState):
     def dep_fetcher(input_path, *, flags="r") -> Union[str, bytes]:
         try:
-            if input_path in build_state.target_rule_lookup:
+            if input_path not in build_state.source_files:
+                rule = build_state.target_rule_lookup.lookup(build_state, input_path)
                 # this input may be stale / unbuilt
                 # if so, do not read it, but instead throw MissingDependency
-                if build_state.target_rule_lookup[input_path] not in build_state.ready:
+                if rule not in build_state.ready:
                     raise MissingDependency(input_path)
                 # so it's already ready for use!
 
@@ -63,11 +63,12 @@ def get_deps(build_state: BuildState, rule: Rule):
 
     log(f"Looking for static dependencies of {rule}")
     for dep in rule.deps:
-        if dep in build_state.target_rule_lookup:
-            if build_state.target_rule_lookup[dep] not in build_state.ready:
-                log(
-                    f"Static dependency {build_state.target_rule_lookup[dep]} of {rule} is not ready, skipping impl"
-                )
+        if dep not in build_state.source_files:
+            if (
+                build_state.target_rule_lookup.lookup(build_state, dep)
+                not in build_state.ready
+            ):
+                log(f"Static dependency {dep} of {rule} is not ready, skipping impl")
                 # static deps are not yet ready
                 break
         hashstate.update(dep.encode("utf-8"))

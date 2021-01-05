@@ -2,7 +2,7 @@ import hashlib
 import os
 from pathlib import Path
 
-from loader import Rule
+from state import Rule
 from utils import CacheMiss
 
 
@@ -29,7 +29,11 @@ def make_cache_memorize(cache_directory: str):
 
 def get_cache_output_paths(cache_directory: str, rule: Rule, cache_key: str):
     cache_location = Path(cache_directory).joinpath(cache_key)
-    return cache_location, [
+    keys = [
         hashlib.md5(output_path.encode("utf-8")).hexdigest()
         for output_path in rule.outputs
     ]
+    for i, (output_path, key) in enumerate(zip(rule.outputs, keys)):
+        if output_path.endswith("/"):
+            keys[i] += "/"
+    return cache_location, keys

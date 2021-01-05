@@ -1,15 +1,15 @@
 from threading import Thread
 
-from build_state import BuildState
+from state import BuildState
 from build_worker import worker
 from monitoring import create_status_monitor
 from utils import BuildException
 
 
 def run_build(build_state: BuildState, target: str, num_threads: int):
-    if target not in build_state.target_rule_lookup:
-        raise BuildException(f"Target {target} not found in BUILD files.")
-    root_rule = build_state.target_rule_lookup[target]
+    root_rule = build_state.target_rule_lookup.try_lookup(
+        target
+    ) or build_state.target_rule_lookup.lookup(build_state, ":" + target)
 
     build_state.status_monitor = create_status_monitor(num_threads)
 

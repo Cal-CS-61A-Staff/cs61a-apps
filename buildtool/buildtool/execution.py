@@ -7,10 +7,9 @@ from typing import Callable, Collection, Optional, Sequence
 from cache import make_cache_memorize
 from context import MemorizeContext
 from fs_utils import copy_helper
-from loader import Rule
 from monitoring import log
 from utils import BuildException, HashState, MissingDependency
-from build_state import BuildState
+from state import BuildState, Rule
 
 from common.shell_utils import sh as run_shell
 
@@ -75,12 +74,10 @@ def build(
         # check that these deps are built! Since they have not been checked by the PreviewExecution.
         missing_deps = []
         for dep in deps:
-            if dep in build_state.target_rule_lookup:
-                if build_state.target_rule_lookup[dep] not in build_state.ready:
+            if dep not in build_state.source_files:
+                rule = build_state.target_rule_lookup.lookup(build_state, dep)
+                if rule not in build_state.ready:
                     missing_deps.append(dep)
-            else:
-                if dep not in build_state.source_files:
-                    raise BuildException(f"Dependency missing: {dep}")
         if missing_deps:
             raise MissingDependency(*missing_deps)
         loaded_deps.update(deps)

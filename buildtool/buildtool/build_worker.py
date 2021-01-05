@@ -9,7 +9,7 @@ from monitoring import log
 from preview_execution import get_deps
 from utils import BuildException, MissingDependency
 from work_queue import enqueue_deps
-from build_state import BuildState
+from state import BuildState
 
 
 def worker(build_state: BuildState, index: int):
