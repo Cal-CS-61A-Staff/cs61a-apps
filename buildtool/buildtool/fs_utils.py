@@ -39,7 +39,6 @@ def get_repo_files() -> List[str]:
 
 
 def normalize_path(repo_root, build_root, path):
-    print(path, repo_root)
     if path.startswith("//"):
         path = Path(repo_root).joinpath(path[2:])
     else:
