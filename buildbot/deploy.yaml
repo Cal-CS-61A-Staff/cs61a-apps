@@ -1,2 +1,3 @@
 build_type: none
 deploy_type: pypi
+package_name: hack
