@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 
 setup(
-    name="hack",
+    name="buildtool",
     version="0.0.*",
     author="Rahul Arya",
     author_email="rahularya@berkeley.edu",
@@ -13,11 +13,16 @@ setup(
     long_description_content_type="text/markdown",
     licence="MIT",
     packages=find_packages(
-        include=["buildbot", "buildbot.common", "buildbot.common.rpc"]
+        include=["buildtool", "buildtool.common", "buildtool.common.rpc"]
     ),
     package_data={"": ["**/*.tex"]},
     include_package_data=True,
-    entry_points={"console_scripts": ["buildbot=buildbot.__main__:cli"]},
+    entry_points={
+        "console_scripts": [
+            "buildtool=buildtool.__main__:cli",
+            "bt=buildtool.__main__:cli",
+        ]
+    },
     python_requires=">=3.8",
     install_requires=[
         "click",
