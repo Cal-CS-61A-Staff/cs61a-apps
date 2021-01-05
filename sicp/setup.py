@@ -26,5 +26,6 @@ setup(
         "cachetools",
         "colorama",
         "requests",
+        "PyGithub",
     ],
 )
