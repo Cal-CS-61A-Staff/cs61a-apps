@@ -1,7 +1,10 @@
+import traceback
 from pathlib import Path
 from queue import Empty, Queue
 from shutil import rmtree
 from subprocess import CalledProcessError
+
+from colorama import Style
 
 from cache import get_cache_output_paths
 from execution import build
@@ -184,8 +187,12 @@ def worker(build_state: BuildState, index: int):
             build_state.status_monitor.move(curr=1)
             build_state.work_queue.task_done()
         except Exception as e:
+            if not isinstance(e, BuildException):
+                suffix = f"\n{Style.RESET_ALL}" + traceback.format_exc()
+            else:
+                suffix = ""
             build_state.status_monitor.stop()
             build_state.failure = BuildException(
-                f"Error while executing rule {todo}: " + str(e)
+                f"Error while executing rule {todo}: " + str(e) + suffix
             )
             build_state.work_queue.task_done()

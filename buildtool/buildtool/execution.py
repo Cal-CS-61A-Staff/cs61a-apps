@@ -29,10 +29,16 @@ class ExecutionContext(MemorizeContext):
         super().__init__(repo_root, cwd, hashstate)
         self.load_deps = load_deps
         self.memorize = memorize
+        self.sh_queue = []
 
     def sh(self, cmd: str):
         super().sh(cmd)
-        run_shell(cmd, shell=True, cwd=self.cwd, quiet=True, capture_output=True)
+        self.sh_queue.append([cmd, self.cwd])
+
+    def run_shell_queue(self):
+        for cmd, cwd in self.sh_queue:
+            run_shell(cmd, shell=True, cwd=cwd, quiet=True, capture_output=True)
+        self.sh_queue = []
 
     def add_deps(self, deps: Sequence[str]):
         super().add_deps(deps)
@@ -112,6 +118,8 @@ def build(
 
     try:
         rule.impl(ctx)
+        if in_sandbox:
+            ctx.run_shell_queue()
     except CalledProcessError as e:
         raise BuildException(
             "".join(
@@ -119,6 +127,7 @@ def build(
                     str(e) + "\n",
                     Style.RESET_ALL,
                     f"Location: {scratch_path}\n",
+                    f"Working Directory: {ctx.cwd}\n",
                     e.stdout.decode("utf-8"),
                     e.stderr.decode("utf-8")[:-1],
                 ]

@@ -2,11 +2,26 @@ from __future__ import annotations
 
 import os
 from abc import ABC
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
 from fs_utils import normalize_path
 from utils import HashState
+
+
+@dataclass
+class ContextualRelativePath:
+    path: str
+    context: Context
+
+    def resolve(self):
+        return str(self)
+
+    def __str__(self):
+        return os.path.relpath(
+            Path(self.context.repo_root).joinpath(self.path), self.context.cwd
+        )
 
 
 class Context(ABC):
@@ -18,11 +33,7 @@ class Context(ABC):
         return normalize_path(self.repo_root, self.cwd, path)
 
     def relative(self, path: str):
-        return str(
-            os.path.relpath(
-                Path(self.repo_root).joinpath(self.absolute(path)), self.cwd
-            )
-        )
+        return ContextualRelativePath(self.absolute(path), self)
 
     def chdir(self, dest: str):
         self.cwd = os.path.abspath(
