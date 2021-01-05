@@ -42,7 +42,7 @@ def normalize_path(repo_root, build_root, path):
     if path.startswith("//"):
         path = Path(repo_root).joinpath(path[2:])
     else:
-        path = Path(build_root).joinpath(build_root, path)
+        path = Path(repo_root).joinpath(build_root, path)
     path = Path(os.path.abspath(path))
     repo_root = Path(os.path.abspath(repo_root))
     if repo_root not in path.parents:
