@@ -39,12 +39,13 @@ def get_repo_files() -> List[str]:
 
 
 def normalize_path(repo_root, build_root, path):
+    print(path, repo_root)
     if path.startswith("//"):
-        path = os.path.join(repo_root, path[2:])
+        path = Path(repo_root).joinpath(path[2:])
     else:
-        path = os.path.join(build_root, path)
-    path = Path(path).absolute().resolve()
-    repo_root = Path(repo_root).absolute().resolve()
+        path = Path(build_root).joinpath(build_root, path)
+    path = Path(os.path.abspath(path))
+    repo_root = Path(os.path.abspath(repo_root))
     if repo_root not in path.parents:
         raise BuildException(
             f"Target `{path}` is not in the root directory of the repo."
