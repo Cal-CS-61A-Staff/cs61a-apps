@@ -1,6 +1,8 @@
 auth:
   - rahularya50
   - itsvs
+buildtool:
+  - rahularya50
 buildserver:
   - rahularya50
   - itsvs
@@ -45,13 +47,14 @@ search:
   - rahularya50
 secrets:
   - rahularya50
+  - itsvs
 sections:
   - rahularya50
 shortlinks:
   - rahularya50
 sicp:
-  - rahularya50
   - itsvs
+  - rahularya50
 slack:
   - rahularya50
 static-server:

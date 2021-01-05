@@ -129,6 +129,7 @@ for app_raw in apps:
 
 STUBS = [
     StubApp("buildserver"),
+    StubApp("buildtool", name="Build Tool"),
     StubApp("common"),
     StubApp("domains"),
     StubApp("hog-contest"),
