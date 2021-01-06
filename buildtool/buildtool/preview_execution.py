@@ -1,8 +1,8 @@
 import hashlib
-from typing import Callable, Union
+from typing import Callable, Dict, List, Union
 
 from cache import make_cache_fetcher
-from context import MemorizeContext
+from context import Env, MemorizeContext
 from monitoring import log
 from utils import CacheMiss, HashState, MissingDependency
 from state import BuildState, Rule
@@ -22,14 +22,14 @@ class PreviewContext(MemorizeContext):
         self.dep_fetcher = dep_fetcher
         self.cache_fetcher = cache_fetcher
 
-    def input(self, *, file: str = None, sh: str = None):
-        super().input(file=file, sh=sh)
+    def input(self, *, file: str = None, sh: str = None, env: Env = None):
+        super().input(file=file, sh=sh, env=env)
         if file is not None:
             return self.dep_fetcher(self.absolute(file))
         else:
             return self.cache_fetcher(
                 self.hashstate.state(),
-                hashlib.md5(sh.encode("utf-8")).hexdigest(),
+                HashState().record(sh, env).state(),
             )
 
 

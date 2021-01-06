@@ -6,7 +6,6 @@ from tqdm import tqdm
 
 
 def log(*args):
-    # print(*args)
     pass
 
 

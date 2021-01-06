@@ -4,10 +4,12 @@ import os
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Dict, List, Sequence, Union
 
 from fs_utils import normalize_path
 from utils import HashState
+
+Env = Dict[str, Union[str, List[str]]]
 
 
 @dataclass
@@ -42,7 +44,7 @@ class Context(ABC):
             )
         )
 
-    def sh(self, cmd: str):
+    def sh(self, cmd: str, env: Env = None):
         raise NotImplementedError
 
     def add_dep(self, dep: str):
@@ -51,7 +53,7 @@ class Context(ABC):
     def add_deps(self, deps: Sequence[str]):
         raise NotImplementedError
 
-    def input(self, *, file: str, sh: str):
+    def input(self, *, file: str, sh: str, env: Env = None):
         raise NotImplementedError
 
 
@@ -65,8 +67,8 @@ class MemorizeContext(Context):
         super().chdir(dest)
         self.hashstate.record("chdir", dest)
 
-    def sh(self, cmd: str):
-        self.hashstate.record("sh", cmd)
+    def sh(self, cmd: str, env: Env = None):
+        self.hashstate.record("sh", cmd, env)
 
     def add_deps(self, deps: Sequence[str]):
         self.hashstate.record("add_deps", deps)
@@ -75,7 +77,7 @@ class MemorizeContext(Context):
                 continue
             self.inputs.append(self.absolute(dep))
 
-    def input(self, *, file: str, sh: str):
-        self.hashstate.record("input", file, sh)
+    def input(self, *, file: str, sh: str, env: Env = None):
+        self.hashstate.record("input", file, sh, env)
         if file is not None:
             self.inputs.append(self.absolute(file))

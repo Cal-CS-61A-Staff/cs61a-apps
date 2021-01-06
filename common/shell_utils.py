@@ -16,6 +16,7 @@ def sh(
     quiet=False,
     shell=False,
     cwd=None,
+    inherit_env=True,
 ):
     assert not (
         capture_output and stream_output
@@ -24,7 +25,9 @@ def sh(
     if shell:
         args = [" ".join(args)]
 
-    env = {**os.environ, **env, "ENV": "dev"}
+    if inherit_env:
+        env = {**os.environ, **env, "ENV": "dev"}
+
     if stream_output:
         out = subprocess.Popen(
             args,

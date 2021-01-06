@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Callable, Collection, Optional, Sequence
@@ -8,13 +9,12 @@ from typing import Callable, Collection, Optional, Sequence
 from colorama import Style
 
 from cache import make_cache_memorize
-from context import MemorizeContext
+from common.shell_utils import sh as run_shell
+from context import Env, MemorizeContext
 from fs_utils import copy_helper
 from monitoring import log
-from utils import BuildException, HashState, MissingDependency
 from state import BuildState, Rule
-
-from common.shell_utils import sh as run_shell
+from utils import BuildException, HashState, MissingDependency
 
 
 class ExecutionContext(MemorizeContext):
@@ -31,31 +31,65 @@ class ExecutionContext(MemorizeContext):
         self.memorize = memorize
         self.sh_queue = []
 
-    def sh(self, cmd: str):
-        super().sh(cmd)
-        self.sh_queue.append([cmd, self.cwd])
+    def normalize_single(self, path: str):
+        return os.path.abspath(os.path.join(self.repo_root, self.absolute(path)))
+
+    def normalize(self, env: Env):
+        if env is None:
+            return {}
+        for key in env:
+            if isinstance(env[key], str):
+                if env[key].startswith("//"):
+                    env[key] = self.normalize_single(env[key])
+            else:
+                env[key] = ":".join(
+                    self.normalize_single(component) for component in env[key]
+                )
+        return env
+
+    def sh(self, cmd: str, env: Env = None):
+        super().sh(cmd=cmd, env=env)
+        self.sh_queue.append([cmd, self.cwd, self.normalize(env)])
 
     def run_shell_queue(self):
-        for cmd, cwd in self.sh_queue:
-            run_shell(cmd, shell=True, cwd=cwd, quiet=True, capture_output=True)
+        for cmd, cwd, env in self.sh_queue:
+            log("RUNNING cmd:", cmd)
+            run_shell(
+                cmd,
+                shell=True,
+                cwd=cwd,
+                quiet=True,
+                capture_output=True,
+                inherit_env=False,
+                env=env,
+            )
         self.sh_queue = []
 
     def add_deps(self, deps: Sequence[str]):
         super().add_deps(deps)
+        self.run_shell_queue()
         self.load_deps([self.absolute(dep) for dep in deps])
 
-    def input(self, *, file: str = None, sh: str = None):
-        super().input(file=file, sh=sh)
+    def input(self, *, file: str = None, sh: str = None, env: Env = None):
+        super().input(file=file, sh=sh, env=env)
+        self.run_shell_queue()
         if file is not None:
             self.load_deps([self.absolute(file)])
             with open(self.absolute(file), "r") as f:
                 return f.read()
         else:
+            log("RUNNING", sh)
             out = run_shell(
-                sh, shell=True, cwd=self.cwd, capture_output=True, quiet=True
+                sh,
+                shell=True,
+                cwd=self.cwd,
+                capture_output=True,
+                quiet=True,
+                inherit_env=False,
+                env=self.normalize(env),
             ).decode("utf-8")
             self.memorize(
-                self.hashstate.state(), hashlib.md5(sh.encode("utf-8")).hexdigest(), out
+                self.hashstate.state(), HashState().record(sh, env).state(), out
             )
             return out
 
