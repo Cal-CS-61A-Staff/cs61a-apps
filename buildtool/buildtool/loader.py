@@ -141,7 +141,8 @@ def reset_mock_imports(frame, targets):
     )
 
 
-def load_rules():
+def load_rules(flags: Dict[str, object]):
+    flags = Struct(flags)
     repo_root = find_root()
     src_files = get_repo_files()
     build_files = [file for file in src_files if file.split("/")[-1] == "BUILD"]
@@ -158,13 +159,14 @@ def load_rules():
             __builtins__["callback"] = callback
             __builtins__["find"] = find
             __builtins__["load"] = load
+            __builtins__["flags"] = flags
 
             frame = {
                 **frame,
                 "__builtins__": __builtins__,
             }
 
-            reset_mock_imports(frame, ["callback", "find", "load"])
+            reset_mock_imports(frame, ["callback", "find", "load", "flags"])
 
             try:
                 exec(f.read(), frame)

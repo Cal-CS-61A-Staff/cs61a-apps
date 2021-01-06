@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import traceback
+from json import loads
+from typing import List
 
 import click
 from colorama import Fore, Style
@@ -25,9 +27,18 @@ def display_error(error: BuildException):
 @click.command()
 @click.argument("target")
 @click.option("--profile", "-p", default=False, is_flag=True)
+@click.option("--locate", "-l", default=False, is_flag=True)
 @click.option("--threads", "-t", default=8)
 @click.option("--cache-directory", default=".cache")
-def cli(target: str, profile: bool, threads: int, cache_directory: str):
+@click.option("--flag", "-f", type=str, multiple=True)
+def cli(
+    target: str,
+    profile: bool,
+    locate: bool,
+    threads: int,
+    cache_directory: str,
+    flag: List[str],
+):
     """
     This is a `make` alternative with a simpler syntax and some useful features.
     """
@@ -35,10 +46,27 @@ def cli(target: str, profile: bool, threads: int, cache_directory: str):
         repo_root = find_root()
         os.chdir(repo_root)
 
-        target_rule_lookup = load_rules()
+        flags = [flag.split("=", 1) + ["true"] for flag in flag]
+        flags = {flag[0].lower(): loads(flag[1]) for flag in flags}
+
+        target_rule_lookup = load_rules(flags)
         target_rule_lookup.verify()
+
         all_files = get_repo_files()
         source_files = target_rule_lookup.find_source_files(all_files)
+
+        if locate:
+            if target in source_files:
+                raise BuildException(
+                    f"Target {target} is a source file, not a build target."
+                )
+            rule = target_rule_lookup.try_lookup(target)
+            if rule is None and not target.startswith(":"):
+                rule = target_rule_lookup.try_lookup(f":{target}")
+            if rule is None:
+                raise BuildException(f"Target {target} was not found.")
+            print(f"Target {target} is built by {rule.name} in {rule.location}/BUILD.")
+            exit(0)
 
         run_build(
             BuildState(

@@ -71,7 +71,12 @@ def worker(build_state: BuildState, index: int):
 
             if deps_ready:
                 done = False
-                # first check if we're already cached!
+                # if the rule has no outputs, skip execution
+                if not todo.outputs:
+                    log(f"Target {todo} has no outputs and so does not need to be run")
+                    done = True
+
+                # check if we're already cached!
                 if cache_key:
                     cache_location, cache_output_names = get_cache_output_paths(
                         build_state.cache_directory, todo, cache_key
