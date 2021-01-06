@@ -95,13 +95,15 @@ def build(
             copy_helper(
                 src_root=build_state.repo_root,
                 dest_root=scratch_path,
-                src_names=deps,
+                src_names=[dep for dep in deps if not dep.startswith(":")],
                 symlink=True,
             )
 
     load_deps(deps)
     hashstate = HashState()
     for dep in rule.deps:
+        if dep.startswith(":"):
+            continue
         hashstate.update(dep.encode("utf-8"))
         with open(dep, "rb") as f:
             hashstate.update(f.read())

@@ -71,6 +71,8 @@ def get_deps(build_state: BuildState, rule: Rule):
                 log(f"Static dependency {dep} of {rule} is not ready, skipping impl")
                 # static deps are not yet ready
                 break
+        if dep.startswith(":"):
+            continue
         hashstate.update(dep.encode("utf-8"))
         try:
             dep_fetcher(dep, flags="rb")
