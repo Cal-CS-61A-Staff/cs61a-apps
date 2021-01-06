@@ -8,9 +8,9 @@ from typing import Callable, Dict, Optional, Sequence, Union
 
 from colorama import Style
 
+from fs_utils import find_root, get_repo_files, normalize_path
 from state import Rule, TargetLookup
 from utils import BuildException
-from fs_utils import find_root, get_repo_files, normalize_path
 
 LOAD_FRAME_CACHE: Dict[str, Struct] = {}
 
@@ -94,8 +94,15 @@ def make_callback(
 
 
 class Struct:
-    def __init__(self, entries):
+    def __init__(self, entries, default=False):
         self.__dict__.update(entries)
+        self.default = default
+
+    def __getattr__(self, item):
+        if self.default:
+            return None
+        else:
+            return getattr(super(), item)
 
 
 def make_load_rules(repo_root: str, rules_root: str):
@@ -142,7 +149,7 @@ def reset_mock_imports(frame, targets):
 
 
 def load_rules(flags: Dict[str, object]):
-    flags = Struct(flags)
+    flags = Struct(flags, default=True)
     repo_root = find_root()
     src_files = get_repo_files()
     build_files = [file for file in src_files if file.split("/")[-1] == "BUILD"]
