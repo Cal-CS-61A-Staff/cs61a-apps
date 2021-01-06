@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+import traceback
 
 import click
 from colorama import Fore, Style
 
 from build_coordinator import run_build
+from build_worker import TIMINGS
 from common.cli_utils import pretty_print
 from state import BuildState
 from fs_utils import find_root, get_repo_files
@@ -18,14 +20,14 @@ def display_error(error: BuildException):
     pretty_print("🚫", "Build failed.")
     print(Style.BRIGHT)
     print(error)
-    exit(1)
 
 
 @click.command()
 @click.argument("target")
+@click.option("--profile", "-p", default=False, is_flag=True)
 @click.option("--threads", "-t", default=8)
 @click.option("--cache-directory", default=".cache")
-def cli(target: str, threads: int, cache_directory: str):
+def cli(target: str, profile: bool, threads: int, cache_directory: str):
     """
     This is a `make` alternative with a simpler syntax and some useful features.
     """
@@ -48,10 +50,19 @@ def cli(target: str, threads: int, cache_directory: str):
             target,
             threads,
         )
+
+        if profile:
+            slowest = sorted(TIMINGS, key=lambda x: TIMINGS[x], reverse=True)[:20]
+            for key in slowest:
+                print(key, TIMINGS[key])
+
     except BuildException as e:
         display_error(e)
+        exit(1)
     except Exception as e:
-        display_error(BuildException("Error while processing rules: " + repr(e)))
+        display_error(BuildException("Internal error: " + repr(e)))
+        print(f"\n{Style.RESET_ALL}" + traceback.format_exc())
+        exit(1)
 
 
 if __name__ == "__main__":

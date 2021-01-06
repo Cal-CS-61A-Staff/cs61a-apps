@@ -75,9 +75,7 @@ def get_deps(build_state: BuildState, rule: Rule):
             continue
         hashstate.update(dep.encode("utf-8"))
         try:
-            dep_fetcher(dep, flags="rb")
-            with open(dep, "rb") as f:
-                hashstate.update(f.read())
+            hashstate.update(dep_fetcher(dep, flags="rb"))
         except MissingDependency:
             # get static deps before running the impl!
             # this means that a source file is *missing*, but the error will be thrown in enqueue_deps

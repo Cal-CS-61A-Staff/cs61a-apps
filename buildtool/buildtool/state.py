@@ -92,7 +92,7 @@ class Rule:
 
     def __str__(self):
         if self.name:
-            return self.name
+            return f":{self.name}"
         elif len(self.outputs) == 1:
             return self.outputs[0]
         else:

@@ -1,4 +1,6 @@
+import time
 import traceback
+from collections import defaultdict
 from pathlib import Path
 from queue import Empty, Queue
 from shutil import rmtree
@@ -14,6 +16,8 @@ from preview_execution import get_deps
 from utils import BuildException, MissingDependency
 from work_queue import enqueue_deps
 from state import BuildState
+
+TIMINGS = defaultdict(int)
 
 
 def clear_queue(queue: Queue):
@@ -38,6 +42,8 @@ def worker(build_state: BuildState, index: int):
         todo = build_state.work_queue.get()
         if todo is None:
             return
+
+        start_time = time.time()
 
         try:
             build_state.status_monitor.update(index, "Parsing: " + str(todo))
@@ -186,6 +192,10 @@ def worker(build_state: BuildState, index: int):
             # either way, we're done with this task for now
             build_state.status_monitor.move(curr=1)
             build_state.work_queue.task_done()
+
+            # record timing data
+            run_time = time.time() - start_time
+            TIMINGS[str(todo)] += run_time
         except Exception as e:
             if not isinstance(e, BuildException):
                 suffix = f"\n{Style.RESET_ALL}" + traceback.format_exc()

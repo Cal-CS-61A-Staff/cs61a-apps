@@ -2,20 +2,27 @@ from __future__ import annotations
 
 import os
 import sys
+import traceback
 from glob import glob
-from typing import Callable, Optional, Sequence, Union
+from typing import Callable, Dict, Optional, Sequence, Union
+
+from colorama import Style
 
 from state import Rule, TargetLookup
 from utils import BuildException
 from fs_utils import find_root, get_repo_files, normalize_path
 
+LOAD_FRAME_CACHE: Dict[str, Struct] = {}
+
 
 def make_callback(
     repo_root: str,
-    build_root: str,
+    build_root: Optional[str],
     # output parameter
     target_rule_lookup: TargetLookup,
 ):
+    make_callback.build_root = build_root
+
     def fail(target):
         raise BuildException(
             f"The target `{target}` is built by multiple rules. Targets can only be produced by a single rule."
@@ -39,8 +46,16 @@ def make_callback(
         impl: Callable,
         out: Union[str, Sequence[str]] = (),
     ):
+        build_root = make_callback.build_root
+
+        if build_root is None:
+            raise BuildException(
+                "Rules files can only define functions, not invoke callback()"
+            )
+
         if isinstance(out, str):
             out = [out]
+
         rule = Rule(
             name=name,
             location=build_root,
@@ -60,6 +75,13 @@ def make_callback(
             add_target_rule(":" + name, rule)
 
     def find(path):
+        build_root = make_callback.build_root
+
+        if build_root is None:
+            raise BuildException(
+                "Rules files can only define functions, not invoke find()"
+            )
+
         return [
             os.path.relpath(path, build_root)
             for path in glob(
@@ -82,20 +104,29 @@ def make_load_rules(repo_root: str, rules_root: str):
         if not path.endswith(".py"):
             raise BuildException(f"Cannot import from a non .py file: {path}")
 
+        if path in LOAD_FRAME_CACHE:
+            return LOAD_FRAME_CACHE[path]
+
         __builtins__["load"] = make_load_rules(repo_root, path)
-        cached_callback = __builtins__["callback"]
-        cached_find = __builtins__["find"]
-        del __builtins__["callback"]
-        del __builtins__["find"]
         # We hide the callback here, since you should not be running the
         # callback (or anything else!) in an import, but just providing defs
         frame = {"__builtins__": __builtins__}
         reset_mock_imports(frame, ["load"])
+        cached_root = make_callback.build_root
+        make_callback.build_root = None
         with open(path) as f:
-            exec(f.read(), frame)
-        __builtins__["callback"] = cached_callback
-        __builtins__["find"] = cached_find
-        return Struct(frame)
+            try:
+                exec(f.read(), frame)
+            except Exception:
+                raise BuildException(
+                    f"Error while processing rules file {path}:\n"
+                    + f"\n{Style.RESET_ALL}"
+                    + traceback.format_exc()
+                )
+        make_callback.build_root = cached_root
+
+        out = LOAD_FRAME_CACHE[path] = Struct(frame)
+        return out
 
     return load_rules
 
@@ -114,12 +145,12 @@ def load_rules():
     build_files = [file for file in src_files if file.split("/")[-1] == "BUILD"]
     target_rule_lookup = TargetLookup()
     sys.path.insert(0, repo_root)
+    callback, find = make_callback(repo_root, None, target_rule_lookup)
     for build_file in build_files:
+        make_callback.build_root = os.path.dirname(build_file)
+
         with open(build_file) as f:
             frame = {}
-            callback, find = make_callback(
-                repo_root, os.path.dirname(build_file), target_rule_lookup
-            )
             load = make_load_rules(repo_root, os.path.dirname(build_file))
 
             __builtins__["callback"] = callback
@@ -133,5 +164,14 @@ def load_rules():
 
             reset_mock_imports(frame, ["callback", "find", "load"])
 
-            exec(f.read(), frame)
+            try:
+                exec(f.read(), frame)
+            except BuildException:
+                raise
+            except Exception:
+                raise BuildException(
+                    f"Error while processing BUILD file {build_file}:\n"
+                    + f"\n{Style.RESET_ALL}"
+                    + traceback.format_exc()
+                )
     return target_rule_lookup
