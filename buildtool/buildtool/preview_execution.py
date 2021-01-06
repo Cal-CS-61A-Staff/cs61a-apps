@@ -2,6 +2,7 @@ from typing import Callable, Union
 
 from cache import make_cache_fetcher
 from context import Env, MemorizeContext
+from fs_utils import hash_file
 from monitoring import log
 from state import BuildState, Rule
 from utils import CacheMiss, HashState, MissingDependency
@@ -32,7 +33,7 @@ class PreviewContext(MemorizeContext):
 
 
 def make_dep_fetcher(build_state: BuildState):
-    def dep_fetcher(input_path, *, flags="r") -> Union[str, bytes]:
+    def dep_fetcher(input_path, *, get_hash=False) -> Union[str, bytes]:
         try:
             if input_path not in build_state.source_files:
                 rule = build_state.target_rule_lookup.lookup(build_state, input_path)
@@ -42,8 +43,11 @@ def make_dep_fetcher(build_state: BuildState):
                     raise MissingDependency(input_path)
                 # so it's already ready for use!
 
-            with open(input_path, flags) as f:
-                return f.read()
+            if get_hash:
+                return hash_file(input_path)
+            else:
+                with open(input_path) as f:
+                    return f.read()
         except FileNotFoundError:
             raise MissingDependency(input_path)
 
@@ -73,7 +77,7 @@ def get_deps(build_state: BuildState, rule: Rule):
             continue
         hashstate.update(dep.encode("utf-8"))
         try:
-            hashstate.update(dep_fetcher(dep, flags="rb"))
+            hashstate.update(dep_fetcher(dep, get_hash=True))
         except MissingDependency:
             # get static deps before running the impl!
             # this means that a source file is *missing*, but the error will be thrown in enqueue_deps
@@ -106,7 +110,7 @@ def get_deps(build_state: BuildState, rule: Rule):
             for input_path in ctx.inputs:
                 hashstate.update(input_path.encode("utf-8"))
                 try:
-                    data = dep_fetcher(input_path, flags="rb")
+                    data = dep_fetcher(input_path, get_hash=True)
                 except MissingDependency as e:
                     # this dependency was not needed for deps calculation
                     # but is not verified to be up-to-date

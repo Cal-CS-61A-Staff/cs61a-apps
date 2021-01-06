@@ -1,3 +1,4 @@
+import hashlib
 import os
 from pathlib import Path
 from shutil import SameFileError, copyfile, copytree
@@ -70,3 +71,18 @@ def copy_helper(*, src_root, dest_root, src_names, dest_names=None, symlink=Fals
                 copyfile(src, dest)
         except SameFileError:
             pass
+
+
+def hash_file(path):
+    # only hash files whose contents are "locked in". That way we can cache safely.
+    if path in hash_file.cache:
+        return hash_file.cache[path]
+    else:
+        with open(path, "rb") as f:
+            out = hash_file.cache[path] = (
+                hashlib.md5(f.read()).hexdigest().encode("utf-8")
+            )
+            return out
+
+
+hash_file.cache = {}

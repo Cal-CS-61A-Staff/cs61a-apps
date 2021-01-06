@@ -11,7 +11,7 @@ from colorama import Style
 from cache import make_cache_memorize
 from common.shell_utils import sh as run_shell
 from context import Env, MemorizeContext
-from fs_utils import copy_helper
+from fs_utils import copy_helper, hash_file
 from monitoring import log
 from state import BuildState, Rule
 from utils import BuildException, HashState, MissingDependency
@@ -144,8 +144,7 @@ def build(
         if dep.startswith(":"):
             continue
         hashstate.update(dep.encode("utf-8"))
-        with open(dep, "rb") as f:
-            hashstate.update(f.read())
+        hashstate.update(hash_file(dep))
 
     ctx = ExecutionContext(
         scratch_path if in_sandbox else build_state.repo_root,
@@ -190,7 +189,6 @@ def build(
 
     for input_path in ctx.inputs:
         hashstate.update(input_path.encode("utf-8"))
-        with open(input_path, "rb") as f:
-            hashstate.update(f.read())
+        hashstate.update(hash_file(input_path))
 
     return hashstate.state()
