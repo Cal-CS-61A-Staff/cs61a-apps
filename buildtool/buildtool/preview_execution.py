@@ -1,11 +1,10 @@
-import hashlib
-from typing import Callable, Dict, List, Union
+from typing import Callable, Union
 
 from cache import make_cache_fetcher
 from context import Env, MemorizeContext
 from monitoring import log
-from utils import CacheMiss, HashState, MissingDependency
 from state import BuildState, Rule
+from utils import CacheMiss, HashState, MissingDependency
 
 
 class PreviewContext(MemorizeContext):
@@ -28,8 +27,7 @@ class PreviewContext(MemorizeContext):
             return self.dep_fetcher(self.absolute(file))
         else:
             return self.cache_fetcher(
-                self.hashstate.state(),
-                HashState().record(sh, env).state(),
+                self.hashstate.state(), HashState().record(sh, env).state()
             )
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import hashlib
 import os
+import traceback
 from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Callable, Collection, Optional, Sequence
@@ -32,20 +32,25 @@ class ExecutionContext(MemorizeContext):
         self.sh_queue = []
 
     def normalize_single(self, path: str):
-        return os.path.abspath(os.path.join(self.repo_root, self.absolute(path)))
+        if path.startswith("@//"):
+            return os.path.abspath(os.path.join(os.curdir, path[3:]))
+        elif path.startswith("//"):
+            return os.path.abspath(os.path.join(self.repo_root, path[2:]))
+        else:
+            return path
 
     def normalize(self, env: Env):
         if env is None:
             return {}
+        out = {}
         for key in env:
             if isinstance(env[key], str):
-                if env[key].startswith("//"):
-                    env[key] = self.normalize_single(env[key])
+                out[key] = self.normalize_single(env[key])
             else:
-                env[key] = ":".join(
+                out[key] = ":".join(
                     self.normalize_single(component) for component in env[key]
                 )
-        return env
+        return out
 
     def sh(self, cmd: str, env: Env = None):
         super().sh(cmd=cmd, env=env)
@@ -165,7 +170,8 @@ def build(
                     f"Location: {scratch_path}\n",
                     f"Working Directory: {ctx.cwd}\n",
                     e.stdout.decode("utf-8"),
-                    e.stderr.decode("utf-8")[:-1],
+                    e.stderr.decode("utf-8"),
+                    traceback.format_exc(),
                 ]
             )
         )

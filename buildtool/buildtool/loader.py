@@ -99,6 +99,8 @@ class Struct:
 
 
 def make_load_rules(repo_root: str, rules_root: str):
+    rules_root = os.path.dirname(rules_root)
+
     def load_rules(path):
         path = normalize_path(repo_root, rules_root, path)
         if not path.endswith(".py"):
