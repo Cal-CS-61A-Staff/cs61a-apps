@@ -26,10 +26,22 @@ class ContextualRelativePath:
         )
 
 
+class DotDict:
+    def __init__(self):
+        self.items = {}
+
+    def __getitem__(self, item):
+        return self.items[item]
+
+    def __setitem__(self, key, value):
+        self.items[key] = value
+
+
 class Context(ABC):
     def __init__(self, repo_root: str, cwd: str):
         self.repo_root = repo_root
         self.cwd = os.path.abspath(cwd)
+        self.deps = DotDict()
 
     def absolute(self, path: str):
         return normalize_path(self.repo_root, self.cwd, path)

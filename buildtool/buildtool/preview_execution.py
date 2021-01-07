@@ -62,18 +62,28 @@ def get_deps(build_state: BuildState, rule: Rule):
     cache_fetcher = make_cache_fetcher(build_state.cache_directory)
     dep_fetcher = make_dep_fetcher(build_state)
 
+    ctx = PreviewContext(
+        build_state.repo_root,
+        rule.location,
+        hashstate,
+        dep_fetcher,
+        cache_fetcher,
+    )
+
     log(f"Looking for static dependencies of {rule}")
     for dep in rule.deps:
         if dep not in build_state.source_files:
-            if (
-                build_state.target_rule_lookup.lookup(build_state, dep)
-                not in build_state.ready
-            ):
-                log(f"Static dependency {dep} of {rule} is not ready, skipping impl")
+            dep_rule = build_state.target_rule_lookup.lookup(build_state, dep)
+            if dep_rule not in build_state.ready:
+                log(
+                    f"Static dependency {dep} of {dep_rule} is not ready, skipping impl"
+                )
                 # static deps are not yet ready
                 break
-        if dep.startswith(":"):
-            continue
+            ctx.deps[dep] = dep_rule.provided_value
+            if dep.startswith(":"):
+                setattr(ctx.deps, dep[1:], dep_rule.provided_value)
+                continue
         hashstate.update(dep.encode("utf-8"))
         try:
             hashstate.update(dep_fetcher(dep, get_hash=True))
@@ -82,17 +92,10 @@ def get_deps(build_state: BuildState, rule: Rule):
             # this means that a source file is *missing*, but the error will be thrown in enqueue_deps
             break
     else:
-        ctx = PreviewContext(
-            build_state.repo_root,
-            rule.location,
-            hashstate,
-            dep_fetcher,
-            cache_fetcher,
-        )
         ok = False
         try:
             log(f"Running impl of {rule} to discover dynamic dependencies")
-            rule.impl(ctx)
+            rule.provided_value = rule.impl(ctx)
             log(f"Impl of {rule} completed with discovered deps: {ctx.inputs}")
             for out in rule.outputs:
                 # needed so that if we ask for another output, we don't panic if it's not in the cache

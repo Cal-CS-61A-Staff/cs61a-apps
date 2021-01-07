@@ -142,11 +142,6 @@ def build(
 
     load_deps(deps)
     hashstate = HashState()
-    for dep in rule.deps:
-        if dep.startswith(":"):
-            continue
-        hashstate.update(dep.encode("utf-8"))
-        hashstate.update(hash_file(dep))
 
     ctx = ExecutionContext(
         scratch_path if in_sandbox else build_state.repo_root,
@@ -158,8 +153,18 @@ def build(
         memorize,
     )
 
+    for dep in rule.deps:
+        dep_rule = build_state.target_rule_lookup.try_lookup(dep)
+        if dep.startswith(":"):
+            setattr(ctx.deps, dep[1:], dep_rule.provided_value)
+        else:
+            hashstate.update(dep.encode("utf-8"))
+            hashstate.update(hash_file(dep))
+        if dep not in build_state.source_files:
+            ctx.deps[dep] = dep_rule.provided_value
+
     try:
-        rule.impl(ctx)
+        rule.provided_value = rule.impl(ctx)
         for out in rule.outputs:
             # needed so that if we ask for another output, we don't panic if it's not in the cache
             hashstate.record(out)

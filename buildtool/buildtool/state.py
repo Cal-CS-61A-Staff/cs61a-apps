@@ -86,6 +86,7 @@ class Rule:
 
     runtime_dependents: List[Rule] = field(default_factory=list)
     pending_rule_dependencies: List[Rule] = field(default_factory=list)
+    provided_value: object = None
 
     def __hash__(self):
         return hash(id(self))
