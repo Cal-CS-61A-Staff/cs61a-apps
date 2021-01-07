@@ -23,13 +23,12 @@ class PreviewContext(MemorizeContext):
         self.cache_fetcher = cache_fetcher
 
     def input(self, *, file: str = None, sh: str = None, env: Env = None):
+        state = self.hashstate.state()
         super().input(file=file, sh=sh, env=env)
         if file is not None:
             return self.dep_fetcher(self.absolute(file))
         else:
-            return self.cache_fetcher(
-                self.hashstate.state(), HashState().record(sh, env).state()
-            )
+            return self.cache_fetcher(state, HashState().record(sh, env).state())
 
 
 def make_dep_fetcher(build_state: BuildState):
@@ -95,6 +94,9 @@ def get_deps(build_state: BuildState, rule: Rule):
             log(f"Running impl of {rule} to discover dynamic dependencies")
             rule.impl(ctx)
             log(f"Impl of {rule} completed with discovered deps: {ctx.inputs}")
+            for out in rule.outputs:
+                # needed so that if we ask for another output, we don't panic if it's not in the cache
+                hashstate.record(out)
             ok = True
         except CacheMiss:
             log(f"Cache miss while running impl of {rule}")

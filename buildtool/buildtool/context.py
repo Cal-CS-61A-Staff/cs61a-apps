@@ -4,7 +4,7 @@ import os
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from fs_utils import normalize_path
 from utils import HashState
@@ -53,7 +53,7 @@ class Context(ABC):
     def add_deps(self, deps: Sequence[str]):
         raise NotImplementedError
 
-    def input(self, *, file: str, sh: str, env: Env = None):
+    def input(self, *, file: Optional[str], sh: Optional[str], env: Env = None):
         raise NotImplementedError
 
 
@@ -77,7 +77,7 @@ class MemorizeContext(Context):
                 continue
             self.inputs.append(self.absolute(dep))
 
-    def input(self, *, file: str, sh: str, env: Env = None):
+    def input(self, *, file: Optional[str], sh: Optional[str], env: Env = None):
         self.hashstate.record("input", file, sh, env)
         if file is not None:
             self.inputs.append(self.absolute(file))

@@ -75,7 +75,11 @@ class ExecutionContext(MemorizeContext):
         self.run_shell_queue()
         self.load_deps([self.absolute(dep) for dep in deps])
 
-    def input(self, *, file: str = None, sh: str = None, env: Env = None):
+    def input(
+        self, *, file: Optional[str] = None, sh: Optional[str] = None, env: Env = None
+    ):
+        # we want the state *before* running the action
+        state = self.hashstate.state()
         super().input(file=file, sh=sh, env=env)
         self.run_shell_queue()
         if file is not None:
@@ -93,9 +97,7 @@ class ExecutionContext(MemorizeContext):
                 inherit_env=False,
                 env=self.normalize(env),
             ).decode("utf-8")
-            self.memorize(
-                self.hashstate.state(), HashState().record(sh, env).state(), out
-            )
+            self.memorize(state, HashState().record(sh, env).state(), out)
             return out
 
 
