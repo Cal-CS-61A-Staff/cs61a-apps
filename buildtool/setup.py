@@ -24,11 +24,5 @@ setup(
         ]
     },
     python_requires=">=3.8",
-    install_requires=[
-        "click",
-        "flask",
-        "cachetools",
-        "colorama",
-        "requests",
-    ],
+    install_requires=["click", "flask", "cachetools", "colorama", "requests", "tqdm"],
 )
