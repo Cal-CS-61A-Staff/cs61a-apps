@@ -49,8 +49,8 @@ def sh(
     else:
         out = subprocess.run(args, env=env, stdout=subprocess.PIPE, shell=shell)
     if capture_output and not quiet:
-        print(out.stdout, file=sys.stdout)
-        print(out.stderr, file=sys.stderr)
+        print(out.stdout.decode("utf-8"), file=sys.stdout)
+        print(out.stderr.decode("utf-8"), file=sys.stderr)
     out.check_returncode()
     return out.stdout
 
