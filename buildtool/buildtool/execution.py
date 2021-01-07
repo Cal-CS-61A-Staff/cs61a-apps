@@ -73,7 +73,9 @@ class ExecutionContext(MemorizeContext):
     def add_deps(self, deps: Sequence[str]):
         super().add_deps(deps)
         self.run_shell_queue()
-        self.load_deps([self.absolute(dep) for dep in deps])
+        self.load_deps(
+            [dep if dep.startswith(":") else self.absolute(dep) for dep in deps]
+        )
 
     def input(
         self, *, file: Optional[str] = None, sh: Optional[str] = None, env: Env = None
