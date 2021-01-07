@@ -160,6 +160,9 @@ def build(
 
     try:
         rule.impl(ctx)
+        for out in rule.outputs:
+            # needed so that if we ask for another output, we don't panic if it's not in the cache
+            hashstate.record(out)
         if in_sandbox:
             ctx.run_shell_queue()
     except CalledProcessError as e:

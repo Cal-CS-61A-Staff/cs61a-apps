@@ -116,9 +116,9 @@ def worker(build_state: BuildState, index: int):
                             )
                             # now, if no exception has thrown, all the deps are available to the deps finder
                             alt_cache_key, deps = get_deps(build_state, todo)
-                            assert (
-                                cache_key == alt_cache_key
-                            ), "An internal error has occurred"
+                            # the alt_cache_key *MAY HAVE CHANGED*, because dynamic dependencies
+                            # are not used for the input() cache_key [since they are only known afterwards]
+                            # however, the alt_cache_key should match the cache_key of the subsequent run
                             try:
                                 alt_cache_key = build(
                                     build_state,
