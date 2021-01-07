@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 import traceback
 from glob import glob
 from typing import Callable, Dict, Optional, Sequence, Union
@@ -14,6 +15,10 @@ from utils import BuildException
 
 LOAD_FRAME_CACHE: Dict[str, Struct] = {}
 
+TIMINGS = {}
+
+start_time_stack = []
+
 
 def make_callback(
     repo_root: str,
@@ -22,6 +27,7 @@ def make_callback(
     target_rule_lookup: TargetLookup,
 ):
     make_callback.build_root = build_root
+    make_callback.find_cache = {}
 
     def fail(target):
         raise BuildException(
@@ -77,18 +83,25 @@ def make_callback(
     def find(path):
         build_root = make_callback.build_root
 
+        target = normalize_path(repo_root, build_root, path)
+
+        if target in make_callback.find_cache:
+            return make_callback.find_cache[target]
+
         if build_root is None:
             raise BuildException(
                 "Rules files can only define functions, not invoke find()"
             )
 
-        return [
-            os.path.relpath(path, build_root)
+        make_callback.find_cache[target] = out = [
+            "//" + os.path.relpath(path, repo_root)
             for path in glob(
                 normalize_path(repo_root, build_root, path),
                 recursive=True,
             )
         ]
+
+        return out
 
     return callback, find
 
@@ -116,6 +129,8 @@ def make_load_rules(repo_root: str, rules_root: str):
         if path in LOAD_FRAME_CACHE:
             return LOAD_FRAME_CACHE[path]
 
+        start_time_stack.append(time.time())
+
         __builtins__["load"] = make_load_rules(repo_root, path)
         # We hide the callback here, since you should not be running the
         # callback (or anything else!) in an import, but just providing defs
@@ -133,6 +148,9 @@ def make_load_rules(repo_root: str, rules_root: str):
                     + traceback.format_exc()
                 )
         make_callback.build_root = cached_root
+
+        TIMINGS[path] = load_time = time.time() - start_time_stack.pop()
+        start_time_stack[0] += load_time
 
         out = LOAD_FRAME_CACHE[path] = Struct(frame)
         return out
@@ -174,7 +192,7 @@ def load_rules(flags: Dict[str, object]):
             }
 
             reset_mock_imports(frame, ["callback", "find", "load", "flags"])
-
+            start_time_stack.append(time.time())
             try:
                 exec(f.read(), frame)
             except BuildException:
@@ -185,4 +203,5 @@ def load_rules(flags: Dict[str, object]):
                     + f"\n{Style.RESET_ALL}"
                     + traceback.format_exc()
                 )
+            TIMINGS[build_file] = time.time() - start_time_stack.pop()
     return target_rule_lookup

@@ -9,11 +9,11 @@ import click
 from colorama import Fore, Style
 
 from build_coordinator import run_build
-from build_worker import TIMINGS
+from build_worker import TIMINGS as BUILD_TIMINGS
 from common.cli_utils import pretty_print
 from state import BuildState
 from fs_utils import find_root, get_repo_files
-from loader import load_rules
+from loader import load_rules, TIMINGS as LOAD_TIMINGS
 from utils import BuildException
 
 
@@ -55,6 +55,16 @@ def cli(
         all_files = get_repo_files()
         source_files = target_rule_lookup.find_source_files(all_files)
 
+        if profile:
+            print("Slow Build / Rules Files (Loading Phase):")
+            slowest = sorted(LOAD_TIMINGS, key=lambda x: LOAD_TIMINGS[x], reverse=True)[
+                :20
+            ]
+            for key in slowest:
+                print(key, LOAD_TIMINGS[key])
+
+            print()
+
         if locate:
             if target in source_files:
                 raise BuildException(
@@ -80,9 +90,12 @@ def cli(
         )
 
         if profile:
-            slowest = sorted(TIMINGS, key=lambda x: TIMINGS[x], reverse=True)[:20]
+            print("Slow Rules (Execution Phase):")
+            slowest = sorted(
+                BUILD_TIMINGS, key=lambda x: BUILD_TIMINGS[x], reverse=True
+            )[:20]
             for key in slowest:
-                print(key, TIMINGS[key])
+                print(key, BUILD_TIMINGS[key])
 
     except BuildException as e:
         display_error(e)
