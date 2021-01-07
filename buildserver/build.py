@@ -102,7 +102,7 @@ def run_61a_website_build():
                 env=env,
                 capture_output=True,
             )
-            print(out)
+            print(out.decode("utf-8"))
 
     sh("rm", "-rf", "env")
     sh("cp", "-aT", "/app/buildcache/website-env", "env")
