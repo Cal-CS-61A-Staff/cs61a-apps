@@ -93,6 +93,10 @@ def make_callback(
                 "Rules files can only define functions, not invoke find()"
             )
 
+        ext = path.split(".")[-1]
+        if "/" in ext:
+            raise BuildException("Cannot find() files without specifying an extension")
+
         make_callback.find_cache[target] = out = [
             "//" + os.path.relpath(path, repo_root)
             for path in glob(
@@ -195,8 +199,6 @@ def load_rules(flags: Dict[str, object]):
             start_time_stack.append(time.time())
             try:
                 exec(f.read(), frame)
-            except BuildException:
-                raise
             except Exception:
                 raise BuildException(
                     f"Error while processing BUILD file {build_file}:\n"
