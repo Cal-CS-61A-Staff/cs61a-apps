@@ -180,10 +180,10 @@ class Struct:
 
 
 def make_load_rules(repo_root: str, rules_root: str):
-    rules_root = os.path.dirname(rules_root)
+    make_load_rules.rules_root = os.path.dirname(rules_root)
 
     def load_rules(path):
-        path = normalize_path(repo_root, rules_root, path)
+        path = normalize_path(repo_root, make_load_rules.rules_root, path)
         if not path.endswith(".py"):
             raise BuildException(f"Cannot import from a non .py file: {path}")
 
@@ -192,6 +192,7 @@ def make_load_rules(repo_root: str, rules_root: str):
 
         start_time_stack.append(time.time())
 
+        old_rules_root = make_load_rules.rules_root
         __builtins__["load"] = make_load_rules(repo_root, path)
         # We hide the callback here, since you should not be running the
         # callback (or anything else!) in an import, but just providing defs
@@ -209,6 +210,7 @@ def make_load_rules(repo_root: str, rules_root: str):
                     + traceback.format_exc()
                 )
         make_callback.build_root = cached_root
+        make_load_rules.rules_root = old_rules_root
 
         TIMINGS[path] = load_time = time.time() - start_time_stack.pop()
         start_time_stack[0] += load_time

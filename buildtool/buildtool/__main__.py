@@ -70,7 +70,7 @@ def cli(
         if not skip_setup:
             setup_rule_lookup = load_rules(flags, workspace=True)
 
-            if target.startswith("setup:"):
+            if target and target.startswith("setup:"):
                 setup_target = target[5:]
                 skip_build = True
             else:
