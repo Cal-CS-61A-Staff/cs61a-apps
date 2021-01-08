@@ -6,7 +6,7 @@ with open("README.md") as f:
 
 setup(
     name="buildtool",
-    version="0.0.*",
+    version="0.1.*",
     author="Rahul Arya",
     author_email="rahularya@berkeley.edu",
     long_description=readme,
