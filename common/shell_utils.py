@@ -9,7 +9,14 @@ from typing.io import IO
 
 
 def sh(
-    *args, env={}, capture_output=False, stream_output=False, quiet=False, shell=False
+    *args,
+    env={},
+    capture_output=False,
+    stream_output=False,
+    quiet=False,
+    shell=False,
+    cwd=None,
+    inherit_env=True,
 ):
     assert not (
         capture_output and stream_output
@@ -18,7 +25,9 @@ def sh(
     if shell:
         args = [" ".join(args)]
 
-    env = {**os.environ, **env, "ENV": "dev"}
+    if inherit_env:
+        env = {**os.environ, **env, "ENV": "dev"}
+
     if stream_output:
         out = subprocess.Popen(
             args,
@@ -28,6 +37,7 @@ def sh(
             universal_newlines=True,
             bufsize=1,
             shell=shell,
+            cwd=cwd,
         )
 
         def generator():
@@ -45,9 +55,13 @@ def sh(
 
         return generator()
     elif capture_output:
-        out = subprocess.run(args, env=env, capture_output=capture_output, shell=shell)
+        out = subprocess.run(
+            args, env=env, capture_output=capture_output, shell=shell, cwd=cwd
+        )
     else:
-        out = subprocess.run(args, env=env, stdout=subprocess.PIPE, shell=shell)
+        out = subprocess.run(
+            args, env=env, stdout=subprocess.PIPE, shell=shell, cwd=cwd
+        )
     if capture_output and not quiet:
         print(out.stdout.decode("utf-8"), file=sys.stdout)
         print(out.stderr.decode("utf-8"), file=sys.stderr)
