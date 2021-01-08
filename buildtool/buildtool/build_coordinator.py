@@ -48,4 +48,4 @@ def run_build(build_state: BuildState, target: str, num_threads: int, quiet: boo
                 )
             else:
                 chain.append(pos)
-                pos = pos.pending_rule_dependencies[0]
+                pos = next(iter(pos.pending_rule_dependencies))

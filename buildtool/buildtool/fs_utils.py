@@ -1,5 +1,6 @@
 import hashlib
 import os
+from functools import lru_cache
 from pathlib import Path
 from shutil import SameFileError, copyfile, copytree
 from typing import List
@@ -22,6 +23,7 @@ def find_root():
     )
 
 
+@lru_cache()
 def get_repo_files() -> List[str]:
     return [
         file.decode("ascii") if isinstance(file, bytes) else file
