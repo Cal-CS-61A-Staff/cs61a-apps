@@ -90,7 +90,7 @@ def run_61a_website_build():
         for i in range(num_iterations):
             is_last_iteration = i == num_iterations - 1
             parallel_args = ["-j1"] if is_last_iteration else ["-j4"]
-            sh(
+            out = sh(
                 "make",
                 "--no-print-directory",
                 "-C",
@@ -100,7 +100,9 @@ def run_61a_website_build():
                 f"BUILDPASS={i+1}",
                 *parallel_args,
                 env=env,
+                capture_output=True,
             )
+            print(out.decode("utf-8"))
 
     sh("rm", "-rf", "env")
     sh("cp", "-aT", "/app/buildcache/website-env", "env")
