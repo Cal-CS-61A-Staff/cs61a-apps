@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import traceback
 from json import loads
+from shutil import rmtree
 from typing import List
 
 import click
@@ -119,17 +120,26 @@ def cli(
             exit(0)
 
         if not skip_build:
-            run_build(
-                BuildState(
-                    target_rule_lookup=target_rule_lookup,
-                    source_files=source_files,
-                    cache_directory=cache_directory,
-                    repo_root=repo_root,
-                ),
-                target,
-                threads,
-                quiet,
-            )
+            for _ in range(2 if clean else 1):
+                if clean:
+                    for out_dir in config.output_directories:
+                        rmtree(out_dir, ignore_errors=True)
+                    for rule in set(target_rule_lookup.direct_lookup.values()) | set(
+                        target_rule_lookup.direct_lookup.values()
+                    ):
+                        rule.pending_rule_dependencies = []
+                        rule.runtime_dependents = []
+                run_build(
+                    BuildState(
+                        target_rule_lookup=target_rule_lookup,
+                        source_files=source_files,
+                        cache_directory=cache_directory,
+                        repo_root=repo_root,
+                    ),
+                    target,
+                    threads,
+                    quiet,
+                )
 
         if profile:
             print("Slow Rules (Execution Phase):")

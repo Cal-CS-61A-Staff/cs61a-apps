@@ -40,16 +40,24 @@ class Config:
     def register_default_setup_rule(self, rule: str):
         self._check_active()
         self._check_rule(rule)
+        if self.default_setup_rule is not None:
+            raise BuildException(
+                f"Default setup rule is already set to {self.default_setup_rule}"
+            )
         self.default_setup_rule = rule
 
     def register_default_build_rule(self, rule: str):
         self._check_active()
         self._check_rule(rule)
+        if self.default_build_rule is not None:
+            raise BuildException(
+                f"Default build rule is already set to {self.default_build_rule}"
+            )
         self.default_build_rule = rule
 
-    def register_output_directory(self, rule: str):
+    def register_output_directory(self, path: str):
         self._check_active()
-        self.output_directories.append(rule)
+        self.output_directories.append(normalize_path(os.curdir, os.curdir, path))
 
 
 config = Config()
