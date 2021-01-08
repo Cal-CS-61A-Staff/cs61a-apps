@@ -4,8 +4,9 @@ import os
 import sys
 import time
 import traceback
+from dataclasses import dataclass, field
 from glob import glob
-from typing import Callable, Dict, Optional, Sequence, Union
+from typing import Callable, Dict, List, Optional, Sequence, Union
 
 from colorama import Style
 
@@ -20,6 +21,48 @@ TIMINGS = {}
 start_time_stack = []
 
 
+@dataclass
+class Config:
+    default_setup_rule: Optional[str] = None
+    default_build_rule: Optional[str] = None
+    active: bool = False
+    output_directories: List[str] = field(default_factory=list)
+
+    def _check_active(self):
+        if not self.active:
+            raise BuildException("Cannot use config in this context.")
+
+    @staticmethod
+    def _check_rule(rule: str):
+        if not rule.startswith(":"):
+            raise BuildException(f"Can only register a rule, not {rule}")
+
+    def register_default_setup_rule(self, rule: str):
+        self._check_active()
+        self._check_rule(rule)
+        if self.default_setup_rule is not None:
+            raise BuildException(
+                f"Default setup rule is already set to {self.default_setup_rule}"
+            )
+        self.default_setup_rule = rule
+
+    def register_default_build_rule(self, rule: str):
+        self._check_active()
+        self._check_rule(rule)
+        if self.default_build_rule is not None:
+            raise BuildException(
+                f"Default build rule is already set to {self.default_build_rule}"
+            )
+        self.default_build_rule = rule
+
+    def register_output_directory(self, path: str):
+        self._check_active()
+        self.output_directories.append(normalize_path(os.curdir, os.curdir, path))
+
+
+config = Config()
+
+
 def make_callback(
     repo_root: str,
     build_root: Optional[str],
@@ -28,6 +71,7 @@ def make_callback(
 ):
     make_callback.build_root = build_root
     make_callback.find_cache = {}
+    make_callback.target_rule_lookup = target_rule_lookup
 
     def fail(target):
         raise BuildException(
@@ -35,6 +79,7 @@ def make_callback(
         )
 
     def add_target_rule(target, rule):
+        target_rule_lookup = make_callback.target_rule_lookup
         if target.endswith("/"):
             # it's a folder dependency
             if target in target_rule_lookup.location_lookup:
@@ -82,7 +127,9 @@ def make_callback(
         if name is not None:
             add_target_rule(":" + name, rule)
 
-    def find(path):
+        return f":{name}"
+
+    def find(path, *, unsafe_ignore_extension=False):
         build_root = make_callback.build_root
 
         target = normalize_path(repo_root, build_root, path)
@@ -95,9 +142,12 @@ def make_callback(
                 "Rules files can only define functions, not invoke find()"
             )
 
-        ext = path.split(".")[-1]
-        if "/" in ext:
-            raise BuildException("Cannot find() files without specifying an extension")
+        if not unsafe_ignore_extension:
+            ext = path.split(".")[-1]
+            if "/" in ext:
+                raise BuildException(
+                    "Cannot find() files without specifying an extension"
+                )
 
         make_callback.find_cache[target] = out = [
             "//" + os.path.relpath(path, repo_root)
@@ -172,11 +222,15 @@ def reset_mock_imports(frame, targets):
     )
 
 
-def load_rules(flags: Dict[str, object]):
+def load_rules(flags: Dict[str, object], *, workspace=False):
     flags = Struct(flags, default=True)
     repo_root = find_root()
     src_files = get_repo_files()
-    build_files = [file for file in src_files if file.split("/")[-1] == "BUILD"]
+    build_files = (
+        ["WORKSPACE"]
+        if workspace
+        else [file for file in src_files if file.split("/")[-1] == "BUILD"]
+    )
     target_rule_lookup = TargetLookup()
     sys.path.insert(0, repo_root)
     callback, find = make_callback(repo_root, None, target_rule_lookup)
@@ -185,7 +239,7 @@ def load_rules(flags: Dict[str, object]):
 
         with open(build_file) as f:
             frame = {}
-            load = make_load_rules(repo_root, os.path.dirname(build_file))
+            load = make_load_rules(repo_root, build_file)
 
             __builtins__["callback"] = callback
             __builtins__["find"] = find
@@ -198,9 +252,16 @@ def load_rules(flags: Dict[str, object]):
             }
 
             reset_mock_imports(frame, ["callback", "find", "load", "flags"])
+
+            if workspace:
+                __builtins__["config"] = config
+                config.active = True
+                reset_mock_imports(frame, ["config"])
+
             start_time_stack.append(time.time())
             try:
                 exec(f.read(), frame)
+                config.active = False
             except Exception:
                 raise BuildException(
                     f"Error while processing BUILD file {build_file}:\n"

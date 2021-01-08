@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import traceback
 from json import loads
+from shutil import rmtree
 from typing import List
 
 import click
@@ -14,8 +15,9 @@ from common.cli_utils import pretty_print
 from monitoring import enable_logging
 from state import BuildState
 from fs_utils import find_root, get_repo_files
-from loader import load_rules, TIMINGS as LOAD_TIMINGS
+from loader import config, load_rules, TIMINGS as LOAD_TIMINGS
 from utils import BuildException
+from workspace_setup import initialize_workspace
 
 
 def display_error(error: BuildException):
@@ -26,11 +28,16 @@ def display_error(error: BuildException):
 
 
 @click.command()
-@click.argument("target")
+@click.argument("target", required=False)
 @click.option("--profile", "-p", default=False, is_flag=True)
 @click.option("--locate", "-l", default=False, is_flag=True)
 @click.option("--verbose", "-v", default=False, is_flag=True)
+@click.option("--quiet", "-q", default=False, is_flag=True)
+@click.option("--skip-setup", default=False, is_flag=True)
+@click.option("--skip-build", default=False, is_flag=True)
+@click.option("--clean", "-c", default=False, is_flag=True)
 @click.option("--threads", "-t", default=8)
+@click.option("--state-directory", default=".state")
 @click.option("--cache-directory", default=".cache")
 @click.option("--flag", "-f", type=str, multiple=True)
 def cli(
@@ -38,7 +45,12 @@ def cli(
     profile: bool,
     locate: bool,
     verbose: bool,
+    quiet: bool,
+    skip_setup: bool,
+    skip_build: bool,
+    clean: bool,
     threads: int,
+    state_directory: str,
     cache_directory: str,
     flag: List[str],
 ):
@@ -54,6 +66,22 @@ def cli(
 
         flags = [flag.split("=", 1) + ["true"] for flag in flag]
         flags = {flag[0].lower(): loads(flag[1]) for flag in flags}
+
+        if not skip_setup:
+            setup_rule_lookup = load_rules(flags, workspace=True)
+
+            if target.startswith("setup:"):
+                setup_target = target[5:]
+                skip_build = True
+            else:
+                setup_target = config.default_setup_rule
+
+            initialize_workspace(
+                setup_rule_lookup,
+                setup_target,
+                state_directory,
+                quiet,
+            )
 
         target_rule_lookup = load_rules(flags)
         target_rule_lookup.verify()
@@ -71,6 +99,13 @@ def cli(
 
             print()
 
+        need_target = locate or not skip_build
+
+        if not target and need_target:
+            target = config.default_build_rule
+            if target is None:
+                raise BuildException("No target provided, and no default target set.")
+
         if locate:
             if target in source_files:
                 raise BuildException(
@@ -84,16 +119,27 @@ def cli(
             print(f"Target {target} is built by {rule.name} in {rule.location}/BUILD.")
             exit(0)
 
-        run_build(
-            BuildState(
-                target_rule_lookup=target_rule_lookup,
-                source_files=source_files,
-                cache_directory=cache_directory,
-                repo_root=repo_root,
-            ),
-            target,
-            threads,
-        )
+        if not skip_build:
+            for _ in range(2 if clean else 1):
+                if clean:
+                    for out_dir in config.output_directories:
+                        rmtree(out_dir, ignore_errors=True)
+                    for rule in set(target_rule_lookup.direct_lookup.values()) | set(
+                        target_rule_lookup.direct_lookup.values()
+                    ):
+                        rule.pending_rule_dependencies = []
+                        rule.runtime_dependents = []
+                run_build(
+                    BuildState(
+                        target_rule_lookup=target_rule_lookup,
+                        source_files=source_files,
+                        cache_directory=cache_directory,
+                        repo_root=repo_root,
+                    ),
+                    target,
+                    threads,
+                    quiet,
+                )
 
         if profile:
             print("Slow Rules (Execution Phase):")

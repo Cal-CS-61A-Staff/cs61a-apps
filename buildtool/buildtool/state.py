@@ -35,6 +35,10 @@ class TargetLookup:
     direct_lookup: Dict[str, Rule] = field(default_factory=dict)
     location_lookup: Dict[str, Rule] = field(default_factory=dict)
 
+    def __iter__(self):
+        yield from self.direct_lookup
+        yield from self.location_lookup
+
     def lookup(self, build_state: BuildState, dep: str) -> Rule:
         if dep in build_state.source_files:
             raise BuildException(
