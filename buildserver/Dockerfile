@@ -26,7 +26,7 @@ RUN apt install -y --no-install-recommends texlive-full
 
 RUN apt-get update && apt-get install -y latexmk && git config --global core.symlinks true
 
-RUN apt install -y hugo
+RUN apt-get install -y hugo zip
 
 RUN apt-get update && apt-get install -y groff
 
