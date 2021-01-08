@@ -30,6 +30,7 @@ class ExecutionContext(MemorizeContext):
         self.load_deps = load_deps
         self.memorize = memorize
         self.sh_queue = []
+        os.makedirs(self.cwd, exist_ok=True)
 
     def normalize_single(self, path: str):
         if path.startswith("@//"):
@@ -127,8 +128,8 @@ def build(
         missing_deps = []
         for dep in deps:
             if dep not in build_state.source_files:
-                rule = build_state.target_rule_lookup.lookup(build_state, dep)
-                if rule not in build_state.ready:
+                dep_rule = build_state.target_rule_lookup.lookup(build_state, dep)
+                if dep_rule not in build_state.ready:
                     missing_deps.append(dep)
         if missing_deps:
             raise MissingDependency(*missing_deps)
@@ -139,7 +140,7 @@ def build(
                 src_root=build_state.repo_root,
                 dest_root=scratch_path,
                 src_names=[dep for dep in deps if not dep.startswith(":")],
-                symlink=True,
+                symlink=not rule.do_not_symlink,
             )
 
     load_deps(deps)

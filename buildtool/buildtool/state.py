@@ -84,6 +84,9 @@ class Rule:
     impl: Callable[[Context], None]
     outputs: Sequence[str]
 
+    # advanced config
+    do_not_symlink: bool
+
     runtime_dependents: List[Rule] = field(default_factory=list)
     pending_rule_dependencies: List[Rule] = field(default_factory=list)
     provided_value: object = None

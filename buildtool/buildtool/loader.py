@@ -51,6 +51,7 @@ def make_callback(
         deps: Sequence[str] = (),
         impl: Callable,
         out: Union[str, Sequence[str]] = (),
+        do_not_symlink: bool = False,
     ):
         build_root = make_callback.build_root
 
@@ -73,6 +74,7 @@ def make_callback(
             ],
             impl=impl,
             outputs=[normalize_path(repo_root, build_root, output) for output in out],
+            do_not_symlink=do_not_symlink,
         )
         for output in rule.outputs:
             add_target_rule(output, rule)
