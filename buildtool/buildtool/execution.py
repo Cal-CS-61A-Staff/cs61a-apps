@@ -40,7 +40,7 @@ class ExecutionContext(MemorizeContext):
         else:
             return path
 
-    def normalize(self, env: Env):
+    def normalize(self, env: Optional[Env]):
         if env is None:
             return {}
         out = {}

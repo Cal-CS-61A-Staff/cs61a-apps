@@ -25,5 +25,5 @@ def callback(
     ...
 
 
-def find(path: str):
+def find(path: str, unsafe_ignore_extension=False):
     ...

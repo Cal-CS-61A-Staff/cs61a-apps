@@ -30,10 +30,10 @@ class StatusMonitor:
     stop: Callable[[], None]
 
 
-def create_status_monitor(num_threads: int):
+def create_status_monitor(num_threads: int, quiet: bool):
     status = ["IDLE"] * num_threads
 
-    bar = tqdm(total=0)
+    bar = tqdm(total=0, disable=quiet)
     lock = Lock()
     pos = 0
     tot = 0

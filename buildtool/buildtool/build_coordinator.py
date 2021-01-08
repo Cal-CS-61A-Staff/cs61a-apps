@@ -6,12 +6,12 @@ from state import BuildState
 from utils import BuildException
 
 
-def run_build(build_state: BuildState, target: str, num_threads: int):
+def run_build(build_state: BuildState, target: str, num_threads: int, quiet: bool):
     root_rule = build_state.target_rule_lookup.try_lookup(
         target
     ) or build_state.target_rule_lookup.lookup(build_state, ":" + target)
 
-    build_state.status_monitor = create_status_monitor(num_threads)
+    build_state.status_monitor = create_status_monitor(num_threads, quiet)
 
     build_state.scheduled_but_not_ready.add(root_rule)
     build_state.work_queue.put(root_rule)
