@@ -19,10 +19,7 @@ def run_build(build_state: BuildState, target: str, num_threads: int):
 
     thread_instances = []
     for i in range(num_threads):
-        thread = Thread(
-            target=worker,
-            args=(build_state, i),
-        )
+        thread = Thread(target=worker, args=(build_state, i), daemon=True)
         thread_instances.append(thread)
         thread.start()
     build_state.work_queue.join()

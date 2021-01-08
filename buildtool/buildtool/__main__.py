@@ -11,6 +11,7 @@ from colorama import Fore, Style
 from build_coordinator import run_build
 from build_worker import TIMINGS as BUILD_TIMINGS
 from common.cli_utils import pretty_print
+from monitoring import enable_logging
 from state import BuildState
 from fs_utils import find_root, get_repo_files
 from loader import load_rules, TIMINGS as LOAD_TIMINGS
@@ -28,6 +29,7 @@ def display_error(error: BuildException):
 @click.argument("target")
 @click.option("--profile", "-p", default=False, is_flag=True)
 @click.option("--locate", "-l", default=False, is_flag=True)
+@click.option("--verbose", "-v", default=False, is_flag=True)
 @click.option("--threads", "-t", default=8)
 @click.option("--cache-directory", default=".cache")
 @click.option("--flag", "-f", type=str, multiple=True)
@@ -35,6 +37,7 @@ def cli(
     target: str,
     profile: bool,
     locate: bool,
+    verbose: bool,
     threads: int,
     cache_directory: str,
     flag: List[str],
@@ -45,6 +48,9 @@ def cli(
     try:
         repo_root = find_root()
         os.chdir(repo_root)
+
+        if verbose:
+            enable_logging()
 
         flags = [flag.split("=", 1) + ["true"] for flag in flag]
         flags = {flag[0].lower(): loads(flag[1]) for flag in flags}

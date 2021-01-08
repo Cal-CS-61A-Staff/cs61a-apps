@@ -5,8 +5,17 @@ from typing import Callable, Protocol
 from tqdm import tqdm
 
 
+def enable_logging():
+    log.enabled = True
+
+
 def log(*args):
+    if log.enabled:
+        print(*args)
     pass
+
+
+log.enabled = False
 
 
 class MoveCallable(Protocol):
