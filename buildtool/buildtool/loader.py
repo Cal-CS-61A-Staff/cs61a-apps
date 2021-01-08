@@ -6,7 +6,7 @@ import time
 import traceback
 from dataclasses import dataclass, field
 from glob import glob
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from typing import Callable, Dict, List, Optional, Sequence, Set, Union
 
 from colorama import Style
 
@@ -66,6 +66,7 @@ config = Config()
 def make_callback(
     repo_root: str,
     build_root: Optional[str],
+    src_files: Set[str],
     # output parameter
     target_rule_lookup: TargetLookup,
 ):
@@ -149,12 +150,16 @@ def make_callback(
                     "Cannot find() files without specifying an extension"
                 )
 
-        make_callback.find_cache[target] = out = [
-            "//" + os.path.relpath(path, repo_root)
+        out = [
+            os.path.relpath(path, repo_root)
             for path in glob(
                 normalize_path(repo_root, build_root, path),
                 recursive=True,
             )
+        ]
+
+        make_callback.find_cache[target] = out = [
+            "//" + path for path in out if path in src_files
         ]
 
         return out
@@ -233,7 +238,7 @@ def load_rules(flags: Dict[str, object], *, workspace=False):
     )
     target_rule_lookup = TargetLookup()
     sys.path.insert(0, repo_root)
-    callback, find = make_callback(repo_root, None, target_rule_lookup)
+    callback, find = make_callback(repo_root, None, set(src_files), target_rule_lookup)
     for build_file in build_files:
         make_callback.build_root = os.path.dirname(build_file)
 

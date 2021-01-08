@@ -98,8 +98,8 @@ def initialize_workspace(
                     log(
                         f"Setup rule {todo} is waiting on {dep}, which is already enqueued"
                     )
-                dep.runtime_dependents.append(todo)
-                todo.pending_rule_dependencies.append(dep)
+                dep.runtime_dependents.add(todo)
+                todo.pending_rule_dependencies.add(dep)
         else:
             # our dependent rules are ready, now we need to see if we need to rerun
             todo.provided_value = todo.impl(ctx)

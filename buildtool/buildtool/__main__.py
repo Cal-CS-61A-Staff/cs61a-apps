@@ -127,8 +127,8 @@ def cli(
                     for rule in set(target_rule_lookup.direct_lookup.values()) | set(
                         target_rule_lookup.direct_lookup.values()
                     ):
-                        rule.pending_rule_dependencies = []
-                        rule.runtime_dependents = []
+                        rule.pending_rule_dependencies = set()
+                        rule.runtime_dependents = set()
                 run_build(
                     BuildState(
                         target_rule_lookup=target_rule_lookup,

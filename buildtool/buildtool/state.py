@@ -91,8 +91,8 @@ class Rule:
     # advanced config
     do_not_symlink: bool
 
-    runtime_dependents: List[Rule] = field(default_factory=list)
-    pending_rule_dependencies: List[Rule] = field(default_factory=list)
+    runtime_dependents: Set[Rule] = field(default_factory=set)
+    pending_rule_dependencies: Set[Rule] = field(default_factory=set)
     provided_value: object = None
 
     def __hash__(self):

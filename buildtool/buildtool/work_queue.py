@@ -31,6 +31,6 @@ def enqueue_deps(
                     log(f"Waiting on already queued dependency {runtime_dep}")
                 # register task in the already queued / executing dependency
                 # so when it finishes we may be triggered
-                runtime_dep.runtime_dependents.append(rule)
-                rule.pending_rule_dependencies.append(runtime_dep)
+                runtime_dep.runtime_dependents.add(rule)
+                rule.pending_rule_dependencies.add(runtime_dep)
     return waiting_for_deps
