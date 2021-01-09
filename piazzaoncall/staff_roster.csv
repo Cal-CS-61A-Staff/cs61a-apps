@@ -1,130 +1,62 @@
-email,name,sid,class_account,section,role,Weight
-rdev11@berkeley.edu,Rahul,,,,Reader,1
-chitsai@berkeley.edu,Chi Tsai,,,,Reader,1
-ryanchao@berkeley.edu,Ryan Chao,,,,Reader,1
-michaelmlu@berkeley.edu,Michael Lu,,,,Reader,1
-vivianlu63@berkeley.edu,Vivian Lu,,,,Reader,1
-nanumuk@berkeley.edu,Nikhita Anumukonda,,,,Reader,1
-melodysifry@berkeley.edu,Melody Sifry,,,,Reader,1
-johnianrso@berkeley.edu,John Ian So,,,,Reader,1
-umaunni@berkeley.edu,Uma Unni,,,,Reader,1
-omotara.oloye@berkeley.edu,Omotara Oloye,,,,Reader,1
-ajjiang@berkeley.edu,Angela,,,,Reader,1
-jeffdeng@berkeley.edu,Jeffrey Deng,,,,Reader,1
-joychang02@berkeley.edu,Joy Chang,,,,Reader,1
-serenade092@berkeley.edu,Jennifer Huang,,,,Reader,1
-gcgikas@berkeley.edu,George Gikas,,,,Reader,1
-catherinegee@berkeley.edu,Catherine Gee,,,,Reader,1
-gurkarn.goindi@berkeley.edu,Gurkaran Goindi,,,,Reader,10
-linhtran@berkeley.edu,Linh Tran,,,,Reader,10
-kennychi@berkeley.edu,Kenneth Chi,,,,Reader,1
-julie.m@berkeley.edu,Julie Ma,,,,Reader,1
-constance.shi@berkeley.edu,Connie Shi,,,,Reader,1
-matthewguo9@berkeley.edu,Matthew Guo,,,,Reader,1
-jwang078@berkeley.edu,Jenny Wang,,,,Reader,1
-czwang@berkeley.edu,Christopher Wang,,,,Reader,10
-rszhu@berkeley.edu,Richard Zhu,,,,Reader,10
-ethanchiu@berkeley.edu,Ethan Chiu,,,,Reader,1
-ecomohr@berkeley.edu,Eknoor Kaur,,,,Reader,1
-parthgupta@berkeley.edu,Parth Gupta,,,,Reader,1
-oshiah@berkeley.edu,Olivia Shiah,,,,Reader,1
-sahilmorchi@berkeley.edu,Sahil Morchi,,,,Reader,1
-conhuang@berkeley.edu,Connie Huang,,,,Reader,1
-vanshaj@berkeley.edu,Vanshaj Singhania,,,,Reader,1
-choyb21@berkeley.edu,Brandon Choy,,,,Reader,1
-yersultan@berkeley.edu,Yersultan Sapar,,,,Reader,1
-asap7772@berkeley.edu,Anikait Singh,,,,Reader,1
-toddyu@berkeley.edu,Todd Yu,,,,Reader,1
-han2019@berkeley.edu,Han Qi,,,,Reader,10
-evelynliu16@berkeley.edu,Evelyn Liu,,,,Reader,1
-kevonz31@berkeley.edu,Kevin Zhu,,,,Reader,1
-cooper.bedin@berkeley.edu,Cooper Bedin,,,,Reader,1
-liyak@berkeley.edu,Liya Mulugeta,,,,Reader,1
-jamiehong@berkeley.edu,Jamie Jie Hong,,,,Reader,1
-khushimalde@berkeley.edu,Khushi Malde,,,,Reader,1
-goldenowen@berkeley.edu,Owen Gong,,,,Reader,1
-laurenmeier@berkeley.edu,Lauren Meier,,,,Reader,1
-sreevidyaganga0@berkeley.edu,SreeVidya Ganga,,,,Reader,10
-mohsin.sarwari@berkeley.edu,Mohsin Sarwari,,,,Reader,1
-chn_minnie_22@berkeley.edu,Minnie Chen,,,,Reader,1
-erwang@berkeley.edu,Eric Wang,,,,Reader,1
-ivan.penev@berkeley.edu,Ivan Penev,,,,Reader,1
-samtaplin@berkeley.edu,Samuel Taplin,,,,Reader,1
-jazzlyanderson@berkeley.edu,Jazzly Anderson,,,,Reader,1
-jemmyzhou@berkeley.edu,Jemmy Zhou,,,,Reader,1
-christineluo@berkeley.edu,Christine Luo,,,,Reader,1
-amit.bhat@berkeley.edu,Amit Bhat,,,,Reader,1
-meganzhu@berkeley.edu,Megan Zhu,,,,Reader,1
-lexyyxl@berkeley.edu,Lexy Li,,,,Reader,1
-crystalwang@berkeley.edu,Crystal Wang,,,,Reader,1
-kristylee@berkeley.edu,Kristy Lee,,,,Reader,1
-timothyktu@berkeley.edu,Timothy Tu,,,,Reader,1
-aliciawang@berkeley.edu,Alicia Wang,,,,Reader,10
-kevinyang8@berkeley.edu,Kevin Yang,,,,Reader,1
-animesha@berkeley.edu,Animesh Agrawal,,,,Reader,1
-granthan@berkeley.edu,Grant Han,,,,Reader,1
-kdutta@berkeley.edu,Kunal Dutta,,,,Reader,1
-larynqi@berkeley.edu,Laryn Qi,,,,Reader,1
-seans1337@berkeley.edu,Sean Sananikone,,,,Reader,1
-shifasabaat@berkeley.edu,Shifa Sabaat,,,,Reader,1
-sophiaxiao@berkeley.edu,Sophia Xiao,,,,Reader,1
-chorpita@berkeley.edu,Marie Chorpita,,,,Reader,1
-seanhaoxiang@berkeley.edu,Haoxiang He,,,,Reader,1
-selinnen@berkeley.edu,Selina Wu,,,,Reader,1
-ethan.yc.yeh@berkeley.edu,Ethan Yeh,,,,Reader,1
-fpan@berkeley.edu,Francis Pan,,,,Reader,1
-amritansh@berkeley.edu,Amritansh Saraf,,,,Reader,1
-lucy.w@berkeley.edu,Lucy Wan,,,,Reader,1
-alinaherri@berkeley.edu,Alina Herri,,,,Reader,1
-kaavyashah@berkeley.edu,Kaavya Shah,,,,Reader,1
-patriciaouyang@berkeley.edu,Patricia Ouyang,,,,Reader,1
-brandonsanchez@berkeley.edu,Brandon Sanchez,,,,Reader,1
-ren.zhou@berkeley.edu,Lauren Zhou,,,,Reader,1
-kevinli5941@berkeley.edu,Kevin Li,,,,Reader,1
-serenazyx@berkeley.edu,Yixin Zhang,,,,Reader,1
-yongmg@berkeley.edu,Yongming Ge,,,,Reader,1
-andrew.shieh@berkeley.edu,Andrew Shieh,,,,Reader,1
-jennywu@berkeley.edu,Jenny Wu,,,,Reader,1
-danielshin@berkeley.edu,Daniel Shin,,,,Reader,1
-robertlin1357@berkeley.edu,Robert Lin,,,,Reader,1
-sarina_sabouri@berkeley.edu,Sarina Sabouri,,,,Reader,1
-nwhaq1@berkeley.edu,Neha Haq,,,,Reader,1
-ben.cuan@berkeley.edu,Ben Cuan,,,,Reader,1
-arushisomani@berkeley.edu,Arushi Somani,,,,Reader,1
-cait@berkeley.edu,Caitlin Phan,,,,Reader,1
-pranad.reddy@berkeley.edu,Pranad Reddy,,,,Reader,10
-joshuabaum@berkeley.edu,Joshua Baum,,,,Reader,1
-d.pan@berkeley.edu,Daphne Pan,,,,Reader,1
-andrew.lenz@berkeley.edu,Andrew Lenz,,,,Reader,1
-emmayokota@berkeley.edu,Emma Yokota,,,,Reader,1
-honglizhaobob@berkeley.edu,Hongli Zhao,,,,Reader,1
-andrewmcguire@berkeley.edu,Andrew McGuire,,,,Reader,1
-stevenfxchen@berkeley.edu,Steven Chen,,,,Reader,1
-brandonshin1492@berkeley.edu,Brandon Shin,,,,Reader,1
-saikapuluru@berkeley.edu,Sai Kapuluru,,,,Reader,1
-imran.khaliq@berkeley.edu,Imran Khaliq-Baporia,,,,Reader,1
-jennymei@berkeley.edu,Jenny Mei,,,,Reader,1
-mpmckeever@berkeley.edu,Mathilde McKeever,,,,Reader,1
-melaniecooray@berkeley.edu,Melanie Cooray,,,,Reader,1
-maristio@berkeley.edu,Melvin Aristio,,,,Reader,1
-abhinav_ashar@berkeley.edu,Abhinav Ashar,,,,Reader,1
-rohan.ds1001@berkeley.edu,Rohan D'Souza,,,,Reader,10
-jessica.yu@berkeley.edu,Jessica Yu,,,,Reader,1
-matthewlee1@berkeley.edu,Matthew Lee,,,,Reader,1
-catherinecang@berkeley.edu,Catherine Cang,,,,Teaching Assistant,5
-griffinprechter@berkeley.edu,Griffin Prechter,,,,Teaching Assistant,5
-jadesingh17@berkeley.edu,Jade Singh,,,,Teaching Assistant,5
-sherryfansf@berkeley.edu,Sherry Fan,,,,Teaching Assistant,17
-cesar.pz@berkeley.edu,Cesar Plascencia Zuniga,,,,Teaching Assistant,5
-jiangxinhao@berkeley.edu,Benny Jiang,,,,Teaching Assistant,5
-amritapv@berkeley.edu,Amrita Palaparthi,,,,Teaching Assistant,5
-sean.obrien@berkeley.edu,Sean O'Brien,,,,Teaching Assistant,5
-addcninblue@berkeley.edu,Addison Chan,,,,Teaching Assistant,5
-albertxu3@berkeley.edu,Albert Xu,,,,Teaching Assistant,5
-rahularya@berkeley.edu,Rahul Arya,,,,Teaching Assistant,5
-nshaw99@berkeley.edu,Nancy Shaw,,,,Teaching Assistant,5
-rroggenkemper22@berkeley.edu,Richard Roggenkemper,,,,Teaching Assistant,5
-alexkassil@berkeley.edu,Alex Kassil,,,,Teaching Assistant,5
-shayna.kothari@berkeley.edu,Shayna Kothari,,,,Teaching Assistant,5
-aaron_chen@berkeley.edu,Aaron Chen,,,,Teaching Assistant,5
-derek.wan11@berkeley.edu,Derek Wan,,,,Teaching Assistant,5
+Title,email,name,Weight
+GSI,rroggenkemper22@berkeley.edu,Richard Roggenkemper,5
+GSI,albertxu3@berkeley.edu,Albert Xu,5
+GSI,alexkassil@berkeley.edu,Alex Kassil,5
+GSI,amritapv@berkeley.edu,Amrita Palaparthi,5
+GSI,addcninblue@berkeley.edu,Addison Chan,5
+GSI,murtzali_5253@berkeley.edu,Murtaza Ali,5
+GSI,cait@berkeley.edu,Caitlin Phan,5
+GSI,rszhu@berkeley.edu,Richard Zhu,5
+GSI,cooper.bedin@berkeley.edu,Cooper Bedin,5
+GSI,rdejaen@berkeley.edu,Rachel De Jaen,5
+GSI,czwang@berkeley.edu,Christopher Wang,5
+GSI,jamiehong@berkeley.edu,Jamie Hong,13
+GSI,catherinecang@berkeley.edu,Catherine Cang,5
+GSI,abhinav_ashar@berkeley.edu,Abhinav Ashar,5
+GSI,patriciaouyang@berkeley.edu,Patricia Ouyang,5
+GSI,yersultan@berkeley.edu,Yersultan Sapar,5
+GSI,vanshaj@berkeley.edu,Vanshaj Singhania,5
+GSI,rahularya@berkeley.edu,Rahul Arya,5
+GSI,sean.obrien@berkeley.edu,Sean O'Brien,5
+Tutor,emmayokota@berkeley.edu,Emma Yokota,1
+Tutor,erwang@berkeley.edu,Eric Wang,1
+Tutor,joychang02@berkeley.edu,Joy Chang,1
+Tutor,amritansh@berkeley.edu,Amritansh Saraf,1
+Tutor,nanumuk@berkeley.edu,Nikhita Anumukonda,1
+Tutor,chorpita@berkeley.edu,Marie Chorpita,1
+Tutor,joshuabaum@berkeley.edu,Joshua Baum,1
+Tutor,gurkarn.goindi@berkeley.edu,Gurkaran Singh Goindi,1
+Tutor,jemmyzhou@berkeley.edu,Jemmy Zhou,1
+Tutor,han2019@berkeley.edu,Han Qi,1
+Tutor,vivianlu63@berkeley.edu,Vivian Lu,1
+Tutor,kevinli5941@berkeley.edu,Kevin Li,1
+Tutor,constance.shi@berkeley.edu,Constance Shi,1
+Tutor,johnianrso@berkeley.edu,John Ian So,1
+Tutor,ryanchao@berkeley.edu,Ryan Chao,1
+Tutor,kennychi@berkeley.edu,Kenny Chi,1
+Tutor,kevinyang8@berkeley.edu,Kevin Yang,1
+Tutor,catherinegee@berkeley.edu,Catherine Gee,1
+Tutor,melaniecooray@berkeley.edu,Melanie  ,1
+Tutor,ben.cuan@berkeley.edu,Ben Cuan,1
+Tutor,matthewlee1@berkeley.edu,Matthew Lee,1
+Tutor,oshiah@berkeley.edu,Olivia Shiah,1
+Tutor,cyrus.bugwadia@berkeley.edu,Cyrus Bugwadia,1
+Tutor,sahilmorchi@berkeley.edu,Sahil Morchi,1
+Tutor,rohan.ds1001@berkeley.edu,Rohan D'Souza,1
+Tutor,amit.bhat@berkeley.edu,Amit Bhat,1
+Tutor,andrewmcguire@berkeley.edu,Andrew McGuire,1
+Tutor,sophiaxiao@berkeley.edu,Sophia Xiao,1
+Tutor,seans1337@berkeley.edu,Sean Sananikone,1
+Tutor,stevenfxchen@berkeley.edu,Steven Chen,1
+Tutor,animesha@berkeley.edu,Animesh Agrawal,1
+Tutor,d.pan@berkeley.edu,Daphne Pan,1
+Tutor,lucy.w@berkeley.edu,Lucy Wan,1
+Tutor,gcgikas@berkeley.edu,George Gikas,1
+Tutor,ecomohr@berkeley.edu,Eknoor Kaur,1
+Tutor,alinaherri@berkeley.edu,Alina Herri,1
+Tutor,umaunni@berkeley.edu,Uma Unni,1
+Tutor,imran.khaliq@berkeley.edu,Imran Khaliq-Baporia,1
+Tutor,michaelmlu@berkeley.edu,Michael Lu,1
+Tutor,melodysifry@berkeley.edu,Melody Sifry,1
+Tutor,samtaplin@berkeley.edu,Samuel Taplin,1
+Tutor,matthewguo9@berkeley.edu,Matthew Guo,1
