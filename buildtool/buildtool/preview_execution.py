@@ -107,6 +107,13 @@ def get_deps(build_state: BuildState, rule: Rule):
         except MissingDependency as e:
             log(f"Dependencies {e.paths} were unavailable while running impl of {rule}")
             pass  # dep already added to ctx.inputs
+        except Exception as e:
+            print(
+                "Error occurred during PreviewExecution. This may be normal, if a cached file that has not "
+                "yet been reported / processed has been changed. However, it may also be an internal error, so "
+                "it is being logged here. If it is an internal error, please contact the maintainer."
+            )
+            print(repr(e))
         # if `ok`, hash loaded dynamic dependencies
         if ok:
             log(

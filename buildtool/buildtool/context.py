@@ -74,6 +74,7 @@ class MemorizeContext(Context):
         super().__init__(repo_root, cwd)
         self.hashstate = hashstate
         self.inputs = []
+        self.hashstate.record(self.absolute(self.cwd))
 
     def chdir(self, dest: str):
         super().chdir(dest)
