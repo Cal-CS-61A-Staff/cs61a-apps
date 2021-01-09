@@ -86,8 +86,9 @@ class MemorizeContext(Context):
         self.hashstate.record("add_deps", deps)
         for dep in deps:
             if dep.startswith(":"):
-                continue
-            self.inputs.append(self.absolute(dep))
+                self.inputs.append(dep)
+            else:
+                self.inputs.append(self.absolute(dep))
 
     def input(self, *, file: Optional[str], sh: Optional[str], env: Env = None):
         self.hashstate.record("input", file, sh, env)

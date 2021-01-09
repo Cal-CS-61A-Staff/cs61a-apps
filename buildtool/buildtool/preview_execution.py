@@ -113,19 +113,25 @@ def get_deps(build_state: BuildState, rule: Rule):
                 f"Runtime dependencies resolved for {rule}, now checking dynamic dependencies"
             )
             for input_path in ctx.inputs:
-                hashstate.update(input_path.encode("utf-8"))
-                try:
-                    data = dep_fetcher(input_path, get_hash=True)
-                except MissingDependency as e:
-                    # this dependency was not needed for deps calculation
-                    # but is not verified to be up-to-date
-                    ok = False
-                    log(
-                        f"Dynamic dependencies {e.paths} were not needed for the impl, but are not up to date"
-                    )
-                    break
+                if input_path.startswith(":"):
+                    if input_path not in build_state.ready:
+                        ok = False
+                        log(f"Dynamic rule dependency {input_path} is not yet ready")
+                        break
                 else:
-                    hashstate.update(data)
+                    hashstate.update(input_path.encode("utf-8"))
+                    try:
+                        data = dep_fetcher(input_path, get_hash=True)
+                    except MissingDependency as e:
+                        # this dependency was not needed for deps calculation
+                        # but is not verified to be up-to-date
+                        ok = False
+                        log(
+                            f"Dynamic dependencies {e.paths} were not needed for the impl, but are not up to date"
+                        )
+                        break
+                    else:
+                        hashstate.update(data)
         return (
             hashstate.state() if ok else None,
             ctx.inputs + rule.deps,

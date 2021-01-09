@@ -201,6 +201,9 @@ def build(
             )
 
     for input_path in ctx.inputs:
+        if input_path.startswith(":"):
+            # don't hash rule deps
+            continue
         hashstate.update(input_path.encode("utf-8"))
         hashstate.update(hash_file(input_path))
 
