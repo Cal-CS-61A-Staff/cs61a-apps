@@ -8,7 +8,7 @@ from subprocess import CalledProcessError
 
 from colorama import Style
 
-from cache import get_cache_output_paths
+from cache import get_cache_output_paths, make_cache_memorize
 from execution import build
 from fs_utils import copy_helper
 from monitoring import log
@@ -156,6 +156,9 @@ def worker(build_state: BuildState, index: int):
                             dest_root=cache_location,
                             src_names=todo.outputs,
                             dest_names=cache_output_names,
+                        )
+                        make_cache_memorize(build_state.cache_directory)(
+                            cache_key, ".touch", ""
                         )
 
                         done = True
