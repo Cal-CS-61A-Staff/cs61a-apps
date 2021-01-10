@@ -4,13 +4,14 @@ from os.path import dirname
 from pathlib import Path
 from typing import Iterator
 
-from fs_utils import copy_helper
+from fs_utils import copy_helper, hash_file
 from google.cloud.exceptions import NotFound
 from google.cloud.storage import Blob
 from state import Rule
 from utils import BuildException, CacheMiss
 
 CLOUD_BUCKET_PREFIX = "gs://"
+AUX_CACHE = ".aux_cache"
 
 
 def get_bucket(cache_directory: str):
@@ -18,7 +19,7 @@ def get_bucket(cache_directory: str):
         from google.cloud import storage
 
         client = storage.Client()
-        return client.get_bucket(cache_directory[len(CLOUD_BUCKET_PREFIX) :])
+        return client.bucket(cache_directory[len(CLOUD_BUCKET_PREFIX) :])
 
 
 def make_cache_fetcher(cache_directory: str):
@@ -26,11 +27,18 @@ def make_cache_fetcher(cache_directory: str):
 
     def cache_fetcher(state: str, target: str) -> str:
         if bucket:
-            dest = str(Path(state).joinpath(target))
             try:
-                return bucket.blob(dest).download_as_string().decode("utf-8")
-            except NotFound:
-                raise CacheMiss
+                return aux_fetcher(state, target)
+            except CacheMiss:
+                dest = str(Path(state).joinpath(target))
+                try:
+                    out = bucket.blob(dest).download_as_string().decode("utf-8")
+                except NotFound:
+                    raise CacheMiss
+                else:
+                    # cache it on disk
+                    aux_memorize(state, target, out)
+                    return out
         else:
             dest = Path(cache_directory).joinpath(state).joinpath(target)
             try:
@@ -45,29 +53,33 @@ def make_cache_fetcher(cache_directory: str):
         )
         if bucket:
             del cache_location
-            for src_name, cache_path in zip(rule.outputs, cache_paths):
-                os.makedirs(dest_root, exist_ok=True)
-                try:
-                    if src_name.endswith("/"):
-                        blobs: Iterator[Blob] = bucket.list_blobs(
-                            prefix=cache_path, delimiter="/"
-                        )
-                        for blob in blobs:
-                            target = str(
-                                Path(dest_root)
-                                .joinpath(src_name)
-                                .joinpath(blob.path[len(cache_path) :])
+            if not aux_loader(cache_key, rule, dest_root):
+                for src_name, cache_path in zip(rule.outputs, cache_paths):
+                    cache_path = str(Path(cache_key).joinpath(cache_path))
+                    os.makedirs(dest_root, exist_ok=True)
+                    try:
+                        if src_name.endswith("/"):
+                            blobs: Iterator[Blob] = bucket.list_blobs(
+                                prefix=cache_path, delimiter="/"
                             )
+                            for blob in blobs:
+                                target = str(
+                                    Path(dest_root)
+                                    .joinpath(src_name)
+                                    .joinpath(blob.path[len(cache_path) :])
+                                )
+                                os.makedirs(dirname(target), exist_ok=True)
+                                blob.download_to_filename(target)
+                        else:
+                            target = str(Path(dest_root).joinpath(src_name))
                             os.makedirs(dirname(target), exist_ok=True)
-                            blob.download_to_filename(target)
-                    else:
-                        target = str(Path(dest_root).joinpath(src_name))
-                        os.makedirs(dirname(target), exist_ok=True)
-                        bucket.blob(
-                            str(Path(cache_key).joinpath(cache_path)),
-                        ).download_to_filename(target)
-                except NotFound:
-                    return False
+                            bucket.blob(
+                                str(Path(cache_key).joinpath(cache_path)),
+                            ).download_to_filename(target)
+                    except NotFound:
+                        return False
+                # now that we have fetched, let's cache it on disk
+                aux_save(cache_key, rule, dest_root)
             return True
         else:
             if not os.path.exists(cache_location):
@@ -94,7 +106,13 @@ def make_cache_memorize(cache_directory: str):
 
     def memorize(state: str, target: str, data: str):
         if bucket:
-            bucket.blob(str(Path(state).joinpath(target))).upload_from_string(data)
+            try:
+                prev_saved = aux_fetcher(state, target)
+            except CacheMiss:
+                prev_saved = None
+            aux_memorize(state, target, data)
+            if prev_saved != data:
+                bucket.blob(str(Path(state).joinpath(target))).upload_from_string(data)
         else:
             cache_target = Path(cache_directory).joinpath(state).joinpath(target)
             os.makedirs(os.path.dirname(cache_target), exist_ok=True)
@@ -116,27 +134,53 @@ def make_cache_memorize(cache_directory: str):
                         Path(output_root).joinpath(src_name)
                     ):
                         for name in files:
-                            bucket.blob(
-                                str(
-                                    Path(cache_key)
-                                    .joinpath(cache_path)
-                                    .joinpath(path)
-                                    .joinpath(name)
-                                )
-                            ).upload_from_filename(
-                                str(
-                                    Path(output_root)
-                                    .joinpath(src_name)
-                                    .joinpath(path)
-                                    .joinpath(name)
-                                )
+                            target = (
+                                Path(output_root)
+                                .joinpath(src_name)
+                                .joinpath(path)
+                                .joinpath(name)
                             )
+                            aux_cache_loc = (
+                                Path(AUX_CACHE)
+                                .joinpath(cache_key)
+                                .joinpath(cache_path)
+                                .joinpath(path)
+                                .joinpath(name)
+                            )
+                            if not os.path.exists(aux_cache_loc) or (
+                                hash_file(target) != hash_file(aux_cache_loc)
+                            ):
+                                bucket.blob(
+                                    str(
+                                        Path(cache_key)
+                                        .joinpath(cache_path)
+                                        .joinpath(path)
+                                        .joinpath(name)
+                                    )
+                                ).upload_from_filename(
+                                    str(
+                                        Path(output_root)
+                                        .joinpath(src_name)
+                                        .joinpath(path)
+                                        .joinpath(name)
+                                    )
+                                )
                 else:
-                    bucket.blob(
-                        str(Path(cache_key).joinpath(cache_path)),
-                    ).upload_from_filename(
-                        str(Path(output_root).joinpath(src_name)),
+                    target = Path(output_root).joinpath(src_name)
+                    aux_cache_loc = (
+                        Path(AUX_CACHE).joinpath(cache_key).joinpath(cache_path)
                     )
+                    if not os.path.exists(aux_cache_loc) or (
+                        hash_file(target) != hash_file(aux_cache_loc)
+                    ):
+                        bucket.blob(
+                            str(Path(cache_key).joinpath(cache_path)),
+                        ).upload_from_filename(
+                            str(Path(output_root).joinpath(src_name)),
+                        )
+
+            aux_save(cache_key, rule, output_root)
+
         else:
             copy_helper(
                 src_root=output_root,
@@ -158,3 +202,7 @@ def get_cache_output_paths(cache_directory: str, rule: Rule, cache_key: str):
         if output_path.endswith("/"):
             keys[i] += "/"
     return cache_location, keys
+
+
+aux_fetcher, aux_loader = make_cache_fetcher(AUX_CACHE)
+aux_memorize, aux_save = make_cache_memorize(AUX_CACHE)
