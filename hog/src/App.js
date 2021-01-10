@@ -16,9 +16,9 @@ const CenteredDiv = styled.div`
 `;
 
 export type RuleSet = {|
-  "Free Bacon": boolean,
+  "Piggy Points": boolean,
   "Swine Align": boolean,
-  "Pig Pass": boolean,
+  "More Boar": boolean,
 |};
 
 export default function App() {
@@ -26,9 +26,9 @@ export default function App() {
   const [strategy, setStrategy] = useState(null);
 
   const [gameRules, setGameRules] = useState<RuleSet>({
-    "Free Bacon": false,
+    "Piggy Points": false,
     "Swine Align": true,
-    "Pig Pass": false,
+    "More Boar": false,
   });
 
   const handleRestart = () => {

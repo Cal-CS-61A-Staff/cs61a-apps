@@ -164,7 +164,18 @@ def make_callback(
 
         return out
 
-    return callback, find
+    def resolve(path):
+        build_root = make_callback.build_root
+
+        if build_root is None:
+            raise BuildException(
+                "Rules files can only define functions, not invoke resolve(). "
+                "If you are in an impl() function, use ctx.resolve() instead."
+            )
+
+        return "//" + normalize_path(repo_root, build_root, path)
+
+    return callback, find, resolve
 
 
 class Struct:
@@ -240,7 +251,9 @@ def load_rules(flags: Dict[str, object], *, workspace=False):
     )
     target_rule_lookup = TargetLookup()
     sys.path.insert(0, repo_root)
-    callback, find = make_callback(repo_root, None, set(src_files), target_rule_lookup)
+    callback, find, resolve = make_callback(
+        repo_root, None, set(src_files), target_rule_lookup
+    )
     for build_file in build_files:
         make_callback.build_root = os.path.dirname(build_file)
 
@@ -250,6 +263,7 @@ def load_rules(flags: Dict[str, object], *, workspace=False):
 
             __builtins__["callback"] = callback
             __builtins__["find"] = find
+            __builtins__["resolve"] = resolve
             __builtins__["load"] = load
             __builtins__["flags"] = flags
 
@@ -258,7 +272,7 @@ def load_rules(flags: Dict[str, object], *, workspace=False):
                 "__builtins__": __builtins__,
             }
 
-            reset_mock_imports(frame, ["callback", "find", "load", "flags"])
+            reset_mock_imports(frame, ["callback", "find", "load", "flags", "resolve"])
 
             if workspace:
                 __builtins__["config"] = config
@@ -276,4 +290,7 @@ def load_rules(flags: Dict[str, object], *, workspace=False):
                     + traceback.format_exc()
                 )
             TIMINGS[build_file] = time.time() - start_time_stack.pop()
+
+        make_callback.build_root = None
+
     return target_rule_lookup

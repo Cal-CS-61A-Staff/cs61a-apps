@@ -14,18 +14,18 @@ const Wrapper = styled.div`
 
 type Props = {|
   playerIndex: number,
-  freeBacon: boolean,
+  piggyPoints: boolean,
   onClick: (number) => mixed,
   onRestart: () => mixed,
 |};
 
 export default function RollButton({
   playerIndex,
-  freeBacon,
+  piggyPoints,
   onClick,
   onRestart,
 }: Props) {
-  const min = freeBacon ? 0 : 1;
+  const min = piggyPoints ? 0 : 1;
 
   const [numberOfRolls, setNumberOfRolls] = useState(min);
 

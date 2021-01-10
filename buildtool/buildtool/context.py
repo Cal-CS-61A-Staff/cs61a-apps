@@ -74,6 +74,7 @@ class MemorizeContext(Context):
         super().__init__(repo_root, cwd)
         self.hashstate = hashstate
         self.inputs = []
+        self.hashstate.record(self.absolute(self.cwd))
 
     def chdir(self, dest: str):
         super().chdir(dest)
@@ -86,8 +87,9 @@ class MemorizeContext(Context):
         self.hashstate.record("add_deps", deps)
         for dep in deps:
             if dep.startswith(":"):
-                continue
-            self.inputs.append(self.absolute(dep))
+                self.inputs.append(dep)
+            else:
+                self.inputs.append(self.absolute(dep))
 
     def input(self, *, file: Optional[str], sh: Optional[str], env: Env = None):
         self.hashstate.record("input", file, sh, env)

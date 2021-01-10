@@ -107,25 +107,38 @@ def get_deps(build_state: BuildState, rule: Rule):
         except MissingDependency as e:
             log(f"Dependencies {e.paths} were unavailable while running impl of {rule}")
             pass  # dep already added to ctx.inputs
+        except Exception as e:
+            print(
+                "Error occurred during PreviewExecution. This may be normal, if a cached file that has not "
+                "yet been reported / processed has been changed. However, it may also be an internal error, so "
+                "it is being logged here. If it is an internal error, please contact the maintainer."
+            )
+            print(repr(e))
         # if `ok`, hash loaded dynamic dependencies
         if ok:
             log(
                 f"Runtime dependencies resolved for {rule}, now checking dynamic dependencies"
             )
             for input_path in ctx.inputs:
-                hashstate.update(input_path.encode("utf-8"))
-                try:
-                    data = dep_fetcher(input_path, get_hash=True)
-                except MissingDependency as e:
-                    # this dependency was not needed for deps calculation
-                    # but is not verified to be up-to-date
-                    ok = False
-                    log(
-                        f"Dynamic dependencies {e.paths} were not needed for the impl, but are not up to date"
-                    )
-                    break
+                if input_path.startswith(":"):
+                    if input_path not in build_state.ready:
+                        ok = False
+                        log(f"Dynamic rule dependency {input_path} is not yet ready")
+                        break
                 else:
-                    hashstate.update(data)
+                    hashstate.update(input_path.encode("utf-8"))
+                    try:
+                        data = dep_fetcher(input_path, get_hash=True)
+                    except MissingDependency as e:
+                        # this dependency was not needed for deps calculation
+                        # but is not verified to be up-to-date
+                        ok = False
+                        log(
+                            f"Dynamic dependencies {e.paths} were not needed for the impl, but are not up to date"
+                        )
+                        break
+                    else:
+                        hashstate.update(data)
         return (
             hashstate.state() if ok else None,
             ctx.inputs + rule.deps,
