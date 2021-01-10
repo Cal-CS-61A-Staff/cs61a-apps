@@ -44,7 +44,7 @@ export default function StrategyPicker({ strategy, onStrategyChange }: Props) {
           <option disabled hidden>
             {defaultString}
           </option>
-          <option>bacon_strategy</option>
+          <option>piggypoints_strategy</option>
           <option>extra_turn_strategy</option>
           <option>final_strategy</option>
         </FormControl>
