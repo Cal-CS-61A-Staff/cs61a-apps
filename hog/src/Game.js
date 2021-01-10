@@ -77,7 +77,7 @@ export default function Game({
     setPlayerIndex(who);
     if (Math.max(...finalScores) >= goal) {
       setState(states.GAME_OVER);
-    } else if (who == 1 && strategy) {
+    } else if (who === 1 && strategy) {
       const nextMove = await post("/strategy", { name: strategy, scores });
       setNumRolls(nextMove);
       setState(states.DISPLAYING_COMPUTER_MOVE);
@@ -92,7 +92,7 @@ export default function Game({
     [states.WAITING_FOR_INPUT]: (
       <RollButton
         playerIndex={playerIndex}
-        freeBacon={gameRules["Free Bacon"]}
+        piggyPoints={gameRules["Piggy Points"]}
         onClick={handleRoll}
         onRestart={onRestart}
       />
