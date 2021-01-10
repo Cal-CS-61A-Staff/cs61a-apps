@@ -178,7 +178,7 @@ def make_callback(
             "//" + path for path in out if path in src_files
         ]
 
-        return out
+        return sorted(out)
 
     def resolve(path):
         build_root = make_callback.build_root
