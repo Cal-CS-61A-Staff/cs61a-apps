@@ -13,7 +13,7 @@ from colorama import Fore, Style
 from build_coordinator import run_build
 from build_worker import TIMINGS as BUILD_TIMINGS
 from common.cli_utils import pretty_print
-from monitoring import enable_logging
+from monitoring import enable_logging, enable_profiling
 from state import BuildState
 from fs_utils import find_root, get_repo_files
 from loader import config, load_rules, TIMINGS as LOAD_TIMINGS
@@ -66,6 +66,9 @@ def cli(
 
         if verbose:
             enable_logging()
+
+        if profile:
+            enable_profiling()
 
         flags = [flag.split("=", 1) + ["true"] for flag in flag]
         flags = {flag[0].lower(): loads(flag[1]) for flag in flags}

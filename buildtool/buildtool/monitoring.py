@@ -9,13 +9,19 @@ def enable_logging():
     log.enabled = True
 
 
+def enable_profiling():
+    log.profile = True
+
+
 def log(*args):
     if log.enabled:
         print(*args)
-    pass
+    elif args[0].startswith("RUNNING") and log.profile:
+        print(*args)
 
 
 log.enabled = False
+log.profile = False
 
 
 class MoveCallable(Protocol):
