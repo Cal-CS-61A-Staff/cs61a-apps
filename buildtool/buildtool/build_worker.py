@@ -6,16 +6,14 @@ from queue import Empty, Queue
 from shutil import rmtree
 from subprocess import CalledProcessError
 
+from cache import make_cache_fetcher, make_cache_memorize
 from colorama import Style
-
-from cache import get_cache_output_paths, make_cache_memorize
 from execution import build
-from fs_utils import copy_helper
 from monitoring import log
 from preview_execution import get_deps
+from state import BuildState
 from utils import BuildException, MissingDependency
 from work_queue import enqueue_deps
-from state import BuildState
 
 TIMINGS = defaultdict(int)
 
@@ -33,6 +31,9 @@ def worker(build_state: BuildState, index: int):
     scratch_path = Path(build_state.repo_root).joinpath(Path(f".scratch_{index}"))
     if scratch_path.exists():
         rmtree(scratch_path, ignore_errors=True)
+
+    _, cache_save = make_cache_memorize(build_state.cache_directory)
+    _, cache_loader = make_cache_fetcher(build_state.cache_directory)
 
     while True:
         if build_state.failure is not None:
@@ -73,25 +74,9 @@ def worker(build_state: BuildState, index: int):
                 done = False
                 # check if we're already cached!
                 if cache_key:
-                    cache_location, cache_output_names = get_cache_output_paths(
-                        build_state.cache_directory, todo, cache_key
-                    )
-                    if cache_location.exists():
-                        log(f"Target {todo} is in the cache")
-                        try:
-                            copy_helper(
-                                src_root=cache_location,
-                                src_names=cache_output_names,
-                                dest_root=build_state.repo_root,
-                                dest_names=todo.outputs,
-                            )
-                        except FileNotFoundError:
-                            raise BuildException(
-                                "Cache corrupted. This should never happen unless you modified the cache "
-                                "directory manually! If so, delete the cache directory and try again."
-                            )
-                        else:
-                            done = True
+                    if cache_loader(cache_key, todo, build_state.repo_root):
+                        log(f"Target {todo} was loaded from the cache")
+                        done = True
 
                 if not done:
                     # time to execute! but *not* inside the lock
@@ -144,22 +129,8 @@ def worker(build_state: BuildState, index: int):
                                 f"We know all the dependencies of {todo}, so we can run it in a sandbox"
                             )
                             build(build_state, todo, deps, scratch_path=scratch_path)
-                        cache_location, cache_output_names = get_cache_output_paths(
-                            build_state.cache_directory, todo, cache_key
-                        )
-
-                        log(
-                            f"Target {todo} has been built fully! Caching to {cache_location}"
-                        )
-                        copy_helper(
-                            src_root=scratch_path,
-                            dest_root=cache_location,
-                            src_names=todo.outputs,
-                            dest_names=cache_output_names,
-                        )
-                        make_cache_memorize(build_state.cache_directory)(
-                            cache_key, ".touch", ""
-                        )
+                        log(f"Target {todo} has been built fully!")
+                        cache_save(cache_key, todo, scratch_path)
 
                         done = True
                     except MissingDependency as d:

@@ -116,7 +116,7 @@ def build(
     obtained. Now we need to run. Either we will successfully finish everything,
     or we will get a missing dependency and have to requeue
     """
-    memorize = make_cache_memorize(build_state.cache_directory)
+    cache_memorize, _ = make_cache_memorize(build_state.cache_directory)
 
     in_sandbox = scratch_path is not None
 
@@ -153,7 +153,7 @@ def build(
         else Path(build_state.repo_root).joinpath(rule.location),
         hashstate,
         load_deps,
-        memorize,
+        cache_memorize,
     )
 
     for dep in rule.deps:

@@ -59,7 +59,7 @@ def get_deps(build_state: BuildState, rule: Rule):
     needed dependencies as possible, without *any* spurious dependencies.
     """
     hashstate = HashState()
-    cache_fetcher = make_cache_fetcher(build_state.cache_directory)
+    cache_fetcher, _ = make_cache_fetcher(build_state.cache_directory)
     dep_fetcher = make_dep_fetcher(build_state)
 
     ctx = PreviewContext(
