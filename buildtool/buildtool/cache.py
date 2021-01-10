@@ -73,14 +73,14 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
                             os.makedirs(
                                 Path(dest_root).joinpath(src_name), exist_ok=True
                             )
-                            blobs: Iterator[Blob] = bucket.list_blobs(
-                                prefix=cache_path, delimiter="/"
+                            blobs: Iterator[Blob] = list(
+                                bucket.list_blobs(prefix=cache_path)
                             )
                             for blob in blobs:
                                 target = str(
                                     Path(dest_root)
                                     .joinpath(src_name)
-                                    .joinpath(blob.path[len(cache_path) :])
+                                    .joinpath(blob.name[len(cache_path) + 1 :])
                                 )
                                 os.makedirs(dirname(target), exist_ok=True)
                                 blob.download_to_filename(target)
