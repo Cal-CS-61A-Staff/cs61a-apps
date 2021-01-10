@@ -6,11 +6,13 @@ import time
 import traceback
 from dataclasses import dataclass, field
 from glob import glob
+from importlib.metadata import version
 from typing import Callable, Dict, List, Optional, Sequence, Set, Union
 
 from colorama import Style
 
 from fs_utils import find_root, get_repo_files, normalize_path
+from packaging.version import parse
 from state import Rule, TargetLookup
 from utils import BuildException
 
@@ -23,6 +25,10 @@ start_time_stack = []
 
 @dataclass
 class Config:
+    # CLI config
+    skip_version_check: bool = False
+
+    # loaded config
     default_setup_rule: Optional[str] = None
     default_build_rule: Optional[str] = None
     active: bool = False
@@ -58,6 +64,16 @@ class Config:
     def register_output_directory(self, path: str):
         self._check_active()
         self.output_directories.append(normalize_path(os.curdir, os.curdir, path))
+
+    def require_buildtool_version(self, min_version: str):
+        if self.skip_version_check:
+            return
+        curr_version = version("buildtool").replace("-", "9999")
+        if parse(curr_version) < parse(min_version):
+            raise BuildException(
+                f"Current buildtool version {curr_version} < {min_version}, the minimum required "
+                "for this project. Please upgrade, or pass in --skip-version-check to skip this check."
+            )
 
 
 config = Config()
@@ -240,7 +256,12 @@ def reset_mock_imports(frame, targets):
     )
 
 
-def load_rules(flags: Dict[str, object], *, workspace=False):
+def load_rules(
+    flags: Dict[str, object],
+    *,
+    skip_version_check: bool,
+    workspace: bool = False,
+):
     flags = Struct(flags, default=True)
     repo_root = find_root()
     src_files = get_repo_files()
@@ -254,6 +275,7 @@ def load_rules(flags: Dict[str, object], *, workspace=False):
     callback, find, resolve = make_callback(
         repo_root, None, set(src_files), target_rule_lookup
     )
+    config.skip_version_check = skip_version_check
     for build_file in build_files:
         make_callback.build_root = os.path.dirname(build_file)
 

@@ -33,6 +33,7 @@ def display_error(error: BuildException):
 @click.option("--locate", "-l", default=False, is_flag=True)
 @click.option("--verbose", "-v", default=False, is_flag=True)
 @click.option("--quiet", "-q", default=False, is_flag=True)
+@click.option("--skip-version-check", default=False, is_flag=True)
 @click.option("--skip-setup", default=False, is_flag=True)
 @click.option("--skip-build", default=False, is_flag=True)
 @click.option("--clean", "-c", default=False, is_flag=True)
@@ -46,6 +47,7 @@ def cli(
     locate: bool,
     verbose: bool,
     quiet: bool,
+    skip_version_check: bool,
     skip_setup: bool,
     skip_build: bool,
     clean: bool,
@@ -68,7 +70,9 @@ def cli(
         flags = {flag[0].lower(): loads(flag[1]) for flag in flags}
 
         if not skip_setup:
-            setup_rule_lookup = load_rules(flags, workspace=True)
+            setup_rule_lookup = load_rules(
+                flags, workspace=True, skip_version_check=skip_version_check
+            )
 
             if target and target.startswith("setup:"):
                 setup_target = target[5:]
@@ -83,7 +87,7 @@ def cli(
                 quiet,
             )
 
-        target_rule_lookup = load_rules(flags)
+        target_rule_lookup = load_rules(flags, skip_version_check=skip_version_check)
         target_rule_lookup.verify()
 
         all_files = get_repo_files()
