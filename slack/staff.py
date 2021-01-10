@@ -74,7 +74,6 @@ STAFF = [
     StaffMember("Patricia", "Ouyang", ":patricia:"),
     StaffMember("Pranad", "Reddy", ":pranad:"),
     StaffMember("Rahul", "Arya", ":rahul-a:"),
-    StaffMember("Rahul", "Devarapalli", ":rahul-d:"),
     StaffMember("Richard", "Roggenkemper", ":richard-r:"),
     StaffMember("Richard", "Zhu", ":richard-z:"),
     StaffMember("Rohan", "Dsouza", ":rohan:"),
