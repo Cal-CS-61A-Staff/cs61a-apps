@@ -13,6 +13,8 @@ from utils import BuildException, CacheMiss
 CLOUD_BUCKET_PREFIX = "gs://"
 AUX_CACHE = ".aux_cache"
 
+STATS = dict(hits=0, misses=0, inserts=0)
+
 
 def get_bucket(cache_directory: str):
     if cache_directory.startswith(CLOUD_BUCKET_PREFIX):
@@ -28,12 +30,16 @@ def make_cache_fetcher(cache_directory: str):
     def cache_fetcher(state: str, target: str) -> str:
         if bucket:
             try:
-                return aux_fetcher(state, target)
+                out = aux_fetcher(state, target)
+                STATS["hits"] += 1
+                return out
             except CacheMiss:
                 dest = str(Path(state).joinpath(target))
                 try:
                     out = bucket.blob(dest).download_as_string().decode("utf-8")
+                    STATS["hits"] += 1
                 except NotFound:
+                    STATS["misses"] += 1
                     raise CacheMiss
                 else:
                     # cache it on disk
@@ -43,8 +49,11 @@ def make_cache_fetcher(cache_directory: str):
             dest = Path(cache_directory).joinpath(state).joinpath(target)
             try:
                 with open(dest, "r") as f:
-                    return f.read()
+                    out = f.read()
+                    STATS["hits"] += 1
+                    return out
             except FileNotFoundError:
+                STATS["misses"] += 1
                 raise CacheMiss
 
     def cache_loader(cache_key: str, rule: Rule, dest_root: str) -> bool:
@@ -70,19 +79,23 @@ def make_cache_fetcher(cache_directory: str):
                                 )
                                 os.makedirs(dirname(target), exist_ok=True)
                                 blob.download_to_filename(target)
+                                STATS["hits"] += 1
                         else:
                             target = str(Path(dest_root).joinpath(src_name))
                             os.makedirs(dirname(target), exist_ok=True)
                             bucket.blob(
                                 str(Path(cache_key).joinpath(cache_path)),
                             ).download_to_filename(target)
+                            STATS["hits"] += 1
                     except NotFound:
+                        STATS["misses"] += 1
                         return False
                 # now that we have fetched, let's cache it on disk
                 aux_save(cache_key, rule, dest_root)
             return True
         else:
             if not os.path.exists(cache_location):
+                STATS["misses"] += 1
                 return False
             try:
                 copy_helper(
@@ -91,6 +104,7 @@ def make_cache_fetcher(cache_directory: str):
                     dest_root=dest_root,
                     dest_names=rule.outputs,
                 )
+                STATS["hits"] += 1
             except FileNotFoundError:
                 raise BuildException(
                     "Cache corrupted. This should never happen unless you modified the cache "
@@ -112,10 +126,12 @@ def make_cache_memorize(cache_directory: str):
                 prev_saved = None
             aux_memorize(state, target, data)
             if prev_saved != data:
+                STATS["inserts"] += 1
                 bucket.blob(str(Path(state).joinpath(target))).upload_from_string(data)
         else:
             cache_target = Path(cache_directory).joinpath(state).joinpath(target)
             os.makedirs(os.path.dirname(cache_target), exist_ok=True)
+            STATS["inserts"] += 1
             cache_target.write_text(data)
 
     def save(cache_key: str, rule: Rule, output_root: str):
@@ -150,6 +166,7 @@ def make_cache_memorize(cache_directory: str):
                             if not os.path.exists(aux_cache_loc) or (
                                 hash_file(target) != hash_file(aux_cache_loc)
                             ):
+                                STATS["inserts"] += 1
                                 bucket.blob(
                                     str(
                                         Path(cache_key)
@@ -173,6 +190,7 @@ def make_cache_memorize(cache_directory: str):
                     if not os.path.exists(aux_cache_loc) or (
                         hash_file(target) != hash_file(aux_cache_loc)
                     ):
+                        STATS["inserts"] += 1
                         bucket.blob(
                             str(Path(cache_key).joinpath(cache_path)),
                         ).upload_from_filename(
@@ -182,6 +200,7 @@ def make_cache_memorize(cache_directory: str):
             aux_save(cache_key, rule, output_root)
 
         else:
+            STATS["inserts"] += 1
             copy_helper(
                 src_root=output_root,
                 src_names=rule.outputs,

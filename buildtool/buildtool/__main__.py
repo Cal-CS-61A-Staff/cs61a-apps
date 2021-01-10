@@ -7,6 +7,7 @@ from shutil import rmtree
 from typing import List
 
 import click
+from cache import STATS
 from colorama import Fore, Style
 
 from build_coordinator import run_build
@@ -152,6 +153,10 @@ def cli(
             )[:20]
             for key in slowest:
                 print(key, BUILD_TIMINGS[key])
+            print("Cache Statistics")
+            print(
+                f"{STATS['hits']} cache hits, {STATS['misses']} cache misses, {STATS['inserts']} cache inserts (approx)"
+            )
 
     except BuildException as e:
         display_error(e)
