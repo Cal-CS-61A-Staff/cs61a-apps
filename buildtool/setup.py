@@ -32,5 +32,6 @@ setup(
         "requests",
         "tqdm",
         "google-cloud-storage",
+        "packaging",
     ],
 )

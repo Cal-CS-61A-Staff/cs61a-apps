@@ -22,7 +22,7 @@ NGINX_PORT = os.environ.get("PORT", "8001")
 
 DEFAULT_USER = "prbuild"
 
-app = Flask(__name__ + "-ide")
+app = Flask(__name__)
 
 create_oauth_client(
     app, "61a-ide", secret_key=get_secret(secret_name="OKPY_IDE_SECRET")
@@ -32,10 +32,20 @@ with connect_db() as db:
     db(
         """CREATE TABLE IF NOT EXISTS ide (
     username varchar(128),
-    initialized boolean, -- this is unused in the ide context
+    initialized boolean, -- this is unused in the ide context, for now
     locked boolean
 );"""
     )
+
+
+VSCODE_ASSOC = """
+{
+    "files.associations": {
+        "BUILD": "python",
+        "WORKSPACE": "python"
+    }
+}
+"""
 
 
 def auth_only(func):
@@ -90,24 +100,37 @@ def start():
         user_exists = False
 
     if not user_exists:
+        print(f"User {username} doesn't exist, creating...", file=sys.stderr)
         sh("useradd", "-b", "/save", "-m", username, "-s", "/bin/bash")
-        add_domain(
-            name=get_hosted_app_name(),
-            domain=f"{username}.{get_host()}",
-            proxy_set_header={
-                "Host": "$host",
-                "Upgrade": "$http_upgrade",
-                "Connection": "upgrade",
-                "Accept-Encoding": "gzip",
-            },
+        print(
+            f"Proxying {username}.{get_host()} to {get_hosted_app_name()}...",
+            file=sys.stderr,
         )
+        if os.getenv("ENV", "dev") == "prod":
+            add_domain(
+                name=get_hosted_app_name(),
+                domain=f"{username}.{get_host()}",
+                proxy_set_header={
+                    "Host": "$host",
+                    "Upgrade": "$http_upgrade",
+                    "Connection": "upgrade",
+                    "Accept-Encoding": "gzip",
+                },
+            )
+        else:
+            print(
+                f"Could not proxy domains for a PR build.",
+                file=sys.stderr,
+            )
 
     if not get_server_pid(username):
+        print(f"Server for {username} is not running, starting...", file=sys.stderr)
         with db_lock("ide", username):
             passwd = gen_salt(24)
+            port = get_open_port()
 
             config = {
-                "socket": f"/tmp/ide-{username}.sock",
+                "bind-addr": f"127.0.0.1:{port}",
                 "auth": "password",
                 "password": passwd,
                 "home": f"https://{get_host()}",
@@ -116,22 +139,26 @@ def start():
             with open(f"/save/{username}/.code-server.yaml", "w") as csc:
                 yaml.dump(config, csc)
 
+            print("Configuration ready.", file=sys.stderr)
+
             sanitized = os.environ.copy()
             del sanitized["DATABASE_URL"]
             del sanitized["APP_HOME"]
             del sanitized["APP_MASTER_SECRET"]
             del sanitized["ENV"]
             del sanitized["INSTANCE_CONNECTION_NAME"]
+            sanitized["PORT"] = str(port)
+
+            print("Environment sanitized.", file=sys.stderr)
 
             subprocess.Popen(get_server_cmd(username), env=sanitized)
-            sh("sleep", "2")  # give the server a couple of seconds to start up
-            sh("chmod", "666", f"/tmp/ide-{username}.sock")
+            print("Subprocess opened.", file=sys.stderr)
 
             conf = Server(
                 Location(
                     "/",
                     include="proxy_params",
-                    proxy_pass=f"http://unix:/tmp/ide-{username}.sock",
+                    proxy_pass=f"http://127.0.0.1:{port}",
                     proxy_set_header={
                         "Host": "$host",
                         "Upgrade": "$http_upgrade",
@@ -147,16 +174,31 @@ def start():
             with open(f"/etc/nginx/sites-enabled/{username}.{get_host()}", "w") as f:
                 f.write(str(conf))
             sh("nginx", "-s", "reload")
+            print("NGINX configuration written and server restarted.", file=sys.stderr)
 
     if not os.path.exists(f"/save/{username}/berkeley-cs61a"):
-        if os.path.exists("/save/berkeley-cs61a"):
+        print(f"Copy of repo for {username} not found.", file=sys.stderr)
+        if os.path.exists("/save/root/berkeley-cs61a"):
+            print("Found a known good repo, copying...", file=sys.stderr)
             shutil.copytree(
-                "/save/berkeley-cs61a",
+                "/save/root/berkeley-cs61a",
                 f"/save/{username}/berkeley-cs61a",
                 symlinks=True,
             )
+            print(
+                "Tree copied. Writing Visual Studio Code associations...",
+                file=sys.stderr,
+            )
+            os.mkdir(f"/save/{username}/berkeley-cs61a/.vscode")
+            with open(
+                f"/save/{username}/berkeley-cs61a/.vscode/settings.json", "w"
+            ) as f:
+                f.write(VSCODE_ASSOC)
+            print("Done.", file=sys.stderr)
             sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
+            print("Tree owner changed.", file=sys.stderr)
 
+    print("IDE ready.", file=sys.stderr)
     return redirect(url_for("index"))
 
 
@@ -210,6 +252,17 @@ def get_config(username):
     with open(f"/save/{username}/.code-server.yaml") as csc:
         data = yaml.load(csc)
     return data
+
+
+def get_open_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("", 0))
+
+    s.listen(1)
+    port = s.getsockname()[1]
+
+    s.close()
+    return port
 
 
 if __name__ == "__main__":
