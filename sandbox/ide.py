@@ -1,4 +1,4 @@
-import os, shutil, subprocess, sys, yaml, socket
+import os, shutil, subprocess, sys, yaml, socket, requests, time
 from contextlib import contextmanager
 from flask import Flask, request, redirect
 from werkzeug.security import gen_salt
@@ -197,6 +197,11 @@ def start():
             print("Done.", file=sys.stderr)
             sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
             print("Tree owner changed.", file=sys.stderr)
+
+    print("Waiting for code-server to come alive, if needed...", file=sys.stderr)
+    while requests.get(f"https://{username}.{get_host()}").status_code != 200:
+        time.sleep(1)
+    print("code-server is alive.", file=sys.stderr)
 
     print("IDE ready.", file=sys.stderr)
     return redirect(url_for("index"))
