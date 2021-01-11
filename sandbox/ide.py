@@ -120,7 +120,7 @@ def start():
             port = get_open_port()
 
             config = {
-                "port": port,
+                "bind-port": f"127.0.0.1:{port}",
                 "auth": "password",
                 "password": passwd,
                 "home": f"https://{get_host()}",
@@ -137,6 +137,7 @@ def start():
             del sanitized["APP_MASTER_SECRET"]
             del sanitized["ENV"]
             del sanitized["INSTANCE_CONNECTION_NAME"]
+            sanitized["PORT"] = port
 
             print("Environment sanitized.", file=sys.stderr)
 
