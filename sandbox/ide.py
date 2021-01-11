@@ -90,9 +90,12 @@ def start():
         user_exists = False
 
     if not user_exists:
-        print(f"User {username} doesn't exist, creating...")
+        print(f"User {username} doesn't exist, creating...", file=sys.stderr)
         sh("useradd", "-b", "/save", "-m", username, "-s", "/bin/bash")
-        print(f"Proxying {username}.{get_host()} to {get_hosted_app_name()}..")
+        print(
+            f"Proxying {username}.{get_host()} to {get_hosted_app_name()}...",
+            file=sys.stderr,
+        )
         add_domain(
             name=get_hosted_app_name(),
             domain=f"{username}.{get_host()}",
@@ -105,7 +108,7 @@ def start():
         )
 
     if not get_server_pid(username):
-        print(f"Server for {username} is not running, starting...")
+        print(f"Server for {username} is not running, starting...", file=sys.stderr)
         with db_lock("ide", username):
             passwd = gen_salt(24)
             port = get_open_port()
@@ -120,7 +123,7 @@ def start():
             with open(f"/save/{username}/.code-server.yaml", "w") as csc:
                 yaml.dump(config, csc)
 
-            print("Configuration ready.")
+            print("Configuration ready.", file=sys.stderr)
 
             sanitized = os.environ.copy()
             del sanitized["DATABASE_URL"]
@@ -129,10 +132,10 @@ def start():
             del sanitized["ENV"]
             del sanitized["INSTANCE_CONNECTION_NAME"]
 
-            print("Environment sanitized.")
+            print("Environment sanitized.", file=sys.stderr)
 
             subprocess.Popen(get_server_cmd(username), env=sanitized)
-            print("Subprocess opened.")
+            print("Subprocess opened.", file=sys.stderr)
 
             conf = Server(
                 Location(
@@ -154,19 +157,19 @@ def start():
             with open(f"/etc/nginx/sites-enabled/{username}.{get_host()}", "w") as f:
                 f.write(str(conf))
             sh("nginx", "-s", "reload")
-            print("NGINX configuration written and server restarted.")
+            print("NGINX configuration written and server restarted.", file=sys.stderr)
 
     if not os.path.exists(f"/save/{username}/berkeley-cs61a"):
-        print(f"Copy of repo for {username} not found, copying...")
+        print(f"Copy of repo for {username} not found, copying...", file=sys.stderr)
         if os.path.exists("/save/berkeley-cs61a"):
-            print("Found a known good repo to copy.")
+            print("Found a known good repo to copy.", file=sys.stderr)
             shutil.copytree(
                 "/save/berkeley-cs61a",
                 f"/save/{username}/berkeley-cs61a",
                 symlinks=True,
             )
             sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
-            print("Tree copied and tree owner changed.")
+            print("Tree copied and tree owner changed.", file=sys.stderr)
 
     return redirect(url_for("index"))
 
