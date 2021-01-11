@@ -96,16 +96,22 @@ def start():
             f"Proxying {username}.{get_host()} to {get_hosted_app_name()}...",
             file=sys.stderr,
         )
-        add_domain(
-            name=get_hosted_app_name(),
-            domain=f"{username}.{get_host()}",
-            proxy_set_header={
-                "Host": "$host",
-                "Upgrade": "$http_upgrade",
-                "Connection": "upgrade",
-                "Accept-Encoding": "gzip",
-            },
-        )
+        if os.getenv("ENV", "dev") == "prod":
+            add_domain(
+                name=get_hosted_app_name(),
+                domain=f"{username}.{get_host()}",
+                proxy_set_header={
+                    "Host": "$host",
+                    "Upgrade": "$http_upgrade",
+                    "Connection": "upgrade",
+                    "Accept-Encoding": "gzip",
+                },
+            )
+        else:
+            print(
+                f"Could not proxy domains for a PR build.",
+                file=sys.stderr,
+            )
 
     if not get_server_pid(username):
         print(f"Server for {username} is not running, starting...", file=sys.stderr)
