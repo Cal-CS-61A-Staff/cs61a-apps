@@ -166,9 +166,9 @@ def start():
             print("NGINX configuration written and server restarted.", file=sys.stderr)
 
     if not os.path.exists(f"/save/{username}/berkeley-cs61a"):
-        print(f"Copy of repo for {username} not found, copying...", file=sys.stderr)
+        print(f"Copy of repo for {username} not found.", file=sys.stderr)
         if os.path.exists("/save/berkeley-cs61a"):
-            print("Found a known good repo to copy.", file=sys.stderr)
+            print("Found a known good repo, copying...", file=sys.stderr)
             shutil.copytree(
                 "/save/berkeley-cs61a",
                 f"/save/{username}/berkeley-cs61a",
