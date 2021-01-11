@@ -45,9 +45,10 @@ def main():
         sh(
             "git",
             "clone",
-            f"https://{get_secret(secret_name='GITHUB_IDE_SECRET')}@github.com/Cal-CS-61A-Staff/berkeley-cs61a",
+            f"https://{get_secret(secret_name='GITHUB_IDE_TOKEN')}@github.com/Cal-CS-61A-Staff/berkeley-cs61a",
             "/save/root/berkeley-cs61a",
         )
+    # @nocommit make sure to delete the GITHUB_IDE_SECRET secret once this is pushed.
     print("Checking out latest good copy commit..", file=sys.stderr)
     sh("git", "pull", cwd="/save/root/berkeley-cs61a")
 

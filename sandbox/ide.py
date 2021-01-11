@@ -38,6 +38,16 @@ with connect_db() as db:
     )
 
 
+VSCODE_ASSOC = """
+{
+    "files.associations": {
+        "BUILD": "python",
+        "WORKSPACE": "python"
+    }
+}
+"""
+
+
 def auth_only(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -120,7 +130,7 @@ def start():
             port = get_open_port()
 
             config = {
-                "bind-port": f"127.0.0.1:{port}",
+                "bind-addr": f"127.0.0.1:{port}",
                 "auth": "password",
                 "password": passwd,
                 "home": f"https://{get_host()}",
@@ -137,7 +147,7 @@ def start():
             del sanitized["APP_MASTER_SECRET"]
             del sanitized["ENV"]
             del sanitized["INSTANCE_CONNECTION_NAME"]
-            sanitized["PORT"] = port
+            sanitized["PORT"] = str(port)
 
             print("Environment sanitized.", file=sys.stderr)
 
@@ -168,16 +178,27 @@ def start():
 
     if not os.path.exists(f"/save/{username}/berkeley-cs61a"):
         print(f"Copy of repo for {username} not found.", file=sys.stderr)
-        if os.path.exists("/save/berkeley-cs61a"):
+        if os.path.exists("/save/root/berkeley-cs61a"):
             print("Found a known good repo, copying...", file=sys.stderr)
             shutil.copytree(
-                "/save/berkeley-cs61a",
+                "/save/root/berkeley-cs61a",
                 f"/save/{username}/berkeley-cs61a",
                 symlinks=True,
             )
+            print(
+                "Tree copied. Writing Visual Studio Code associations...",
+                file=sys.stderr,
+            )
+            os.mkdir(f"/save/{username}/berkeley-cs61a/.vscode")
+            with open(
+                f"/save/{username}/berkeley-cs61a/.vscode/settings.json", "w"
+            ) as f:
+                f.write(VSCODE_ASSOC)
+            print("Done.", file=sys.stderr)
             sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
-            print("Tree copied and tree owner changed.", file=sys.stderr)
+            print("Tree owner changed.", file=sys.stderr)
 
+    print("IDE ready.", file=sys.stderr)
     return redirect(url_for("index"))
 
 
