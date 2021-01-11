@@ -45,7 +45,7 @@ def main():
         sh(
             "git",
             "clone",
-            f"https://{get_secret('GITHUB_IDE_SECRET')}@github.com/Cal-CS-61A-Staff/berkeley-cs61a",
+            f"https://{get_secret(secret_name='GITHUB_IDE_SECRET')}@github.com/Cal-CS-61A-Staff/berkeley-cs61a",
             "/save/root/berkeley-cs61a",
         )
     print("Checking out latest good copy commit..", file=sys.stderr)
