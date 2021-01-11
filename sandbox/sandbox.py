@@ -49,7 +49,7 @@ ENV = dict(
     CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org", IN_SANDBOX="true"
 )
 
-DEFAULT_USER = "rahularya"
+DEFAULT_USER = "prbuild"
 
 PDF_INLINE_SCRIPT = """
 <div style="width: 100%; height: 100%;">
