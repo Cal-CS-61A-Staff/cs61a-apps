@@ -4,6 +4,7 @@ import os
 from contextlib import redirect_stdout
 
 from gui_files.common_server import route, start
+from gui_files.svg import create_graphic, draw_rect, draw_circle, write_text
 
 import hog
 import dice
@@ -119,6 +120,24 @@ def strategy(name, scores):
         "final_strategy": hog.final_strategy,
     }
     return STRATEGIES[name](*scores[::-1])
+
+
+@route
+def draw_dice_svg(num=1):
+    x = 0
+    y = 0
+    width = 100
+    height = 100
+    graphic = create_graphic(width, height)
+    draw_rect(graphic, x, y, width, height, fill="blue") 
+    spacing = width / (1 + num)
+    for _ in range(0, num):
+        x += spacing
+        y += spacing
+        draw_circle(graphic, x, y, 10, fill="white")
+    if num == 1:
+        write_text(graphic, x+5, y+20, "TURN OVER", fill="pink")
+    return str(graphic)
 
 
 def safe(commentary):

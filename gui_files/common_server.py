@@ -10,7 +10,7 @@ from functools import wraps
 from http import HTTPStatus, server
 from http.server import HTTPServer
 from urllib.error import URLError
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse, parse_qs
 from urllib.request import Request, urlopen
 
 PATHS = {}
@@ -46,9 +46,29 @@ def route(path):
 class Handler(server.BaseHTTPRequestHandler):
     """HTTP handler."""
 
+    def output_svg(self, path, query_params):
+        self.send_header("Content-type", "image/svg+xml")
+        self.end_headers()
+        try:
+            # Turn the query parameters into a list of ints
+            query_vals = [int(val[0]) for val in query_params.values()]
+            result = PATHS[path](*query_vals)
+            self.wfile.write(bytes(result, "utf-8"))
+        except Exception as e:
+            print(e)
+            raise
+        return 
+
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
-        path = GUI_FOLDER + unquote(self.path)[1:]
+        parsed_url = urlparse(unquote(self.path))
+        path = parsed_url.path
+        query_params = parse_qs(parsed_url.query)
+        if path.endswith("_svg"):
+            self.output_svg(path, query_params)
+            return
+
+        path = GUI_FOLDER + path[1:]
         if "scripts" in path and not path.endswith(".js"):
             path += ".js"
 
