@@ -256,8 +256,6 @@ def run_static_deploy(app: App, pr_number: int):
     prod_bucket = f"gs://{gen_service_name(app.name, 0)}.buckets.cs61a.org"
     try:
         sh("gsutil", "mb", "-b", "on", bucket)
-        # attempt to "pre-warm" bucket with fast intra-bucket transfer
-        sh("gsutil", "-m", "rsync", "-dRc", prod_bucket, bucket)
     except CalledProcessError:
         # bucket already exists
         pass
