@@ -184,12 +184,12 @@ def remove_source():
 
 @app.route("/_refresh/")
 def refresh():
+    data = []
+    links = set()
     with connect_db() as db:
-        db("DELETE FROM shortlinks WHERE course=%s", [get_course()])
         sheets = db(
             "SELECT url, sheet, secure FROM sources WHERE course=(%s)", [get_course()]
         ).fetchall()
-    data = []
     for url, sheet, secure in sheets:
         try:
             csvr = read_spreadsheet(url=url, sheet_name=sheet)
@@ -199,10 +199,14 @@ def refresh():
         for row in csvr[1:]:
             row = row + [""] * 5
             shortlink = row[headers.index("shortlink")]
+            if shortlink in links:
+                return error(f"Duplicate shortlink `{shortlink}` found, aborting.")
+            links.add(shortlink)
             url = row[headers.index("url")]
             creator = row[headers.index("creator")]
             data.append([shortlink, url, creator, secure, get_course()])
     with connect_db() as db:
+        db("DELETE FROM shortlinks WHERE course=%s", [get_course()])
         db(
             "INSERT INTO shortlinks (shortlink, url, creator, secure, course) VALUES (%s, %s, %s, %s, %s)",
             data,
