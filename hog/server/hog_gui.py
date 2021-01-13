@@ -8,6 +8,7 @@ from gui_files.svg import create_graphic, draw_rect, draw_circle, write_text
 
 import hog
 import dice
+import dice_graphics
 
 PORT = 31415
 DEFAULT_SERVER = "https://hog.cs61a.org"
@@ -123,28 +124,14 @@ def strategy(name, scores):
 
 
 @route
-def draw_dice_svg(num=1):
-    x = 0
-    y = 0
-    width = 100
-    height = 100
-    graphic = create_graphic(width, height)
-    draw_rect(graphic, x, y, width, height, fill="blue") 
-    spacing = width / (1 + num)
-    for _ in range(0, num):
-        x += spacing
-        y += spacing
-        draw_circle(graphic, x, y, 10, fill="white")
-    if num == 1:
-        write_text(graphic, x+5, y+20, "TURN OVER", fill="pink")
-    return str(graphic)
-
+def draw_dice_graphic(num=1):
+    return dice_graphics.dice[num]
 
 def safe(commentary):
     def new_commentary(*args, **kwargs):
         try:
             result = commentary(*args, **kwargs)
-        except TypeError as e:
+        except TypeError:
             print("Error in commentary function")
             result = commentary
         return safe(result)

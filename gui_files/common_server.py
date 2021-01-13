@@ -50,21 +50,17 @@ class Handler(server.BaseHTTPRequestHandler):
         self.send_header("Content-type", "image/svg+xml")
         self.end_headers()
         try:
-            # Turn the query parameters into a list of ints
-            query_vals = [int(val[0]) for val in query_params.values()]
-            result = PATHS[path](*query_vals)
+            result = PATHS[path](int(query_params["num"][0]))
             self.wfile.write(bytes(result, "utf-8"))
         except Exception as e:
             print(e)
-            raise
-        return 
 
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
         parsed_url = urlparse(unquote(self.path))
         path = parsed_url.path
         query_params = parse_qs(parsed_url.query)
-        if path.endswith("_svg"):
+        if path.endswith("_graphic"):
             self.output_svg(path, query_params)
             return
 
@@ -84,7 +80,6 @@ class Handler(server.BaseHTTPRequestHandler):
                 self.wfile.write(f.read())
         except Exception as e:
             print(e)
-            # raise
 
     def do_POST(self):
         content_length = int(self.headers["Content-Length"])
