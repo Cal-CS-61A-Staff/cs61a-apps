@@ -77,9 +77,9 @@ def index():
     config = get_config(username)
 
     out += "active.<br />"
-    out += f"""<form action="https://{username}.{get_host()}/login", method="POST" target="_blank">
+    out += f"""<form action="https://{username}.{get_host()}/login", method="POST">
     <input type="hidden" name="base" value="" /><input type="hidden" name="password" value="{config['password']}" />
-    <input type="submit" value="Open in New Tab" />
+    <input type="submit" value="Open IDE" />
     </form><form action="{url_for('kill')}" method="POST">
     <input type="hidden" name="username" value="{username}" />
     <input type="submit" value="Kill IDE" />
