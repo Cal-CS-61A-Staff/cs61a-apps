@@ -40,7 +40,7 @@ class App extends React.Component {
     window.history.replaceState(false, "", "/");
 
     if (!ELECTRON && window.initData) {
-      const { loadFile, startInterpreter } = initData;
+      const { loadFile, srcOrigin, startInterpreter } = initData;
 
       if (loadFile) {
         this.handleFileCreate(
@@ -50,7 +50,8 @@ class App extends React.Component {
             content: loadFile.data,
             shareRef: loadFile.shareRef,
           },
-          startInterpreter
+          startInterpreter,
+          srcOrigin
         );
       }
     }
@@ -60,11 +61,12 @@ class App extends React.Component {
     this.setState({ launch: true });
   };
 
-  handleFileCreate = (file, startInterpreter) => {
+  handleFileCreate = (file, startInterpreter, srcOrigin) => {
     this.setState({
       launch: false,
       initFile: file,
       startInterpreter,
+      srcOrigin,
     });
   };
 
@@ -77,6 +79,7 @@ class App extends React.Component {
         <MainScreen
           onAllClosed={this.handleAllClosed}
           initFile={this.state.initFile}
+          srcOrigin={this.state.srcOrigin}
           startInterpreter={this.state.startInterpreter}
         />
       );

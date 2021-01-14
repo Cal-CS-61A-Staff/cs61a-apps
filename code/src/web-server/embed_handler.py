@@ -8,7 +8,12 @@ def create_embed_handler(app):
             "fileName": request.args["fileName"],
             "data": request.args["data"],
             "shareRef": None,
-            "srcOrigin": request.args["srcOrigin"],
         }
 
-        return render_template("index.html", initData={"loadFile": data})
+        return render_template(
+            "index.html",
+            initData={
+                "loadFile": data,
+                "srcOrigin": request.args["srcOrigin"],
+            },
+        )

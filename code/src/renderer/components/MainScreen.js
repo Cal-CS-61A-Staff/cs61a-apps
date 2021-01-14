@@ -65,6 +65,7 @@ export default class MainScreen extends React.Component {
         ref: React.createRef(),
         initData: this.props.initFile,
         startInterpreter: this.props.startInterpreter,
+        srcOrigin: this.props.srcOrigin,
         loadFile: this.props.loadFile,
       },
     };
