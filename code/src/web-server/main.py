@@ -1,4 +1,5 @@
 from flask import Flask, render_template, send_from_directory
+from flask_cors import CORS
 
 from constants import STATIC_FOLDER
 from embed_handler import create_embed_handler
@@ -40,6 +41,7 @@ create_stored_files(app)
 create_ok_server_interface(app)
 create_embed_handler(app)
 
+CORS(app)
 
 if __name__ == "__main__":
     app.run(debug=True)

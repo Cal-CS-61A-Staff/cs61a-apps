@@ -3,4 +3,5 @@ english-words
 flask
 gunicorn
 braceexpand
+flask-cors
 -r common/requirements.txt
