@@ -293,8 +293,8 @@ export default class File extends React.Component {
         *also* is supplying the _contents_ of the file, so there's no data to steal!
          */
       window.parent.postMessage(
-        { content: editorText },
-        this.props.initFile.srcOrigin
+        { fileName: this.props.initFile.name, data: editorText },
+        this.props.srcOrigin
       );
     }
     this.setState((state) => ({
