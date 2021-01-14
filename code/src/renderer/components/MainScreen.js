@@ -65,6 +65,8 @@ export default class MainScreen extends React.Component {
         ref: React.createRef(),
         initData: this.props.initFile,
         startInterpreter: this.props.startInterpreter,
+        srcOrigin: this.props.srcOrigin,
+        loadFile: this.props.loadFile,
       },
     };
     this.setState({ files });
@@ -100,7 +102,7 @@ export default class MainScreen extends React.Component {
     }
   };
 
-  loadFile = (initData, startInterpreter) => {
+  loadFile = (initData) => {
     const keyVal = this.keyCnt++;
     this.setState((state) => ({
       files: {
@@ -108,7 +110,6 @@ export default class MainScreen extends React.Component {
         [keyVal]: {
           ref: React.createRef(),
           initData,
-          startInterpreter,
         },
       },
     }));
@@ -188,6 +189,7 @@ export default class MainScreen extends React.Component {
         id={key}
         ref={this.state.files[key].ref}
         initFile={this.state.files[key].initData}
+        srcOrigin={this.state.files[key].srcOrigin}
         startInterpreter={this.state.files[key].startInterpreter}
         onActivate={this.handleFileActivate}
       />

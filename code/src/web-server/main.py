@@ -1,6 +1,7 @@
 from flask import Flask, render_template, send_from_directory
 
 from constants import STATIC_FOLDER
+from embed_handler import create_embed_handler
 
 from interpreter_links import create_interpreter_links
 from language_apis import create_language_apis
@@ -37,6 +38,7 @@ create_language_apis(app)
 create_preloaded_tables(app)
 create_stored_files(app)
 create_ok_server_interface(app)
+create_embed_handler(app)
 
 
 if __name__ == "__main__":

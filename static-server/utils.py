@@ -33,7 +33,7 @@ def get_bucket(app_lookup: Dict[str, str], default_app: str = None):
     return f"{app_lookup[app]}.buckets.cs61a.org"
 
 
-def serve_path(bucket, root, path):
+def serve_path(bucket, root, path, *, path_404="404.html"):
     filename = safe_join(root, path)[1:]
     client = storage.Client()
     bucket = client.get_bucket(bucket)
@@ -48,10 +48,10 @@ def serve_path(bucket, root, path):
                 mimetype = "text/x-scheme"
             return send_file(temp.name, attachment_filename=filename, mimetype=mimetype)
     except NotFound:
-        if filename.endswith("404.html"):
+        if filename == path_404:
             abort(404)
         elif filename.endswith("index.html"):
-            return serve_path(bucket, root, "404.html"), 404
+            return serve_path(bucket, root, path_404), 404
         else:
             if path and not path.endswith("/"):
                 if bucket.blob(filename + "/" + "index.html").exists():
@@ -67,5 +67,5 @@ def serve_path(bucket, root, path):
                     )
                     return redirect(target, 301)
                 else:
-                    return serve_path(bucket, root, "404.html"), 404
+                    return serve_path(bucket, root, path_404), 404
             return serve_path(bucket, root, path + "index.html")

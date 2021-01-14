@@ -1,5 +1,4 @@
 import requests, auth, sys
-
 from common.rpc.auth import get_endpoint
 
 

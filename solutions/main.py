@@ -31,7 +31,7 @@ def index(path):
         },
         "website-base",
     )
-    return serve_path(bucket, "/unreleased/", path)
+    return serve_path(bucket, "/unreleased/", path, path_404="404/index.html")
 
 
 Compress(app)
