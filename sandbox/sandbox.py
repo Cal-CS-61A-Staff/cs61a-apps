@@ -165,8 +165,8 @@ def index(path="index.html"):
     original_path = path
     target = path_to_target(path)
     path = safe_join(base_directory, "published", path)
-    if not is_up_to_date(username, target):
-        build(username, target)
+    # if not is_up_to_date(username, target):
+    #     build(username, target)
 
     if path.endswith(".html") or path.endswith(".pdf"):
         logs = get_logs(username, target)
