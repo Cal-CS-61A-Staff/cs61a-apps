@@ -1,4 +1,4 @@
-import os, shutil, subprocess, sys, yaml, socket
+import os, shutil, subprocess, sys, yaml, socket, requests, time
 from contextlib import contextmanager
 from flask import Flask, request, redirect
 from werkzeug.security import gen_salt
@@ -77,9 +77,9 @@ def index():
     config = get_config(username)
 
     out += "active.<br />"
-    out += f"""<form action="https://{username}.{get_host()}/login", method="POST" target="_blank">
+    out += f"""<form action="https://{username}.{get_host()}/login", method="POST">
     <input type="hidden" name="base" value="" /><input type="hidden" name="password" value="{config['password']}" />
-    <input type="submit" value="Open in New Tab" />
+    <input type="submit" value="Open IDE" />
     </form><form action="{url_for('kill')}" method="POST">
     <input type="hidden" name="username" value="{username}" />
     <input type="submit" value="Kill IDE" />
@@ -197,6 +197,11 @@ def start():
             print("Done.", file=sys.stderr)
             sh("chown", "-R", username, f"/save/{username}/berkeley-cs61a")
             print("Tree owner changed.", file=sys.stderr)
+
+    print("Waiting for code-server to come alive, if needed...", file=sys.stderr)
+    while requests.get(f"https://{username}.{get_host()}").status_code != 200:
+        time.sleep(1)
+    print("code-server is alive.", file=sys.stderr)
 
     print("IDE ready.", file=sys.stderr)
     return redirect(url_for("index"))
