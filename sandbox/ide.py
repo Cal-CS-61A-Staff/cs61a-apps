@@ -123,6 +123,9 @@ def start():
                 file=sys.stderr,
             )
 
+    sh("chown", "-R", username, f"/save/{username}")
+    print("Home folder owner set.", file=sys.stderr)
+
     if not get_server_pid(username):
         print(f"Server for {username} is not running, starting...", file=sys.stderr)
         with db_lock("ide", username):
@@ -139,6 +142,7 @@ def start():
             with open(f"/save/{username}/.code-server.yaml", "w") as csc:
                 yaml.dump(config, csc)
 
+            sh("chown", "-R", username, f"/save/{username}/.code-server.yaml")
             print("Configuration ready.", file=sys.stderr)
 
             sanitized = os.environ.copy()
