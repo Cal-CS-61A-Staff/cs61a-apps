@@ -29,7 +29,7 @@ def get_domain():
 
 def get_endpoint(course=None):
     if getenv("ENV") != "prod":
-        return "cal/cs61a/fa20"
+        return "cal/cs61a/sp21"
     if not course:
         course = get_course()
     if course not in COURSE_ENDPOINTS:

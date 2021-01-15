@@ -26,12 +26,12 @@ def roll_dice(num_rolls, dice=six_sided):
     # END PROBLEM 1
 
 
-def free_bacon(score):
-    """Return the points scored from rolling 0 dice (Free Bacon).
+def piggy_points(score):
+    """Return the points scored from rolling 0 dice (Piggy Points).
 
     score:  The opponent's current score.
     """
-    assert score < 100, "The game should be over."
+    assert score < GOAL_SCORE, "The game should be over."
     pi = FIRST_101_DIGITS_OF_PI
 
     # Trim pi to only (score + 1) digit(s)
@@ -43,7 +43,8 @@ def free_bacon(score):
 
 
 def take_turn(num_rolls, opponent_score, dice=six_sided):
-    """Simulate a turn rolling NUM_ROLLS dice, which may be 0 (Free Bacon).
+    """Simulate a turn rolling NUM_ROLLS dice, which may be 0 in the case
+    of a player using Piggy Points.
     Return the points scored for the turn by the current player.
 
     num_rolls:       The number of dice rolls that will be made.
@@ -54,7 +55,7 @@ def take_turn(num_rolls, opponent_score, dice=six_sided):
     assert type(num_rolls) == int, "num_rolls must be an integer."
     assert num_rolls >= 0, "Cannot roll a negative number of dice in take_turn."
     assert num_rolls <= 10, "Cannot roll more than 10 dice."
-    assert opponent_score < 100, "The game should be over."
+    assert opponent_score < GOAL_SCORE, "The game should be over."
     # BEGIN PROBLEM 3
     "*** YOUR CODE HERE ***"
     # END PROBLEM 3
@@ -62,7 +63,7 @@ def take_turn(num_rolls, opponent_score, dice=six_sided):
 
 def extra_turn(player_score, opponent_score):
     """Return whether the player gets an extra turn."""
-    return pig_pass(player_score, opponent_score) or swine_align(
+    return more_boar(player_score, opponent_score) or swine_align(
         player_score, opponent_score
     )
 
@@ -83,21 +84,21 @@ def swine_align(player_score, opponent_score):
     # END PROBLEM 4a
 
 
-def pig_pass(player_score, opponent_score):
-    """Return whether the player gets an extra turn due to Pig Pass.
+def more_boar(player_score, opponent_score):
+    """Return whether the player gets an extra turn due to Moar Boar.
 
     player_score:   The total score of the current player.
     opponent_score: The total score of the other player.
 
-    >>> pig_pass(9, 12)
+    >>> more_boar(9, 12)
     False
-    >>> pig_pass(10, 12)
+    >>> more_boar(10, 12)
     True
-    >>> pig_pass(11, 12)
+    >>> more_boar(11, 12)
     True
-    >>> pig_pass(12, 12)
+    >>> more_boar(12, 12)
     False
-    >>> pig_pass(13, 12)
+    >>> more_boar(13, 12)
     False
     """
     # BEGIN PROBLEM 4b
@@ -286,8 +287,8 @@ def make_averaged(original_function, trials_count=1000):
 
 
 def max_scoring_num_rolls(dice=six_sided, trials_count=1000):
-    """Return the number of dice (1 to 10) that gives the highest average turn
-    score by calling roll_dice with the provided DICE over TRIALS_COUNT times.
+    """Return the number of dice (1 to 10) that gives the highest average turn score
+    by calling roll_dice with the provided DICE a total of TRIALS_COUNT times.
     Assume that the dice always return positive outcomes.
 
     >>> dice = make_test_dice(1, 6)
@@ -327,8 +328,8 @@ def run_experiments():
     if False:  # Change to True to test always_roll(8)
         print("always_roll(8) win rate:", average_win_rate(always_roll(8)))
 
-    if False:  # Change to True to test bacon_strategy
-        print("bacon_strategy win rate:", average_win_rate(bacon_strategy))
+    if False:  # Change to True to test piggypoints_strategy
+        print("piggypoints_strategy win rate:", average_win_rate(piggypoints_strategy))
 
     if False:  # Change to True to test extra_turn_strategy
         print("extra_turn_strategy win rate:", average_win_rate(extra_turn_strategy))
@@ -339,7 +340,7 @@ def run_experiments():
     "*** You may add additional experiments as you wish ***"
 
 
-def bacon_strategy(score, opponent_score, cutoff=8, num_rolls=6):
+def piggypoints_strategy(score, opponent_score, cutoff=8, num_rolls=6):
     """This strategy rolls 0 dice if that gives at least CUTOFF points, and
     rolls NUM_ROLLS otherwise.
     """

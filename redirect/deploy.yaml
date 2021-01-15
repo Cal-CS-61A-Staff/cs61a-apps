@@ -10,6 +10,7 @@ first_party_domains:
   - sql.cs61a.org
   - ok-help.app.cs61a.org
   # domain redirects
+  - fa20.cs61a.org
   - su20.cs61a.org
   - sp20.cs61a.org
   - fa19.cs61a.org

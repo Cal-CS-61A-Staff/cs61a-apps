@@ -49,7 +49,7 @@ ENV = dict(
     CLOUD_STORAGE_BUCKET="website-pdf-cache.buckets.cs61a.org", IN_SANDBOX="true"
 )
 
-DEFAULT_USER = "rahularya"
+DEFAULT_USER = "prbuild"
 
 PDF_INLINE_SCRIPT = """
 <div style="width: 100%; height: 100%;">
@@ -165,8 +165,8 @@ def index(path="index.html"):
     original_path = path
     target = path_to_target(path)
     path = safe_join(base_directory, "published", path)
-    if not is_up_to_date(username, target):
-        build(username, target)
+    # if not is_up_to_date(username, target):
+    #     build(username, target)
 
     if path.endswith(".html") or path.endswith(".pdf"):
         logs = get_logs(username, target)

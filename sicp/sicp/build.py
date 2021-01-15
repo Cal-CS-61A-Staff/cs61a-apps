@@ -1,4 +1,5 @@
 import os
+import pathlib
 import sys
 import time
 import webbrowser
@@ -22,6 +23,7 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
+from common.cli_utils import pretty_print
 from common.rpc.auth_utils import get_token
 from common.rpc.sandbox import (
     get_server_hashes,
@@ -66,10 +68,6 @@ def find_target():
             .strip()
         )
     return find_target.out
-
-
-def pretty_print(emoji, msg):
-    print(f"{emoji}{Style.BRIGHT} {msg} {Style.RESET_ALL}{emoji}")
 
 
 def get_sandbox_url():

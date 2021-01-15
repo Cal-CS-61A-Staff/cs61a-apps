@@ -86,24 +86,17 @@ def run_61a_website_build():
 
     def build(target):
         # need to re-run make for stupid reasons
-        num_iterations = 3
-        for i in range(num_iterations):
-            is_last_iteration = i == num_iterations - 1
-            parallel_args = ["-j1"] if is_last_iteration else ["-j4"]
-            sh(
-                "make",
-                "--no-print-directory",
-                "-C",
-                "src",
-                "BUILDTYPE=pull",
-                target,
-                f"BUILDPASS={i+1}",
-                *parallel_args,
-                env=env,
-            )
+        out = sh(
+            "make",
+            "--no-print-directory",
+            "-C",
+            "src",
+            target,
+            env=env,
+            capture_output=True,
+        )
+        print(out.decode("utf-8"))
 
-    sh("rm", "-rf", "env")
-    sh("cp", "-aT", "/app/buildcache/website-env", "env")
     build("all")
     sh("cp", "-aT", "published", "released")
     build("unreleased")
