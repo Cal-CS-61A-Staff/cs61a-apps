@@ -25,7 +25,7 @@ with connect_db() as db:
     )
 
 
-@app.route("index")
+@app.route("/")
 def index():
     return "<script> window.close(); </script>"
 
