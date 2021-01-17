@@ -1,5 +1,5 @@
-from flask import Flask, jsonify, request
-from flask_cors import cross_origin
+from flask import Flask, abort, jsonify, request
+from flask_cors import CORS, cross_origin
 
 from common.db import connect_db, transaction_db
 from common.oauth_client import (
@@ -15,7 +15,10 @@ app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
     app.debug = True
 
+CORS(app, origins=VALID_ORIGINS, supports_credentials=True)
+
 create_oauth_client(app, "61a-discussions")
+
 
 with connect_db() as db:
     db(
@@ -32,11 +35,10 @@ def index():
     return "<script> window.close(); </script>"
 
 
-@cross_origin(origin=VALID_ORIGINS, supports_credentials=True)
 @app.route("/save", methods=["POST"])
 def save():
     if not is_enrolled("cs61a"):
-        return login()
+        abort(401)
     email = get_user()["email"]
     name = request.json["name"]
     value = request.json["value"]
@@ -49,11 +51,10 @@ def save():
         )
 
 
-@cross_origin(origin=VALID_ORIGINS, supports_credentials=True)
-@app.route("/fetch", methods=["POST"])
+@app.route("/fetch", methods=["GET", "POST"])
 def fetch():
     if not is_enrolled("cs61a"):
-        return login()
+        abort(401)
     email = get_user()["email"]
     with connect_db() as db:
         resp = db("SELECT name, value FROM saves WHERE email=%s", [email]).fetchall()
