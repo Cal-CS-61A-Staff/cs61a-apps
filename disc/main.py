@@ -9,6 +9,8 @@ from common.oauth_client import (
     login,
 )
 
+VALID_ORIGINS = r".*cs61a\.org"
+
 app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
     app.debug = True
@@ -30,7 +32,7 @@ def index():
     return "<script> window.close(); </script>"
 
 
-@cross_origin(origin="cs61a.org", supports_credentials=True)
+@cross_origin(origin=VALID_ORIGINS, supports_credentials=True)
 @app.route("/save", methods=["POST"])
 def save():
     if not is_enrolled("cs61a"):
@@ -47,7 +49,7 @@ def save():
         )
 
 
-@cross_origin(origin="cs61a.org", supports_credentials=True)
+@cross_origin(origin=VALID_ORIGINS, supports_credentials=True)
 @app.route("/fetch", methods=["POST"])
 def fetch():
     if not is_enrolled("cs61a"):
