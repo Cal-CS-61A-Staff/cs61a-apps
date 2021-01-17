@@ -12,12 +12,15 @@ def create_language_apis(app):
     # python
     @app.route("/api/pytutor", methods=["POST"])
     def pytutor_proxy():
+        data = {
+            "user_script": request.form["code"],
+            # "options_json": r'{"cumulative_mode":true,"heap_primitives":false}',
+        }
+        if "options_json" in request.form:
+            data["options_json"] = request.form["options_json"]
         response = requests.post(
             "http://pythontutor.com/web_exec_py3.py",
-            data={
-                "user_script": request.form["code"],
-                # "options_json": r'{"cumulative_mode":true,"heap_primitives":false}',
-            },
+            data=data,
         )
         return response.text
 
