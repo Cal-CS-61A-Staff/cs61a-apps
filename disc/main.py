@@ -1,12 +1,13 @@
 from flask import Flask, Response, abort, jsonify, request, session
 from flask.sessions import SecureCookieSessionInterface
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 from common.db import connect_db, transaction_db
 from common.oauth_client import (
     create_oauth_client,
     get_user,
     is_enrolled,
+    login,
 )
 
 VALID_ORIGINS = r"https://.*cs61a\.org"
@@ -38,9 +39,8 @@ def patch_session_samesite(response: Response):
     response.headers.add(
         "Set-Cookie",
         f"session={SecureCookieSessionInterface().get_signing_serializer(app).dumps(dict(session))}; "
-        "HttpOnly; SameSite=None; Path=/; Secure;",
+        "HttpOnly; SameSite=Lax; Path=/; Secure;",
     )
-    print(response.headers)
     return response
 
 
@@ -59,7 +59,7 @@ def index():
     return "<script> window.close(); </script>"
 
 
-@app.route("/save", methods=["POST"])
+@app.route("/save", methods=["GET", "POST"])
 def save():
     if not is_enrolled("cs61a"):
         abort(401)
