@@ -33,9 +33,6 @@ function RequestForm(props) {
   };
 
   let show = (e) => {
-    if (!descriptionRequired || party_enabled) {
-      return submit(e);
-    }
     e.preventDefault();
     let form = $("#request-form");
     let formDOM = form[0];
@@ -43,13 +40,13 @@ function RequestForm(props) {
       return;
     }
 
+    if (!descriptionRequired || party_enabled) {
+      return submit(e);
+    }
+
     let descriptionBox = $("#description-box");
 
-    if (descriptionRequired) {
-      descriptionBox.prop("required", true);
-    } else {
-      descriptionBox.prop("required", false);
-    }
+    descriptionBox.prop("required", true);
 
     $("#description-overlay").show();
   };

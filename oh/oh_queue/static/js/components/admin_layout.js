@@ -14,6 +14,7 @@ class AdminLayout extends React.Component {
           <Messages messages={state.messages} />
           <AdminTabs
             currentTab={pathname.split("/")[pathname.split("/").length - 1]}
+            partyAlias={state.config.party_name}
           />
           <Switch location={location}>
             <Route
