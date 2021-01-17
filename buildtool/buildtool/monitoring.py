@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from sys import stderr
 from threading import Lock
 from typing import Callable, Protocol
 
@@ -15,9 +16,9 @@ def enable_profiling():
 
 def log(*args):
     if log.enabled:
-        print(*args)
+        print(*args, file=stderr)
     elif args[0].startswith("RUNNING") and log.profile:
-        print(*args)
+        print(*args, file=stderr)
 
 
 log.enabled = False

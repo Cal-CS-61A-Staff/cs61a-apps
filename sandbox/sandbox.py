@@ -31,7 +31,7 @@ from common.rpc.sandbox import (
 )
 from common.rpc.secrets import get_secret
 from common.shell_utils import sh
-from common.url_for import get_host, url_for
+from common.url_for import get_host
 from sicp.build import get_hash, hash_all
 
 from utils import db_lock
@@ -77,19 +77,9 @@ with connect_db() as db:
     db(
         """CREATE TABLE IF NOT EXISTS sandboxes (
     username varchar(128),
-    initialized boolean,
-    locked boolean,
     version integer, -- updated every time we sync a file
-    manual_version integer -- updated after every manual make command
+    manual_version integer -- updated after every restart of `watch`
 );"""
-    )
-
-    db(
-        """CREATE TABLE IF NOT EXISTS builds (
-        username varchar(128),
-        target varchar(256),
-        pending boolean
-    );"""
     )
 
     db(
@@ -264,15 +254,7 @@ def get_revision():
     )
 
 
-@app.route("/rebuild_path", methods=["POST"])
-def rebuild_path():
-    if not is_staff("cs61a"):
-        abort(403)
-    path = request.json["path"]
-    build(get_host_username(), path_to_target(path))
-    return ""
-
-
+# @nocommit make this triggered by VS Code
 @update_file.bind(app)
 @verifies_access_token
 def update_file(
@@ -314,69 +296,12 @@ def update_file(
         )
 
 
-@run_make_command.bind(app)
-@verifies_access_token
-def run_make_command(target):
-    os.chdir(get_working_directory(g.username))
-    os.chdir("src")
-
-    clear_pending_builds(g.username)
-
-    try:
-        yield from sh(
-            "make",
-            "VIRTUAL_ENV=../env",
-            target,
-            env=ENV,
-            stream_output=True,
-            shell=True,
-        )
-
-    finally:
-        increment_manual_version(g.username)
-
-
 def increment_manual_version(username):
     with connect_db() as db:
         db(
             "UPDATE sandboxes SET manual_version=%s, version=%s WHERE username=%s",
             [randrange(1, 1000), randrange(1, 1000), username],
         )
-
-
-def get_pending_targets(username):
-    with connect_db() as db:
-        return [
-            target
-            for [target] in db(
-                "SELECT target FROM builds WHERE username=%s AND pending=TRUE",
-                [username],
-            ).fetchall()
-        ]
-
-
-def clear_pending_builds(username):
-    with connect_db() as db:
-        db(
-            "UPDATE builds SET pending=FALSE WHERE username=%s",
-            [username],
-        )
-
-
-def build(username, target):
-    pending = get_pending_targets(username)
-    if target in pending:
-        # target is already scheduled to be built
-        return
-    with connect_db() as db:
-        db(
-            "INSERT INTO builds (username, target, pending) VALUES (%s, %s, %s)",
-            [username, target, True],
-        )
-    if not pending:
-        # We need to start the build ourselves
-        with app.app_context():
-            threading.Thread(target=build_worker, args=[username]).start()
 
 
 def get_version(username, target):
@@ -424,108 +349,12 @@ def get_logs(username, target):
             return None
 
 
-def build_worker(username):
-    # Note that we are not necessarily running in an app context
-    try:
-        while True:
-            targets = get_pending_targets(username)
-            if not targets:
-                break
-            target = targets[0]
-            src_version = get_src_version(username)
-            os.chdir(get_working_directory(username))
-            os.chdir("src")
-            ok = False
-            try:
-                sh("make", "-n", "VIRTUAL_ENV=../env", target, env=ENV)
-            except CalledProcessError as e:
-                if e.returncode == 2:
-                    # target does not exist, no need to build
-                    update_version(username, target, src_version)
-                    ok = True
-            if not ok:
-                # target exists, time to build!
-                try:
-                    sh(
-                        "make",
-                        "VIRTUAL_ENV=../env",
-                        target,
-                        env={**ENV, "LAZY_LOADING": "true"},
-                        capture_output=True,
-                        quiet=True,
-                    )
-                except CalledProcessError as e:
-                    log_name = paste_text(
-                        data=(
-                            (e.stdout or b"").decode("utf-8")
-                            + (e.stderr or b"").decode("utf-8")
-                        )
-                    )
-                    update_version(username, target, src_version, log_name)
-                else:
-                    update_version(username, target, src_version)
-            with connect_db() as db:
-                db(
-                    "UPDATE builds SET pending=FALSE WHERE username=%s AND target=%s",
-                    [username, target],
-                )
-    except:
-        # in the event of failure, cancel all builds and trigger refresh
-        increment_manual_version(username)
-        clear_pending_builds(username)
-        raise
-
-
 @get_server_hashes.bind(app)
 @verifies_access_token
 def get_server_hashes():
     base = get_working_directory(g.username)
     os.chdir(base)
     return hash_all()
-
-
-@is_sandbox_initialized.bind(app)
-@verifies_access_token
-def is_sandbox_initialized():
-    return check_sandbox_initialized(g.username)
-
-
-def check_sandbox_initialized(username):
-    with connect_db() as db:
-        initialized = db(
-            "SELECT initialized FROM sandboxes WHERE username=%s", [username]
-        ).fetchone()
-    if initialized is None or not initialized[0]:
-        return False
-    # sanity check that the working directory exists
-    return os.path.exists(get_working_directory(username))
-
-
-@initialize_sandbox.bind(app)
-@verifies_access_token
-def initialize_sandbox(force=False):
-    with db_lock("sandboxes", g.username):
-        initialized = check_sandbox_initialized(g.username)
-        if initialized and not force:
-            raise Exception("Sandbox is already initialized")
-        elif initialized:
-            sh("rm", "-rf", get_working_directory(g.username))
-        Path(get_working_directory(g.username)).mkdir(parents=True, exist_ok=True)
-        os.chdir(get_working_directory(g.username))
-        sh("git", "init")
-        sh(
-            "git",
-            "fetch",
-            "--depth=1",
-            f"https://{get_secret(secret_name='GITHUB_ACCESS_TOKEN')}@github.com/{REPO}",
-            "master",
-        )
-        sh("git", "checkout", "FETCH_HEAD", "-f")
-        os.mkdir("published")  # needed for lazy-loading builds
-        if is_prod_build():
-            add_domain(name="sandbox", domain=f"{g.username}.sb.cs61a.org")
-        with connect_db() as db:
-            db("UPDATE sandboxes SET initialized=TRUE WHERE username=%s", [g.username])
 
 
 if __name__ == "__main__":
