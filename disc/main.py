@@ -1,12 +1,12 @@
-from flask import Flask, abort, jsonify, request
-from flask_cors import CORS, cross_origin
+from flask import Flask, Response, abort, jsonify, request, session
+from flask.sessions import SecureCookieSessionInterface
+from flask_cors import CORS
 
 from common.db import connect_db, transaction_db
 from common.oauth_client import (
     create_oauth_client,
     get_user,
     is_enrolled,
-    login,
 )
 
 VALID_ORIGINS = r"https://.*cs61a\.org"
@@ -18,6 +18,30 @@ if __name__ == "__main__":
 CORS(app, origins=VALID_ORIGINS, supports_credentials=True)
 
 create_oauth_client(app, "61a-discussions")
+
+"""
+This is normally risky! It is safe here because 
+    (a) CORS prevents an attacker from reading reply data, even if their request is authenticated
+    (b) The endpoints require a Content-Type of application/json, so browsers will send a pre-flight
+        meaning that they will not even send POSTs unless they pass the CORS check, which they don't
+
+To ensure safety, we must ensure that 
+    (a) GET requests have no side-effects
+    (b) POST requests must have the JSON Content-Type, so a malicious site cannot send requests on
+        behalf of a user that can cause issues.
+    (c) The CORS policy only allows *.cs61a.org to send POSTs with credentials
+"""
+
+
+@app.after_request
+def patch_session_samesite(response: Response):
+    response.headers.add(
+        "Set-Cookie",
+        f"session={SecureCookieSessionInterface().get_signing_serializer(app).dumps(dict(session))}; "
+        "HttpOnly; SameSite=None; Path=/; Secure;",
+    )
+    print(response.headers)
+    return response
 
 
 with connect_db() as db:
