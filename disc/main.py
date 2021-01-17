@@ -9,7 +9,7 @@ from common.oauth_client import (
     login,
 )
 
-VALID_ORIGINS = r".*cs61a\.org"
+VALID_ORIGINS = r"https://.*cs61a\.org"
 
 app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
