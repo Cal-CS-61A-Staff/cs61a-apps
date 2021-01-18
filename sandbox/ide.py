@@ -77,8 +77,13 @@ def gen_index_html(out, username, show_active=False):
 
     config = get_config(username)
 
+    if is_prod_build():
+        domain = f"{username}.{get_host()}"
+    else:
+        domain = f"{username}-{get_host()}"
+
     out += "active.<br />"
-    out += f"""<form action="https://{username}.{get_host()}/login", method="POST">
+    out += f"""<form action="https://{domain}/login", method="POST">
     <input type="hidden" name="base" value="" /><input type="hidden" name="password" value="{config['password']}" />
     <input type="submit" value="Open IDE" />
     </form><form action="{url_for('kill')}" method="POST">
@@ -129,29 +134,28 @@ def start():
     except subprocess.CalledProcessError:
         user_exists = False
 
+    if is_prod_build():
+        domain = f"{username}.{get_host()}"
+    else:
+        domain = f"{username}-{get_host()}"
+
     if not user_exists:
         print(f"User {username} doesn't exist, creating...", file=sys.stderr)
         sh("useradd", "-b", "/save", "-m", username, "-s", "/bin/bash")
         print(
-            f"Proxying {username}.{get_host()} to {get_hosted_app_name()}...",
+            f"Proxying {domain} to {get_hosted_app_name()}...",
             file=sys.stderr,
         )
-        if os.getenv("ENV", "dev") == "prod":
-            add_domain(
-                name=get_hosted_app_name(),
-                domain=f"{username}.{get_host()}",
-                proxy_set_header={
-                    "Host": "$host",
-                    "Upgrade": "$http_upgrade",
-                    "Connection": "upgrade",
-                    "Accept-Encoding": "gzip",
-                },
-            )
-        else:
-            print(
-                f"Could not proxy domains for a PR build.",
-                file=sys.stderr,
-            )
+        add_domain(
+            name=get_hosted_app_name(),
+            domain=domain,
+            proxy_set_header={
+                "Host": "$host",
+                "Upgrade": "$http_upgrade",
+                "Connection": "upgrade",
+                "Accept-Encoding": "gzip",
+            },
+        )
 
     sh("chown", "-R", username, f"/save/{username}")
     print("Home folder owner set.", file=sys.stderr)
@@ -200,12 +204,12 @@ def start():
                         "Accept-Encoding": "gzip",
                     },
                 ),
-                server_name=f"{username}.{get_host()}",
+                server_name=domain,
                 listen=NGINX_PORT,
                 error_page=f"502 https://{get_host()}",
             )
 
-            with open(f"/etc/nginx/sites-enabled/{username}.{get_host()}", "w") as f:
+            with open(f"/etc/nginx/sites-enabled/{domain}", "w") as f:
                 f.write(str(conf))
             sh("nginx", "-s", "reload")
             print("NGINX configuration written and server restarted.", file=sys.stderr)
@@ -233,7 +237,7 @@ def start():
             print("Tree owner changed.", file=sys.stderr)
 
     print("Waiting for code-server to come alive, if needed...", file=sys.stderr)
-    while requests.get(f"https://{username}.{get_host()}").status_code != 200:
+    while requests.get(f"https://{domain}").status_code != 200:
         time.sleep(1)
     print("code-server is alive.", file=sys.stderr)
 
