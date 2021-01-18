@@ -456,6 +456,14 @@ def init_config():
             course=get_course(),
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="party_name",
+            value="Party",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 

@@ -1,4 +1,4 @@
-function AdminTabs({ currentTab }) {
+function AdminTabs({ currentTab, partyAlias }) {
   if (currentTab === "admin") {
     currentTab = "general";
   }
@@ -16,7 +16,7 @@ function AdminTabs({ currentTab }) {
   const body = links.map((link, index) => (
     <li role="presentation" className={currentTab === link ? "active" : ""}>
       <Link to={index ? "/admin/" + link : "/admin"}>
-        {link[0].toUpperCase() + link.slice(1)}
+        {link === "party" ? partyAlias : link[0].toUpperCase() + link.slice(1)}
       </Link>
     </li>
   ));
