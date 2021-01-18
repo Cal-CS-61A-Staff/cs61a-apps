@@ -3,7 +3,14 @@ from contextlib import contextmanager
 from flask import Flask, request, redirect, session
 from werkzeug.security import gen_salt
 from functools import wraps
-from utils import db_lock, Server, Location, get_server_cmd, get_server_pid
+from utils import (
+    db_lock,
+    Server,
+    Location,
+    get_server_cmd,
+    get_server_pid,
+    get_active_servers,
+)
 
 from common.oauth_client import (
     create_oauth_client,
@@ -59,7 +66,7 @@ def auth_only(func):
     return wrapped
 
 
-def gen_index_html(out, username):
+def gen_index_html(out, username, show_active=False):
     if not get_server_pid(username):
         out += "inactive or nonexistent.<br />"
         out += f"""<form action="{url_for('start')}" method="POST">
@@ -79,6 +86,10 @@ def gen_index_html(out, username):
     <input type="submit" value="Kill IDE" />
     </form>"""
 
+    active = get_active_servers()
+    if active and show_active:
+        out += "<p>Active servers: " + ", ".join(active) + "</p>"
+
     return html(out)
 
 
@@ -91,7 +102,9 @@ def index():
     out += f"Hi {get_user()['name'].split()[0]}! Your IDE is "
 
     session[SK_RETURN_TO] = url_for("index")
-    return gen_index_html(out, username)
+    return gen_index_html(
+        out, username, is_admin(email=get_user()["email"], course="cs61a")
+    )
 
 
 @app.route("/sudo/<username>")
@@ -104,7 +117,7 @@ def sudo(username):
     out += f"Hi {get_user()['name'].split()[0]}! {username}'s IDE is "
 
     session[SK_RETURN_TO] = url_for("sudo", username=username)
-    return gen_index_html(out, username)
+    return gen_index_html(out, username, True)
 
 
 @app.route("/start", methods=["POST"])
