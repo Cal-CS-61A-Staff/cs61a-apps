@@ -1,6 +1,6 @@
 import os, shutil, subprocess, sys, yaml, socket, requests, time
 from contextlib import contextmanager
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, session
 from werkzeug.security import gen_salt
 from functools import wraps
 from utils import db_lock, Server, Location
@@ -17,10 +17,11 @@ from common.shell_utils import sh
 from common.html import html
 from common.url_for import get_host, url_for
 from common.db import connect_db
+from common.course_config import is_admin
 
 NGINX_PORT = os.environ.get("PORT", "8001")
-
 DEFAULT_USER = "prbuild"
+SK_RETURN_TO = "start_kill_return_to"
 
 app = Flask(__name__)
 
@@ -58,16 +59,9 @@ def auth_only(func):
     return wrapped
 
 
-@app.route("/")
-@auth_only
-def index():
-    username = get_username()
-
-    out = "<h1>61A Sandbox IDE</h1>\n"
-    out += f"Hi {get_user()['name'].split()[0]}! Your IDE is "
-
+def gen_index_html(out, username):
     if not get_server_pid(username):
-        out += "inactive.<br />"
+        out += "inactive or nonexistent.<br />"
         out += f"""<form action="{url_for('start')}" method="POST">
         <input type="hidden" name="username" value="{username}" />
         <input type="submit" value="Start IDE" />
@@ -86,6 +80,31 @@ def index():
     </form>"""
 
     return html(out)
+
+
+@app.route("/")
+@auth_only
+def index():
+    username = get_username()
+
+    out = "<h1>61A Sandbox IDE</h1>\n"
+    out += f"Hi {get_user()['name'].split()[0]}! Your IDE is "
+
+    session[SK_RETURN_TO] = url_for("index")
+    return gen_index_html(out, username)
+
+
+@app.route("/sudo/<username>")
+@auth_only
+def sudo(username):
+    if not is_admin(email=get_user()["email"], course="cs61a"):
+        return redirect(url_for("index"))
+
+    out = "<h1>61A Sandbox IDE</h1>\n"
+    out += f"Hi {get_user()['name'].split()[0]}! {username}'s IDE is "
+
+    session[SK_RETURN_TO] = url_for("sudo", username=username)
+    return gen_index_html(out, username)
 
 
 @app.route("/start", methods=["POST"])
@@ -208,7 +227,7 @@ def start():
     print("code-server is alive.", file=sys.stderr)
 
     print("IDE ready.", file=sys.stderr)
-    return redirect(url_for("index"))
+    return redirect(session.pop(SK_RETURN_TO, url_for("index")))
 
 
 @app.route("/kill", methods=["POST"])
@@ -220,7 +239,7 @@ def kill():
     if pid:
         sh("kill", pid.decode("utf-8")[:-1])
         sh("sleep", "2")  # give the server a couple of seconds to shutdown
-    return redirect(url_for("index"))
+    return redirect(session.pop(SK_RETURN_TO, url_for("index")))
 
 
 def is_prod_build():

@@ -64,10 +64,12 @@ def main():
             last_beat = heartbeat.stat().st_mtime
 
             if now - last_beat > 900:
-                print(f"Killing {server.split('/')[2]} for idling...", file=sys.stderr)
                 pid = get_server_pid(server.split("/")[2])
 
                 if pid:
+                    print(
+                        f"Killing {server.split('/')[2]} for idling...", file=sys.stderr
+                    )
                     sh("kill", pid.decode("utf-8")[:-1])
                     print(f"Killed.", file=sys.stderr)
         print("Cleanup complete. Sleeping for 900 seconds...", file=sys.stderr)
