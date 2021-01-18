@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from flask import Flask, request, redirect, session
 from werkzeug.security import gen_salt
 from functools import wraps
-from utils import db_lock, Server, Location
+from utils import db_lock, Server, Location, get_server_cmd, get_server_pid
 
 from common.oauth_client import (
     create_oauth_client,
@@ -256,24 +256,6 @@ def get_username():
 
 def is_berkeley():
     return get_user()["email"].endswith("@berkeley.edu")
-
-
-def get_server_cmd(username):
-    return [
-        "su",
-        username,
-        "-c",
-        f"code-server --config /save/{username}/.code-server.yaml",
-    ]
-
-
-def get_server_pid(username):
-    try:
-        return sh(
-            "pgrep", "-f", " ".join(get_server_cmd(username)), capture_output=True
-        )
-    except subprocess.CalledProcessError:
-        return False
 
 
 def get_config(username):

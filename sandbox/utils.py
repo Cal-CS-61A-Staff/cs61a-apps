@@ -1,5 +1,7 @@
 from contextlib import contextmanager
 from common.db import connect_db
+import glob, subprocess
+from common.shell_utils import sh
 
 
 @contextmanager
@@ -33,6 +35,33 @@ def db_lock(active_db, username):
     finally:
         with connect_db() as db:
             db(f"UPDATE {active_db} SET locked=FALSE WHERE username=%s", [username])
+
+
+def get_server_cmd(username):
+    return [
+        "su",
+        username,
+        "-c",
+        f"code-server --config /save/{username}/.code-server.yaml",
+    ]
+
+
+def get_server_pid(username):
+    try:
+        return sh(
+            "pgrep", "-f", " ".join(get_server_cmd(username)), capture_output=True
+        )
+    except subprocess.CalledProcessError:
+        return False
+
+
+def get_active_servers():
+    servers = glob.glob("/save/**/.local/share/code-server/heartbeat")
+    return [
+        server.split("/")[2]
+        for server in servers
+        if get_server_pid(server.split("/")[2])
+    ]
 
 
 # Some utilities for NGINX follow. These are originally sourced from:
