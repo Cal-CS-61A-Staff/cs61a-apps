@@ -262,7 +262,11 @@ def get_hosted_app_name():
 
 
 def get_username():
-    return get_user()["email"].split("@")[0] if is_prod_build() else DEFAULT_USER
+    return (
+        get_user()["email"].split("@")[0].replace(".", "-")
+        if is_prod_build()
+        else DEFAULT_USER
+    )
 
 
 def is_berkeley():
