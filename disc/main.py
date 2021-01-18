@@ -59,7 +59,7 @@ def index():
     return "<script> window.close(); </script>"
 
 
-@app.route("/save", methods=["GET", "POST"])
+@app.route("/save", methods=["POST"])
 def save():
     if not is_enrolled("cs61a"):
         abort(401)
@@ -74,8 +74,10 @@ def save():
             [email, name, value],
         )
 
+    return dict(success=True)
 
-@app.route("/fetch", methods=["GET", "POST"])
+
+@app.route("/fetch", methods=["POST"])
 def fetch():
     if not is_enrolled("cs61a"):
         abort(401)
