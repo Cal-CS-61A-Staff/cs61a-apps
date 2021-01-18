@@ -84,7 +84,7 @@ def fetch():
     email = get_user()["email"]
     with connect_db() as db:
         resp = db("SELECT name, value FROM saves WHERE email=%s", [email]).fetchall()
-    return jsonify(dict(resp))
+    return jsonify({name: value.decode("utf-8") for name, value in resp})
 
 
 if __name__ == "__main__":
