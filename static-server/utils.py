@@ -51,7 +51,7 @@ def serve_path(bucket, root, path, *, path_404="404.html"):
         if filename == path_404:
             abort(404)
         elif filename.endswith("index.html"):
-            return serve_path(bucket, root, path_404), 404
+            return serve_path(bucket, root, path_404, path_404=path_404), 404
         else:
             if path and not path.endswith("/"):
                 if bucket.blob(filename + "/" + "index.html").exists():
@@ -67,5 +67,5 @@ def serve_path(bucket, root, path, *, path_404="404.html"):
                     )
                     return redirect(target, 301)
                 else:
-                    return serve_path(bucket, root, path_404), 404
-            return serve_path(bucket, root, path + "index.html")
+                    return serve_path(bucket, root, path_404, path_404=path_404), 404
+            return serve_path(bucket, root, path + "index.html", path_404=path_404)
