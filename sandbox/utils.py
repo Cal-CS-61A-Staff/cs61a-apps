@@ -64,6 +64,11 @@ def get_active_servers():
     ]
 
 
+# IDE has no AUTH_KEY and this was easier than giving it one
+def is_software_ta(email):
+    return email in ["vanshaj@berkeley.edu", "rahularya@berkeley.edu"]
+
+
 # Some utilities for NGINX follow. These are originally sourced from:
 # https://raw.githubusercontent.com/itsvs/dna/master/dna/utils/nginx_utils.py
 

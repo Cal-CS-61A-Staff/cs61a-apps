@@ -10,6 +10,7 @@ from utils import (
     get_server_cmd,
     get_server_pid,
     get_active_servers,
+    is_software_ta,
 )
 
 from common.oauth_client import (
@@ -24,7 +25,6 @@ from common.shell_utils import sh
 from common.html import html
 from common.url_for import get_host, url_for
 from common.db import connect_db
-from common.course_config import is_admin
 
 NGINX_PORT = os.environ.get("PORT", "8001")
 DEFAULT_USER = "prbuild"
@@ -102,15 +102,13 @@ def index():
     out += f"Hi {get_user()['name'].split()[0]}! Your IDE is "
 
     session[SK_RETURN_TO] = url_for("index")
-    return gen_index_html(
-        out, username, is_admin(email=get_user()["email"], course="cs61a")
-    )
+    return gen_index_html(out, username, is_software_ta(get_user()["email"]))
 
 
 @app.route("/sudo/<username>")
 @auth_only
 def sudo(username):
-    if not is_admin(email=get_user()["email"], course="cs61a"):
+    if not is_software_ta(get_user()["email"]):
         return redirect(url_for("index"))
 
     out = "<h1>61A Sandbox IDE</h1>\n"
