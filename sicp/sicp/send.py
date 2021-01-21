@@ -53,7 +53,7 @@ def send(
             )
 
     send_email(
-        sender=f"{sender} <{sender_user}@eecs.berkeley.edu>",
+        sender=f"{sender} <{sender_user}@cs162.eecs.berkeley.edu>",
         target=target,
         subject=subject,
         body=body,
