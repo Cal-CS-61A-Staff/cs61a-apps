@@ -13,8 +13,8 @@ from piazza import network
 from slack import send
 
 STAFF = read_spreadsheet(
-    "https://docs.google.com/spreadsheets/d/1rhZEVryWVhMWiEyHZWMDhk_zgQ_4eg_RJevq2K3nVno/",
-    "piazza-bot",
+    url="https://docs.google.com/spreadsheets/d/1rhZEVryWVhMWiEyHZWMDhk_zgQ_4eg_RJevq2K3nVno/",
+    sheet_name="piazza-bot",
 )
 headers = STAFF[0]
 STAFF = STAFF[1:]
