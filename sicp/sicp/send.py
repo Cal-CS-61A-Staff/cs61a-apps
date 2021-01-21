@@ -42,7 +42,7 @@ def send(
     attachments: List[str],
 ):
     """
-    Send emails from cs61a@berkeley.edu routed through a university mailserver.
+    Send emails from eecs.berkeley.edu routed through a university mailserver.
     """
     loaded_attachments = {}
 
