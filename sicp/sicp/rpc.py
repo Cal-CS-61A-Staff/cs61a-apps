@@ -9,6 +9,7 @@ from common.rpc import domains
 from common.rpc import hosted
 from common.rpc import howamidoing
 from common.rpc import indexer
+from common.rpc import mail
 from common.rpc import oh
 from common.rpc import paste
 from common.rpc import sandbox
