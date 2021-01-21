@@ -1,7 +1,7 @@
 from random import choice
 from string import ascii_lowercase
 
-from flask import Flask, Response, abort, redirect, request
+from flask import Flask, Response, abort, redirect, request, escape
 
 from common.db import connect_db
 from common.html import html
@@ -59,7 +59,7 @@ def load_formatted(name):
         return html(
             f"""<div style="margin-left: -50%; margin-right: -50%">
                 <h1>61A Paste</h1>
-                <pre>{out}</pre>
+                <pre>{escape(out)}</pre>
                 <a href=\"{url_for('load_raw', name=name)}\">(raw)</a>
             </div>"""
         )
