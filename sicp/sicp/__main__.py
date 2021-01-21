@@ -1,3 +1,6 @@
+import sys
+from warnings import warn
+
 import click, os
 
 from sicp.build import build
@@ -22,6 +25,9 @@ cli.add_command(build)
 cli.add_command(venv)
 cli.add_command(pr)
 cli.add_command(auth)
+
+if sys.version_info[0] == 3 and sys.version_info[1] < 8:
+    warn("sicp may not work properly on versions of Python before 3.8")
 
 if __name__ == "__main__":
     cli()
