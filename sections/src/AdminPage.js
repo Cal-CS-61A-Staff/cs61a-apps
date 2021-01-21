@@ -149,7 +149,10 @@ export default function AdminPage(): React.Node {
                 </Button>
               </p>
               <p>
-                <Button variant="danger" onClick={remindTutorsToSetupZoomLinks}>
+                <Button
+                  variant="danger"
+                  onClick={() => remindTutorsToSetupZoomLinks()}
+                >
                   Remind Tutors to Setup Zoom Links
                 </Button>{" "}
               </p>
