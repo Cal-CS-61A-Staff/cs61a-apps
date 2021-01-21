@@ -8,14 +8,20 @@ import re
 from dateutil.parser import parse
 
 from common.db import connect_db
-from common.rpc.auth import piazza_course_id
+from common.rpc.auth import piazza_course_id, read_spreadsheet
 from piazza import network
 from slack import send
 
-STAFF = csv.DictReader(open("staff_roster.csv"))
+STAFF = read_spreadsheet(
+    "https://docs.google.com/spreadsheets/d/1rhZEVryWVhMWiEyHZWMDhk_zgQ_4eg_RJevq2K3nVno/",
+    "piazza-bot",
+)
+headers = STAFF[0]
+STAFF = STAFF[1:]
+
 STAFF_LST = []
 for row in STAFF:
-    for _ in range(int(row["Weight"])):
+    for _ in range(int(row[headers.index("Weight")])):
         STAFF_LST.append(row)
 
 TIMEZONE = pytz.timezone("America/Los_Angeles")
@@ -81,14 +87,16 @@ class Main:
         if message:
             starter = (
                 "Good morning! Here are today's piazza assignments. You will receive a daily reminder "
-                + "about your unresolved piazza posts. *If you do not know how to answer your post(s), post in general.*\n\n"
+                "about your unresolved piazza posts. *If you do not know how to answer your post(s), "
+                "post in #general.*\n\n "
             )
             # print(starter + message)
             send(starter + message, course="cs61a")
         if high_priority:
             starter = (
-                f"<These messages have been unanswered for {self.urgent_threshold} days. "
-                + "*If you were assigned one of these posts, reply to this message after you have resolved it.*\n\n"
+                f"These messages have been unanswered for {self.urgent_threshold} days. "
+                "*If you were assigned one of these posts, please reply to this message after you have resolved "
+                "it.*\n\n "
             )
             send(starter + high_priority, course="cs61a")
 
@@ -140,7 +148,7 @@ class Main:
             [ord(c) for c in hashlib.sha224((str(post_id)).encode("utf-8")).hexdigest()]
         )
         staff_index = post_hash % len(STAFF_LST)
-        return STAFF_LST[staff_index]["email"]
+        return STAFF_LST[staff_index][headers.index("Email")]
 
     def is_urgent(self, post):
         """Returns a boolean indicating whether the input post or followup is urgent. For a post to be urgent,
