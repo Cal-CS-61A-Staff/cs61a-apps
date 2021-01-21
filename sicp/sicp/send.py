@@ -10,6 +10,16 @@ from common.rpc.mail import send_email
 
 @click.command()
 @click.option(
+    "--sender",
+    default="CS 61A Mailtool",
+    help="The sender display name",
+)
+@click.option(
+    "--sender-user",
+    default="cs61a",
+    help="The sender username (@eecs.berkeley.edu)",
+)
+@click.option(
     "--target",
     help="The destination email address e.g. cs61a@berkeley.edu",
     prompt=True,
@@ -23,7 +33,14 @@ from common.rpc.mail import send_email
     multiple=True,
     help="Files to attach to the email",
 )
-def send(target: str, subject: str, body: str, attachments: List[str]):
+def send(
+    sender: str,
+    sender_user: str,
+    target: str,
+    subject: str,
+    body: str,
+    attachments: List[str],
+):
     """
     Send emails from cs61a@berkeley.edu routed through a university mailserver.
     """
@@ -36,5 +53,9 @@ def send(target: str, subject: str, body: str, attachments: List[str]):
             )
 
     send_email(
-        target=target, subject=subject, body=body, attachments=loaded_attachments
+        sender=f"{sender} <{sender_user}@eecs.berkeley.edu>",
+        target=target,
+        subject=subject,
+        body=body,
+        attachments=loaded_attachments,
     )

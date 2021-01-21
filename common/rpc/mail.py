@@ -9,6 +9,7 @@ service = create_service(__name__, providers=["https://cs162.org/autograder/"])
 @service.route("/api/send_email")
 def send_email(
     *,
+    sender: str,
     target: str,
     subject: str,
     body: str,
