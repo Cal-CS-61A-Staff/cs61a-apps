@@ -58,4 +58,5 @@ def send(
         subject=subject,
         body=body,
         attachments=loaded_attachments,
+        _impersonate="mail",
     )

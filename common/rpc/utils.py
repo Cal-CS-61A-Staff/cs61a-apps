@@ -45,7 +45,7 @@ def create_service(app: str, override=None, providers=None):
                 if (
                     not get_master_secret()
                     and "_impersonate" in kwargs
-                    and not "_sudo_token" in kwargs
+                    and "_sudo_token" not in kwargs
                 ):
                     from common.rpc.secrets import (
                         get_secret_from_server,
