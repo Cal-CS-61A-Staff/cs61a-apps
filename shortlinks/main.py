@@ -18,6 +18,8 @@ class AccessRestriction(Enum):
     STUDENT = 2
 
 
+print("Added this line for investigation.")
+
 with connect_db() as db:
     db(
         """CREATE TABLE IF NOT EXISTS shortlinks (
