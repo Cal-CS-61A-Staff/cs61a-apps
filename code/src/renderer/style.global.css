@@ -1,195 +1,197 @@
-@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400&display=swap');
+@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400&display=swap");
 
 html {
-    box-sizing: border-box;
-    background-color: #282d34;
+  box-sizing: border-box;
+  background-color: #282d34;
 }
 
-*, *:before, *:after {
-    box-sizing: inherit;
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
 }
 
 .hljs {
-    display: inline !important;
-    padding: 0 !important;
-    background: inherit !important;
+  display: inline !important;
+  padding: 0 !important;
+  background: inherit !important;
 }
 
 #app {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 #modalOverlay {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .bottomBar {
-    position: absolute;
-    width: 100%;
-    bottom: 0;
-    left: 0;
-    height: 30px;
-    display: flex;
-    z-index: 1;
-    pointer-events: none;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  height: 30px;
+  display: flex;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .browserFileSelector {
-    overflow-y: auto;
-    font-family: "Source Sans Pro", sans-serif;
-    font-size: 24px;
-    font-weight: 200;
-    text-align: center;
-    flex-shrink: 0;
+  overflow-y: auto;
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 24px;
+  font-weight: 200;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .fileCard {
-    height: 50px;
-    line-height: 30px;
-    padding: 10px;
-    border: 1px white solid;
-    margin: 10px;
+  height: 50px;
+  line-height: 30px;
+  padding: 10px;
+  border: 1px white solid;
+  margin: 10px;
 
-    text-align: left;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 16px;
+  text-align: left;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 16px;
 }
 
 .fileCard:hover {
-    background-color: dimgray;
-    cursor: pointer;
+  background-color: dimgray;
+  cursor: pointer;
 }
 
 .modal {
-    position: fixed;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    pointer-events: auto;
-    font-family: "Verdana", "Consolas", sans-serif;
+  position: fixed;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+  font-family: "Verdana", "Consolas", sans-serif;
 }
 
 .modalBody {
-    background-color: #000000;
-    margin-top: 80px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 5px 5px 5px 25px;
-    border: 1px solid #888;
-    width: 70%;
-    height: 70%;
-    color: white;
+  background-color: #000000;
+  margin-top: 80px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 5px 5px 5px 25px;
+  border: 1px solid #888;
+  width: 70%;
+  height: 70%;
+  color: white;
 }
 
 .modal > * {
-    user-select: none;
+  user-select: none;
 }
 
 .modalHeader {
-    font-family: "Source Sans Pro", sans-serif;
-    font-weight: 200;
-    font-size: 36pt;
-    padding-top: 10px;
-    padding-bottom: 5px;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 200;
+  font-size: 36pt;
+  padding-top: 10px;
+  padding-bottom: 5px;
 }
 
 .modalContent {
-    display: flex;
-    width: calc(100% - 20px);
-    bottom: 20px;
-    height: calc(100% - 90px);
+  display: flex;
+  width: calc(100% - 20px);
+  bottom: 20px;
+  height: calc(100% - 90px);
 }
 
 .modalCol {
-    flex: 0 0 50%;
+  flex: 0 0 50%;
 }
 
 .fileNameField {
-    background-color: black;
-    color: white;
-    font-size: 16pt;
-    font-family: 'Consolas', 'Monaco', monospace;
-    padding: 5px;
-    width: calc(100% - 75px);
-    vertical-align: middle;
-    border: 1px solid white;
+  background-color: black;
+  color: white;
+  font-size: 16pt;
+  font-family: "Consolas", "Monaco", monospace;
+  padding: 5px;
+  width: calc(100% - 75px);
+  vertical-align: middle;
+  border: 1px solid white;
 }
 
 .fileNameField:focus {
-    outline-color: white;
+  outline-color: white;
 }
 
 .fileNameSubmitBtn {
-    width: 70px;
-    height: 42px;
-    margin-left: 5px;
-    vertical-align: middle;
-    background-color: black;
-    color: white;
-    font-size: 18px;
-    font-family: Calibri, sans-serif;
+  width: 70px;
+  height: 42px;
+  margin-left: 5px;
+  vertical-align: middle;
+  background-color: black;
+  color: white;
+  font-size: 18px;
+  font-family: Calibri, sans-serif;
 }
 
 .fileNameSubmitBtn:hover {
-    color: white;
-    cursor: pointer;
-    background-color: dimgray;
+  color: white;
+  cursor: pointer;
+  background-color: dimgray;
 }
 
 .fileDownloadBtn {
-    width: 100%;
-    height: 42px;
-    vertical-align: middle;
-    background-color: transparent;
-    color: white;
-    font-size: 18px;
-    font-family: Calibri, sans-serif;
+  width: 100%;
+  height: 42px;
+  vertical-align: middle;
+  background-color: transparent;
+  color: white;
+  font-size: 18px;
+  font-family: Calibri, sans-serif;
 }
 
 .fileDownloadBtn:hover {
-    color: white;
-    cursor: pointer;
-    background-color: dimgray;
+  color: white;
+  cursor: pointer;
+  background-color: dimgray;
 }
 
 .fileUploadButton {
-    width: 100%;
-    height: 40px;
-    border: 1px solid white;
-    display: table;
-    text-align: center;
+  width: 100%;
+  height: 40px;
+  border: 1px solid white;
+  display: table;
+  text-align: center;
 }
 
 .fileUploadButton:hover {
-    background-color: dimgray;
-    cursor: pointer;
+  background-color: dimgray;
+  cursor: pointer;
 }
 
 .localFileSelector {
-    width: 90%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+  width: 90%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .fileDropTarget {
-    flex-grow: 1;
-    width: 100%;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    border: 2px dotted white;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  flex-grow: 1;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  border: 2px dotted white;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .centeredTextHolder {
@@ -199,338 +201,338 @@ html {
 }
 
 .close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
 }
 
 .close:hover {
-    color: white;
-    text-decoration: none;
-    cursor: pointer;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .menuBar {
-    position: absolute;
-    width: 100%;
-    top: 0;
-    left: 0;
-    height: 30px;
-    display: flex;
-    z-index: 1;
-    pointer-events: none;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  height: 30px;
+  display: flex;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .menuElem {
-    flex-shrink: 0;
-    flex-grow: 0;
-    margin: 2px;
-    padding: 0 10px 0 10px;
-    color: white;
-    text-align: center;
-    font-family: "Source Sans Pro", sans-serif;
-    line-height: 26px;
-    cursor: pointer;
-    user-select: none;
-    pointer-events: auto;
+  flex-shrink: 0;
+  flex-grow: 0;
+  margin: 2px;
+  padding: 0 10px 0 10px;
+  color: white;
+  text-align: center;
+  font-family: "Source Sans Pro", sans-serif;
+  line-height: 26px;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
 }
 
 .menuElem:hover {
-    background-color: #6c6c6c;
+  background-color: #6c6c6c;
 }
 
 /* Launch screen */
 .row {
-    display: flex;
-    position: absolute;
-    left: 0;
-    top: 0; /* Header Height */
-    bottom: 0; /* Footer Height */
-    width: 100%;
-    background-color: #282d34;
-    user-select: none;
+  display: flex;
+  position: absolute;
+  left: 0;
+  top: 0; /* Header Height */
+  bottom: 0; /* Footer Height */
+  width: 100%;
+  background-color: #282d34;
+  user-select: none;
 }
 
 .introColumn {
-    flex: 50%;
-    border-right: 1px solid white;
-    text-align: center;
+  flex: 50%;
+  border-right: 1px solid white;
+  text-align: center;
 }
 
 .introHolder {
-    top: 40%;
-    left: 50%;
-    position: relative;
-    text-align: center;
-    transform: translate(-50%, -50%);
+  top: 40%;
+  left: 50%;
+  position: relative;
+  text-align: center;
+  transform: translate(-50%, -50%);
 }
 
 .introTitle {
-    font-size: 48px;
-    font-family: "Source Sans Pro", sans-serif;
-    font-weight: 200;
-    color: white;
+  font-size: 48px;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 200;
+  color: white;
 }
 
 .versionNumber {
-    font-size: 24px;
-    font-family: "Source Sans Pro", sans-serif;
-    color: white;
-    margin-bottom: 16px;
+  font-size: 24px;
+  font-family: "Source Sans Pro", sans-serif;
+  color: white;
+  margin-bottom: 16px;
 }
 
 .introButton {
-    position: relative;
-    left: 50%;
-    transform: translate(-50%, 0);
+  position: relative;
+  left: 50%;
+  transform: translate(-50%, 0);
 
-    width: 200px;
-    height: 24px;
-    margin-bottom: 8px;
+  width: 200px;
+  height: 24px;
+  margin-bottom: 8px;
 
-    line-height: 24px;
+  line-height: 24px;
 
-    color: white;
-    font-size: 14px;
-    border: 1px solid white;
-    font-family: "Verdana", "Consolas", sans-serif;
+  color: white;
+  font-size: 14px;
+  border: 1px solid white;
+  font-family: "Verdana", "Consolas", sans-serif;
 
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .introButton:hover {
-    background-color: #6c6c6c;
+  background-color: #6c6c6c;
 }
 
 .recentColumn {
-    flex: 50%;
-    padding: 10vh 10% 25vh;
-    color: white;
-    display: flex;
-    align-items: center;
+  flex: 50%;
+  padding: 10vh 10% 25vh;
+  color: white;
+  display: flex;
+  align-items: center;
 }
 
 .recentHolder {
-    flex: 1 1 auto;
-    max-height: 80%;
-    overflow-y: hidden;
+  flex: 1 1 auto;
+  max-height: 80%;
+  overflow-y: hidden;
 }
 
 .LaunchScreenHeader {
-    margin-block-end: 10px;
+  margin-block-end: 10px;
 }
-
 
 /* Main screen */
 
 #tabRoot {
-    position: absolute;
-    left: 0;
-    top: 30px; /* Header Height */
-    bottom: 0; /* Footer Height */
-    width: 100%;
+  position: absolute;
+  left: 0;
+  top: 30px; /* Header Height */
+  bottom: 0; /* Footer Height */
+  width: 100%;
 }
 
 .navBar {
-    left: 0;
-    right: 0;
-    height: 30px;
-    top: 0;
-    position: absolute;
-    background-color: black;
-    color: white;
-    vertical-align: center;
-    user-select: none;
+  left: 0;
+  right: 0;
+  height: 30px;
+  top: 0;
+  position: absolute;
+  background-color: black;
+  color: white;
+  vertical-align: center;
+  user-select: none;
 }
 
 .pathIndicator {
-    position: absolute;
-    left: 10px;
-    top: 7px;
+  position: absolute;
+  left: 10px;
+  top: 7px;
 }
 
 .pathIndicatorElem {
-    font-family: "Verdana", sans-serif;
-    font-size: 10pt;
+  font-family: "Verdana", sans-serif;
+  font-size: 10pt;
 }
 
 .folderIndicator {
-    font-weight: lighter;
-    color: slategrey;
+  font-weight: lighter;
+  color: slategrey;
 }
 
 .fileIndicator {
 }
 
 .commandIcons {
-    position: absolute;
-    right: 5px;
-    top: 5px;
-    z-index: 1;
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  z-index: 1;
 }
 
 .activeLine {
-    position: absolute;
-    background: darkblue;
+  position: absolute;
+  background: darkblue;
 }
 
-.output, .preview {
-    padding: 0 5px;
-    font-family: Monaco, Consolas, monospace;
-    color: white;
-    font-size: 14px;
-    text-align: left;
-    white-space: pre-wrap;
-    word-break: break-all;
-    line-height: 1.6;
-    padding-bottom: 100px;
+.output,
+.preview {
+  padding: 0 5px;
+  font-family: Monaco, Consolas, monospace;
+  color: white;
+  font-size: 14px;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.6;
+  padding-bottom: 100px;
 }
 
 .output * {
-    overflow-anchor: none;
+  overflow-anchor: none;
 }
 
 .outputScrollAnchor {
-    overflow-anchor: auto;
-    height: 1px;
+  overflow-anchor: auto;
+  height: 1px;
 }
 
 .outputControls {
-    display: inline-block;
-    height: 100%;
-    width: 2em;
-    border-right: 1px dashed white;
-    overflow-x: hidden;
-    text-align: center;
+  display: inline-block;
+  height: 100%;
+  width: 2em;
+  border-right: 1px dashed white;
+  overflow-x: hidden;
+  text-align: center;
 }
 
 .outputWrapper {
-    display: inline-block;
-    height: 100%;
-    position: relative;
-    width: calc(100% - 2em - 1px);
-    bottom: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    cursor: text;
+  display: inline-block;
+  height: 100%;
+  position: relative;
+  width: calc(100% - 2em - 1px);
+  bottom: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  cursor: text;
 }
 
 .consoleInput:focus {
-    outline: none;
-    -webkit-user-modify: read-write-plaintext-only;
+  outline: none;
+  -webkit-user-modify: read-write-plaintext-only;
 }
 
 .okResults {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 .testList {
-    height: 100%;
-    overflow-y: auto;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .testListItem {
-    padding: 5px;
-    border-bottom: 1px solid white;
-    color: white;
-    font-family: Verdana, "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
-    font-size: 10pt;
-    user-select: none;
+  padding: 5px;
+  border-bottom: 1px solid white;
+  color: white;
+  font-family: Verdana, "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+  font-size: 10pt;
+  user-select: none;
 }
 
 .testListItem:hover {
-    background: dimgray;
+  background: dimgray;
 }
 
 .testElem {
-    background-color: gray;
-    padding-left: 40px;
+  background-color: gray;
+  padding-left: 40px;
 }
 
 .testDetails {
-    height: 100%;
-    overflow-y: auto;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .testDetailsHeader {
-    padding-left: 10px;
-    color: white;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    border-bottom: solid 5px;
-    font-size: 24px;
-    font-family: Monaco, Consolas, monospace;
+  padding-left: 10px;
+  color: white;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border-bottom: solid 5px;
+  font-size: 24px;
+  font-family: Monaco, Consolas, monospace;
 }
 
 .testDetailsCongrats {
-    text-align: center;
-    position: relative;
-    top: 40%
+  text-align: center;
+  position: relative;
+  top: 40%;
 }
 
 .rawOKPyOutput {
-    padding: 0 5px;
-    font-family: Monaco, Consolas, monospace;
-    color: white;
-    font-size: 14px;
-    text-align: left;
-    white-space: pre-wrap;
-    word-break: break-all;
-    line-height: 1.6;
+  padding: 0 5px;
+  font-family: Monaco, Consolas, monospace;
+  color: white;
+  font-size: 14px;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.6;
 }
 
 .commandIcon {
-    width: 24px;
-    height: 24px;
-    padding: 2px;
-    background-color: transparent;
-    border: 1px solid transparent;
-    overflow-x: hidden;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  overflow-x: hidden;
 }
 
 .commandIcon:hover {
-    border: 1px solid gray;
+  border: 1px solid gray;
 }
 
 .commandIcon:focus {
-    outline: 1px solid transparent;
+  outline: 1px solid transparent;
 }
 
 /* Golden Layout stuff */
 
 .lm_title {
-    margin: 5px;
+  margin: 5px;
 }
 
 .lm_tab {
-    height: 24px !important;
-    width: 250px;
-    cursor: default !important;
-    text-align: center;
-    font-family: system-ui, sans-serif !important;
-    box-shadow: none !important;
+  height: 24px !important;
+  width: 250px;
+  cursor: default !important;
+  text-align: center;
+  font-family: system-ui, sans-serif !important;
+  box-shadow: none !important;
 }
 
 .lm_header {
-    height: 30px !important;
-    background: black;
+  height: 30px !important;
+  background: black;
 }
 
 .lm_close_tab {
-    top: 9px !important;
+  top: 9px !important;
 }
 
 .MuiTypography-body1.MuiTypography-body1 {
-    font-family: "Consolas", "Monaco", monospace;
-    font-size: 12pt;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 12pt;
 }
 
 .MuiCollapse-container.MuiTreeItem-group {
-    border-left: 1px dashed white;
-    padding-left: 12px;
-    margin-left: 12px;
+  border-left: 1px dashed white;
+  padding-left: 12px;
+  margin-left: 12px;
 }
 
 /*[class^='Mui'] {*/
@@ -538,49 +540,49 @@ html {
 /*}*/
 
 .MuiTreeItem-content {
-    padding: 5px 0 5px 0;
+  padding: 5px 0 5px 0;
 }
 
 .TreeFileSelector {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 90%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 90%;
 }
 
 .FileTree {
-    margin-top: 10px;
-    overflow: auto;
-    border: 1px solid white;
-    padding: 15px;
-    flex-grow: 1;
+  margin-top: 10px;
+  overflow: auto;
+  border: 1px solid white;
+  padding: 15px;
+  flex-grow: 1;
 }
 
 .ModalButton {
-    flex: 0;
+  flex: 0;
 }
 
 .directoryIndicator {
-    margin: 20px 0 10px 0;
-    line-height: 30px;
+  margin: 20px 0 10px 0;
+  line-height: 30px;
 }
 
 .newFolderButton {
-    height: 30px;
-    margin-left: 5px;
-    vertical-align: middle;
-    background-color: black;
-    color: white;
-    font-size: 18px;
-    font-family: Calibri, sans-serif;
-    float: right;
+  height: 30px;
+  margin-left: 5px;
+  vertical-align: middle;
+  background-color: black;
+  color: white;
+  font-size: 18px;
+  font-family: Calibri, sans-serif;
+  float: right;
 }
 
 .newFolderButton:hover {
-    background-color: dimgray;
-    cursor: pointer;
+  background-color: dimgray;
+  cursor: pointer;
 }
 
 .powered-by-firepad {
-    display: none !important;
+  display: none !important;
 }

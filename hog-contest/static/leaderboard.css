@@ -1,126 +1,136 @@
-html, * {
-    box-sizing: border-box;
-    font-family: 'Inconsolata', monospace;
+html,
+* {
+  box-sizing: border-box;
+  font-family: "Inconsolata", monospace;
 }
 
 body {
-    padding: 0;
-    background-color: #333;
-    color: #fff;
-    display: block
+  padding: 0;
+  background-color: #333;
+  color: #fff;
+  display: block;
 }
 
-h1, h1 > span, h2, h3, h4, h5, h6 {
-    font-family: 'Roboto', sans-serif;
-    padding-left: 0;
-    margin: 0;
-    font-weight: 300;
+h1,
+h1 > span,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Roboto", sans-serif;
+  padding-left: 0;
+  margin: 0;
+  font-weight: 300;
 }
 
 span.emphasis {
-    font-weight: 400;
+  font-weight: 400;
 }
 
 .main ol {
-    list-style-type: none;
-    margin: 25px 0;
-    padding: 0;
-    background-color: #444
+  list-style-type: none;
+  margin: 25px 0;
+  padding: 0;
+  background-color: #444;
 }
 
 .main ol > li {
-    padding: 5px 10px;
+  padding: 5px 10px;
 }
 
 .main ol > li:hover {
-    background-color: #4f4f4f
+  background-color: #4f4f4f;
 }
 
 .main li.rank-0 {
-    background-color: #ddaa11;
-    color: #fff
+  background-color: #ddaa11;
+  color: #fff;
 }
 
 .main li.rank-0:hover {
-    background-color: #ecb722;
+  background-color: #ecb722;
 }
 
 .main li.rank-1 {
-    background-color: #555555;
-    color: #fff
+  background-color: #555555;
+  color: #fff;
 }
 
 .main li.rank-1:hover {
-    background-color: #666666;
-    color: #fff
+  background-color: #666666;
+  color: #fff;
 }
 
 .main li.rank-2 {
-    background-color: #aa7711;
-    color: #fff
+  background-color: #aa7711;
+  color: #fff;
 }
 
 .main li.rank-2:hover {
-    background-color: #bb8833;
-    color: #fff
+  background-color: #bb8833;
+  color: #fff;
 }
 
 .main li.rank-staff {
-    color: #bbb
+  color: #bbb;
 }
 
 .main li.winrate-self {
-    color: #bbb;
+  color: #bbb;
 }
 
 a {
-    text-decoration: none;
-    color: #fc3
+  text-decoration: none;
+  color: #fc3;
 }
 
 a:hover {
-    text-decoration: none;
-    color: #fc9
+  text-decoration: none;
+  color: #fc9;
 }
 
-#leaderboard,#past-winners {
-    padding: 40px 6%
+#leaderboard,
+#past-winners {
+  padding: 40px 6%;
 }
 
-#timestamp, #leaderboard-click-tip {
-    font-size: 12px;
-    margin-bottom: 0;
+#timestamp,
+#leaderboard-click-tip {
+  font-size: 12px;
+  margin-bottom: 0;
 }
 
 #timestamp {
-    margin-top: 20px
+  margin-top: 20px;
 }
 
 #winrate {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: #222;
-    padding: 3% 6%;
-    width: 100%;
-    display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #222;
+  padding: 3% 6%;
+  width: 100%;
+  display: none;
 }
 
 #winrate-ctrl-bar {
-    text-align: right;
+  text-align: right;
 }
 
 #past-semester-links {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 10px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
 }
 
-#past-semester-links > a, #leaderboard > a:not(:first-of-type) {
-    margin-left: 10px;
+#past-semester-links > a,
+#leaderboard > a:not(:first-of-type) {
+  margin-left: 10px;
 }
 
 #winrate-close {
-    cursor: pointer;
+  cursor: pointer;
 }

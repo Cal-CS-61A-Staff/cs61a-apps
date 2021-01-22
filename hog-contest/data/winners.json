@@ -1,79 +1,52 @@
 {
-    "fa11":[
-        "Kaylee Mann",
-        "Yan Duan & Ziming Li",
-        "Brian Prike & Zhenghao Qian",
-        "Parker Schuh & Robert Chatham"
-    ],
-    "fa12":[
-        "Chenyang Yuan",
-        "Joseph Hui"
-    ],
-    "fa13":[
-        "Paul Bramsen",
-        "Sam Kumar & Kangsik Lee",
-        "Kevin Chen"
-    ],
-    "fa14":[
-        "Alan Tong & Elaine Zhao",
-        "Zhenyang Zhang",
-        "Adam Robert Villaflor & Joany Gao",
-        "Zhen Qin & Dian Chen Zizheng Tai & Yihe Li"
-    ],
-    "sp15":[
-        "Sinho Chewi & Alexander Nguyen Tran",
-        "Zhaoxi Li",
-        "Stella Tao and Yao Ge"
-    ],
-    "fa15":[
-        "Micah Carroll & Vasilis Oikonomou",
-        "Matthew Wu",
-        "Anthony Yeung and Alexander Dai"
-    ],
-    "sp16":[
-        "Michael McDonald and Tianrui Chen",
-        "Andrei Kassiantchouk",
-        "Benjamin Krieges"
-    ],
-    "sp17":[
-        "Cindy Jin and Sunjoon Lee",
-        "Anny Patino and Christian Vasquez",
-        "Asana Choudhury and Jenna Wen",
-        "Michelle Lee and Nicholas Chew"
-    ],
-    "fa17":[
-        "Alex Yu and Tanmay Khattar",
-        "James Li",
-        "Justin Yokota"
-    ],
-    "sp18":[
-        "Eric James Michaud",
-        "Ziyu Dong",
-        "Xuhui Zhou"
-    ],
-    "fa18":[
-        "Rahul Arya",
-        "Jonathan Bodine",
-        "Sumer Kohli and Neelesh Ramachandran"
-    ],
-    "sp19":[
-        "Dustin Luong",
-        "Cici Xue",
-        "Betty Yee and Ajay Kosuri"
-    ],
-    "fa19":[
-        "Jet Situ, Lucas Schaberg",
-        "Yikun (Anthony) Han, Hongyi (Franklin) Huang",
-        "Arthur Pan, Qingyuan Liu"
-    ],
-    "sp20":[
-        "Andy Dong",
-        "Theodor Sion, Anish Kar",
-        "Shaun Diem-Lane"
-    ],
-    "su20":[
-        "Claire Liu, Letu Wang",
-        "Stephen Huan",
-        "Brandon Suen"
-    ]
+  "fa11": [
+    "Kaylee Mann",
+    "Yan Duan & Ziming Li",
+    "Brian Prike & Zhenghao Qian",
+    "Parker Schuh & Robert Chatham"
+  ],
+  "fa12": ["Chenyang Yuan", "Joseph Hui"],
+  "fa13": ["Paul Bramsen", "Sam Kumar & Kangsik Lee", "Kevin Chen"],
+  "fa14": [
+    "Alan Tong & Elaine Zhao",
+    "Zhenyang Zhang",
+    "Adam Robert Villaflor & Joany Gao",
+    "Zhen Qin & Dian Chen Zizheng Tai & Yihe Li"
+  ],
+  "sp15": [
+    "Sinho Chewi & Alexander Nguyen Tran",
+    "Zhaoxi Li",
+    "Stella Tao and Yao Ge"
+  ],
+  "fa15": [
+    "Micah Carroll & Vasilis Oikonomou",
+    "Matthew Wu",
+    "Anthony Yeung and Alexander Dai"
+  ],
+  "sp16": [
+    "Michael McDonald and Tianrui Chen",
+    "Andrei Kassiantchouk",
+    "Benjamin Krieges"
+  ],
+  "sp17": [
+    "Cindy Jin and Sunjoon Lee",
+    "Anny Patino and Christian Vasquez",
+    "Asana Choudhury and Jenna Wen",
+    "Michelle Lee and Nicholas Chew"
+  ],
+  "fa17": ["Alex Yu and Tanmay Khattar", "James Li", "Justin Yokota"],
+  "sp18": ["Eric James Michaud", "Ziyu Dong", "Xuhui Zhou"],
+  "fa18": [
+    "Rahul Arya",
+    "Jonathan Bodine",
+    "Sumer Kohli and Neelesh Ramachandran"
+  ],
+  "sp19": ["Dustin Luong", "Cici Xue", "Betty Yee and Ajay Kosuri"],
+  "fa19": [
+    "Jet Situ, Lucas Schaberg",
+    "Yikun (Anthony) Han, Hongyi (Franklin) Huang",
+    "Arthur Pan, Qingyuan Liu"
+  ],
+  "sp20": ["Andy Dong", "Theodor Sion, Anish Kar", "Shaun Diem-Lane"],
+  "su20": ["Claire Liu, Letu Wang", "Stephen Huan", "Brandon Suen"]
 }

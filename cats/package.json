@@ -1,47 +1,47 @@
 {
-	"name": "typing-test--gui",
-	"version": "0.1.0",
-	"private": true,
-	"proxy": "http://localhost:31415",
-	"dependencies": {
-		"bootstrap": "4.3.1",
-		"git": "^0.1.5",
-		"popper.js": "^1.15.0",
-		"react": "^16.8.6",
-		"react-bootstrap": "^1.0.0-beta.11",
-		"react-dom": "^16.8.6",
-		"react-scripts": "3.0.1"
-	},
-	"scripts": {
-		"start": "react-scripts start",
-		"build": "react-scripts build && rm -rf deploy && mkdir deploy && mv build deploy/gui_files && cp -r server/* deploy",
-		"deploy": "cd deploy/ && rm -rf .git && rm -rf common_server/.git && git init && git add -A && git commit -m \"init\" && git remote add dokku dokku@apps.cs61a.org:cats && git push --force dokku master",
-        "proj-build": "python3 build.py cats.py",
-		"test": "react-scripts test",
-		"eject": "react-scripts eject"
-	},
-	"eslintConfig": {
-		"extends": "react-app"
-	},
-	"browserslist": {
-		"production": [
-			">0.2%",
-			"not dead",
-			"not op_mini all"
-		],
-		"development": [
-			"last 1 chrome version",
-			"last 1 firefox version",
-			"last 1 safari version"
-		]
-	},
-	"devDependencies": {
-		"eslint-config-airbnb": "^18.0.1",
-		"eslint-config-fbjs": "^3.1.0",
-		"eslint-plugin-babel": "^5.3.0",
-		"eslint-plugin-jsx-a11y": "^6.2.3",
-		"eslint-plugin-react": "^7.14.3",
-		"jquery": "^3.4.1",
-		"js-cookie": "^2.2.1"
-	}
+  "name": "typing-test--gui",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:31415",
+  "dependencies": {
+    "bootstrap": "4.3.1",
+    "git": "^0.1.5",
+    "popper.js": "^1.15.0",
+    "react": "^16.8.6",
+    "react-bootstrap": "^1.0.0-beta.11",
+    "react-dom": "^16.8.6",
+    "react-scripts": "3.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build && rm -rf deploy && mkdir deploy && mv build deploy/gui_files && cp -r server/* deploy",
+    "deploy": "cd deploy/ && rm -rf .git && rm -rf common_server/.git && git init && git add -A && git commit -m \"init\" && git remote add dokku dokku@apps.cs61a.org:cats && git push --force dokku master",
+    "proj-build": "python3 build.py cats.py",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-fbjs": "^3.1.0",
+    "eslint-plugin-babel": "^5.3.0",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.14.3",
+    "jquery": "^3.4.1",
+    "js-cookie": "^2.2.1"
+  }
 }

@@ -10,4 +10,3 @@
 1. Once you're satisfied with your changes, make a PR in cs61a-apps
 2. See the PR in action at <pr_num>.cats.pr.cs61a.org
 3. When the PR is merged, it will automatically be deployed with our `hosted` deploy tool!
-

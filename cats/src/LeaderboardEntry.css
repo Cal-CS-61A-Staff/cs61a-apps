@@ -1,19 +1,19 @@
 .Entry {
-	text-align: left;
+  text-align: left;
 }
 
 .Rank {
-	font-weight: bold;
+  font-weight: bold;
 }
 
 .Rank::after {
-	content: ". ";
+  content: ". ";
 }
 
 .Name {
-	font-style: italic;
+  font-style: italic;
 }
 
 .Score::after {
-	content: " wpm - ";
+  content: " wpm - ";
 }
