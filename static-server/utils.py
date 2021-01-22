@@ -1,4 +1,5 @@
 import tempfile
+from datetime import timedelta
 from os import getenv
 from typing import Dict
 from urllib.parse import urlparse, urlunparse
@@ -46,12 +47,17 @@ def serve_path(bucket, root, path, *, path_404="404.html"):
             mimetype = None
             if filename.endswith(".scm"):
                 mimetype = "text/x-scheme"
-            return send_file(temp.name, attachment_filename=filename, mimetype=mimetype)
+            return send_file(
+                temp.name,
+                attachment_filename=filename,
+                mimetype=mimetype,
+                cache_timeout=timedelta(minutes=15).total_seconds(),
+            )
     except NotFound:
         if filename == path_404:
             abort(404)
         elif filename.endswith("index.html"):
-            return serve_path(bucket, root, path_404), 404
+            return serve_path(bucket, root, path_404, path_404=path_404), 404
         else:
             if path and not path.endswith("/"):
                 if bucket.blob(filename + "/" + "index.html").exists():
@@ -67,5 +73,5 @@ def serve_path(bucket, root, path, *, path_404="404.html"):
                     )
                     return redirect(target, 301)
                 else:
-                    return serve_path(bucket, root, path_404), 404
-            return serve_path(bucket, root, path + "index.html")
+                    return serve_path(bucket, root, path_404, path_404=path_404), 404
+            return serve_path(bucket, root, path + "index.html", path_404=path_404)

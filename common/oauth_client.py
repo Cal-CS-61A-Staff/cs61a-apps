@@ -12,7 +12,7 @@ from common.rpc.auth import get_endpoint
 from common.rpc.secrets import get_secret
 from common.url_for import get_host, url_for
 
-AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
+AUTHORIZED_ROLES = ("staff", "instructor", "grader")
 
 REDIRECT_KEY = "REDIRECT_KEY"
 
@@ -27,10 +27,14 @@ def is_logged_in():
 
 
 def is_staff(course):
+    return is_enrolled(course, roles=AUTHORIZED_ROLES)
+
+
+def is_enrolled(course, *, roles=None):
     try:
         endpoint = get_endpoint(course=course)
         for participation in get_user()["participations"]:
-            if participation["role"] not in AUTHORIZED_ROLES:
+            if roles and participation["role"] not in roles:
                 continue
             if participation["course"]["offering"] != endpoint and endpoint is not None:
                 continue

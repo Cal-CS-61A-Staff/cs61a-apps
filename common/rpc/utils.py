@@ -18,7 +18,7 @@ class Service:
         self.route = route
 
 
-def create_service(app: str, override=None):
+def create_service(app: str, override=None, providers=None):
     app = override or app.split(".")[-1]
 
     def route(path, *, streaming=False):
@@ -26,20 +26,26 @@ def create_service(app: str, override=None):
             @wraps(func)
             def wrapped(**kwargs):
                 noreply = kwargs.pop("noreply", False)
-                endpoints = []
-                if has_request_context() and not noreply:
-                    proxied_host = request.headers.get("X-Forwarded-For-Host")
-                    if proxied_host:
-                        parts = proxied_host.split(".")
-                        if "pr" in parts:
-                            pr = parts[0]
-                            endpoints.append(f"https://{pr}.{app}.pr.cs61a.org{path}")
-                endpoints.append(f"https://{app}.cs61a.org{path}")
+
+                if providers:
+                    endpoints = [f"{provider}{path}" for provider in providers]
+                else:
+                    endpoints = []
+                    if has_request_context() and not noreply:
+                        proxied_host = request.headers.get("X-Forwarded-For-Host")
+                        if proxied_host:
+                            parts = proxied_host.split(".")
+                            if "pr" in parts:
+                                pr = parts[0]
+                                endpoints.append(
+                                    f"https://{pr}.{app}.pr.cs61a.org{path}"
+                                )
+                    endpoints.append(f"https://{app}.cs61a.org{path}")
 
                 if (
                     not get_master_secret()
                     and "_impersonate" in kwargs
-                    and not "_sudo_token" in kwargs
+                    and "_sudo_token" not in kwargs
                 ):
                     from common.rpc.secrets import (
                         get_secret_from_server,
@@ -65,7 +71,6 @@ def create_service(app: str, override=None):
                             raise PermissionError(
                                 "You must be logged in as an admin to do that."
                             )
-                            return
 
                     kwargs["master_secret"] = sudo_secret
 

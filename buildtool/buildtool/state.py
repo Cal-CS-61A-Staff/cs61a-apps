@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from queue import Queue
@@ -16,7 +17,7 @@ class BuildState:
     # config parameters
     cache_directory: str
     target_rule_lookup: TargetLookup
-    source_files: Set[str]
+    source_files: SourceFileLookup
     repo_root: str
 
     # logging
@@ -28,6 +29,14 @@ class BuildState:
     scheduled_but_not_ready: Set[Rule] = field(default_factory=set)
     work_queue: Queue[Optional[Rule]] = field(default_factory=Queue)
     failure: Optional[BuildException] = None
+
+
+@dataclass
+class SourceFileLookup:
+    tracked_files: Set[str]
+
+    def __contains__(self, dep):
+        return os.path.relpath(os.path.realpath(dep), os.curdir) in self.tracked_files
 
 
 @dataclass
@@ -61,12 +70,12 @@ class TargetLookup:
                 if key in self.location_lookup:
                     return self.location_lookup[key]
 
-    def find_source_files(self, all_files: List[str]) -> Set[str]:
+    def find_source_files(self, all_files: List[str]) -> SourceFileLookup:
         out = set(all_files)
         for file in all_files:
             if self.try_lookup(file) is not None:
                 out.remove(file)
-        return out
+        return SourceFileLookup(out)
 
     def verify(self):
         # check for overlaps involving location_lookups

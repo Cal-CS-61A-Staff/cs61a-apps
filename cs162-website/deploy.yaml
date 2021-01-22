@@ -1,0 +1,3 @@
+build_type: none
+deploy_type: flask
+repo: Berkeley-CS162/website

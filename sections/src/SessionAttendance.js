@@ -16,8 +16,6 @@ import type {
 } from "./models";
 import useSectionAPI from "./useSectionAPI";
 
-import { AttendanceStatus } from "./models";
-
 const TableHolder = styled.div`
   margin-bottom: -1em;
 `;
