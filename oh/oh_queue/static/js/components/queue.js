@@ -1,4 +1,7 @@
 let Queue = ({ state }) => {
+  if (!state.currentUser && state.config.party_enabled) {
+    return <Redirect to="/" />;
+  }
   let staff = isStaff(state);
   let myTicket = getMyTicket(state);
   let canAddTicket =
