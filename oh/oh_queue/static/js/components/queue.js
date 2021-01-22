@@ -1,4 +1,5 @@
 let Queue = ({ state }) => {
+  const { Redirect } = ReactRouterDOM;
   if (!state.currentUser && state.config.party_enabled) {
     return <Redirect to="/" />;
   }
