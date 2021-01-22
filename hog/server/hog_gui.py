@@ -4,11 +4,11 @@ import os
 from contextlib import redirect_stdout
 
 from gui_files.common_server import route, start
-from gui_files.svg import create_graphic, draw_rect, draw_circle, write_text
 
 import hog
 import dice
-import dice_graphics
+import hog_dice
+import default_graphics
 
 PORT = 31415
 DEFAULT_SERVER = "https://hog.cs61a.org"
@@ -122,10 +122,14 @@ def strategy(name, scores):
     }
     return STRATEGIES[name](*scores[::-1])
 
-
 @route
-def draw_dice_graphic(num=1):
-    return dice_graphics.dice[num]
+def draw_dice_graphic(num):
+    num = int(num)
+    # Either draw student-provided dice or our default dice
+    graphic = hog_dice.draw_dice(num)
+    if graphic:
+        return str(graphic)
+    return default_graphics.dice[num]
 
 def safe(commentary):
     def new_commentary(*args, **kwargs):
