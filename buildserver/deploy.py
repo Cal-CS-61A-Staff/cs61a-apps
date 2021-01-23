@@ -34,7 +34,7 @@ def gen_env_variables(app: App, pr_number: int):
         if db_pw is None:
             db_pw = new_secret()
             # unable to use placeholders here, but it's safe because we control the app.name and db_pw
-            db(f"CREATE DATABASE IF NOT EXISTS {app}")
+            db(f"CREATE DATABASE IF NOT EXISTS {database}")
             db(f'CREATE USER "{app.name}"@"%%" IDENTIFIED BY "{db_pw}";')
             db(f"GRANT ALL ON {database}.* TO '{app}'@'%%'")
             db("FLUSH TABLES mysql.user")
