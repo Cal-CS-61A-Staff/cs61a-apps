@@ -69,13 +69,22 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
                 move = move_history[move_cnt]
                 move_cnt += 1
                 return move
+
             return strategy
 
         game_over = False
 
         try:
-            final_scores = trace_play(hog.play, strategy_for(0), strategy_for(1),
-                                      0, 0, dice=logged_dice, say=log, goal=goal)[:2]
+            final_scores = trace_play(
+                hog.play,
+                strategy_for(0),
+                strategy_for(1),
+                0,
+                0,
+                dice=logged_dice,
+                say=log,
+                goal=goal,
+            )[:2]
         except HogLoggingException:
             pass
         else:
@@ -102,6 +111,7 @@ def strategy(name, scores):
     }
     return STRATEGIES[name](*scores[::-1])
 
+
 def safe(commentary):
     def new_commentary(*args, **kwargs):
         try:
@@ -110,6 +120,7 @@ def safe(commentary):
             print("Error in commentary function")
             result = commentary
         return safe(result)
+
     return new_commentary
 
 
