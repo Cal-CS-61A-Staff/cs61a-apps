@@ -162,5 +162,5 @@ def trace_play(play, strategy0, strategy1, score0, score1, dice, goal, say):
     return s0, s1, game_trace
 
 
-if __name__ == "__main__" or os.environ.get("ENV") == "prod":
+if __name__ == "__main__" or "gunicorn" in os.environ.get("SERVER_SOFTWARE", ""):
     app = start(PORT, DEFAULT_SERVER, GUI_FOLDER)
