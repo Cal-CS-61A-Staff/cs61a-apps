@@ -17,7 +17,6 @@ const CenteredDiv = styled.div`
 
 export type RuleSet = {|
   "Piggy Points": boolean,
-  "Swine Align": boolean,
   "More Boar": boolean,
 |};
 
@@ -27,7 +26,6 @@ export default function App() {
 
   const [gameRules, setGameRules] = useState<RuleSet>({
     "Piggy Points": false,
-    "Swine Align": true,
     "More Boar": false,
   });
 

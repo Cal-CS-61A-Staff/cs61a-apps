@@ -24,16 +24,9 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
     fair_dice = dice.make_fair_dice(6)
     dice_results = []
 
-    swine_align = game_rules["Swine Align"]
     more_boar = game_rules["More Boar"]
 
     try:
-        if not swine_align:
-            old_swine_align, hog.swine_align = (
-                hog.swine_align,
-                lambda score0, score1: False,
-            )
-
         if not more_boar:
             old_more_boar, hog.more_boar = hog.more_boar, lambda score0, score1: False
 
@@ -76,29 +69,18 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
                 move = move_history[move_cnt]
                 move_cnt += 1
                 return move
-
             return strategy
 
         game_over = False
 
         try:
-            final_scores = trace_play(
-                hog.play,
-                strategy_for(0),
-                strategy_for(1),
-                0,
-                0,
-                dice=logged_dice,
-                say=log,
-                goal=goal,
-            )[:2]
+            final_scores = trace_play(hog.play, strategy_for(0), strategy_for(1),
+                                      0, 0, dice=logged_dice, say=log, goal=goal)[:2]
         except HogLoggingException:
             pass
         else:
             game_over = True
     finally:
-        if not swine_align:
-            hog.swine_align = old_swine_align
         if not more_boar:
             hog.more_boar = old_more_boar
 
@@ -115,11 +97,10 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
 def strategy(name, scores):
     STRATEGIES = {
         "piggypoints_strategy": hog.piggypoints_strategy,
-        "extra_turn_strategy": hog.extra_turn_strategy,
+        "more_boar_strategy": hog.more_boar_strategy,
         "final_strategy": hog.final_strategy,
     }
     return STRATEGIES[name](*scores[::-1])
-
 
 def safe(commentary):
     def new_commentary(*args, **kwargs):
@@ -129,7 +110,6 @@ def safe(commentary):
             print("Error in commentary function")
             result = commentary
         return safe(result)
-
     return new_commentary
 
 
@@ -182,5 +162,5 @@ def trace_play(play, strategy0, strategy1, score0, score1, dice, goal, say):
     return s0, s1, game_trace
 
 
-if __name__ == "__main__" or "gunicorn" in os.environ.get("SERVER_SOFTWARE", ""):
+if __name__ == "__main__" or os.environ.get("ENV") == "prod":
     app = start(PORT, DEFAULT_SERVER, GUI_FOLDER)
