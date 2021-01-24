@@ -1,4 +1,6 @@
 GITHUB_REPO = "Cal-CS-61A-Staff/cs61a-apps"
-DB_INSTANCE_NAME = "cs61a-140900:us-west2:cs61a-apps-us-west1"
+PROJECT_ID = "cs61a-140900"
+DB_SHORT_INSTANCE_NAME = "cs61a-apps-us-west1"
+DB_INSTANCE_NAME = f"{PROJECT_ID}:us-west2:{DB_SHORT_INSTANCE_NAME}"
 DB_IP_ADDRESS = "35.236.93.51"
 STATIC_SERVER = "static-server"
