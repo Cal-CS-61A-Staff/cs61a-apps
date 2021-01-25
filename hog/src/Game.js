@@ -58,7 +58,7 @@ export default function Game({
     setNumRolls(inputNumRolls);
     moveHistory.current.push(inputNumRolls);
     const [
-      { messages, rolls, finalScores, who },
+      { message, rolls, finalScores, who },
     ] = await Promise.all([
       post("/take_turn", {
         prevRolls: rollHistory.current,
@@ -71,9 +71,15 @@ export default function Game({
     setDisplayedRolls(rolls.slice(rollHistory.current.length));
     setScores(finalScores);
     setState(states.DISPLAYING_CHANGE);
+    const messages = []
+    if (who === currPlayerIndex) {
+      messages.push(`More boar! Extra turn granted to Player ${who}`);
+    }
+    message && messages.push(message);
     setMessages(messages);
     rollHistory.current = rolls;
     strategy && await wait(2500);
+
     setPlayerIndex(who);
     if (Math.max(...finalScores) >= goal) {
       setState(states.GAME_OVER);

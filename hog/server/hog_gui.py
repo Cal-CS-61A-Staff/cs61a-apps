@@ -18,17 +18,6 @@ PATHS = {}
 class HogLoggingException(Exception):
     pass
 
-
-def trace_rule(func, rules):
-    """ Returns HOF that traces which rules are used in a turn.
-    Updates global dictionary.
-    """
-    def traced_func(*args):
-        ret_val = func(*args)
-        rules[func.__name__] = ret_val
-        logging.warning(rules)
-        return ret_val
-    return traced_func
         
 @route
 def take_turn(prev_rolls, move_history, goal, game_rules):
@@ -41,11 +30,8 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
 
     try:
         old_more_boar = hog.more_boar
-
         if not more_boar:
             hog.more_boar = lambda score0, score1: False
-        else:
-            hog.more_boar = trace_rule(hog.more_boar, traced_rules)
 
         def logged_dice():
             if len(dice_results) < len(prev_rolls):
@@ -109,16 +95,10 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
     finally:
         hog.more_boar = old_more_boar
 
-    messages = []
-    if traced_rules.get("more_boar"):
-        messages.append("More boar! Extra turn granted.")
-    if final_message:
-        messages.append(final_message)
-
     return {
         "rolls": dice_results,
         "finalScores": final_scores,
-        "messages": messages,
+        "message": final_message,
         "gameOver": game_over,
         "who": who,
         "rules": traced_rules
