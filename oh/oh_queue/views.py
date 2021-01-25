@@ -1579,13 +1579,11 @@ def bulk_appointment_action(data):
             {Appointment.status: AppointmentStatus.pending}, synchronize_session=False
         )
     elif action == "resolve_all_past":
-        appointments = (
-            Appointment.query.filter(
-                Appointment.course == get_course(),
-                Appointment.helper_id != None,
-                Appointment.start_time < get_current_time(),
-                Appointment.status == AppointmentStatus.pending,
-            )
+        appointments = Appointment.query.filter(
+            Appointment.course == get_course(),
+            Appointment.helper_id != None,
+            Appointment.start_time < get_current_time(),
+            Appointment.status == AppointmentStatus.pending,
         )
         if ids is not None:
             appointments = appointments.filter(Appointment.id.in_(ids))
