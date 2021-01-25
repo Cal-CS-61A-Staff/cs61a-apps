@@ -3,13 +3,12 @@ import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import styled from "styled-components";
 import { numberStrings } from "./constants";
-import ResetButton from "./ResetButton";
 
 const Wrapper = styled.div`
   font-size: 1.25rem;
   width: 100%;
   text-align: center;
-  margin: 20px;
+  margin-top: 20px;
 `;
 
 type Props = {|
@@ -58,11 +57,10 @@ export default function RollButton({
           onChange={handleChange}
         />{" "}
         Dice.
-      </p>
-      <p>
         <Button
-          variant={["primary", "warning"][playerIndex]}
+          variant="info"
           size="lg"
+          style={{marginLeft: "10px"}}
           onClick={handleClick}
         >
           {" "}
@@ -70,7 +68,7 @@ export default function RollButton({
         </Button>
       </p>
       <p>
-        <ResetButton onClick={onRestart} />
+        
       </p>
     </Wrapper>
   );

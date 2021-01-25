@@ -1,6 +1,7 @@
 """Web server for the hog GUI."""
 import io
 import os
+
 from contextlib import redirect_stdout
 
 from gui_files.common_server import route, start
@@ -18,24 +19,40 @@ class HogLoggingException(Exception):
     pass
 
 
+def trace_rule(func, rules):
+    """ Returns HOF that traces which rules are used in a turn.
+    Updates global dictionary.
+    """
+    def traced_func(*args):
+        ret_val = func(*args)
+        rules[func.__name__] = ret_val
+        return ret_val
+    return traced_func
+        
 @route
 def take_turn(prev_rolls, move_history, goal, game_rules):
     """Simulate the whole game up to the current turn."""
     fair_dice = dice.make_fair_dice(6)
     dice_results = []
+    traced_rules = {}
 
     swine_align = game_rules["Swine Align"]
     more_boar = game_rules["More Boar"]
 
     try:
-        if not swine_align:
-            old_swine_align, hog.swine_align = (
-                hog.swine_align,
-                lambda score0, score1: False,
-            )
+        always_false = lambda score0, score1: False
+        old_swine_align = hog.swine_align
+        old_more_boar = hog.more_boar
 
+        if not swine_align:
+            hog.swine_align = always_false
+        else:
+            hog.swine_align = trace_rule(hog.swine_align, traced_rules)
+            
         if not more_boar:
-            old_more_boar, hog.more_boar = hog.more_boar, lambda score0, score1: False
+            hog.more_boar = always_false
+        else:
+            hog.more_boar = trace_rule(hog.more_boar, traced_rules)
 
         def logged_dice():
             if len(dice_results) < len(prev_rolls):
@@ -97,17 +114,22 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
         else:
             game_over = True
     finally:
-        if not swine_align:
-            hog.swine_align = old_swine_align
-        if not more_boar:
-            hog.more_boar = old_more_boar
-
+        hog.swine_align = old_swine_align
+        hog.more_boar = old_more_boar
+    messages = []
+    if traced_rules.get("swine_align"):
+        messages.append("Swine align! Extra turn granted.")
+    elif traced_rules.get("More boar"):
+        messages.append("More boar! Extra turn granted.")
+    if final_message:
+        messages.append(final_message)
     return {
         "rolls": dice_results,
         "finalScores": final_scores,
-        "message": final_message,
+        "messages": messages,
         "gameOver": game_over,
         "who": who,
+        "rules": traced_rules
     }
 
 
@@ -125,8 +147,7 @@ def safe(commentary):
     def new_commentary(*args, **kwargs):
         try:
             result = commentary(*args, **kwargs)
-        except TypeError as e:
-            print("Error in commentary function")
+        except TypeError:
             result = commentary
         return safe(result)
 

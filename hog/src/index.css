@@ -11,3 +11,13 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.container {
+  background: #f7f7f7;
+  border: 2px solid #18a2b8;
+  margin: 20px auto;
+}
+
+.hognav {
+  margin: 10px 0 40px 0;
+}
