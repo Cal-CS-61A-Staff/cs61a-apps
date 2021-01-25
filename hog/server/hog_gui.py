@@ -18,7 +18,7 @@ PATHS = {}
 class HogLoggingException(Exception):
     pass
 
-        
+
 @route
 def take_turn(prev_rolls, move_history, goal, game_rules):
     """Simulate the whole game up to the current turn."""
@@ -101,7 +101,6 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
         "message": final_message,
         "gameOver": game_over,
         "who": who,
-        "rules": traced_rules
     }
 
 
