@@ -175,7 +175,9 @@ def make_callback(
         ]
 
         make_callback.find_cache[target] = out = [
-            "//" + path for path in out if path in src_files
+            "//" + path
+            for path in out
+            if os.path.relpath(os.path.realpath(path), repo_root) in src_files
         ]
 
         return sorted(out)

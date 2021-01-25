@@ -9,6 +9,11 @@ let Navbar = ({ state, mode }) => {
   var { Link } = ReactRouterDOM;
 
   const words = mode.split("_");
+
+  if (words.length === 1 && words[0] === "party") {
+    words[0] = state.config.party_name;
+  }
+
   const title = words
     .map((word) => word[0].toUpperCase() + word.slice(1))
     .join(" ");
@@ -54,7 +59,9 @@ let Navbar = ({ state, mode }) => {
 
             {currentUser && state.config.party_enabled && (
               <li>
-                <Link to={partyAsRoot ? "/" : "/party"}>Party</Link>
+                <Link to={partyAsRoot ? "/" : "/party"}>
+                  {state.config.party_name}
+                </Link>
               </li>
             )}
 

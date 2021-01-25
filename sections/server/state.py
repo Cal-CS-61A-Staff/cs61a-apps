@@ -14,7 +14,7 @@ from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
 
 from common.course_config import get_course, is_admin
-from common.rpc.auth import read_spreadsheet, validate_secret
+from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
 from common.rpc.secrets import only
 from common.rpc.sections import rpc_export_attendance
 from models import (
@@ -416,3 +416,24 @@ def create_state_client(app: flask.Flask):
         user_id = int(user_id)
         user = User.query.filter_by(id=user_id).one_or_none()
         return user.full_json
+
+    @api
+    @admin_required
+    def remind_tutors_to_setup_zoom_links():
+        sections: List[Section] = Section.query.filter_by(call_link=None).all()
+        tutor_emails = set()
+        for section in sections:
+            tutor_emails.add(section.staff.email)
+        tutor_emails = sorted(tutor_emails)
+        if not tutor_emails:
+            raise Failure("All tutors have set up their Zoom links!")
+
+        message = (
+            "The following tutors have not yet set up their Zoom links for all their sections:\n"
+            + "\n".join(f" • <!{email}>" for email in tutor_emails)
+            + "\n Please do so ASAP! Thanks."
+        )
+
+        post_slack_message(course="cs61a", message=message, purpose="tutors")
+
+        return refresh_state()

@@ -10,6 +10,8 @@ LOOKUP = {
     "scheme": "https://code.cs61a.org/scheme",
     "sql": "https://code.cs61a.org/sql",
     "ok-help": "https://ok-help.cs61a.org",
+    "ok": "https://okpy.org",
+    "staging": "https://solutions.cs61a.org",
 }
 
 

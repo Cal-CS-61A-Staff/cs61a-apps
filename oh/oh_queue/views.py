@@ -456,6 +456,14 @@ def init_config():
             course=get_course(),
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="party_name",
+            value="Party",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 
@@ -1578,9 +1586,6 @@ def bulk_appointment_action(data):
                 Appointment.start_time < get_current_time(),
                 Appointment.status == AppointmentStatus.pending,
             )
-            .outerjoin(Appointment.signups)
-            .group_by(Appointment)
-            .having(func.count(AppointmentSignup.id) == 0)
         )
         if ids is not None:
             appointments = appointments.filter(Appointment.id.in_(ids))
