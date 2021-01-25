@@ -15,14 +15,12 @@ type Props = {|
   playerIndex: number,
   piggyPoints: boolean,
   onClick: (number) => mixed,
-  onRestart: () => mixed,
 |};
 
 export default function RollButton({
   playerIndex,
   piggyPoints,
   onClick,
-  onRestart,
 }: Props) {
   const min = piggyPoints ? 0 : 1;
 

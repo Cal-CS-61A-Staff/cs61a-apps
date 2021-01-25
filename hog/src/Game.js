@@ -73,7 +73,7 @@ export default function Game({
     setState(states.DISPLAYING_CHANGE);
     setMessages(messages);
     rollHistory.current = rolls;
-    //await wait(2500);
+    strategy && await wait(2500);
     setPlayerIndex(who);
     if (Math.max(...finalScores) >= goal) {
       setState(states.GAME_OVER);
@@ -105,14 +105,15 @@ export default function Game({
           <ScoreIndicators scores={scores} currentPlayer={playerIndex}/>
         </Col>
       </Row>
-      <Row>
-        <RollButton
-          playerIndex={playerIndex}
-          piggyPoints={gameRules["Piggy Points"]}
-          onClick={handleRoll}
-          onRestart={onRestart}
-        />
-      </Row>
+      {state !== states.DISPLAYING_COMPUTER_MOVE && (
+        <Row>
+          <RollButton
+            playerIndex={playerIndex}
+            piggyPoints={gameRules["Piggy Points"]}
+            onClick={handleRoll}
+          />
+        </Row>
+      )}
       <Row>
         <Col>
         {diceDisplay}

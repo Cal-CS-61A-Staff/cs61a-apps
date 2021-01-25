@@ -1,7 +1,7 @@
 """Web server for the hog GUI."""
 import io
 import os
-
+import logging
 from contextlib import redirect_stdout
 
 from gui_files.common_server import route, start
@@ -26,6 +26,7 @@ def trace_rule(func, rules):
     def traced_func(*args):
         ret_val = func(*args)
         rules[func.__name__] = ret_val
+        logging.warning(rules)
         return ret_val
     return traced_func
         
@@ -36,21 +37,13 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
     dice_results = []
     traced_rules = {}
 
-    swine_align = game_rules["Swine Align"]
     more_boar = game_rules["More Boar"]
 
     try:
-        always_false = lambda score0, score1: False
-        old_swine_align = hog.swine_align
         old_more_boar = hog.more_boar
 
-        if not swine_align:
-            hog.swine_align = always_false
-        else:
-            hog.swine_align = trace_rule(hog.swine_align, traced_rules)
-            
         if not more_boar:
-            hog.more_boar = always_false
+            hog.more_boar = lambda score0, score1: False
         else:
             hog.more_boar = trace_rule(hog.more_boar, traced_rules)
 
@@ -114,15 +107,14 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
         else:
             game_over = True
     finally:
-        hog.swine_align = old_swine_align
         hog.more_boar = old_more_boar
+
     messages = []
-    if traced_rules.get("swine_align"):
-        messages.append("Swine align! Extra turn granted.")
-    elif traced_rules.get("More boar"):
+    if traced_rules.get("more_boar"):
         messages.append("More boar! Extra turn granted.")
     if final_message:
         messages.append(final_message)
+
     return {
         "rolls": dice_results,
         "finalScores": final_scores,
@@ -137,7 +129,7 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
 def strategy(name, scores):
     STRATEGIES = {
         "piggypoints_strategy": hog.piggypoints_strategy,
-        "extra_turn_strategy": hog.extra_turn_strategy,
+        "more_boar_strategy": hog.more_boar_strategy,
         "final_strategy": hog.final_strategy,
     }
     return STRATEGIES[name](*scores[::-1])
