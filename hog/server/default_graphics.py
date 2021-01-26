@@ -5,10 +5,10 @@ dice = ["",
         """<?xml version="1.0" encoding="UTF-8"?>
         <svg data-name="Layer 1" viewBox="0 0 76.08 76.08" xmlns="http://www.w3.org/2000/svg">
         <defs>
-        <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-3{stroke:#000;}.cls-2{font-size:22.7px;font-family:MyriadPro-Regular, Myriad Pro;}.cls-3{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
+        <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-3{stroke:#000;}.cls-2{font-size:22.7px;font-family:"Helvetica Neue",Arial;}.cls-3{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
         </defs>
         <rect class="cls-1" x=".5" y=".5" width="75.08" height="75.08" rx="9.25"/>
-        <text class="cls-2" transform="translate(11.45 26)">TURN<tspan x="0.71" y="40.24">OVER</tspan></text>
+        <text class="cls-2" transform="translate(7 26)">TURN<tspan x="0.71" y="40.24">OVER</tspan></text>
         <path class="cls-3" d="M44.29,38A6.25,6.25,0,1,1,38,31.79,6.25,6.25,0,0,1,44.29,38Z"/>
         </svg>
         """,

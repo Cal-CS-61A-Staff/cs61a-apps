@@ -7,7 +7,6 @@ from gui_files.common_server import route, start
 
 import hog
 import dice
-import hog_dice
 import default_graphics
 
 PORT = 31415
@@ -126,8 +125,8 @@ def strategy(name, scores):
 def draw_dice_graphic(num):
     num = int(num)
     # Either draw student-provided dice or our default dice
-    graphic = hog_dice.draw_dice(num)
-    if graphic:
+    if hasattr(hog, "draw_dice"):
+        graphic = hog.draw_dice(num)
         return str(graphic)
     return default_graphics.dice[num]
 
