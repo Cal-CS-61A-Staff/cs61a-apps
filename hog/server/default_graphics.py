@@ -1,8 +1,8 @@
-
 # Default dice for the Hog game. These can be overriden by students.
 
-dice = ["",
-        """<?xml version="1.0" encoding="UTF-8"?>
+dice = [
+    "",
+    """<?xml version="1.0" encoding="UTF-8"?>
         <svg data-name="Layer 1" viewBox="0 0 76.08 76.08" xmlns="http://www.w3.org/2000/svg">
         <defs>
         <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-3{stroke:#000;}.cls-2{font-size:22.7px;font-family:"Helvetica Neue",Arial;}.cls-3{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
@@ -12,7 +12,7 @@ dice = ["",
         <path class="cls-3" d="M44.29,38A6.25,6.25,0,1,1,38,31.79,6.25,6.25,0,0,1,44.29,38Z"/>
         </svg>
         """,
-        """<?xml version="1.0" encoding="UTF-8"?>
+    """<?xml version="1.0" encoding="UTF-8"?>
         <svg data-name="Layer 1" viewBox="0 0 76.08 76.08" xmlns="http://www.w3.org/2000/svg">
         <defs>
         <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-2{stroke:#000;}.cls-2{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
@@ -22,7 +22,7 @@ dice = ["",
         <path class="cls-2" d="m44.29 56.32a6.25 6.25 0 1 1-6.29-6.25 6.25 6.25 0 0 1 6.29 6.25z"/>
         </svg>
         """,
-        """<?xml version="1.0" encoding="UTF-8"?>
+    """<?xml version="1.0" encoding="UTF-8"?>
         <svg data-name="Layer 1" viewBox="0 0 76.08 76.08" xmlns="http://www.w3.org/2000/svg">
         <defs>
         <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-2{stroke:#000;}.cls-2{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
@@ -32,7 +32,7 @@ dice = ["",
         <path class="cls-2" d="m44.29 56.32a6.25 6.25 0 1 1-6.29-6.25 6.25 6.25 0 0 1 6.29 6.25z"/>
         </svg>
         """,
-        """<?xml version="1.0" encoding="UTF-8"?>
+    """<?xml version="1.0" encoding="UTF-8"?>
         <svg data-name="Layer 1" viewBox="0 0 76.08 76.08" xmlns="http://www.w3.org/2000/svg">
         <defs>
         <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-2{stroke:#000;}.cls-2{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
@@ -44,7 +44,7 @@ dice = ["",
         <path class="cls-2" d="M62,56a6.25,6.25,0,1,1-6.25-6.25A6.25,6.25,0,0,1,62,56Z"/>
         </svg>
         """,
-        """<?xml version="1.0" encoding="UTF-8"?>
+    """<?xml version="1.0" encoding="UTF-8"?>
         <svg data-name="Layer 1" viewBox="0 0 76.08 76.08" xmlns="http://www.w3.org/2000/svg">
         <defs>
         <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-2{stroke:#000;}.cls-2{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
@@ -57,7 +57,7 @@ dice = ["",
         <path class="cls-2" d="m44.29 37.75a6.25 6.25 0 1 1-6.29-6.25 6.25 6.25 0 0 1 6.29 6.25z"/>
         </svg>
         """,
-        """<?xml version="1.0" encoding="UTF-8"?>
+    """<?xml version="1.0" encoding="UTF-8"?>
         <svg data-name="Layer 1" viewBox="0 0 76.08 76.08" xmlns="http://www.w3.org/2000/svg">
         <defs>
         <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-2{stroke:#000;}.cls-2{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
@@ -70,5 +70,5 @@ dice = ["",
         <path class="cls-2" d="M62,55.75a6.25,6.25,0,1,1-6.25-6.25A6.25,6.25,0,0,1,62,55.75Z"/>
         <path class="cls-2" d="M62,37.75a6.25,6.25,0,1,1-6.25-6.25A6.25,6.25,0,0,1,62,37.75Z"/>
         </svg>
-        """
+        """,
 ]
