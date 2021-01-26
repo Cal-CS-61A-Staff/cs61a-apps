@@ -6,6 +6,7 @@ from github.Repository import Repository
 from app_config import App
 from common.secrets import get_master_secret
 from common.shell_utils import sh
+from conf import PROJECT_ID
 from deploy import gen_service_name
 
 
@@ -39,6 +40,6 @@ def run_highcpu_build(
         "submit",
         "-q",
         "--tag",
-        "gcr.io/cs61a-140900/temp-{}".format(gen_service_name(app.name, pr_number)),
+        "gcr.io/{}/temp-{}".format(PROJECT_ID, gen_service_name(app.name, pr_number)),
         # "--machine-type=N1_HIGHCPU_32",
     )

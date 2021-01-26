@@ -2,16 +2,20 @@ import json
 import os
 import shutil
 from subprocess import CalledProcessError
+from time import sleep
 
 import sqlalchemy
 import sqlalchemy.engine.url
 
-from build import gen_working_dir
 from app_config import App, CLOUD_RUN_DEPLOY_TYPES
+from build import gen_working_dir
+from common.db import connect_db
+from common.hash_utils import HashState
 from common.rpc.hosted import add_domain, new
 from common.rpc.secrets import create_master_secret, get_secret, load_all_secrets
+from common.secrets import new_secret
 from common.shell_utils import sh, tmp_directory
-from conf import DB_INSTANCE_NAME, DB_IP_ADDRESS
+from conf import DB_INSTANCE_NAME, DB_IP_ADDRESS, PROJECT_ID
 from pypi_utils import update_setup_py
 
 
@@ -21,31 +25,60 @@ def gen_master_secret(app: App, pr_number: int):
 
 
 def gen_env_variables(app: App, pr_number: int):
+    # set up and create database user
+    database = app.name.replace("-", "_")
+    with connect_db() as db:
+        db_pw = db(
+            "SELECT mysql_pw FROM mysql_users WHERE app=(%s)", [app.name]
+        ).fetchone()
+        if db_pw is None:
+            db_pw = new_secret()
+            # unable to use placeholders here, but it's safe because we control the app.name and db_pw
+            db(f"CREATE DATABASE IF NOT EXISTS {database}")
+            db(f'CREATE USER "{app.name}"@"%%" IDENTIFIED BY "{db_pw}";')
+            db(f"GRANT ALL ON {database}.* TO '{app}'@'%%'")
+            db("FLUSH TABLES mysql.user")
+            db(
+                "INSERT INTO mysql_users (app, mysql_pw) VALUES (%s, %s)",
+                [app.name, db_pw],
+            )
+        else:
+            db_pw = db_pw[0]
+
     if app.config["deploy_type"] == "hosted":
         database_url = sqlalchemy.engine.url.URL(
             drivername="mysql",
             host=DB_IP_ADDRESS,
-            username="apps",
-            password=get_secret(secret_name="DATABASE_PW"),
-            database=app.name.replace("-", "_"),
+            username=app.name,
+            password=db_pw,
+            database=database,
         ).__to_string__(hide_password=False)
     elif app.config["deploy_type"] in CLOUD_RUN_DEPLOY_TYPES:
         database_url = sqlalchemy.engine.url.URL(
             drivername="mysql+pymysql",
-            username="apps",
-            password=get_secret(secret_name="DATABASE_PW"),
-            database=app.name.replace("-", "_"),
+            username=app.name,
+            password=db_pw,
+            database=database,
             query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
         ).__to_string__(hide_password=False)
     else:
         database_url = None
 
+    # set up the remaining secrets
     return dict(
         ENV="prod",
         DATABASE_URL=database_url,
         INSTANCE_CONNECTION_NAME=DB_INSTANCE_NAME,
-        APP_MASTER_SECRET=gen_master_secret(app, pr_number),
-        **(load_all_secrets(created_app_name=app.name) if pr_number == 0 else {}),
+        **(
+            dict(APP_MASTER_SECRET=gen_master_secret(app, pr_number))
+            if "rpc" in app.config["permissions"]
+            else {}
+        ),
+        **(
+            load_all_secrets(created_app_name=app.name)
+            if pr_number == 0 and "rpc" in app.config["permissions"]
+            else {}
+        ),
     )
 
 
@@ -61,6 +94,67 @@ def gen_service_name(app_name: str, pr_number: int):
         return app_name
     else:
         return f"{app_name}-pr{pr_number}"
+
+
+def gen_service_account(app: App):
+    # set up and create service account
+    hashstate = HashState()
+    permissions = sorted(app.config["permissions"])
+    hashstate.record(permissions)
+    service_account_name = f"managed-{hashstate.state()}"[
+        :30
+    ]  # max len of account ID is 30 chars
+    existing_accounts = json.loads(
+        sh(
+            "gcloud",
+            "iam",
+            "service-accounts",
+            "list",
+            "--format",
+            "json",
+            capture_output=True,
+        )
+    )
+    for account in existing_accounts:
+        if account["email"].split("@")[0] == service_account_name:
+            break
+    else:
+        # need to create service account
+        sh(
+            "gcloud",
+            "iam",
+            "service-accounts",
+            "create",
+            service_account_name,
+            f"--description",
+            f'Managed service account with permissions: {" ".join(permissions)}',
+            "--display-name",
+            "Managed service account - DO NOT EDIT MANUALLY",
+        )
+        sleep(60)  # it takes a while to create service accounts
+        role_lookup = dict(
+            storage="roles/storage.admin",
+            database="roles/cloudsql.client",
+            iam_admin="roles/resourcemanager.projectIamAdmin",
+            cloud_run_admin="roles/run.admin",
+            cloud_functions_admin="roles/cloudfunctions.admin",
+        )
+        for permission in permissions:
+            if permission == "rpc":
+                pass  # handled later
+            else:
+                role = role_lookup[permission]
+                sh(
+                    "gcloud",
+                    "projects",
+                    "add-iam-policy-binding",
+                    PROJECT_ID,
+                    f"--member",
+                    f"serviceAccount:{service_account_name}@{PROJECT_ID}.iam.gserviceaccount.com",
+                    f"--role",
+                    role,
+                )
+    return service_account_name
 
 
 def deploy_commit(app: App, pr_number: int):
@@ -112,12 +206,13 @@ def build_docker_image(app: App, pr_number: int) -> str:
         f.truncate()
         f.write(contents)
     sh("gcloud", "builds", "submit", "-q", "--config", "cloudbuild.yaml")
-    return f"gcr.io/cs61a-140900/{service_name}"
+    return f"gcr.io/{PROJECT_ID}/{service_name}"
 
 
 def run_dockerfile_deploy(app: App, pr_number: int):
     image = build_docker_image(app, pr_number)
     service_name = gen_service_name(app.name, pr_number)
+    service_account = gen_service_account(app)
     sh(
         "gcloud",
         "beta",
@@ -126,6 +221,8 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         service_name,
         "--image",
         image,
+        "--service-account",
+        service_account,
         "--region",
         "us-west1",
         "--platform",
