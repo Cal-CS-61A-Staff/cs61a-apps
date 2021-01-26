@@ -13,6 +13,7 @@ from urllib.error import URLError
 from urllib.parse import unquote, urlparse, parse_qs
 from urllib.request import Request, urlopen
 
+STATIC_PATHS = {}
 PATHS = {}
 
 
@@ -36,8 +37,14 @@ def route(path):
     if callable(path):
         return route("/" + path.__name__)(path)
 
+    if not path.startswith("/"):
+        path = "/" + path
+
     def wrap(f):
-        PATHS[path] = f
+        if "." in path:
+            STATIC_PATHS[path] = f
+        else:
+            PATHS[path] = f
         return f
 
     return wrap
@@ -46,38 +53,37 @@ def route(path):
 class Handler(server.BaseHTTPRequestHandler):
     """HTTP handler."""
 
-    def output_svg(self, path, query_params):
-        self.send_header("Content-type", "image/svg+xml")
-        self.end_headers()
-        try:
-            result = PATHS[path](int(query_params["num"][0]))
-            self.wfile.write(bytes(result, "utf-8"))
-        except Exception as e:
-            print(e)
+    CONTENT_TYPE_LOOKUP = dict(
+        html="text/html",
+        css="text/css",
+        js="application/javascript",
+        svg="image/svg+xml",
+    )
 
     def do_GET(self):
-        self.send_response(HTTPStatus.OK)
-        parsed_url = urlparse(unquote(self.path))
-        path = parsed_url.path
-        query_params = parse_qs(parsed_url.query)
-        if path.endswith("_graphic"):
-            self.output_svg(path, query_params)
-            return
-
-        path = GUI_FOLDER + path[1:]
-        if "scripts" in path and not path.endswith(".js"):
-            path += ".js"
-
-        if path.endswith(".css"):
-            self.send_header("Content-type", "text/css")
-        elif path.endswith(".js"):
-            self.send_header("Content-type", "application/javascript")
-        self.end_headers()
-        if path == GUI_FOLDER:
-            path = GUI_FOLDER + "index.html"
         try:
-            with open(path, "rb") as f:
-                self.wfile.write(f.read())
+            self.send_response(HTTPStatus.OK)
+            parsed_url = urlparse(unquote(self.path))
+            path = parsed_url.path
+            query_params = parse_qs(parsed_url.query)
+
+            if path in STATIC_PATHS:
+                out = bytes(STATIC_PATHS[path](**snakify(query_params)), "utf-8")
+            else:
+                path = GUI_FOLDER + path[1:]
+                if "scripts" in path and not path.endswith(".js"):
+                    path += ".js"
+                if path == GUI_FOLDER:
+                    path = GUI_FOLDER + "index.html"
+                with open(path, "rb") as f:
+                    out = f.read()
+
+            self.send_header(
+                "Content-type", self.CONTENT_TYPE_LOOKUP[path.split(".")[-1]]
+            )
+            self.end_headers()
+            self.wfile.write(out)
+
         except Exception as e:
             print(e)
 

@@ -15,7 +15,7 @@ const DiceImage = styled.img`
 
 export default function DiceResults({ rolls }: { rolls: Array<number> }) {
   const dice = rolls.map((roll, i) => (
-    <DiceImage src={ "/draw_dice_graphic?num=" + roll} key={i} />
+    <DiceImage src={"/dice_graphic.svg?num=" + roll} key={i} />
   ));
   return <WrapperDiv>{dice}</WrapperDiv>;
 }
