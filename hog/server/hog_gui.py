@@ -121,14 +121,16 @@ def strategy(name, scores):
     }
     return STRATEGIES[name](*scores[::-1])
 
-@route
+
+@route("dice_graphic.svg")
 def draw_dice_graphic(num):
-    num = int(num)
+    num = int(num[0])
     # Either draw student-provided dice or our default dice
     if hasattr(hog, "draw_dice"):
         graphic = hog.draw_dice(num)
         return str(graphic)
     return default_graphics.dice[num]
+
 
 def safe(commentary):
     def new_commentary(*args, **kwargs):
