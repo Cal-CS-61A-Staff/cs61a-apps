@@ -16,6 +16,13 @@ from urllib.request import Request, urlopen
 STATIC_PATHS = {}
 PATHS = {}
 
+CONTENT_TYPE_LOOKUP = dict(
+    html="text/html",
+    css="text/css",
+    js="application/javascript",
+    svg="image/svg+xml",
+)
+
 
 def path_optional(decorator):
     def wrapped(func_or_path):
@@ -53,13 +60,6 @@ def route(path):
 class Handler(server.BaseHTTPRequestHandler):
     """HTTP handler."""
 
-    CONTENT_TYPE_LOOKUP = dict(
-        html="text/html",
-        css="text/css",
-        js="application/javascript",
-        svg="image/svg+xml",
-    )
-
     def do_GET(self):
         try:
             self.send_response(HTTPStatus.OK)
@@ -78,9 +78,7 @@ class Handler(server.BaseHTTPRequestHandler):
                 with open(path, "rb") as f:
                     out = f.read()
 
-            self.send_header(
-                "Content-type", self.CONTENT_TYPE_LOOKUP[path.split(".")[-1]]
-            )
+            self.send_header("Content-type", CONTENT_TYPE_LOOKUP[path.split(".")[-1]])
             self.end_headers()
             self.wfile.write(out)
 
@@ -194,7 +192,7 @@ def sendto(f):
 def start_server():
     global IS_SERVER
     IS_SERVER = True
-    from flask import Flask, request, jsonify, send_from_directory
+    from flask import Flask, request, jsonify, send_from_directory, Response
 
     app = Flask(__name__, static_url_path="", static_folder="")
     for route, handler in PATHS.items():
@@ -203,6 +201,17 @@ def start_server():
             return jsonify(handler(**snakify(request.get_json(force=True))))
 
         app.add_url_rule(route, handler.__name__, wrapped_handler, methods=["POST"])
+
+    for route, handler in STATIC_PATHS.items():
+
+        def wrapped_handler(route=route, handler=handler):
+            query_params = parse_qs(request.query_string.decode())
+            return Response(
+                handler(**snakify(query_params)),
+                mimetype=CONTENT_TYPE_LOOKUP[route.split(".")[-1]],
+            )
+
+        app.add_url_rule(route, handler.__name__, wrapped_handler, methods=["GET"])
 
     @app.route("/")
     def index():
