@@ -98,7 +98,7 @@ def clear():
         abort(401)
     email = get_user()["email"]
     with connect_db() as db:
-        db("DELETE FROM saves WHERE email=%s", [email]).fetchall()
+        db("DELETE FROM saves WHERE email=%s", [email])
     return ""
 
 
