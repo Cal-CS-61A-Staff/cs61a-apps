@@ -17,20 +17,23 @@ const ScoreDiv = styled.div`
   height: 130px;
   line-height: 130px;
   font-size: 48pt;
-  background: ${props => props.isCurrent ? "white" : "transparent"};
-
+  background: ${(props) => (props.isCurrent ? "white" : "transparent")};
 `;
 
 const PlayerDiv = styled.div`
   width: 100%;
   line-height: 30px;
-  background: ${props => props.isCurrent ? "#17a2b8" : "grey"};
+  background: ${(props) => (props.isCurrent ? "#17a2b8" : "grey")};
   color: white;
 `;
 
 type Props = { score: number, playerIndex: number, currentPlayer: number };
 
-export default function ScoreIndicator({ score, playerIndex, currentPlayer }: Props) {
+export default function ScoreIndicator({
+  score,
+  playerIndex,
+  currentPlayer,
+}: Props) {
   const isCurrent = currentPlayer === playerIndex;
   return (
     <OuterDiv>

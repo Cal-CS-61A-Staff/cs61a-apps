@@ -57,9 +57,7 @@ export default function Game({
     setState(states.ROLLING_DICE);
     setNumRolls(inputNumRolls);
     moveHistory.current.push(inputNumRolls);
-    const [
-      { message, rolls, finalScores, who },
-    ] = await Promise.all([
+    const [{ message, rolls, finalScores, who }] = await Promise.all([
       post("/take_turn", {
         prevRolls: rollHistory.current,
         moveHistory: moveHistory.current,
@@ -71,14 +69,14 @@ export default function Game({
     setDisplayedRolls(rolls.slice(rollHistory.current.length));
     setScores(finalScores);
     setState(states.DISPLAYING_CHANGE);
-    const messages = []
+    const messages = [];
     if (who === currPlayerIndex) {
       messages.push(`More boar! Extra turn granted to Player ${who}`);
     }
     message && messages.push(message);
     setMessages(messages);
     rollHistory.current = rolls;
-    strategy && await wait(2500);
+    strategy && (await wait(2500));
 
     setPlayerIndex(who);
     if (Math.max(...finalScores) >= goal) {
@@ -108,7 +106,7 @@ export default function Game({
     <>
       <Row>
         <Col>
-          <ScoreIndicators scores={scores} currentPlayer={playerIndex}/>
+          <ScoreIndicators scores={scores} currentPlayer={playerIndex} />
         </Col>
       </Row>
       {state !== states.DISPLAYING_COMPUTER_MOVE && (
@@ -121,9 +119,7 @@ export default function Game({
         </Row>
       )}
       <Row>
-        <Col>
-        {diceDisplay}
-        </Col>
+        <Col>{diceDisplay}</Col>
       </Row>
       <Row>
         <Col>

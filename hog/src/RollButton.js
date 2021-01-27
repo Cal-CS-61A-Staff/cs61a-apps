@@ -58,16 +58,14 @@ export default function RollButton({
         <Button
           variant="info"
           size="lg"
-          style={{marginLeft: "10px"}}
+          style={{ marginLeft: "10px" }}
           onClick={handleClick}
         >
           {" "}
           Roll!
         </Button>
       </p>
-      <p>
-        
-      </p>
+      <p></p>
     </Wrapper>
   );
 }

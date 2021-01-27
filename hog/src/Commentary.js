@@ -7,7 +7,8 @@ export default function Commentary({ messages }: { messages: [string] }) {
       return (
         <Alert key={i} variant="dark">
           {message}
-        </Alert>);
+        </Alert>
+      );
     });
   }
   return null;

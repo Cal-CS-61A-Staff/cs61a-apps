@@ -39,13 +39,20 @@ export default function App() {
 
   return (
     <Container>
-      <Navbar bg="dark" variant="dark" className="justify-content-between hognav">
-        <Navbar.Brand>The Game of <strong>Hog</strong></Navbar.Brand>
+      <Navbar
+        bg="dark"
+        variant="dark"
+        className="justify-content-between hognav"
+      >
+        <Navbar.Brand>
+          The Game of <strong>Hog</strong>
+        </Navbar.Brand>
         <Form inline>
           <ResetButton onClick={handleRestart} />
         </Form>
       </Navbar>
-      <Game style={{paddingTop: "10px"}}
+      <Game
+        style={{ paddingTop: "10px" }}
         key={gameKey}
         strategy={strategy}
         onStrategyChange={handleStrategyChange}

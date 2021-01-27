@@ -17,7 +17,12 @@ export default function ScoreIndicators({
   return (
     <Wrapper>
       {scores.map((score, i) => (
-        <ScoreIndicator key={i} score={score} playerIndex={i} currentPlayer={currentPlayer}/>
+        <ScoreIndicator
+          key={i}
+          score={score}
+          playerIndex={i}
+          currentPlayer={currentPlayer}
+        />
       ))}
     </Wrapper>
   );
