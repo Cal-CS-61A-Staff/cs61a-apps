@@ -1,6 +1,6 @@
 from flask import Flask, Response, abort, jsonify, request, session
 from flask.sessions import SecureCookieSessionInterface
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 
 from common.db import connect_db, transaction_db
 from common.oauth_client import (
@@ -90,6 +90,16 @@ def fetch():
             for name, value in resp
         }
     )
+
+
+@app.route("/clear", methods=["POST"])
+def clear():
+    if not is_enrolled("cs61a"):
+        abort(401)
+    email = get_user()["email"]
+    with connect_db() as db:
+        db("DELETE FROM saves WHERE email=%s", [email])
+    return dict(success=True)
 
 
 if __name__ == "__main__":
