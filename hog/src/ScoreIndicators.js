@@ -10,13 +10,19 @@ const Wrapper = styled.div`
 
 export default function ScoreIndicators({
   scores,
+  currentPlayer,
 }: {
   scores: $ReadOnlyArray<number>,
 }) {
   return (
     <Wrapper>
       {scores.map((score, i) => (
-        <ScoreIndicator score={score} key={i} playerIndex={i} />
+        <ScoreIndicator
+          key={i}
+          score={score}
+          playerIndex={i}
+          currentPlayer={currentPlayer}
+        />
       ))}
     </Wrapper>
   );

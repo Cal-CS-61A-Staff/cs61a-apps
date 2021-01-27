@@ -1,6 +1,7 @@
 """Web server for the hog GUI."""
 import io
 import os
+import logging
 from contextlib import redirect_stdout
 
 from gui_files.common_server import route, start
@@ -25,18 +26,12 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
     fair_dice = dice.make_fair_dice(6)
     dice_results = []
 
-    swine_align = game_rules["Swine Align"]
     more_boar = game_rules["More Boar"]
 
     try:
-        if not swine_align:
-            old_swine_align, hog.swine_align = (
-                hog.swine_align,
-                lambda score0, score1: False,
-            )
-
+        old_more_boar = hog.more_boar
         if not more_boar:
-            old_more_boar, hog.more_boar = hog.more_boar, lambda score0, score1: False
+            hog.more_boar = lambda score0, score1: False
 
         def logged_dice():
             if len(dice_results) < len(prev_rolls):
@@ -98,10 +93,7 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
         else:
             game_over = True
     finally:
-        if not swine_align:
-            hog.swine_align = old_swine_align
-        if not more_boar:
-            hog.more_boar = old_more_boar
+        hog.more_boar = old_more_boar
 
     return {
         "rolls": dice_results,
@@ -116,7 +108,7 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
 def strategy(name, scores):
     STRATEGIES = {
         "piggypoints_strategy": hog.piggypoints_strategy,
-        "extra_turn_strategy": hog.extra_turn_strategy,
+        "more_boar_strategy": hog.more_boar_strategy,
         "final_strategy": hog.final_strategy,
     }
     return STRATEGIES[name](*scores[::-1])
@@ -137,7 +129,6 @@ def safe(commentary):
         try:
             result = commentary(*args, **kwargs)
         except TypeError:
-            print("Error in commentary function")
             result = commentary
         return safe(result)
 
