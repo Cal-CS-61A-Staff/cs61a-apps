@@ -76,6 +76,8 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
                             blobs: Iterator[Blob] = list(
                                 bucket.list_blobs(prefix=cache_path)
                             )
+                            if not blobs:
+                                raise NotFound
                             for blob in blobs:
                                 target = str(
                                     Path(dest_root)
