@@ -8,6 +8,7 @@ from gui_files.common_server import route, start
 
 import hog
 import dice
+import default_graphics
 
 PORT = 31415
 DEFAULT_SERVER = "https://hog.cs61a.org"
@@ -111,6 +112,16 @@ def strategy(name, scores):
         "final_strategy": hog.final_strategy,
     }
     return STRATEGIES[name](*scores[::-1])
+
+
+@route("dice_graphic.svg")
+def draw_dice_graphic(num):
+    num = int(num[0])
+    # Either draw student-provided dice or our default dice
+    if hasattr(hog, "draw_dice"):
+        graphic = hog.draw_dice(num)
+        return str(graphic)
+    return default_graphics.dice[num]
 
 
 def safe(commentary):
