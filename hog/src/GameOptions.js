@@ -17,12 +17,13 @@ type Props = {
 export default function GameOptions({ gameRules, onGameRulesChange }: Props) {
   return (
     <StyledDiv>
-      <h5>Toggle Game Rules:</h5>
+      <h5>Enable game rules:</h5>
       {Object.entries(gameRules).map(([rule, state]) => (
         <Form.Check
           key={rule}
           custom
-          type="checkbox"
+          inline
+          type="switch"
           id={`rule-checkbox-${rule}`}
           checked={state}
           label={rule}
