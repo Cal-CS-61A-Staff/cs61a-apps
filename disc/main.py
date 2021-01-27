@@ -93,7 +93,7 @@ def fetch():
 
 
 @app.route("/clear", methods=["POST"])
-def fetch():
+def clear():
     if not is_enrolled("cs61a"):
         abort(401)
     email = get_user()["email"]
