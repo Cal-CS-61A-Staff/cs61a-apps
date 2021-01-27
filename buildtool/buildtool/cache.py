@@ -66,7 +66,7 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
             del cache_location
             if not aux_loader(cache_key, rule, dest_root):
                 try:
-                    aux_fetcher(cache_key, ".touch")
+                    cache_fetcher(cache_key, ".touch")
                 except CacheMiss:
                     STATS["misses"] += delta
                     return False
