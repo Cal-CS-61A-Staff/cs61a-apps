@@ -14,8 +14,7 @@ from context import Env, MemorizeContext
 from fs_utils import copy_helper, hash_file
 from monitoring import log
 from state import BuildState, Rule
-from utils import BuildException, MissingDependency
-from common.hash_utils import HashState
+from utils import BuildException, HashState, MissingDependency
 
 
 class ExecutionContext(MemorizeContext):

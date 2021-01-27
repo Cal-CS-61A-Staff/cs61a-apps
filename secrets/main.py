@@ -1,19 +1,21 @@
 import hashlib
+import string
 from functools import wraps
+from random import SystemRandom
 from typing import List, Tuple
 
 from flask import Flask, abort, redirect, request, url_for
 
 from common.course_config import is_admin, is_admin_token
+from common.oauth_client import create_oauth_client, get_user, login
 from common.db import connect_db
-from common.oauth_client import create_oauth_client, get_user, is_staff, login
+from common.oauth_client import is_staff
 from common.rpc.secrets import (
     create_master_secret,
     get_secret_from_server,
     load_all_secrets,
     validate_master_secret,
 )
-from common.secrets import new_secret
 
 app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
@@ -121,6 +123,12 @@ def create_master_secret(app, is_staging, created_app_name):
             [created_app_name, "MASTER", *out],
         )
     return out
+
+
+def new_secret():
+    return "".join(
+        SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(64)
+    )
 
 
 def display_hash(secret: str):
