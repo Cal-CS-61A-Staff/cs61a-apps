@@ -1,6 +1,7 @@
 """Web server for the hog GUI."""
 import io
 import os
+import logging
 from contextlib import redirect_stdout
 
 from gui_files.common_server import route, start
@@ -27,8 +28,9 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
     more_boar = game_rules["More Boar"]
 
     try:
+        old_more_boar = hog.more_boar
         if not more_boar:
-            old_more_boar, hog.more_boar = hog.more_boar, lambda score0, score1: False
+            hog.more_boar = lambda score0, score1: False
 
         def logged_dice():
             if len(dice_results) < len(prev_rolls):
@@ -90,8 +92,7 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
         else:
             game_over = True
     finally:
-        if not more_boar:
-            hog.more_boar = old_more_boar
+        hog.more_boar = old_more_boar
 
     return {
         "rolls": dice_results,
@@ -116,8 +117,7 @@ def safe(commentary):
     def new_commentary(*args, **kwargs):
         try:
             result = commentary(*args, **kwargs)
-        except TypeError as e:
-            print("Error in commentary function")
+        except TypeError:
             result = commentary
         return safe(result)
 

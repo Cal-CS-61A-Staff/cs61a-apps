@@ -48,7 +48,7 @@ export default function Game({
   const [playerIndex, setPlayerIndex] = useState(0);
   const [scores, setScores] = useState<[number, number]>([0, 0]);
   const [numRolls, setNumRolls] = useState<number>(0);
-  const [message, setMessage] = useState<string>("");
+  const [messages, setMessages] = useState<[string]>([]);
 
   const moveHistory = useRef([]);
   const rollHistory = useRef([]);
@@ -57,9 +57,7 @@ export default function Game({
     setState(states.ROLLING_DICE);
     setNumRolls(inputNumRolls);
     moveHistory.current.push(inputNumRolls);
-    const [
-      { message: newMessage, rolls, finalScores, who },
-    ] = await Promise.all([
+    const [{ message, rolls, finalScores, who }] = await Promise.all([
       post("/take_turn", {
         prevRolls: rollHistory.current,
         moveHistory: moveHistory.current,
@@ -71,9 +69,15 @@ export default function Game({
     setDisplayedRolls(rolls.slice(rollHistory.current.length));
     setScores(finalScores);
     setState(states.DISPLAYING_CHANGE);
-    setMessage(newMessage);
+    const messages = [];
+    if (who === currPlayerIndex) {
+      messages.push(`More boar! Extra turn granted to Player ${who}`);
+    }
+    message && messages.push(message);
+    setMessages(messages);
     rollHistory.current = rolls;
-    await wait(2500);
+    strategy && (await wait(2500));
+
     setPlayerIndex(who);
     if (Math.max(...finalScores) >= goal) {
       setState(states.GAME_OVER);
@@ -89,14 +93,7 @@ export default function Game({
   };
 
   const diceDisplay = {
-    [states.WAITING_FOR_INPUT]: (
-      <RollButton
-        playerIndex={playerIndex}
-        piggyPoints={gameRules["Piggy Points"]}
-        onClick={handleRoll}
-        onRestart={onRestart}
-      />
-    ),
+    [states.WAITING_FOR_INPUT]: <DiceResults rolls={displayedRolls} />,
     [states.ROLLING_DICE]: <RollingDice numRolls={numRolls} />,
     [states.DISPLAYING_CHANGE]: <DiceResults rolls={displayedRolls} />,
     [states.GAME_OVER]: null,
@@ -109,10 +106,26 @@ export default function Game({
     <>
       <Row>
         <Col>
-          <ScoreIndicators scores={scores} />
+          <ScoreIndicators scores={scores} currentPlayer={playerIndex} />
         </Col>
       </Row>
-      <Row>{diceDisplay}</Row>
+      {state !== states.DISPLAYING_COMPUTER_MOVE && (
+        <Row>
+          <RollButton
+            playerIndex={playerIndex}
+            piggyPoints={gameRules["Piggy Points"]}
+            onClick={handleRoll}
+          />
+        </Row>
+      )}
+      <Row>
+        <Col>{diceDisplay}</Col>
+      </Row>
+      <Row>
+        <Col>
+          <Commentary messages={messages} />
+        </Col>
+      </Row>
       {state === states.GAME_OVER && (
         <VictoryScreen
           winner={scores[0] > scores[1] ? 0 : 1}
@@ -120,26 +133,21 @@ export default function Game({
           onStrategyChange={onStrategyChange}
         />
       )}
-      {state === states.DISPLAYING_CHANGE && (
-        <Row>
-          <Commentary text={message} />
-        </Row>
-      )}
       {state === states.WAITING_FOR_INPUT && (
         <>
-          <Row>
-            <Col>
-              <StrategyPicker
-                strategy={strategy}
-                onStrategyChange={onStrategyChange}
-              />
-            </Col>
-          </Row>
           <Row>
             <Col>
               <GameOptions
                 gameRules={gameRules}
                 onGameRulesChange={onGameRulesChange}
+              />
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <StrategyPicker
+                strategy={strategy}
+                onStrategyChange={onStrategyChange}
               />
             </Col>
           </Row>

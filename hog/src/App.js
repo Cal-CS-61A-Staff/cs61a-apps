@@ -1,19 +1,13 @@
 // @flow
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useState } from "react";
-import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import styled from "styled-components";
+import Navbar from "react-bootstrap/Navbar";
+import Form from "react-bootstrap/Form";
 import Game from "./Game";
+import ResetButton from "./ResetButton";
 
 import "./style.global.css";
-
-const CenteredDiv = styled.div`
-  text-align: center;
-  margin-top: 10px;
-  font-weight: bold;
-`;
 
 export type RuleSet = {|
   "Piggy Points": boolean,
@@ -45,19 +39,22 @@ export default function App() {
 
   return (
     <Container>
-      <Row>
-        <Col>
-          <CenteredDiv>
-            <h1 className="display-4">
-              The Game of <b>Hog.</b>
-            </h1>
-          </CenteredDiv>
-        </Col>
-      </Row>
+      <Navbar
+        bg="dark"
+        variant="dark"
+        className="justify-content-between hognav"
+      >
+        <Navbar.Brand>
+          The Game of <strong>Hog</strong>
+        </Navbar.Brand>
+        <Form inline>
+          <ResetButton onClick={handleRestart} />
+        </Form>
+      </Navbar>
       <Game
+        style={{ paddingTop: "10px" }}
         key={gameKey}
         strategy={strategy}
-        onRestart={handleRestart}
         onStrategyChange={handleStrategyChange}
         gameRules={gameRules}
         onGameRulesChange={handleGameRulesChange}

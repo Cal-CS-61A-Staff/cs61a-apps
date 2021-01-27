@@ -17,9 +17,8 @@ const WrapperDiv = styled.div`
 `;
 
 const DiceImage = styled.img`
-  width: 120px;
-  height: 120px;
-  border: 1px solid black;
+  width: 100px;
+  height: 100px;
   margin: 10px;
 `;
 
