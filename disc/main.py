@@ -99,7 +99,7 @@ def clear():
     email = get_user()["email"]
     with connect_db() as db:
         db("DELETE FROM saves WHERE email=%s", [email])
-    return ""
+    return dict(success=True)
 
 
 if __name__ == "__main__":
