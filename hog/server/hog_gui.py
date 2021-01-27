@@ -24,7 +24,6 @@ def take_turn(prev_rolls, move_history, goal, game_rules):
     """Simulate the whole game up to the current turn."""
     fair_dice = dice.make_fair_dice(6)
     dice_results = []
-    traced_rules = {}
 
     more_boar = game_rules["More Boar"]
 
