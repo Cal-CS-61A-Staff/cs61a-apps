@@ -2,7 +2,13 @@ from flask import Flask, redirect
 from flask_compress import Compress
 from static_server.utils import get_bucket, serve_path
 
-from common.oauth_client import create_oauth_client, is_staff, login, get_user
+from common.oauth_client import (
+    create_oauth_client,
+    is_enrolled,
+    login,
+    get_user,
+    AUTHORIZED_ROLES,
+)
 from common.course_config import get_endpoint
 
 app = Flask(__name__)
@@ -24,7 +30,7 @@ def index(path):
     except:
         pass  # don't let the rickroll crash anything else
 
-    if not is_staff("cs61a", allow_interns=True):
+    if not is_enrolled("cs61a", roles=[*AUTHORIZED_ROLES, "lab assistant"]):
         return login()
     bucket = get_bucket(
         {
