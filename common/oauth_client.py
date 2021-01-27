@@ -26,8 +26,13 @@ def is_logged_in():
     return "access_token" in session
 
 
-def is_staff(course):
-    return is_enrolled(course, roles=AUTHORIZED_ROLES)
+def is_staff(course, allow_interns=False):
+    return is_enrolled(
+        course,
+        roles=[*AUTHORIZED_ROLES, "lab assistant"]
+        if allow_interns
+        else AUTHORIZED_ROLES,
+    )
 
 
 def is_enrolled(course, *, roles=None):

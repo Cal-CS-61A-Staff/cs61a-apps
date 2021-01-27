@@ -24,7 +24,7 @@ def index(path):
     except:
         pass  # don't let the rickroll crash anything else
 
-    if not is_staff("cs61a"):
+    if not is_staff("cs61a", allow_interns=True):
         return login()
     bucket = get_bucket(
         {
