@@ -65,6 +65,11 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
         if bucket:
             del cache_location
             if not aux_loader(cache_key, rule, dest_root):
+                try:
+                    aux_fetcher(cache_key, ".touch")
+                except CacheMiss:
+                    STATS["misses"] += delta
+                    return False
                 for src_name, cache_path in zip(rule.outputs, cache_paths):
                     cache_path = str(Path(cache_key).joinpath(cache_path))
                     os.makedirs(dest_root, exist_ok=True)
