@@ -1,2 +1,3 @@
 build_type: none
 deploy_type: flask
+concurrency: 40
