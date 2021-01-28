@@ -234,6 +234,7 @@ def webhook():
                         BuildStatus.pushed,
                         None,
                         None,
+                        private=True,
                     )
 
         elif payload["action"] == "closed":
