@@ -85,7 +85,7 @@ def old_results(semester):
     winrate_mat, teams = data["winrate_mat"], data["teams"]
 
     teams = [
-        (team, sum(score > 0.5 for score in team_scores))
+        (team, sum(score > tournament.THRESHOLD for score in team_scores))
         for team, team_scores in zip(teams, winrate_mat)
     ]
 
