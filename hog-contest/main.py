@@ -17,6 +17,8 @@ from tournament import build_ranking, run_tournament
 
 app = Flask(__name__)
 
+ASSIGNMENT = "proj01contest"
+
 with connect_db() as db:
     db("CREATE TABLE IF NOT EXISTS accesses (email VARCHAR(128), last_access INTEGER)")
     db(
@@ -117,7 +119,7 @@ def submit_strategy():
         strat = json.loads(request.form["strat"])
     except JSONDecodeError:
         abort(400, "Received malformed JSON strategy")
-    group = get_group(get_endpoint("cs61a"))
+    group = get_group(get_endpoint("cs61a") + f"/{ASSIGNMENT}")
 
     hashed = record_strat(request.form["name"], group, strat)
     run_tournament()
