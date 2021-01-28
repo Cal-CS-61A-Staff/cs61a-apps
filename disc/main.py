@@ -60,6 +60,12 @@ def index():
     return "<script> window.close(); </script>"
 
 
+@app.route("/whoami")
+def whoami():
+    email = session.get("email")
+    return f"You are {email}"
+
+
 @app.route("/save", methods=["POST"])
 def save():
     email = session.get("email")
