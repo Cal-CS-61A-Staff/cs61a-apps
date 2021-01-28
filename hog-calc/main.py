@@ -26,8 +26,10 @@ with connect_db() as db:
 def compare_strategies():
     strat0 = json.loads(request.form["strat0"])
     strat1 = json.loads(request.form["strat1"])
-
-    return jsonify({"success": True, "win_rate": score(strat0, strat1)})
+    use_contest = bool(request.form.get("use_contest"))
+    return jsonify(
+        {"success": True, "win_rate": score(strat0, strat1, use_contest=use_contest)}
+    )
 
 
 if __name__ == "__main__":

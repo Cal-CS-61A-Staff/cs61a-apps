@@ -14,9 +14,9 @@ def make_strat_str(strat_0, strat_1):
     return "\n".join(out)
 
 
-def match(strat_0, strat_1):
+def match(strat_0, strat_1, *, use_contest=True):
     p = subprocess.Popen(
-        ["./bacon"],
+        ["./bacon" if use_contest else "./bacon_proj"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -28,9 +28,9 @@ def match(strat_0, strat_1):
     return float(out.decode("utf-8"))
 
 
-def score(strat_0, strat_1):
-    return (1 + match(strat_0, strat_1) - match(strat_1, strat_0)) / 2
-
-
-def compile():
-    subprocess.run(["g++", "-std=c++17", "-O3", "main.cpp", "-Wall", "-o", "bacon"])
+def score(strat_0, strat_1, *, use_contest=True):
+    return (
+        1
+        + match(strat_0, strat_1, use_contest=use_contest)
+        - match(strat_1, strat_0, use_contest=use_contest)
+    ) / 2
