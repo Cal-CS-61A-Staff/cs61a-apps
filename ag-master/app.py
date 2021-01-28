@@ -39,12 +39,16 @@ with connect_db() as db:
 """
     )
 
+
 def check_secret(func):
     @wraps(func)
     def wrapped():
-        if request.headers.get("Authorization", None) == get_secret(secret_name="AG_UPLOAD_SECRET"):
+        if request.headers.get("Authorization", None) == get_secret(
+            secret_name="AG_UPLOAD_SECRET"
+        ):
             return func()
         abort(403)
+
     return wrapped
 
 
@@ -58,39 +62,56 @@ def create_assignment():
 
     id = gen_salt(24)
     with connect_db() as db:
-        existing = db("SELECT id, name FROM assignments WHERE name = %s", [name]).fetchone()
+        existing = db(
+            "SELECT id, name FROM assignments WHERE name = %s", [name]
+        ).fetchone()
         if existing:
-            db("UPDATE assignments SET file = %s, command = %s WHERE name = %s", [file, command, name])
+            db(
+                "UPDATE assignments SET file = %s, command = %s WHERE name = %s",
+                [file, command, name],
+            )
             return dict(assign_id=existing[0])
-        db("INSERT INTO assignments (id, name, file, command) VALUES (%s, %s, %s, %s)", [id, name, file, command])
+        db(
+            "INSERT INTO assignments (id, name, file, command) VALUES (%s, %s, %s, %s)",
+            [id, name, file, command],
+        )
         return dict(assign_id=id)
-    
+
 
 @app.route("/get_zip", methods=["POST"])
 @check_secret
 def get_zip():
     with connect_db() as db:
-        assignment = db("SELECT file FROM assignments WHERE id=%s", [request.get_json()['assignment_id']]).fetchone()
+        assignment = db(
+            "SELECT file FROM assignments WHERE id=%s",
+            [request.get_json()["assignment_id"]],
+        ).fetchone()
     return send_file("zips/cs61a/" + assignment[0])
+
 
 @app.route("/api/ok/v3/grade/batch", methods=["POST"])
 def batch_grade():
     data = request.get_json()
-    subms = data['subm_ids']
-    assignment_id = data['assignment']
-    if assignment_id == 'test':
-        return 'OK'
-    ok_token = data['access_token']
+    subms = data["subm_ids"]
+    assignment_id = data["assignment"]
+    if assignment_id == "test":
+        return "OK"
+    ok_token = data["access_token"]
 
     with connect_db() as db:
-        assignment = db("SELECT name, file, cmd FROM assignments WHERE id = %s", [assignment_id]).fetchone()
+        assignment = db(
+            "SELECT name, file, cmd FROM assignments WHERE id = %s", [assignment_id]
+        ).fetchone()
     if not assignment:
         abort(404, "Unknown Assignment")
 
     name, file, cmd = assignment
-    batches = [subms[i:i + 100] for i in range(0, len(subms), 100)]
+    batches = [subms[i : i + 100] for i in range(0, len(subms), 100)]
 
-    return dict(jobs = [*trigger_jobs(assignment_id, name, cmd, batch, ok_token) for batch in batches])
+    jobs = []
+    for batch in batches:
+        jobs.extend(trigger_jobs(assignment_id, name, cmd, batch, ok_token))
+    return dict(jobs=jobs)
 
 
 def trigger_jobs(assignment, name, cmd, ids, ok_token):
@@ -98,10 +119,24 @@ def trigger_jobs(assignment, name, cmd, ids, ok_token):
     with connect_db() as db:
         for id in ids:
             job_id = gen_salt(24)
-            db("INSERT INTO jobs (id, assignment, backup_id, status) VALUES (%s, %s, %s, %s)", [job_id, assignment, id, "queued"])
+            db(
+                "INSERT INTO jobs (id, assignment, backup_id, status) VALUES (%s, %s, %s, %s)",
+                [job_id, assignment, id, "queued"],
+            )
             jobs.append(job_id)
 
-        requests.post("https://ag-worker.cs61a.org/batch_grade", json=dict(assignment_id=assignment, assignment_name=name, command=cmd, jobs=jobs, backups=ids, access_token=ok_token), headers=dict(Authorization=get_secret("AG_WORKER_SECRET")))
+        requests.post(
+            "https://ag-worker.cs61a.org/batch_grade",
+            json=dict(
+                assignment_id=assignment,
+                assignment_name=name,
+                command=cmd,
+                jobs=jobs,
+                backups=ids,
+                access_token=ok_token,
+            ),
+            headers=dict(Authorization=get_secret("AG_WORKER_SECRET")),
+        )
     return jobs
 
 
@@ -119,15 +154,18 @@ def get_results():
     def job_json(job_id):
         with connect_db() as db:
             status = db("SELECT status FROM jobs WHERE id = %s", [job_id]).fetchone()
-        return {
-            'status': status[0],
-            'result': status[0],
-        } if status else None
+        return (
+            {
+                "status": status[0],
+                "result": status[0],
+            }
+            if status
+            else None
+        )
 
-    return {
-        job_id: job_json(job_id) for job_id in request.get_json()
-    }
-    
+    return {job_id: job_json(job_id) for job_id in request.get_json()}
+
+
 @app.route("/set_results", methods=["POST"])
 @check_secret
 def set_results():
@@ -135,7 +173,7 @@ def set_results():
     with connect_db() as db:
         db(
             "UPDATE jobs SET status = %s WHERE id = %s AND assignment = %s",
-            [data['status'], data['job_id'], data['assignment_id']]
+            [data["status"], data["job_id"], data["assignment_id"]],
         )
     return dict(success=True)
 
@@ -147,9 +185,11 @@ def upload_zip():
     file.save(f"zips/cs61a/{file.filename}")
     return dict(success=True)
 
+
 @app.route("/")
 def index():
     return "it works!"
+
 
 if __name__ == "__main__":
     app.run()
