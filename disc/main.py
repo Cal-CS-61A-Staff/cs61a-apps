@@ -56,14 +56,21 @@ with connect_db() as db:
 
 @app.route("/")
 def index():
+    session["email"] = get_user()["email"]
     return "<script> window.close(); </script>"
+
+
+@app.route("/whoami")
+def whoami():
+    email = session.get("email")
+    return f"You are {email}"
 
 
 @app.route("/save", methods=["POST"])
 def save():
-    if not is_enrolled("cs61a"):
+    email = session.get("email")
+    if not email:
         abort(401)
-    email = get_user()["email"]
     name = request.json["name"]
     value = request.json["value"]
 
@@ -79,9 +86,9 @@ def save():
 
 @app.route("/fetch", methods=["POST"])
 def fetch():
-    if not is_enrolled("cs61a"):
+    email = session.get("email")
+    if not email:
         abort(401)
-    email = get_user()["email"]
     with connect_db() as db:
         resp = db("SELECT name, value FROM saves WHERE email=%s", [email]).fetchall()
     return jsonify(
@@ -94,9 +101,9 @@ def fetch():
 
 @app.route("/clear", methods=["POST"])
 def clear():
-    if not is_enrolled("cs61a"):
+    email = session.get("email")
+    if not email:
         abort(401)
-    email = get_user()["email"]
     with connect_db() as db:
         db("DELETE FROM saves WHERE email=%s", [email])
     return dict(success=True)
