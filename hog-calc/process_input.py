@@ -8,13 +8,7 @@ from common.db import connect_db
 from runner import GOAL_SCORE, MAX_ROLLS
 
 
-def record_strat(name, group, received_strat):
-    if not isinstance(name, str):
-        abort(400, "Name is not a string!")
-    name = base64.encodebytes(bytes(name, "utf-8"))
-    if len(name) >= 1024:
-        abort(400, "Strategy name is too long!")
-    name = name.decode("utf-8")
+def validate_strat(received_strat):
     extracted_strat = []
     for i in range(GOAL_SCORE):
         extracted_strat.append([])
@@ -37,7 +31,17 @@ def record_strat(name, group, received_strat):
                     ),
                 )
             extracted_strat[-1].append(val)
+    return extracted_strat
 
+
+def record_strat(name, group, received_strat):
+    if not isinstance(name, str):
+        abort(400, "Name is not a string!")
+    name = base64.encodebytes(bytes(name, "utf-8"))
+    if len(name) >= 1024:
+        abort(400, "Strategy name is too long!")
+    name = name.decode("utf-8")
+    extracted_strat = validate_strat(received_strat)
     # extracted_strat probably OK
     email = group[0]
     encoded_strat = json.dumps(extracted_strat)
