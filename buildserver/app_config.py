@@ -17,16 +17,6 @@ WEB_DEPLOY_TYPES = {
 }
 
 
-Permission = Literal[
-    "rpc",
-    "database",
-    "storage",
-    "iam_admin",
-    "cloud_run_admin",
-    "cloud_functions_admin",
-]
-
-
 class Config(TypedDict):
     build_type: Literal[
         "create_react_app", "oh_queue", "webpack", "61a_website", "hugo", "none"
@@ -54,7 +44,6 @@ class Config(TypedDict):
     static_consumers: List[str]
     service: "Service"
     pr_consumers: List[str]
-    permissions: List[Permission]
 
 
 class Task(TypedDict):
@@ -109,9 +98,6 @@ class App:
                     self.config["service"] = self.config.get("service")
                     self.config["pr_consumers"] = self.config.get(
                         "pr_consumers", [name]
-                    )
-                    self.config["permissions"] = self.config.get(
-                        "permissions", ["rpc", "database"]
                     )
             except FileNotFoundError:
                 # app has been deleted in PR

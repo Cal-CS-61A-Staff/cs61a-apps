@@ -7,8 +7,7 @@ from execution import ExecutionContext
 from fs_utils import hash_file
 from monitoring import create_status_monitor, log
 from state import Rule, TargetLookup
-from utils import BuildException, CacheMiss
-from common.hash_utils import HashState
+from utils import BuildException, CacheMiss, HashState
 
 
 class WorkspaceExecutionContext(ExecutionContext):

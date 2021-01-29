@@ -5,8 +5,7 @@ from context import Env, MemorizeContext
 from fs_utils import hash_file
 from monitoring import log
 from state import BuildState, Rule
-from utils import CacheMiss, MissingDependency
-from common.hash_utils import HashState
+from utils import CacheMiss, HashState, MissingDependency
 
 
 class PreviewContext(MemorizeContext):

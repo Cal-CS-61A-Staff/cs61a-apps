@@ -121,6 +121,7 @@ def land_commit(
                         BuildStatus.failure,
                         None,
                         logs.read(),
+                        private=repo.full_name == base_repo.full_name,
                     )
                 else:
                     logs.seek(0)
@@ -136,6 +137,7 @@ def land_commit(
                             for hostname in get_pr_subdomains(app, pr_number)
                         ),
                         logs.read(),
+                        private=repo.full_name == base_repo.full_name,
                     )
 
             if app.config is not None:
