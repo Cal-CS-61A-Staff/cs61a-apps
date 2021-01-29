@@ -1,52 +1,48 @@
-import os, zipfile, sys, requests, json
+import os, requests
 from functools import wraps
 
-from flask import Flask, request, abort, session, send_file
+from flask import Flask, request, abort, send_file
 from werkzeug.security import gen_salt
 
-from common.oauth_client import create_oauth_client, get_user, is_logged_in
-from common.rpc.auth import is_admin
+from common.oauth_client import create_oauth_client
 from common.rpc.secrets import get_secret
 
-from common.db import connect_db
+from models import create_models, Course, Assignment, Job, db
 
 app = Flask(__name__)
-app.secret_key = "xyz"
-
 create_oauth_client(app, "61a-autograder")
 
-if not os.path.exists("./zips/cs61a"):
-    os.makedirs("./zips/cs61a")
+create_models(app)
+db.init_app(app)
+db.create_all(app=app)
 
-with connect_db() as db:
-    db(
-        """CREATE TABLE IF NOT EXISTS assignments (
-    id varchar(128),
-    name text,
-    file text,
-    command text
-)
-"""
-    )
+WORKER_URL = "https://ag-worker.cs61a.org"
+# WORKER_URL = "http://127.0.0.1:5001"
 
-    db(
-        """CREATE TABLE IF NOT EXISTS jobs (
-    id varchar(128),
-    assignment text,
-    backup_id text,
-    status text
-)
-"""
-    )
+if not os.path.exists("./zips"):
+    os.makedirs("./zips")
 
 
 def check_secret(func):
     @wraps(func)
-    def wrapped():
+    def wrapped(*args, **kwargs):
+        course = Course.query.filter_by(
+            secret=request.headers.get("Authorization", None)
+        ).first()
+        if course:
+            return func(course, *args, **kwargs)
+        abort(403)
+
+    return wrapped
+
+
+def check_master(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
         if request.headers.get("Authorization", None) == get_secret(
-            secret_name="AG_UPLOAD_SECRET"
+            secret_name="AG_MASTER_SECRET"
         ):
-            return func()
+            return func(*args, **kwargs)
         abort(403)
 
     return wrapped
@@ -54,39 +50,39 @@ def check_secret(func):
 
 @app.route("/create_assignment", methods=["POST"])
 @check_secret
-def create_assignment():
+def create_assignment(course):
     data = request.get_json()
     name = data["name"]
     file = data["filename"]
     command = data["command"]
 
+    existing = Assignment.query.filter_by(name=name, course=course.secret).first()
+    if existing:
+        existing.file = file
+        existing.command = command
+        db.session.commit()
+        return dict(assign_id=existing.ag_key)
+
     id = gen_salt(24)
-    with connect_db() as db:
-        existing = db(
-            "SELECT id, name FROM assignments WHERE name = %s", [name]
-        ).fetchone()
-        if existing:
-            db(
-                "UPDATE assignments SET file = %s, command = %s WHERE name = %s",
-                [file, command, name],
-            )
-            return dict(assign_id=existing[0])
-        db(
-            "INSERT INTO assignments (id, name, file, command) VALUES (%s, %s, %s, %s)",
-            [id, name, file, command],
-        )
-        return dict(assign_id=id)
+    existing = Assignment(
+        name=name, course=course.secret, file=file, command=command, ag_key=id
+    )
+    db.session.add(existing)
+    db.session.commit()
+
+    return dict(assign_id=id)
 
 
 @app.route("/get_zip", methods=["POST"])
 @check_secret
-def get_zip():
-    with connect_db() as db:
-        assignment = db(
-            "SELECT file FROM assignments WHERE id=%s",
-            [request.get_json()["assignment_id"]],
-        ).fetchone()
-    return send_file("zips/cs61a/" + assignment[0])
+def get_zip(course):
+    print(f"getting {request.get_json()['name']} for {course.name}")
+    assignment = Assignment.query.filter_by(
+        name=request.get_json()["name"], course=course.secret
+    ).first()
+    if assignment:
+        return send_file(f"zips/{course.name}-{course.semester}/{assignment.file}")
+    abort(404)
 
 
 @app.route("/api/ok/v3/grade/batch", methods=["POST"])
@@ -98,68 +94,64 @@ def batch_grade():
         return "OK"
     ok_token = data["access_token"]
 
-    with connect_db() as db:
-        assignment = db(
-            "SELECT name, file, cmd FROM assignments WHERE id = %s", [assignment_id]
-        ).fetchone()
+    assignment = Assignment.query.filter_by(ag_key=assignment_id).first()
     if not assignment:
         abort(404, "Unknown Assignment")
 
-    name, file, cmd = assignment
     batches = [subms[i : i + 100] for i in range(0, len(subms), 100)]
 
     jobs = []
     for batch in batches:
-        jobs.extend(trigger_jobs(assignment_id, name, cmd, batch, ok_token))
+        jobs.extend(trigger_jobs(assignment, batch, ok_token))
     return dict(jobs=jobs)
 
 
-def trigger_jobs(assignment, name, cmd, ids, ok_token):
+def trigger_jobs(assignment, ids, ok_token):
     jobs = []
-    with connect_db() as db:
-        for id in ids:
-            job_id = gen_salt(24)
-            db(
-                "INSERT INTO jobs (id, assignment, backup_id, status) VALUES (%s, %s, %s, %s)",
-                [job_id, assignment, id, "queued"],
+    for id in ids:
+        job_id = gen_salt(24)
+        db.session.add(
+            Job(
+                assignment=assignment.ag_key, backup=id, status="queued", job_key=job_id
             )
-            jobs.append(job_id)
-
-        requests.post(
-            "https://ag-worker.cs61a.org/batch_grade",
-            json=dict(
-                assignment_id=assignment,
-                assignment_name=name,
-                command=cmd,
-                jobs=jobs,
-                backups=ids,
-                access_token=ok_token,
-            ),
-            headers=dict(Authorization=get_secret("AG_WORKER_SECRET")),
         )
+        jobs.append(job_id)
+    db.session.commit()
+
+    requests.post(
+        f"{WORKER_URL}/batch_grade",
+        json=dict(
+            assignment_id=assignment.ag_key,
+            assignment_name=assignment.name,
+            command=assignment.command,
+            jobs=jobs,
+            backups=ids,
+            access_token=ok_token,
+            course_key=assignment.course,
+        ),
+        headers=dict(Authorization=get_secret(secret_name="AG_WORKER_SECRET")),
+    )
     return jobs
 
 
 @app.route("/results/<job_id>", methods=["GET"])
 def get_results_for(job_id):
-    with connect_db() as db:
-        status = db("SELECT status FROM jobs WHERE id = %s", [job_id]).fetchone()
-    if status in ("finished", "failed"):
-        return status[0], 200
+    job = Job.query.filter_by(job_key=job_id).first()
+    if job and job.status in ("finished", "failed"):
+        return job.status, 200
     return "Nope!", 202
 
 
 @app.route("/results", methods=["POST"])
 def get_results():
     def job_json(job_id):
-        with connect_db() as db:
-            status = db("SELECT status FROM jobs WHERE id = %s", [job_id]).fetchone()
+        job = Job.query.filter_by(job_key=job_id).first()
         return (
             {
-                "status": status[0],
-                "result": status[0],
+                "status": job.status,
+                "result": job.result,
             }
-            if status
+            if job
             else None
         )
 
@@ -168,27 +160,142 @@ def get_results():
 
 @app.route("/set_results", methods=["POST"])
 @check_secret
-def set_results():
+def set_results(course):
     data = request.get_json()
-    with connect_db() as db:
-        db(
-            "UPDATE jobs SET status = %s WHERE id = %s AND assignment = %s",
-            [data["status"], data["job_id"], data["assignment_id"]],
-        )
-    return dict(success=True)
+    job = Job.query.filter_by(job_key=data["job_id"]).first()
+    assignment = Assignment.query.filter_by(
+        ag_key=job.assignment, course=course.secret
+    )  # validates secret
+    if job and assignment:
+        job.status = data["status"]
+        job.result = data["result"]
+        db.session.commit()
+    return dict(success=(job is not None))
 
 
 @app.route("/upload_zip", methods=["POST"])
 @check_secret
-def upload_zip():
+def upload_zip(course):
     file = request.files["upload"]
-    file.save(f"zips/cs61a/{file.filename}")
+    file.save(f"zips/{course.name}-{course.semester}/{file.filename}")
     return dict(success=True)
 
 
 @app.route("/")
 def index():
     return "it works!"
+
+
+@app.route("/admin/courses")
+@check_master
+def course_list():
+    courses = Course.query.all()
+    return dict(
+        success=True,
+        courses=[
+            {
+                "name": c.name,
+                "semester": c.semester,
+            }
+            for c in courses
+        ],
+    )
+
+
+@app.route("/admin/courses/<semester>")
+@check_master
+def courses_in(semester):
+    courses = Course.query.filter_by(semester=semester).all()
+    return dict(
+        success=True,
+        courses=[
+            {
+                "name": c.name,
+                "semester": c.semester,
+            }
+            for c in courses
+        ],
+    )
+
+
+@app.route("/admin/<course>/<semester>")
+@check_master
+def course_info_admin(course, semester):
+    course = Course.query.filter_by(name=course, semester=semester).first()
+    if not course:
+        abort(404)
+    assignments = Assignment.query.filter_by(course=course.secret)
+    return {
+        "secret": course.secret,
+        "assignments": [
+            {
+                "name": a.name,
+                "file": a.file,
+                "command": a.command,
+                "ag_key": a.ag_key,
+            }
+            for a in assignments
+        ],
+    }
+
+
+@app.route("/admin/create_course", methods=["POST"])
+@check_master
+def create_course():
+    data = request.get_json()
+    name = data["name"]
+    sem = data["semester"]
+
+    existing = Course.query.filter_by(name=name, semester=sem).first()
+    if existing:
+        return (
+            "This course already exists. If you've misplaced your master key, contact a 61A admin!",
+            400,
+        )
+
+    secret = gen_salt(24)
+    db.session.add(Course(name=name, semester=sem, secret=secret))
+    db.session.commit()
+
+    os.makedirs(f"./zips/{name}-{sem}/")
+
+    return dict(success=True, name=name, semester=sem, secret=secret)
+
+
+@app.route("/course_info")
+@check_secret
+def course_info(course):
+    assignments = Assignment.query.filter_by(course=course.secret)
+    return {
+        "assignments": [
+            {
+                "name": a.name,
+                "file": a.file,
+                "command": a.command,
+                "ag_key": a.ag_key,
+            }
+            for a in assignments
+        ]
+    }
+
+
+@app.route("/jobs/<job>")
+@check_secret
+def job_info(course, job):
+    job = Job.query.filter_by(job_key=job).first()
+    if not job:
+        abort(404)
+
+    assignment = Assignment.query.filter_by(ag_key=job.assignment).first()
+    if not assignment or assignment.course != course.secret:
+        abort(403)
+
+    return {
+        "assignment": assignment.name,
+        "backup": job.backup,
+        "status": job.status,
+        "result": job.result,
+    }
 
 
 if __name__ == "__main__":
