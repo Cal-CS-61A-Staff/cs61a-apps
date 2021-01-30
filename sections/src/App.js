@@ -86,19 +86,11 @@ export default function App(): React.Node {
                 History
               </Link>
             )}
-            <Nav.Link
-              href="https://cs61a.org/tutors.html"
-              target="_blank"
-              active
-            >
+            <Nav.Link href="https://cs61a.org/tutors/" target="_blank" active>
               Staff
             </Nav.Link>
-            <Nav.Link
-              href="https://oh.cs61a.org/appointments"
-              target="_blank"
-              active
-            >
-              Appointments
+            <Nav.Link href="https://oh.cs61a.org/party" target="_blank" active>
+              Study Groups
             </Nav.Link>
             {state.currentUser?.isAdmin === true && (
               <Link to="/admin" className="nav-link active">

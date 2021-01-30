@@ -16,7 +16,7 @@ setup(
     package_data={"": ["**/*.tex"]},
     include_package_data=True,
     entry_points={"console_scripts": ["sicp=sicp.__main__:cli"]},
-    python_requires=">=3.8",
+    python_requires=">=3.6",
     install_requires=[
         "click",
         "watchdog",

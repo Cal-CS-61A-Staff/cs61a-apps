@@ -18,8 +18,10 @@ def get(path):
             "react": "react",
             "ok-help": "ok-help",
             "wiki": "wiki",
+            # simple default app for PR testing
+            "static-server": "time",
         },
-        "react-pr153",
+        "time",
     )
     return serve_path(bucket, "/", path)
 

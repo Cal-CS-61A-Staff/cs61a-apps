@@ -10,10 +10,18 @@ from functools import wraps
 from http import HTTPStatus, server
 from http.server import HTTPServer
 from urllib.error import URLError
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse, parse_qs
 from urllib.request import Request, urlopen
 
+STATIC_PATHS = {}
 PATHS = {}
+
+CONTENT_TYPE_LOOKUP = dict(
+    html="text/html",
+    css="text/css",
+    js="application/javascript",
+    svg="image/svg+xml",
+)
 
 
 def path_optional(decorator):
@@ -36,8 +44,14 @@ def route(path):
     if callable(path):
         return route("/" + path.__name__)(path)
 
+    if not path.startswith("/"):
+        path = "/" + path
+
     def wrap(f):
-        PATHS[path] = f
+        if "." in path:
+            STATIC_PATHS[path] = f
+        else:
+            PATHS[path] = f
         return f
 
     return wrap
@@ -47,24 +61,29 @@ class Handler(server.BaseHTTPRequestHandler):
     """HTTP handler."""
 
     def do_GET(self):
-        self.send_response(HTTPStatus.OK)
-        path = GUI_FOLDER + unquote(self.path)[1:]
-        if "scripts" in path and not path.endswith(".js"):
-            path += ".js"
-
-        if path.endswith(".css"):
-            self.send_header("Content-type", "text/css")
-        elif path.endswith(".js"):
-            self.send_header("Content-type", "application/javascript")
-        self.end_headers()
-        if path == GUI_FOLDER:
-            path = GUI_FOLDER + "index.html"
         try:
-            with open(path, "rb") as f:
-                self.wfile.write(f.read())
+            self.send_response(HTTPStatus.OK)
+            parsed_url = urlparse(unquote(self.path))
+            path = parsed_url.path
+            query_params = parse_qs(parsed_url.query)
+
+            if path in STATIC_PATHS:
+                out = bytes(STATIC_PATHS[path](**snakify(query_params)), "utf-8")
+            else:
+                path = GUI_FOLDER + path[1:]
+                if "scripts" in path and not path.endswith(".js"):
+                    path += ".js"
+                if path == GUI_FOLDER:
+                    path = GUI_FOLDER + "index.html"
+                with open(path, "rb") as f:
+                    out = f.read()
+
+            self.send_header("Content-type", CONTENT_TYPE_LOOKUP[path.split(".")[-1]])
+            self.end_headers()
+            self.wfile.write(out)
+
         except Exception as e:
             print(e)
-            # raise
 
     def do_POST(self):
         content_length = int(self.headers["Content-Length"])
@@ -173,7 +192,7 @@ def sendto(f):
 def start_server():
     global IS_SERVER
     IS_SERVER = True
-    from flask import Flask, request, jsonify, send_from_directory
+    from flask import Flask, request, jsonify, send_from_directory, Response
 
     app = Flask(__name__, static_url_path="", static_folder="")
     for route, handler in PATHS.items():
@@ -182,6 +201,17 @@ def start_server():
             return jsonify(handler(**snakify(request.get_json(force=True))))
 
         app.add_url_rule(route, handler.__name__, wrapped_handler, methods=["POST"])
+
+    for route, handler in STATIC_PATHS.items():
+
+        def wrapped_handler(route=route, handler=handler):
+            query_params = parse_qs(request.query_string.decode())
+            return Response(
+                handler(**snakify(query_params)),
+                mimetype=CONTENT_TYPE_LOOKUP[route.split(".")[-1]],
+            )
+
+        app.add_url_rule(route, handler.__name__, wrapped_handler, methods=["GET"])
 
     @app.route("/")
     def index():

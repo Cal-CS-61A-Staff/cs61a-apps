@@ -46,6 +46,9 @@ export default function AdminPage(): React.Node {
       document.body?.removeChild(element);
     }
   );
+  const remindTutorsToSetupZoomLinks = useAPI(
+    "remind_tutors_to_setup_zoom_links"
+  );
 
   if (!currentUser?.isStaff) {
     return <Redirect to="/" />;
@@ -144,6 +147,14 @@ export default function AdminPage(): React.Node {
                 >
                   Export Full Attendances
                 </Button>
+              </p>
+              <p>
+                <Button
+                  variant="danger"
+                  onClick={() => remindTutorsToSetupZoomLinks()}
+                >
+                  Remind Tutors to Setup Zoom Links
+                </Button>{" "}
               </p>
             </Tab>
           </Tabs>

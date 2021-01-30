@@ -3,27 +3,24 @@ import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import styled from "styled-components";
 import { numberStrings } from "./constants";
-import ResetButton from "./ResetButton";
 
 const Wrapper = styled.div`
   font-size: 1.25rem;
   width: 100%;
   text-align: center;
-  margin: 20px;
+  margin-top: 20px;
 `;
 
 type Props = {|
   playerIndex: number,
   piggyPoints: boolean,
   onClick: (number) => mixed,
-  onRestart: () => mixed,
 |};
 
 export default function RollButton({
   playerIndex,
   piggyPoints,
   onClick,
-  onRestart,
 }: Props) {
   const min = piggyPoints ? 0 : 1;
 
@@ -58,20 +55,17 @@ export default function RollButton({
           onChange={handleChange}
         />{" "}
         Dice.
-      </p>
-      <p>
         <Button
-          variant={["primary", "warning"][playerIndex]}
+          variant="info"
           size="lg"
+          style={{ marginLeft: "10px" }}
           onClick={handleClick}
         >
           {" "}
           Roll!
         </Button>
       </p>
-      <p>
-        <ResetButton onClick={onRestart} />
-      </p>
+      <p></p>
     </Wrapper>
   );
 }
