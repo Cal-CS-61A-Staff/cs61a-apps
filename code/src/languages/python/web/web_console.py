@@ -11,6 +11,7 @@ To visualize a list, call draw(<list>).
 To draw list visualizations automatically, call autodraw().
 To view an environment diagram of your entire program, call visualize().
 To launch an editor associated with your console, call editor().
+To run the doctests for a given function, call test(<func>).
 """
 
 _credits = """    Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
@@ -68,6 +69,18 @@ class Stream:
         self.obj.write(raw)
 
 
+class CaptureStream(Stream):
+    def __init__(self):
+        super().__init__(self)
+        self.data = []
+
+    def write(self, raw):
+        self.data.append(raw)
+
+    def __str__(self):
+        return "".join(self.data)
+
+
 stdout = Stream(browser.self.stdout)
 stderr = Stream(browser.self.stderr)
 
@@ -114,7 +127,7 @@ class Trace:
 def print_tb():
     trace = Trace()
     traceback.print_exc(file=trace)
-    err(trace.format())
+    sys.stderr.write(trace.format())
 
 
 def syntax_error(args):
@@ -475,6 +488,76 @@ class Link:
 
 # sys.meta_path = [LocalFinder()] + sys.meta_path
 
+
+def indent(s, pad=4):
+    return "\n".join(" " * pad + line for line in s.split("\n"))
+
+
+def run_doctests(f):
+    s = f.__doc__
+    tests = []
+    curr_case = None
+    for i, line in enumerate(s.strip().split("\n")):
+        line = line.strip()
+        if line.startswith(">>> "):
+            # new test case
+            if curr_case is not None:
+                tests.append(curr_case)
+            curr_case = [line[4:], ""]
+        elif line.startswith("... "):
+            # continue previous test case
+            if curr_case is None:
+                raise SyntaxError(f"Unable to parse line {i}")
+            curr_case[0] += "\n" + line[4:]
+        else:
+            if not line:
+                tests.append(curr_case)
+                curr_case = None
+            if curr_case is not None:
+                if curr_case[1]:
+                    curr_case[1] += "\n"
+                curr_case[1] += line
+            else:
+                continue
+    if curr_case is not None:
+        tests.append(curr_case)
+
+    namespace = dict(editor_ns)
+
+    for inp, exp in tests:
+        out = []
+        old_write = sys.stdout.write
+        old_err = sys.stderr.write
+        try:
+            sys.stdout.write = sys.stderr.write = out.append
+            try:
+                ret = eval(inp, namespace)
+                if ret is not None:
+                    print(ret)
+            except SyntaxError as msg:
+                if str(msg) == "eval() argument must be an expression":
+                    out = []
+                    exec(inp, namespace)
+                else:
+                    raise
+        except Exception:
+            print_tb()
+        finally:
+            sys.stdout.write = old_write
+            sys.stderr.write = old_err
+        out = "".join(out)
+        if out.strip() != exp.strip():
+            first, *rest = inp.split("\n")
+            err("Failed example:\n")
+            err(indent(f">>> {first}") + "\n")
+            for r in rest:
+                err(indent(f"... {r}") + "\n")
+            err(f"Expected:\n")
+            err(indent(exp.strip()) + "\n")
+            err("Received:\n")
+            err(indent(out.strip()) + "\n")
+
+
 editor_ns = {
     "credits": credits,
     "copyright": copyright,
@@ -495,6 +578,7 @@ editor_ns = {
     "is_leaf": is_leaf,
     "label": label,
     "branches": branches,
+    "test": run_doctests,
 }
 
 replace_trees(editor_ns)
