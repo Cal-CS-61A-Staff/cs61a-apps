@@ -495,7 +495,7 @@ def run_doctests(f):
         elif line.startswith("... "):
             # continue previous test case
             if curr_case is None:
-                raise SyntaxError(f"Unable to parse line {i}")
+                raise Exception(f"SyntaxError: Unable to parse line {i}")
             curr_case[0] += "\n" + line[4:]
         else:
             if not line:
