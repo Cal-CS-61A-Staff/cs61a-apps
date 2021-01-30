@@ -1,4 +1,4 @@
 build_type: none
-deploy_type: flask
+deploy_type: dockerfile
 repo: Cal-CS-61A-Staff/ag-worker
 concurrency: 1
