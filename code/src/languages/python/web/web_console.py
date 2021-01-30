@@ -69,18 +69,6 @@ class Stream:
         self.obj.write(raw)
 
 
-class CaptureStream(Stream):
-    def __init__(self):
-        super().__init__(self)
-        self.data = []
-
-    def write(self, raw):
-        self.data.append(raw)
-
-    def __str__(self):
-        return "".join(self.data)
-
-
 stdout = Stream(browser.self.stdout)
 stderr = Stream(browser.self.stderr)
 
