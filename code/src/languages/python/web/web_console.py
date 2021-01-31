@@ -505,8 +505,7 @@ def run_doctests(f):
                 if curr_case[1]:
                     curr_case[1] += "\n"
                 curr_case[1] += line
-            else:
-                continue
+
     if curr_case is not None:
         tests.append(curr_case)
 
