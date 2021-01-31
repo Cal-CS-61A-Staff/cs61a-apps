@@ -97,11 +97,11 @@ def redirect_descriptor(
     src: Union[IO, TextIO, BytesIO], target: Union[IO, TextIO, BytesIO]
 ):
     src_fd: int = src.fileno()
-    with os.fdopen(os.dup(src_fd), "wb") as saved:
+    alt_src_fd = os.dup(src_fd)
+    src.flush()
+    os.dup2(target.fileno(), src_fd)
+    try:
+        yield src
+    finally:
         src.flush()
-        os.dup2(target.fileno(), src_fd)
-        try:
-            yield src
-        finally:
-            src.flush()
-            os.dup2(saved.fileno(), src_fd)
+        os.dup2(alt_src_fd, src_fd)
