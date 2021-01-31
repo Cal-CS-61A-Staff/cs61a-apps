@@ -35,6 +35,11 @@
         "Andrei Kassiantchouk",
         "Benjamin Krieges"
     ],
+    "fa16":[
+      "Robert Quitt and William Gan",
+      "Eric Sheng and Sachin Kesiraju",
+      "Simon Zhuang, Vaikunth Balaji, Fanyu Meng, and Zekai Fan"
+    ],
     "sp17":[
         "Cindy Jin and Sunjoon Lee",
         "Anny Patino and Christian Vasquez",
@@ -75,5 +80,8 @@
         "Claire Liu, Letu Wang",
         "Stephen Huan",
         "Brandon Suen"
+    ],
+    "fa20":[
+      "Timothy Guo, Shomini Sen, Samuel Berkun, Mitchell Zhen, Lucas Clark, Dominic de Bettencourt, Allen Gu, Alec Li, and Aaron Janse"
     ]
 }
