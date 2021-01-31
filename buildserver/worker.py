@@ -111,8 +111,8 @@ def land_commit(
                         stderr, logs
                     ):
                         land_app(app, pr_number, sha, repo)
-                    if app.config is not None:
-                        update_service_routes([app], pr_number)
+                        if app.config is not None:
+                            update_service_routes([app], pr_number)
                 except:
                     traceback.print_exc(file=logs)
                     logs.seek(0)
