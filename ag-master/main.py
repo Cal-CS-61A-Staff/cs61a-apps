@@ -10,7 +10,7 @@ from common.rpc.secrets import get_secret
 from models import create_models, Course, Assignment, Job, db
 
 app = Flask(__name__)
-create_oauth_client(app, "61a-autograder")
+# create_oauth_client(app, "61a-autograder")
 
 create_models(app)
 db.init_app(app)
