@@ -1,2 +1,5 @@
 build_type: none
 deploy_type: docker
+permissions:
+ - rpc
+ - logging
