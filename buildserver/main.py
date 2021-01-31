@@ -48,6 +48,12 @@ with connect_db() as db:
     autobuild boolean
 )"""
     )
+    db(
+        """CREATE TABLE IF NOT EXISTS mysql_users (
+    app varchar(128),
+    mysql_pw varchar(128)
+)"""
+    )
 
 
 def deploy_prod_app_description(app):
