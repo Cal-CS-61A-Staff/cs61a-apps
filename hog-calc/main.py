@@ -4,7 +4,7 @@ from datetime import timedelta
 from flask import Flask, jsonify, request
 
 from common.db import connect_db
-from rate_limiting import ratelimited
+from contest_utils.rate_limiting import ratelimited
 from runner import score
 
 app = Flask(__name__)
