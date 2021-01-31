@@ -49,11 +49,12 @@ with connect_db() as db:
 )"""
     )
 
+
 def deploy_prod_app_description(app):
     if app == "website-base":
         return "<p>Redeploy cs61a.org</p>"
     return ""
-    
+
 
 @app.route("/")
 def index():
