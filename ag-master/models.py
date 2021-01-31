@@ -16,21 +16,21 @@ class Course(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String(64))
     semester: str = db.Column(db.String(64))
-    secret: str = db.Column(db.String(64))
+    secret: str = db.Column(db.String(64), primary_key=True)
 
 
 class Assignment(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String(64))
-    course: int = db.Column(db.String(64), db.ForeignKey("course.secret"))
+    course: int = db.Column(db.String(64), db.ForeignKey("course.secret"), index=True)
     file: str = db.Column(db.String(64))
     command: str = db.Column(db.Text)
-    ag_key: str = db.Column(db.String(64))
+    ag_key: str = db.Column(db.String(64), primary_key=True)
 
 
 class Job(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
-    assignment: str = db.Column(db.String(64), db.ForeignKey("assignment.ag_key"))
+    assignment: str = db.Column(db.String(64), db.ForeignKey("assignment.ag_key"), index=True)
     backup: str = db.Column(db.String(64))
     status: str = db.Column(db.String(64))
     result: str = db.Column(db.Text)
