@@ -14,24 +14,24 @@ db = SQLAlchemy()
 
 class Course(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
-    name: str = db.Column(db.String)
-    semester: str = db.Column(db.String)
-    secret: str = db.Column(db.String)
+    name: str = db.Column(db.String(64))
+    semester: str = db.Column(db.String(64))
+    secret: str = db.Column(db.String(64))
 
 
 class Assignment(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
-    name: str = db.Column(db.String)
+    name: str = db.Column(db.String(64))
     course: int = db.Column(db.Integer, db.ForeignKey("course.secret"))
-    file: str = db.Column(db.String)
-    command: str = db.Column(db.String)
-    ag_key: str = db.Column(db.String)
+    file: str = db.Column(db.String(64))
+    command: str = db.Column(db.Text)
+    ag_key: str = db.Column(db.String(64))
 
 
 class Job(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
-    assignment: str = db.Column(db.String, db.ForeignKey("assignment.ag_key"))
-    backup: str = db.Column(db.String)
-    status: str = db.Column(db.String)
-    result: str = db.Column(db.String)
-    job_key: str = db.Column(db.String)
+    assignment: str = db.Column(db.String(64), db.ForeignKey("assignment.ag_key"))
+    backup: str = db.Column(db.String(64))
+    status: str = db.Column(db.String(64))
+    result: str = db.Column(db.Text)
+    job_key: str = db.Column(db.String(64))
