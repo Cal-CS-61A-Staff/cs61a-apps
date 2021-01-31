@@ -30,7 +30,9 @@ class Assignment(db.Model):
 
 class Job(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
-    assignment: str = db.Column(db.String(64), db.ForeignKey("assignment.ag_key"), index=True)
+    assignment: str = db.Column(
+        db.String(64), db.ForeignKey("assignment.ag_key"), index=True
+    )
     backup: str = db.Column(db.String(64))
     status: str = db.Column(db.String(64))
     result: str = db.Column(db.Text)

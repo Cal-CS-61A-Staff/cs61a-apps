@@ -1,8 +1,10 @@
-import os, requests
+import os, requests, tempfile
 from functools import wraps
 
 from flask import Flask, request, abort, send_file
 from werkzeug.security import gen_salt
+
+from google.cloud import storage
 
 from common.oauth_client import create_oauth_client
 from common.rpc.secrets import get_secret
@@ -19,8 +21,7 @@ db.create_all(app=app)
 WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
 # WORKER_URL = "http://127.0.0.1:5001"
 
-if not os.path.exists("./zips"):
-    os.makedirs("./zips")
+BUCKET = "ag-master.buckets.cs61a.org"
 
 
 def check_secret(func):
@@ -81,7 +82,11 @@ def get_zip(course):
         name=request.get_json()["name"], course=course.secret
     ).first()
     if assignment:
-        return send_file(f"zips/{course.name}-{course.semester}/{assignment.file}")
+        bucket = storage.Client().get_bucket(BUCKET)
+        blob = bucket.blob(f"zips/{course.name}-{course.semester}/{assignment.file}")
+        with tempfile.NamedTemporaryFile() as temp:
+            blob.download_to_filename(temp.name)
+            return send_file(temp.name)
     abort(404)
 
 
@@ -181,7 +186,9 @@ def set_results(course):
 @check_secret
 def upload_zip(course):
     file = request.files["upload"]
-    file.save(f"zips/{course.name}-{course.semester}/{file.filename}")
+    bucket = storage.Client().get_bucket(BUCKET)
+    blob = bucket.blob(f"zips/{course.name}-{course.semester}/{file.filename}")
+    blob.upload_from_string(file.read(), content_type=file.content_type)
     return dict(success=True)
 
 

@@ -43,7 +43,7 @@ elif use_prod_proxy:
         password=get_secret(secret_name="DATABASE_PW"),
         host="127.0.0.1",
         port=3307,
-        database=app.replace('-', '_'),
+        database=app.replace("-", "_"),
     ).__to_string__(hide_password=False)
 else:
     database_url = getenv("DATABASE_URL")
