@@ -1,2 +1,6 @@
 build_type: none
 deploy_type: flask
+permissions:
+  - rpc
+  - database
+  - storage
