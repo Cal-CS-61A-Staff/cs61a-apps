@@ -1,5 +1,5 @@
 build_type: none
-deploy_type: dockerfile
+deploy_type: docker
 repo: Cal-CS-61A-Staff/ag-worker
 concurrency: 1
 permissions: []
