@@ -6,7 +6,7 @@ Piazza-Oncall monitors piazza and pings the staff Slack to help with unanswered 
 
 ## Setup
 
-All packages are detailed in requirements.txt. Include a .csv file named staff_roster.csv in the program directory. The staff roster should minimally contain `email`, `name`, and `Weight` columns; extraneous columns will be ignored. Name/email will indicate the staff member to tag in slack while the `Weight` indicates their probability of being selected for a random post/followup — note that `Weight` is capitalized.
+All packages are detailed in requirements.txt. Include a .csv file named staff_roster.csv in the program directory. The staff roster should minimally contain `email`, `name`, and `Weight` columns; extraneous columns will be ignored. Name/email will indicate the staff member to tag in slack while the `Weight` indicates their probability of being selected for a random post/followup.
 
 ## High Priority Messages
 
