@@ -16,8 +16,8 @@ create_models(app)
 db.init_app(app)
 db.create_all(app=app)
 
-# WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
-WORKER_URL = "http://127.0.0.1:5001"
+WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
+# WORKER_URL = "http://127.0.0.1:5001"
 
 if not os.path.exists("./zips"):
     os.makedirs("./zips")
