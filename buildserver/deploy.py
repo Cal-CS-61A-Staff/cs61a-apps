@@ -104,6 +104,9 @@ def gen_service_account(app: App):
     service_account_name = f"managed-{hashstate.state()}"[
         :30
     ]  # max len of account ID is 30 chars
+    service_account_email = (
+        f"{service_account_name}@{PROJECT_ID}.iam.gserviceaccount.com"
+    )
     existing_accounts = json.loads(
         sh(
             "gcloud",
@@ -116,7 +119,7 @@ def gen_service_account(app: App):
         )
     )
     for account in existing_accounts:
-        if account["email"].split("@")[0] == service_account_name:
+        if account["email"] == service_account_email:
             break
     else:
         # need to create service account
@@ -133,8 +136,11 @@ def gen_service_account(app: App):
         )
         sleep(60)  # it takes a while to create service accounts
         role_lookup = dict(
+            # permissions that most apps might need
             storage="roles/storage.admin",
             database="roles/cloudsql.client",
+            logging="roles/logging.admin",
+            # only buildserver needs these
             iam_admin="roles/resourcemanager.projectIamAdmin",
             cloud_run_admin="roles/run.admin",
             cloud_functions_admin="roles/cloudfunctions.admin",
@@ -144,16 +150,27 @@ def gen_service_account(app: App):
                 pass  # handled later
             else:
                 role = role_lookup[permission]
-                sh(
-                    "gcloud",
-                    "projects",
-                    "add-iam-policy-binding",
-                    PROJECT_ID,
-                    f"--member",
-                    f"serviceAccount:{service_account_name}@{PROJECT_ID}.iam.gserviceaccount.com",
-                    f"--role",
-                    role,
-                )
+                try:
+                    sh(
+                        "gcloud",
+                        "projects",
+                        "add-iam-policy-binding",
+                        PROJECT_ID,
+                        f"--member",
+                        f"serviceAccount:{service_account_email}",
+                        f"--role",
+                        role,
+                    )
+                except CalledProcessError:
+                    # abort
+                    sh(
+                        "gcloud",
+                        "iam",
+                        "service-accounts",
+                        "delete",
+                        service_account_email,
+                    )
+                    raise
     return service_account_name
 
 
@@ -212,7 +229,11 @@ def build_docker_image(app: App, pr_number: int) -> str:
 def run_dockerfile_deploy(app: App, pr_number: int):
     image = build_docker_image(app, pr_number)
     service_name = gen_service_name(app.name, pr_number)
-    service_account = gen_service_account(app)
+    if app.name == "buildserver":
+        # we exempt buildserver to avoid breaking CI/CD in case of bugs
+        service_account = None
+    else:
+        service_account = gen_service_account(app)
     sh(
         "gcloud",
         "beta",
@@ -221,8 +242,7 @@ def run_dockerfile_deploy(app: App, pr_number: int):
         service_name,
         "--image",
         image,
-        "--service-account",
-        service_account,
+        *(("--service-account", service_account) if service_account else ()),
         "--region",
         "us-west1",
         "--platform",
