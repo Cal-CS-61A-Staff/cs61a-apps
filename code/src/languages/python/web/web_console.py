@@ -498,7 +498,7 @@ def run_doctests(f):
                 raise Exception(f"SyntaxError: Unable to parse line {i}")
             curr_case[0] += "\n" + line[4:]
         else:
-            if not line:
+            if not line and curr_case is not None:
                 tests.append(curr_case)
                 curr_case = None
             if curr_case is not None:
