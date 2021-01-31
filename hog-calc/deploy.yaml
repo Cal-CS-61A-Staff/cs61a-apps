@@ -2,6 +2,6 @@ build_type: none
 deploy_type: docker
 concurrency: 30
 dependencies:
-  - repo: Cal-CS-61A-Staff/hog-calc
-    src: main.cpp
+  - repo: Cal-CS-61A-Staff/berkeley-cs61a
+    src: src/proj/hog/hog_eval.cpp
     dest: main.cpp
