@@ -1,0 +1,4 @@
+Flask
+flask_sqlalchemy
+gunicorn
+-r common/requirements.txt

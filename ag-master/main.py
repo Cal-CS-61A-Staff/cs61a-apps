@@ -16,8 +16,8 @@ create_models(app)
 db.init_app(app)
 db.create_all(app=app)
 
-WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
-# WORKER_URL = "http://127.0.0.1:5001"
+# WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
+WORKER_URL = "http://127.0.0.1:5001"
 
 if not os.path.exists("./zips"):
     os.makedirs("./zips")
@@ -118,19 +118,23 @@ def trigger_jobs(assignment, ids, ok_token):
         jobs.append(job_id)
     db.session.commit()
 
-    requests.post(
-        f"{WORKER_URL}/batch_grade",
-        json=dict(
-            assignment_id=assignment.ag_key,
-            assignment_name=assignment.name,
-            command=assignment.command,
-            jobs=jobs,
-            backups=ids,
-            access_token=ok_token,
-            course_key=assignment.course,
-        ),
-        headers=dict(Authorization=get_secret(secret_name="AG_WORKER_SECRET")),
-    )
+    try:
+        requests.post(
+            f"{WORKER_URL}/batch_grade",
+            json=dict(
+                assignment_id=assignment.ag_key,
+                assignment_name=assignment.name,
+                command=assignment.command,
+                jobs=jobs,
+                backups=ids,
+                access_token=ok_token,
+                course_key=assignment.course,
+            ),
+            headers=dict(Authorization=get_secret(secret_name="AG_WORKER_SECRET")),
+            timeout=1,
+        )
+    except requests.exceptions.ReadTimeout:
+        pass
     return jobs
 
 
