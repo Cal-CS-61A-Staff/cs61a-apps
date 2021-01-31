@@ -22,7 +22,7 @@ class Course(db.Model):
 class Assignment(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String(64))
-    course: int = db.Column(db.Integer, db.ForeignKey("course.secret"))
+    course: int = db.Column(db.String(64), db.ForeignKey("course.secret"))
     file: str = db.Column(db.String(64))
     command: str = db.Column(db.Text)
     ag_key: str = db.Column(db.String(64))
