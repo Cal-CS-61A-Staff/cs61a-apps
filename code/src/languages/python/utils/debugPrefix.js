@@ -4,6 +4,7 @@ def autodraw(): pass
 def disable_autodraw(): pass
 def visualize(): pass
 def editor(): pass
+def test(func): pass
 
 class Tree:
     """A tree."""
