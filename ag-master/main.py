@@ -122,7 +122,11 @@ def trigger_jobs(assignment, ids, ok_token):
         job_id = gen_salt(24)
         db.session.add(
             Job(
-                assignment=assignment.ag_key, backup=id, status="queued", job_key=job_id, access_token=ok_token,
+                assignment=assignment.ag_key,
+                backup=id,
+                status="queued",
+                job_key=job_id,
+                access_token=ok_token,
             )
         )
         jobs.append(job_id)
@@ -157,7 +161,9 @@ def send_score(course):
         ag_key=job.assignment, course=course.secret
     )  # validates secret
     if job and assignment:
-        requests.post(SCORE_ENDPOINT, data=payload, params=dict(access_token=job.access_token))
+        requests.post(
+            SCORE_ENDPOINT, data=payload, params=dict(access_token=job.access_token)
+        )
     return dict(success=(job is not None))
 
 
