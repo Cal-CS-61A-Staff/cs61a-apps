@@ -58,6 +58,7 @@ def img():
     resp.headers["Content-Security-Policy"] = "default-src 'none'"
     if "script" in dice[index]:
         resp.headers["Content-Security-Policy-Observation"] = "Nice try"
+    resp.cache_control.max_age = 3600
     return resp
 
 

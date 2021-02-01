@@ -17,10 +17,29 @@
         .dice-view {
             display: grid;
             grid-template-columns: repeat(2, 50%);
+            justify-items: center;
+            justify-content: center;
         }
-        .dice-img {
+
+        .dice-view .dice-img {
             margin: 10px;
             max-height: 110px;
+        }
+
+        .dice-view-big {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 260px);
+            justify-items: center;
+            justify-content: center;
+        }
+
+        .dice-view-big .dice-img {
+            margin: 10px;
+            height: 240px;
+        }
+
+        .dice-caption {
+            text-align: center;
         }
     </style>
 
@@ -54,14 +73,38 @@
                         <div class="card shadow-sm">
                             <div class="dice-view">
                                 {% for i in range(6) %}
-                                    <img class="dice-img" src="/img?id={{artwork.id}}&index={{i}}"/>
+                                    <img class="dice-img" src="/img?id={{ artwork.id }}&index={{ i }}"/>
                                 {% endfor %}
-                                <div class="card-body">
-                                    <p class="card-text">{{ artwork.caption }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary">Expand</button>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text dice-caption">{{ artwork.caption }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal{{ artwork.id }}">Expand</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="modal{{ artwork.id }}" tabindex="-1" aria-labelledby="{{ artwork.id }}label"
+                             aria-hidden="true">
+                            <div class="modal-dialog modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="{{ artwork.id }}label">Beautiful Artwork</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="dice-view-big">
+                                            {% for i in range(6) %}
+                                                <img class="dice-img" src="/img?id={{ artwork.id }}&index={{ i }}"/>
+                                            {% endfor %}
                                         </div>
+                                        <p class="lead dice-caption">{{ artwork.caption }}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                                        </button>
                                     </div>
                                 </div>
                             </div>
