@@ -1,9 +1,9 @@
 import base64
-
 from flask import Blueprint, request, abort
 from google.cloud import storage
-from models import Assignment, Job
+from werkzeug.security import gen_salt
 
+from models import Assignment, Job
 from utils import admin_only, BUCKET
 
 

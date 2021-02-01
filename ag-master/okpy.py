@@ -1,9 +1,11 @@
 import requests
 from flask import Blueprint, request, abort
+from werkzeug.security import gen_salt
+
+from common.rpc.secrets import get_secret
 
 from models import Assignment, Job
 from utils import check_master_secret, MASTER_URL, WORKER_URL, BATCH_SIZE
-from common.rpc.secrets import get_secret
 
 
 def create_okpy_endpoints(db):

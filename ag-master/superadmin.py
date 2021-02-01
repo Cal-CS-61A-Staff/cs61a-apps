@@ -1,4 +1,5 @@
 from flask import Blueprint, request, abort
+from werkzeug.security import gen_salt
 
 from utils import superadmin_only
 from models import Course, Assignment
