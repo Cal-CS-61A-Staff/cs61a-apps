@@ -146,7 +146,7 @@ def trigger_jobs():
     job_batches = [jobs[i : i + 100] for i in range(0, len(jobs), 100)]
 
     for subm_batch, job_batch in zip(subm_batches, job_batches):
-        jobs.extend(trigger_job_batch(assignment, subm_batch, job_batch, ok_token))
+        trigger_job_batch(assignment, subm_batch, job_batch, ok_token)
     return dict(success=True)
 
 
