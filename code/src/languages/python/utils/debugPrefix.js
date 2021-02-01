@@ -78,7 +78,7 @@ class Link:
         return string + str(self.first) + '>'
 
 
-#pythontutor_hide: draw, autodraw, disable_autodraw, visualize, editor, Tree, is_tree, tree, label, branches, Link
+#pythontutor_hide: draw, autodraw, disable_autodraw, visualize, editor, Tree, is_tree, tree, label, branches, Link, test
 
 # your code is below
 `;
