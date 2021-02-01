@@ -290,7 +290,7 @@ def set_results(course):
 @admin_only
 def upload_zip(course):
     data = request.json
-    file = base64.b64decode(data.get("upload"))
+    file = base64.b64decode(data.get("upload", "").encode("ascii"))
     name = data.get("filename")
 
     bucket = storage.Client().get_bucket(BUCKET)
