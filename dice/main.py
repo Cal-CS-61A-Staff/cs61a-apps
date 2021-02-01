@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import time, timedelta
 from json import dumps, loads
 from random import shuffle
 
@@ -24,6 +24,7 @@ with connect_db() as db:
     db(
         """CREATE TABLE IF NOT EXISTS designs (
     id varchar(128),
+    created_time integer,
     email varchar(128),
     caption varchar(512),
     dice LONGBLOB,
@@ -86,9 +87,10 @@ def submit():
             db("DELETE FROM designs WHERE email=(%s)", [member])
         email = group[0]
         db(
-            "INSERT INTO designs (id, email, caption, dice, endpoint) VALUES (%s, %s, %s, %s, %s)",
+            "INSERT INTO designs (id, created_time, email, caption, dice, endpoint) VALUES (%s, %s, %s, %s, %s, %s)",
             [
                 new_secret(),
+                time(),
                 email,
                 caption,
                 dumps(dice_list),

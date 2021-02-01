@@ -1,8 +1,7 @@
-import os
 import time
 from functools import wraps
 
-from flask import request, abort, current_app
+from flask import abort, current_app, request
 
 from common.course_config import get_endpoint
 from common.db import connect_db
