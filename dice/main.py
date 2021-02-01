@@ -90,7 +90,7 @@ def submit():
             "INSERT INTO designs (id, created_time, email, caption, dice, endpoint) VALUES (%s, %s, %s, %s, %s, %s)",
             [
                 new_secret(),
-                time(),
+                int(time()),
                 email,
                 caption,
                 dumps(dice_list),
