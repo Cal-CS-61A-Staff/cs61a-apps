@@ -75,17 +75,17 @@ def new(img, name=None, env={}):
     if not os.path.exists(save):
         os.makedirs(save)
 
-    common = f"{os.getcwd()}/common"
-    if not os.path.exists(common):
-        os.makedirs(common)
+    shared = f"{os.getcwd()}/data/shared"
+    if not os.path.exists(shared):
+        os.makedirs(shared)
 
     volumes = {
         save: {
             "bind": "/save",
             "mode": "rw",
         },
-        common: {
-            "bind": "/common",
+        shared: {
+            "bind": "/shared",
             "mode": "r",
         },
     }
