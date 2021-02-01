@@ -64,7 +64,7 @@ def admin_only(func):
             and is_admin(email=get_user()["email"], course=course)
         ):
             semester = request.json.get("semester", "sp21")
-            crs = Course.query.filter_by(course=course, semester=semester).first()
+            crs = Course.query.filter_by(name=course, semester=semester).first()
             if crs:
                 return func(crs, *args, **kwargs)
             abort(404)
@@ -81,7 +81,7 @@ def superadmin_only(func):
             email=get_user()["email"], course="cs61a"
         ):
             semester = request.json.get("semester", "sp21")
-            crs = Course.query.filter_by(course=course, semester=semester).first()
+            crs = Course.query.filter_by(name=course, semester=semester).first()
             if crs:
                 return func(crs, *args, **kwargs)
             abort(404)
