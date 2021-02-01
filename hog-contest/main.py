@@ -17,6 +17,8 @@ from tournament import build_ranking, run_tournament
 
 app = Flask(__name__)
 
+ASSIGNMENT = "proj01contest"
+
 with connect_db() as db:
     db("CREATE TABLE IF NOT EXISTS accesses (email VARCHAR(128), last_access INTEGER)")
     db(
@@ -85,7 +87,7 @@ def old_results(semester):
     winrate_mat, teams = data["winrate_mat"], data["teams"]
 
     teams = [
-        (team, sum(score > 0.5 for score in team_scores))
+        (team, sum(score > tournament.THRESHOLD for score in team_scores))
         for team, team_scores in zip(teams, winrate_mat)
     ]
 
@@ -110,14 +112,14 @@ def test():
 @ratelimited(timedelta(minutes=1))
 def submit_strategy():
     curr_time = datetime.now().astimezone(timezone("US/Pacific"))
-    end_time = datetime(2020, 9, 21, 23, 59, 0, tzinfo=timezone("US/Pacific"))
+    end_time = datetime(2021, 2, 23, 23, 59, 0, tzinfo=timezone("US/Pacific"))
     if curr_time > end_time:
         abort(423, "The competition has ended.")
     try:
         strat = json.loads(request.form["strat"])
     except JSONDecodeError:
         abort(400, "Received malformed JSON strategy")
-    group = get_group(get_endpoint("cs61a"))
+    group = get_group(get_endpoint("cs61a") + f"/{ASSIGNMENT}")
 
     hashed = record_strat(request.form["name"], group, strat)
     run_tournament()

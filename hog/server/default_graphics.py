@@ -28,8 +28,9 @@ dice = [
         <style>.cls-1{fill:#fff;stroke-miterlimit:10;}.cls-1,.cls-2{stroke:#000;}.cls-2{stroke-miterlimit:2;stroke-width:1.5px;fill-rule:evenodd;}</style>
         </defs>
         <rect class="cls-1" x=".5" y=".5" width="75.08" height="75.08" rx="9.25"/>
-        <path class="cls-2" d="m44.29 20.32a6.25 6.25 0 1 1-6.29-6.25 6.25 6.25 0 0 1 6.29 6.25z"/>
-        <path class="cls-2" d="m44.29 56.32a6.25 6.25 0 1 1-6.29-6.25 6.25 6.25 0 0 1 6.29 6.25z"/>
+        <path class="cls-2" d="M26.14,19.85a6.25,6.25,0,1,1-6.25-6.25A6.25,6.25,0,0,1,26.14,19.85Z"/>
+        <path class="cls-2" d="M62.14,55.85a6.25,6.25,0,1,1-6.25-6.25A6.25,6.25,0,0,1,62.14,55.85Z"/>
+        <path class="cls-2" d="M44.14,37.85a6.25,6.25,0,1,1-6.25-6.25A6.25,6.25,0,0,1,44.14,37.85Z"/>
         </svg>
         """,
     """<?xml version="1.0" encoding="UTF-8"?>

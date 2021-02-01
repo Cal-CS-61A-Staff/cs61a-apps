@@ -48,6 +48,18 @@ with connect_db() as db:
     autobuild boolean
 )"""
     )
+    db(
+        """CREATE TABLE IF NOT EXISTS mysql_users (
+    app varchar(128),
+    mysql_pw varchar(128)
+)"""
+    )
+
+
+def deploy_prod_app_description(app):
+    if app == "website-base":
+        return "<p>Redeploy cs61a.org</p>"
+    return ""
 
 
 @app.route("/")
@@ -68,6 +80,7 @@ def index():
         This service manages the deployment of the 61A website and various apps.
         {"".join(f'''
         <form action="/deploy_prod_app">
+            {deploy_prod_app_description(app)}
             <input type="submit" name="app" value="{app}" />
         </form>
         ''' for [app] in apps)}

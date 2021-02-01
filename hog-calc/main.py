@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request
 
 from common.db import connect_db
 from contest_utils.rate_limiting import ratelimited
+from process_input import validate_strat
 from runner import score
 
 app = Flask(__name__)
@@ -26,8 +27,17 @@ with connect_db() as db:
 def compare_strategies():
     strat0 = json.loads(request.form["strat0"])
     strat1 = json.loads(request.form["strat1"])
-
-    return jsonify({"success": True, "win_rate": score(strat0, strat1)})
+    use_contest = bool(request.form.get("use_contest"))
+    return jsonify(
+        {
+            "success": True,
+            "win_rate": score(
+                validate_strat(strat0),
+                validate_strat(strat1),
+                use_contest=use_contest,
+            ),
+        }
+    )
 
 
 if __name__ == "__main__":
