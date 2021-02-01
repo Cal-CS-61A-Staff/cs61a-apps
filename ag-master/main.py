@@ -120,12 +120,13 @@ def batch_grade():
                 jobs=jobs,
                 ok_token=ok_token,
             ),
-            headers=dict(Authorization=get_secret(secret_name="AG_MASTER_SECRET"))
+            headers=dict(Authorization=get_secret(secret_name="AG_MASTER_SECRET")),
         )
     except requests.exceptions.ReadTimeout:
         pass
 
     return dict(jobs=jobs)
+
 
 @app.route("/trigger_jobs", methods=["POST"])
 @check_master
@@ -146,6 +147,7 @@ def trigger_jobs():
     for subm_batch, job_batch in zip(subm_batches, job_batches):
         jobs.extend(trigger_job_batch(assignment, subm_batch, job_batch, ok_token))
     return dict(success=True)
+
 
 def trigger_job_batch(assignment, ids, jobs, ok_token):
     for id, job_id in zip(ids, jobs):
