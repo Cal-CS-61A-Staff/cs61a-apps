@@ -82,16 +82,11 @@ def superadmin_only(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
         token = request.json.get("access_token", None)
-        course = request.json.get("course", "cs61a")
         if (token and is_admin_token(access_token=token, course="cs61a")) or (
             is_staff(course="cs61a")
             and is_admin(email=get_user()["email"], course="cs61a")
         ):
-            semester = request.json.get("semester", "sp21")
-            crs = Course.query.filter_by(name=course, semester=semester).first()
-            if crs:
-                return func(crs, *args, **kwargs)
-            abort(404)
+            return func(*args, **kwargs)
         return login()
 
     return wrapped
@@ -156,6 +151,23 @@ def job_info(course, job):
         "backup": job.backup,
         "status": job.status,
         "result": job.result,
+    }
+
+
+@app.route("/course_info")
+@admin_only
+def course_info(course):
+    assignments = Assignment.query.filter_by(course=course.secret)
+    return {
+        "assignments": [
+            {
+                "name": a.name,
+                "file": a.file,
+                "command": a.command,
+                "ag_key": a.ag_key,
+            }
+            for a in assignments
+        ]
     }
 
 
@@ -429,23 +441,6 @@ def create_course():
     os.makedirs(f"./zips/{name}-{sem}/")
 
     return dict(success=True, name=name, semester=sem, secret=secret)
-
-
-@app.route("/course_info")
-@superadmin_only
-def course_info(course):
-    assignments = Assignment.query.filter_by(course=course.secret)
-    return {
-        "assignments": [
-            {
-                "name": a.name,
-                "file": a.file,
-                "command": a.command,
-                "ag_key": a.ag_key,
-            }
-            for a in assignments
-        ]
-    }
 
 
 if __name__ == "__main__":
