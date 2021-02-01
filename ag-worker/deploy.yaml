@@ -2,4 +2,5 @@ build_type: none
 deploy_type: docker
 repo: Cal-CS-61A-Staff/ag-worker
 concurrency: 1
+memory_limit: 1G
 permissions: []
