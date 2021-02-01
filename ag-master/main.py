@@ -234,7 +234,7 @@ def get_results():
     for job in job_ids:
         if job not in res:
             res[job] = None
-    
+
     return res
 
 
