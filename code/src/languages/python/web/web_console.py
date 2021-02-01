@@ -483,6 +483,10 @@ def indent(s, pad=4):
 
 def run_doctests(f):
     s = f.__doc__
+    if not s:
+        print(f"No doctests found for {f.__name__}, skipping...")
+        return
+
     tests = []
     curr_case = None
     for i, line in enumerate(s.strip().split("\n")):
@@ -495,7 +499,7 @@ def run_doctests(f):
         elif line.startswith("... "):
             # continue previous test case
             if curr_case is None:
-                raise Exception(f"SyntaxError: Unable to parse line {i}")
+                continue
             curr_case[0] += "\n" + line[4:]
         else:
             if not line and curr_case is not None:
@@ -511,7 +515,9 @@ def run_doctests(f):
 
     namespace = dict(editor_ns)
 
-    for inp, exp in tests:
+    print(f"Running {len(tests)} doctests for {f.__name__}:")
+
+    for i, (inp, exp) in enumerate(tests):
         out = []
         old_write = sys.stdout.write
         old_err = sys.stderr.write
@@ -533,8 +539,8 @@ def run_doctests(f):
             sys.stdout.write = old_write
             sys.stderr.write = old_err
         out = "".join(out)
+        first, *rest = inp.split("\n")
         if out.strip() != exp.strip():
-            first, *rest = inp.split("\n")
             err("Failed example:\n")
             err(indent(f">>> {first}") + "\n")
             for r in rest:
@@ -543,6 +549,16 @@ def run_doctests(f):
             err(indent(exp.strip()) + "\n")
             err("Received:\n")
             err(indent(out.strip()) + "\n")
+            err(f"{i} out of {len(tests)} tests passed.\n")
+            return
+        else:
+            print(indent(f">>> {first}"))
+            for r in rest:
+                print(indent(f"... {r}"))
+            if out.strip():
+                print(indent(out.strip()))
+
+    print(f"All {len(tests)} doctests for {f.__name__} passed!")
 
 
 editor_ns = {
