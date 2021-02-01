@@ -293,7 +293,6 @@ def upload_zip(course):
     file = base64.b64decode(data.get("upload"))
     name = data.get("filename")
 
-    file = request.files["upload"]
     bucket = storage.Client().get_bucket(BUCKET)
     blob = bucket.blob(f"zips/{course.name}-{course.semester}/{name}")
     blob.upload_from_string(file, content_type="application/zip")
