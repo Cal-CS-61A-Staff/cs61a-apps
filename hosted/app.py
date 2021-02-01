@@ -86,7 +86,7 @@ def new(img, name=None, env={}):
         },
         shared: {
             "bind": "/shared",
-            "mode": "r",
+            "mode": "ro",
         },
     }
 
