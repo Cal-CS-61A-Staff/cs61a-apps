@@ -18,6 +18,7 @@ create_models(app)
 db.init_app(app)
 db.create_all(app=app)
 
+MASTER_URL = "https://232.ag-master.pr.cs61a.org"
 WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
 # WORKER_URL = "http://127.0.0.1:5001"
 
@@ -108,18 +109,46 @@ def batch_grade():
     if not assignment:
         abort(404, "Unknown Assignment")
 
-    batches = [subms[i : i + 100] for i in range(0, len(subms), 100)]
+    jobs = [gen_salt(24) for _ in subms]
 
-    jobs = []
-    for batch in batches:
-        jobs.extend(trigger_jobs(assignment, batch, ok_token))
+    try:
+        requests.post(
+            f"{MASTER_URL}/trigger_jobs",
+            json=dict(
+                assignment_id=assignment_id,
+                subms=subms,
+                jobs=jobs,
+                ok_token=ok_token,
+            ),
+            headers=dict(Authorization=get_secret(secret_name="AG_MASTER_SECRET"))
+        )
+    except requests.exceptions.ReadTimeout:
+        pass
+
     return dict(jobs=jobs)
 
+@app.route("/trigger_jobs", methods=["POST"])
+@check_master
+def trigger_jobs():
+    data = request.get_json()
+    assignment_id = data["assignment_id"]
+    subms = data["subms"]
+    jobs = data["jobs"]
+    ok_token = data["ok_token"]
 
-def trigger_jobs(assignment, ids, ok_token):
-    jobs = []
-    for id in ids:
-        job_id = gen_salt(24)
+    assignment = Assignment.query.filter_by(ag_key=assignment_id).first()
+    if not assignment:
+        abort(404, "Unknown Assignment")
+
+    subm_batches = [subms[i : i + 100] for i in range(0, len(subms), 100)]
+    job_batches = [jobs[i : i + 100] for i in range(0, len(jobs), 100)]
+
+    for subm_batch, job_batch in zip(subm_batches, job_batches):
+        jobs.extend(trigger_job_batch(assignment, subm_batch, job_batch, ok_token))
+    return dict(success=True)
+
+def trigger_job_batch(assignment, ids, jobs, ok_token):
+    for id, job_id in zip(ids, jobs):
         db.session.add(
             Job(
                 assignment=assignment.ag_key,
@@ -129,7 +158,6 @@ def trigger_jobs(assignment, ids, ok_token):
                 access_token=ok_token,
             )
         )
-        jobs.append(job_id)
     db.session.commit()
 
     try:
