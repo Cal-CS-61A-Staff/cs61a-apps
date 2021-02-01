@@ -227,18 +227,15 @@ def get_results_for(job_id):
 
 @app.route("/results", methods=["POST"])
 def get_results():
-    def job_json(job_id):
-        job = Job.query.filter_by(job_key=job_id).first()
-        return (
-            {
-                "status": job.status,
-                "result": job.result,
-            }
-            if job
-            else None
-        )
+    job_ids = request.get_json()
+    jobs = Job.query.filter(Job.job_key.in_(job_ids)).all()
 
-    return {job_id: job_json(job_id) for job_id in request.get_json()}
+    res = {job.job_key: dict(status=job.status, result=job.result) for job in jobs}
+    for job in job_ids:
+        if job not in res:
+            res[job] = None
+    
+    return res
 
 
 @app.route("/set_results", methods=["POST"])
