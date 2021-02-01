@@ -23,6 +23,11 @@ WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
 
 BUCKET = "ag-master.buckets.cs61a.org"
 
+OKPY = "https://okpy.org"
+# OKPY = "http://127.0.0.1:5002"
+SUBM_ENDPOINT = OKPY + "/api/v3/backups/"
+SCORE_ENDPOINT = OKPY + "/api/v3/score/"
+
 
 def check_secret(func):
     @wraps(func)
@@ -117,7 +122,7 @@ def trigger_jobs(assignment, ids, ok_token):
         job_id = gen_salt(24)
         db.session.add(
             Job(
-                assignment=assignment.ag_key, backup=id, status="queued", job_key=job_id
+                assignment=assignment.ag_key, backup=id, status="queued", job_key=job_id, access_token=ok_token,
             )
         )
         jobs.append(job_id)
@@ -132,7 +137,6 @@ def trigger_jobs(assignment, ids, ok_token):
                 command=assignment.command,
                 jobs=jobs,
                 backups=ids,
-                access_token=ok_token,
                 course_key=assignment.course,
             ),
             headers=dict(Authorization=get_secret(secret_name="AG_WORKER_SECRET")),
@@ -141,6 +145,35 @@ def trigger_jobs(assignment, ids, ok_token):
     except requests.exceptions.ReadTimeout:
         pass
     return jobs
+
+
+@app.route("/send_score", methods=["POST"])
+@check_secret
+def send_score(course):
+    data = request.get_json()
+    payload = data["payload"]
+    job = Job.query.filter_by(job_key=data["job_id"]).first()
+    assignment = Assignment.query.filter_by(
+        ag_key=job.assignment, course=course.secret
+    )  # validates secret
+    if job and assignment:
+        requests.post(SCORE_ENDPOINT, data=payload, params=dict(access_token=job.access_token))
+    return dict(success=(job is not None))
+
+
+@app.route("/get_submission")
+@check_secret
+def get_submission(course):
+    data = request.get_json()
+    id = data["id"]
+    job = Job.query.filter_by(job_key=data["job_id"]).first()
+    assignment = Assignment.query.filter_by(
+        ag_key=job.assignment, course=course.secret
+    )  # validates secret
+    if job and assignment:
+        r = requests.get(SUBM_ENDPOINT + id, params=dict(access_token=job.access_token))
+        return r.json()
+    return dict(success=False)
 
 
 @app.route("/results/<job_id>", methods=["GET"])

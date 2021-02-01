@@ -37,3 +37,4 @@ class Job(db.Model):
     status: str = db.Column(db.String(64))
     result: str = db.Column(db.Text)
     job_key: str = db.Column(db.String(64))
+    access_token: str = db.Column(db.String(64))
