@@ -3,3 +3,6 @@ deploy_type: flask
 first_party_domains:
   - solutions.cs61a.org
   - solutions2.cs61a.org
+permissions:
+  - rpc
+  - storage

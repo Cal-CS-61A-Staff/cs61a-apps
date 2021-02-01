@@ -21,6 +21,7 @@ Permission = Literal[
     "rpc",
     "database",
     "storage",
+    "logging",
     "iam_admin",
     "cloud_run_admin",
     "cloud_functions_admin",

@@ -2,7 +2,13 @@ from google.cloud import firestore
 
 
 def valid(id: str):
-    if "/" in id or ".." in id or id == "." or id[:2] == "__":
+    if (
+        not isinstance(id, str)
+        or "/" in id
+        or ".." in id
+        or id == "."
+        or id[:2] == "__"
+    ):
         raise Exception("Invalid ID! This error has been logged.")
     return id
 

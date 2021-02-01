@@ -1,0 +1,7 @@
+## Running the local server
+
+Run this command:
+
+`yarn dev`
+
+It will start up both the webpack server and the Python server. Webpack handles all the static files and proxies other requests to the Python server.

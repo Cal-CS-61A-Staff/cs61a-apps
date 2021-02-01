@@ -1,15 +1,15 @@
 import React from "react";
-import styled from "styled-components";
+import Alert from "react-bootstrap/Alert";
 
-const StyledDiv = styled.code`
-  white-space: pre-line;
-  width: 100%;
-  text-align: center;
-  border: 2px solid black;
-  padding: 10px;
-  margin-top: 10px;
-`;
-
-export default function Commentary({ text }: { text: string }) {
-  return text && <StyledDiv>{text}</StyledDiv>;
+export default function Commentary({ messages }: { messages: [string] }) {
+  if (messages) {
+    return messages.map((message, i) => {
+      return (
+        <Alert key={i} variant="dark">
+          {message}
+        </Alert>
+      );
+    });
+  }
+  return null;
 }

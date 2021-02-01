@@ -111,6 +111,8 @@ def land_commit(
                         stderr, logs
                     ):
                         land_app(app, pr_number, sha, repo)
+                        if app.config is not None:
+                            update_service_routes([app], pr_number)
                 except:
                     traceback.print_exc(file=logs)
                     logs.seek(0)
@@ -121,6 +123,7 @@ def land_commit(
                         BuildStatus.failure,
                         None,
                         logs.read(),
+                        private=repo.full_name == base_repo.full_name,
                     )
                 else:
                     logs.seek(0)
@@ -136,10 +139,9 @@ def land_commit(
                             for hostname in get_pr_subdomains(app, pr_number)
                         ),
                         logs.read(),
+                        private=repo.full_name == base_repo.full_name,
                     )
 
-            if app.config is not None:
-                update_service_routes([app], pr_number)
     if grouped_targets:
         # because we ran a build, we need to clear the queue of anyone we blocked
         # we run this in a new worker to avoid timing out

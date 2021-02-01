@@ -105,8 +105,10 @@ def report_build_status(
     status: BuildStatus,
     url: Optional[str],
     log_data: Optional[str],
+    *,
+    private: bool
 ):
-    log_url = get_paste_url(paste_text(data=log_data, is_private=False))
+    log_url = get_paste_url(paste_text(data=log_data, is_private=private))
     with connect_db() as db:
         existing = db(
             "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND packed_ref=%s",
