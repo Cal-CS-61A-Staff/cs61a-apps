@@ -181,6 +181,7 @@ def get_submission(course):
             SUBM_ENDPOINT + "/" + str(id), params=dict(access_token=job.access_token)
         )
         print("requesting " + SUBM_ENDPOINT + "/" + str(id), file=sys.stderr)
+        r.raise_for_status()
         return r.json()
     return dict(success=False)
 
