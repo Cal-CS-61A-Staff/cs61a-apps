@@ -1,6 +1,7 @@
-from datetime import time, timedelta
+from datetime import timedelta
 from json import dumps, loads
 from random import shuffle
+from time import time
 
 from flask import Flask, Response, abort, render_template, request
 
