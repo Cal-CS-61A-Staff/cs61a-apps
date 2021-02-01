@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
 from fs_utils import normalize_path
-from utils import HashState
+from common.hash_utils import HashState
 
 Env = Dict[str, Union[str, List[str]]]
 

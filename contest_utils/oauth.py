@@ -32,8 +32,6 @@ def get_group(endpoint):
         "assignment/{}/group/{}".format(endpoint, email), token=token
     )
 
-    print(group_info.data["data"])
-
     group = []
     for user in group_info.data["data"]["members"]:
         if user["status"] == "active":

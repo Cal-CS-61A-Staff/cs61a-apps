@@ -1,6 +1,7 @@
 import os
 from contextlib import contextmanager
 from os import getenv
+from os.path import exists
 from typing import List
 
 import sqlalchemy.engine.url
@@ -51,10 +52,23 @@ else:
 engine = sqlalchemy.create_engine(
     database_url,
     **(
+        dict(
+            connect_args=dict(
+                ssl=dict(
+                    cert="/shared/client-cert.pem",
+                    key="/shared/client-key.pem",
+                    ca="/shared/server-ca.pem",
+                ),
+            )
+        )
+        if exists("/shared/client-cert.pem")
+        else {}
+    ),
+    **(
         {}
         if use_devdb
         else dict(pool_size=5, max_overflow=2, pool_timeout=30, pool_recycle=1800)
-    )
+    ),
 )
 
 
