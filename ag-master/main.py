@@ -1,4 +1,4 @@
-import os, requests, tempfile, sys
+import os, requests, tempfile, sys, base64
 from functools import wraps
 
 from flask import Flask, request, abort, send_file
@@ -6,13 +6,14 @@ from werkzeug.security import gen_salt
 
 from google.cloud import storage
 
-from common.oauth_client import create_oauth_client
+from common.oauth_client import create_oauth_client, get_user, login, is_staff
+from common.course_config import is_admin, is_admin_token
 from common.rpc.secrets import get_secret
 
 from models import create_models, Course, Assignment, Job, db
 
 app = Flask(__name__)
-# create_oauth_client(app, "61a-autograder")
+create_oauth_client(app, "61a-autograder")
 
 create_models(app)
 db.init_app(app)
@@ -20,12 +21,10 @@ db.create_all(app=app)
 
 MASTER_URL = "https://232.ag-master.pr.cs61a.org"
 WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
-# WORKER_URL = "http://127.0.0.1:5001"
 
 BUCKET = "ag-master.buckets.cs61a.org"
 
 OKPY = "https://okpy.org"
-# OKPY = "http://127.0.0.1:5002"
 SUBM_ENDPOINT = OKPY + "/api/v3/backups"
 SCORE_ENDPOINT = OKPY + "/api/v3/score/"
 
@@ -55,10 +54,46 @@ def check_master(func):
     return wrapped
 
 
+def admin_only(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        token = request.json.get("access_token", None)
+        course = request.json.get("course", "cs61a")
+        if (token and is_admin_token(access_token=token, course=course)) or (
+            is_staff(course=course)
+            and is_admin(email=get_user()["email"], course=course)
+        ):
+            semester = request.json.get("semester", "sp21")
+            crs = Course.query.filter_by(course=course, semester=semester).first()
+            if crs:
+                return func(crs, *args, **kwargs)
+            abort(404)
+        return login()
+
+    return wrapped
+
+
+def superadmin_only(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        course = request.json.get("course", "cs61a")
+        if is_staff(course="cs61a") and is_admin(
+            email=get_user()["email"], course="cs61a"
+        ):
+            semester = request.json.get("semester", "sp21")
+            crs = Course.query.filter_by(course=course, semester=semester).first()
+            if crs:
+                return func(crs, *args, **kwargs)
+            abort(404)
+        return login()
+
+    return wrapped
+
+
 @app.route("/create_assignment", methods=["POST"])
-@check_secret
+@admin_only
 def create_assignment(course):
-    data = request.get_json()
+    data = request.json
     name = data["name"]
     file = data["filename"]
     command = data["command"]
@@ -83,9 +118,8 @@ def create_assignment(course):
 @app.route("/get_zip", methods=["POST"])
 @check_secret
 def get_zip(course):
-    print(f"getting {request.get_json()['name']} for {course.name}")
     assignment = Assignment.query.filter_by(
-        name=request.get_json()["name"], course=course.secret
+        name=request.json["name"], course=course.secret
     ).first()
     if assignment:
         bucket = storage.Client().get_bucket(BUCKET)
@@ -98,7 +132,7 @@ def get_zip(course):
 
 @app.route("/api/ok/v3/grade/batch", methods=["POST"])
 def batch_grade():
-    data = request.get_json()
+    data = request.json
     subms = data["subm_ids"]
     assignment_id = data["assignment"]
     if assignment_id == "test":
@@ -131,7 +165,6 @@ def batch_grade():
                 assignment_id=assignment_id,
                 subms=subms,
                 jobs=jobs,
-                ok_token=ok_token,
             ),
             headers=dict(Authorization=get_secret(secret_name="AG_MASTER_SECRET")),
             timeout=1,
@@ -145,11 +178,10 @@ def batch_grade():
 @app.route("/trigger_jobs", methods=["POST"])
 @check_master
 def trigger_jobs():
-    data = request.get_json()
+    data = request.json
     assignment_id = data["assignment_id"]
     subms = data["subms"]
     jobs = data["jobs"]
-    ok_token = data["ok_token"]
 
     assignment = Assignment.query.filter_by(ag_key=assignment_id).first()
     if not assignment:
@@ -159,11 +191,11 @@ def trigger_jobs():
     job_batches = [jobs[i : i + 100] for i in range(0, len(jobs), 100)]
 
     for subm_batch, job_batch in zip(subm_batches, job_batches):
-        trigger_job_batch(assignment, subm_batch, job_batch, ok_token)
+        trigger_job_batch(assignment, subm_batch, job_batch)
     return dict(success=True)
 
 
-def trigger_job_batch(assignment, ids, jobs, ok_token):
+def trigger_job_batch(assignment, ids, jobs):
     try:
         requests.post(
             f"{WORKER_URL}/batch_grade",
@@ -186,7 +218,7 @@ def trigger_job_batch(assignment, ids, jobs, ok_token):
 @app.route("/send_score", methods=["POST"])
 @check_secret
 def send_score(course):
-    data = request.get_json()
+    data = request.json
     payload = data["payload"]
     job = Job.query.filter_by(job_key=data["job_id"]).first()
     assignment = Assignment.query.filter_by(
@@ -202,7 +234,7 @@ def send_score(course):
 @app.route("/get_submission", methods=["POST"])
 @check_secret
 def get_submission(course):
-    data = request.get_json()
+    data = request.json
     id = data["id"]
     job = Job.query.filter_by(job_key=data["job_id"]).first()
     assignment = Assignment.query.filter_by(
@@ -228,7 +260,7 @@ def get_results_for(job_id):
 
 @app.route("/results", methods=["POST"])
 def get_results():
-    job_ids = request.get_json()
+    job_ids = request.json
     jobs = Job.query.filter(Job.job_key.in_(job_ids)).all()
 
     res = {job.job_key: dict(status=job.status, result=job.result) for job in jobs}
@@ -242,7 +274,7 @@ def get_results():
 @app.route("/set_results", methods=["POST"])
 @check_secret
 def set_results(course):
-    data = request.get_json()
+    data = request.json
     job = Job.query.filter_by(job_key=data["job_id"]).first()
     assignment = Assignment.query.filter_by(
         ag_key=job.assignment, course=course.secret
@@ -255,12 +287,16 @@ def set_results(course):
 
 
 @app.route("/upload_zip", methods=["POST"])
-@check_secret
+@admin_only
 def upload_zip(course):
+    data = request.json
+    file = base64.b64decode(data.get("upload"))
+    name = data.get("filename")
+
     file = request.files["upload"]
     bucket = storage.Client().get_bucket(BUCKET)
-    blob = bucket.blob(f"zips/{course.name}-{course.semester}/{file.filename}")
-    blob.upload_from_string(file.read(), content_type=file.content_type)
+    blob = bucket.blob(f"zips/{course.name}-{course.semester}/{name}")
+    blob.upload_from_string(file, content_type="application/zip")
     return dict(success=True)
 
 
@@ -270,7 +306,7 @@ def index():
 
 
 @app.route("/admin/courses")
-@check_master
+@superadmin_only
 def course_list():
     courses = Course.query.all()
     return dict(
@@ -286,7 +322,7 @@ def course_list():
 
 
 @app.route("/admin/courses/<semester>")
-@check_master
+@superadmin_only
 def courses_in(semester):
     courses = Course.query.filter_by(semester=semester).all()
     return dict(
@@ -302,7 +338,7 @@ def courses_in(semester):
 
 
 @app.route("/admin/<course>/<semester>")
-@check_master
+@superadmin_only
 def course_info_admin(course, semester):
     course = Course.query.filter_by(name=course, semester=semester).first()
     if not course:
@@ -323,9 +359,9 @@ def course_info_admin(course, semester):
 
 
 @app.route("/admin/create_course", methods=["POST"])
-@check_master
+@superadmin_only
 def create_course():
-    data = request.get_json()
+    data = request.json
     name = data["name"]
     sem = data["semester"]
 
@@ -346,7 +382,7 @@ def create_course():
 
 
 @app.route("/course_info")
-@check_secret
+@superadmin_only
 def course_info(course):
     assignments = Assignment.query.filter_by(course=course.secret)
     return {
@@ -363,7 +399,7 @@ def course_info(course):
 
 
 @app.route("/jobs/<job>")
-@check_secret
+@admin_only
 def job_info(course, job):
     job = Job.query.filter_by(job_key=job).first()
     if not job:
