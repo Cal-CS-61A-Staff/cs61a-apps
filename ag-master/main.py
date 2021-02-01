@@ -111,6 +111,18 @@ def batch_grade():
 
     jobs = [gen_salt(24) for _ in subms]
 
+    objects = [
+        Job(
+            assignment=assignment.ag_key,
+            backup=id,
+            status="queued",
+            job_key=job_id,
+            access_token=ok_token,
+        ) for id, job_id in zip(subms, jobs)
+    ]
+    db.session.bulk_save_objects(objects)
+    db.session.commit()
+
     try:
         requests.post(
             f"{MASTER_URL}/trigger_jobs",
@@ -151,18 +163,6 @@ def trigger_jobs():
 
 
 def trigger_job_batch(assignment, ids, jobs, ok_token):
-    for id, job_id in zip(ids, jobs):
-        db.session.add(
-            Job(
-                assignment=assignment.ag_key,
-                backup=id,
-                status="queued",
-                job_key=job_id,
-                access_token=ok_token,
-            )
-        )
-    db.session.commit()
-
     try:
         requests.post(
             f"{WORKER_URL}/batch_grade",
