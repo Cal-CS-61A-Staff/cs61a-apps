@@ -121,6 +121,7 @@ def batch_grade():
                 ok_token=ok_token,
             ),
             headers=dict(Authorization=get_secret(secret_name="AG_MASTER_SECRET")),
+            timeout=1,
         )
     except requests.exceptions.ReadTimeout:
         pass
