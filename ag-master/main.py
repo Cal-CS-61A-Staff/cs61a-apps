@@ -167,7 +167,7 @@ def send_score(course):
     return dict(success=(job is not None))
 
 
-@app.route("/get_submission")
+@app.route("/get_submission", methods=["POST"])
 @check_secret
 def get_submission(course):
     data = request.get_json()
