@@ -29,6 +29,11 @@ SUBM_ENDPOINT = OKPY + "/api/v3/backups"
 SCORE_ENDPOINT = OKPY + "/api/v3/score/"
 
 
+########################################
+## Relevant Decorators
+########################################
+
+
 def check_secret(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -92,6 +97,24 @@ def superadmin_only(func):
     return wrapped
 
 
+########################################
+## Per-course Endpoints
+########################################
+
+
+@app.route("/upload_zip", methods=["POST"])
+@admin_only
+def upload_zip(course):
+    data = request.json
+    file = base64.b64decode(data.get("upload", "").encode("ascii"))
+    name = data.get("filename")
+
+    bucket = storage.Client().get_bucket(BUCKET)
+    blob = bucket.blob(f"zips/{course.name}-{course.semester}/{name}")
+    blob.upload_from_string(file, content_type="application/zip")
+    return dict(success=True)
+
+
 @app.route("/create_assignment", methods=["POST"])
 @admin_only
 def create_assignment(course):
@@ -117,19 +140,28 @@ def create_assignment(course):
     return dict(assign_id=id)
 
 
-@app.route("/get_zip", methods=["POST"])
-@check_secret
-def get_zip(course):
-    assignment = Assignment.query.filter_by(
-        name=request.json["name"], course=course.secret
-    ).first()
-    if assignment:
-        bucket = storage.Client().get_bucket(BUCKET)
-        blob = bucket.blob(f"zips/{course.name}-{course.semester}/{assignment.file}")
-        with tempfile.NamedTemporaryFile() as temp:
-            blob.download_to_filename(temp.name)
-            return send_file(temp.name)
-    abort(404)
+@app.route("/jobs/<job>")
+@admin_only
+def job_info(course, job):
+    job = Job.query.filter_by(job_key=job).first()
+    if not job:
+        abort(404)
+
+    assignment = Assignment.query.filter_by(ag_key=job.assignment).first()
+    if not assignment or assignment.course != course.secret:
+        abort(403)
+
+    return {
+        "assignment": assignment.name,
+        "backup": job.backup,
+        "status": job.status,
+        "result": job.result,
+    }
+
+
+########################################
+## Okpy Endpoints
+########################################
 
 
 @app.route("/api/ok/v3/grade/batch", methods=["POST"])
@@ -217,41 +249,6 @@ def trigger_job_batch(assignment, ids, jobs):
     return jobs
 
 
-@app.route("/send_score", methods=["POST"])
-@check_secret
-def send_score(course):
-    data = request.json
-    payload = data["payload"]
-    job = Job.query.filter_by(job_key=data["job_id"]).first()
-    assignment = Assignment.query.filter_by(
-        ag_key=job.assignment, course=course.secret
-    )  # validates secret
-    if job and assignment:
-        requests.post(
-            SCORE_ENDPOINT, data=payload, params=dict(access_token=job.access_token)
-        )
-    return dict(success=(job is not None))
-
-
-@app.route("/get_submission", methods=["POST"])
-@check_secret
-def get_submission(course):
-    data = request.json
-    id = data["id"]
-    job = Job.query.filter_by(job_key=data["job_id"]).first()
-    assignment = Assignment.query.filter_by(
-        ag_key=job.assignment, course=course.secret
-    )  # validates secret
-    if job and assignment:
-        r = requests.get(
-            SUBM_ENDPOINT + "/" + str(id), params=dict(access_token=job.access_token)
-        )
-        print("requesting " + SUBM_ENDPOINT + "/" + str(id), file=sys.stderr)
-        r.raise_for_status()
-        return r.json()
-    return dict(success=False)
-
-
 @app.route("/results/<job_id>", methods=["GET"])
 def get_results_for(job_id):
     job = Job.query.filter_by(job_key=job_id).first()
@@ -273,6 +270,61 @@ def get_results():
     return res
 
 
+########################################
+## AG Worker Endpoints
+########################################
+
+
+@app.route("/get_zip", methods=["POST"])
+@check_secret
+def get_zip(course):
+    assignment = Assignment.query.filter_by(
+        name=request.json["name"], course=course.secret
+    ).first()
+    if assignment:
+        bucket = storage.Client().get_bucket(BUCKET)
+        blob = bucket.blob(f"zips/{course.name}-{course.semester}/{assignment.file}")
+        with tempfile.NamedTemporaryFile() as temp:
+            blob.download_to_filename(temp.name)
+            return send_file(temp.name)
+    abort(404)
+
+
+@app.route("/get_submission", methods=["POST"])
+@check_secret
+def get_submission(course):
+    data = request.json
+    id = data["id"]
+    job = Job.query.filter_by(job_key=data["job_id"]).first()
+    assignment = Assignment.query.filter_by(
+        ag_key=job.assignment, course=course.secret
+    )  # validates secret
+    if job and assignment:
+        r = requests.get(
+            SUBM_ENDPOINT + "/" + str(id), params=dict(access_token=job.access_token)
+        )
+        print("requesting " + SUBM_ENDPOINT + "/" + str(id), file=sys.stderr)
+        r.raise_for_status()
+        return r.json()
+    return dict(success=False)
+
+
+@app.route("/send_score", methods=["POST"])
+@check_secret
+def send_score(course):
+    data = request.json
+    payload = data["payload"]
+    job = Job.query.filter_by(job_key=data["job_id"]).first()
+    assignment = Assignment.query.filter_by(
+        ag_key=job.assignment, course=course.secret
+    )  # validates secret
+    if job and assignment:
+        requests.post(
+            SCORE_ENDPOINT, data=payload, params=dict(access_token=job.access_token)
+        )
+    return dict(success=(job is not None))
+
+
 @app.route("/set_results", methods=["POST"])
 @check_secret
 def set_results(course):
@@ -288,22 +340,19 @@ def set_results(course):
     return dict(success=(job is not None))
 
 
-@app.route("/upload_zip", methods=["POST"])
-@admin_only
-def upload_zip(course):
-    data = request.json
-    file = base64.b64decode(data.get("upload", "").encode("ascii"))
-    name = data.get("filename")
-
-    bucket = storage.Client().get_bucket(BUCKET)
-    blob = bucket.blob(f"zips/{course.name}-{course.semester}/{name}")
-    blob.upload_from_string(file, content_type="application/zip")
-    return dict(success=True)
+########################################
+## Index Endpoint
+########################################
 
 
 @app.route("/")
 def index():
     return "it works!"
+
+
+########################################
+## Super-Admin Endpoints
+########################################
 
 
 @app.route("/admin/courses")
@@ -396,25 +445,6 @@ def course_info(course):
             }
             for a in assignments
         ]
-    }
-
-
-@app.route("/jobs/<job>")
-@admin_only
-def job_info(course, job):
-    job = Job.query.filter_by(job_key=job).first()
-    if not job:
-        abort(404)
-
-    assignment = Assignment.query.filter_by(ag_key=job.assignment).first()
-    if not assignment or assignment.course != course.secret:
-        abort(403)
-
-    return {
-        "assignment": assignment.name,
-        "backup": job.backup,
-        "status": job.status,
-        "result": job.result,
     }
 
 
