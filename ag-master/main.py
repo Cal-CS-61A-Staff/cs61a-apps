@@ -25,7 +25,7 @@ BUCKET = "ag-master.buckets.cs61a.org"
 
 OKPY = "https://okpy.org"
 # OKPY = "http://127.0.0.1:5002"
-SUBM_ENDPOINT = OKPY + "/api/v3/backups/"
+SUBM_ENDPOINT = OKPY + "/api/v3/backups"
 SCORE_ENDPOINT = OKPY + "/api/v3/score/"
 
 
@@ -177,7 +177,9 @@ def get_submission(course):
         ag_key=job.assignment, course=course.secret
     )  # validates secret
     if job and assignment:
-        r = requests.get(SUBM_ENDPOINT + "/" + str(id), params=dict(access_token=job.access_token))
+        r = requests.get(
+            SUBM_ENDPOINT + "/" + str(id), params=dict(access_token=job.access_token)
+        )
         print("requesting " + SUBM_ENDPOINT + "/" + str(id), file=sys.stderr)
         return r.json()
     return dict(success=False)
