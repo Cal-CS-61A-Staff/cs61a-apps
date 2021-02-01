@@ -118,7 +118,8 @@ def batch_grade():
             status="queued",
             job_key=job_id,
             access_token=ok_token,
-        ) for id, job_id in zip(subms, jobs)
+        )
+        for id, job_id in zip(subms, jobs)
     ]
     db.session.bulk_save_objects(objects)
     db.session.commit()
