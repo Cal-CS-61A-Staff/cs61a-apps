@@ -1,12 +1,11 @@
-import os
 import time
 from functools import wraps
 
-from flask import request, abort, current_app
+from flask import abort, current_app, request
 
 from common.course_config import get_endpoint
 from common.db import connect_db
-from oauth import create_remote
+from contest_utils.oauth import create_remote
 
 
 def validate(data, timeout):

@@ -9,10 +9,10 @@ from pytz import timezone
 import tournament
 from common.course_config import get_endpoint
 from common.db import connect_db
+from contest_utils.oauth import get_group
+from contest_utils.rate_limiting import ratelimited
 from logger import get_log, log
-from oauth import get_group
 from process_input import record_strat
-from rate_limiting import ratelimited
 from tournament import build_ranking, run_tournament
 
 app = Flask(__name__)
