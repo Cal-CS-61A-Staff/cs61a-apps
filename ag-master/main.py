@@ -1,4 +1,4 @@
-import os, requests, tempfile
+import os, requests, tempfile, sys
 from functools import wraps
 
 from flask import Flask, request, abort, send_file
@@ -177,7 +177,8 @@ def get_submission(course):
         ag_key=job.assignment, course=course.secret
     )  # validates secret
     if job and assignment:
-        r = requests.get(SUBM_ENDPOINT + id, params=dict(access_token=job.access_token))
+        r = requests.get(SUBM_ENDPOINT + "/" + str(id), params=dict(access_token=job.access_token))
+        print("requesting " + SUBM_ENDPOINT + "/" + str(id), file=sys.stderr)
         return r.json()
     return dict(success=False)
 
