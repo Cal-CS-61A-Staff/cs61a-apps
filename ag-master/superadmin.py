@@ -2,10 +2,10 @@ from flask import request, abort
 from werkzeug.security import gen_salt
 
 from utils import superadmin_only
-from models import Course, Assignment
+from models import Course, Assignment, db
 
 
-def create_superadmin_endpoints(app, db):
+def create_superadmin_endpoints(app):
     @app.route("/admin/courses")
     @superadmin_only
     def course_list():

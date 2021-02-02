@@ -1,14 +1,13 @@
 import tempfile, requests, base64
-from flask import abort, send_file
 from google.cloud import storage
 
-from models import Assignment, Job
+from models import Assignment, Job, db
 from utils import check_course_secret, BUCKET, SUBM_ENDPOINT, SCORE_ENDPOINT
 
 from common.rpc.ag_master import get_zip, get_submission, send_score, set_results
 
 
-def create_worker_endpoints(app, db):
+def create_worker_endpoints(app):
     @get_zip.bind(app)
     @check_course_secret
     def get_zip_rpc(course, name):

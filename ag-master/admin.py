@@ -3,13 +3,13 @@ from flask import request, abort
 from google.cloud import storage
 from werkzeug.security import gen_salt
 
-from models import Assignment, Job
+from models import Assignment, Job, db
 from utils import admin_only, admin_only_rpc, BUCKET
 
 from common.rpc.ag_master import upload_zip, create_assignment
 
 
-def create_admin_endpoints(app, db):
+def create_admin_endpoints(app):
     @upload_zip.bind(app)
     @admin_only_rpc
     def upload_zip_rpc(course, name, file):

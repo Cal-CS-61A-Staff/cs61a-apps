@@ -8,9 +8,6 @@ from common.course_config import is_admin, is_admin_token
 
 BUCKET = "ag-master.buckets.cs61a.org"
 
-MASTER_URL = "https://232.ag-master.pr.cs61a.org"
-WORKER_URL = "https://232.ag-worker.pr.cs61a.org"
-
 OKPY = "https://okpy.org"
 SUBM_ENDPOINT = OKPY + "/api/v3/backups"
 SCORE_ENDPOINT = OKPY + "/api/v3/score/"

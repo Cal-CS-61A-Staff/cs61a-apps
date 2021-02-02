@@ -6,11 +6,11 @@ from common.rpc.secrets import get_secret
 from common.rpc.ag_master import trigger_jobs
 from common.rpc.ag_worker import batch_grade
 
-from models import Assignment, Job
-from utils import WORKER_URL, BATCH_SIZE
+from models import Assignment, Job, db
+from utils import BATCH_SIZE
 
 
-def create_okpy_endpoints(app, db):
+def create_okpy_endpoints(app):
     @app.route("/api/ok/v3/grade/batch", methods=["POST"])
     def okpy_receiver():
         data = request.json

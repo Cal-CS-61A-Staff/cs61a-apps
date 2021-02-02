@@ -14,10 +14,10 @@ create_models(app)
 db.init_app(app)
 db.create_all(app=app)
 
-create_admin_endpoints(app, db)
-create_okpy_endpoints(app, db)
-create_worker_endpoints(app, db)
-create_superadmin_endpoints(app, db)
+create_admin_endpoints(app)
+create_okpy_endpoints(app)
+create_worker_endpoints(app)
+create_superadmin_endpoints(app)
 
 
 if __name__ == "__main__":
