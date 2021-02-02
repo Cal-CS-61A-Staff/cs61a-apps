@@ -1,16 +1,16 @@
 import requests
-from flask import Blueprint, request, abort
+from flask import request, abort
 from werkzeug.security import gen_salt
 
 from common.rpc.secrets import get_secret
+from common.rpc.ag_master import trigger_jobs
+from common.rpc.ag_worker import batch_grade
 
 from models import Assignment, Job
-from utils import check_master_secret, MASTER_URL, WORKER_URL, BATCH_SIZE
+from utils import WORKER_URL, BATCH_SIZE
 
 
-def create_okpy_endpoints(db):
-    app = Blueprint("okpy")
-
+def create_okpy_endpoints(app, db):
     @app.route("/api/ok/v3/grade/batch", methods=["POST"])
     def batch_grade():
         data = request.json
@@ -39,29 +39,20 @@ def create_okpy_endpoints(db):
         db.session.bulk_save_objects(objects)
         db.session.commit()
 
-        try:
-            requests.post(
-                f"{MASTER_URL}/trigger_jobs",
-                json=dict(
-                    assignment_id=assignment_id,
-                    subms=subms,
-                    jobs=jobs,
-                ),
-                headers=dict(Authorization=get_secret(secret_name="AG_MASTER_SECRET")),
-                timeout=1,
-            )
-        except requests.exceptions.ReadTimeout:
-            pass
+        trigger_jobs(
+            secret=get_secret(secret_name="AG_MASTER_SECRET"),
+            assignment_id=assignment_id,
+            subms=subms,
+            jobs=jobs,
+            no_reply=True,
+        )
 
         return dict(jobs=jobs)
 
-    @app.route("/trigger_jobs", methods=["POST"])
-    @check_master_secret
-    def trigger_jobs():
-        data = request.json
-        assignment_id = data["assignment_id"]
-        subms = data["subms"]
-        jobs = data["jobs"]
+    @trigger_jobs.bind(app)
+    def trigger_jobs_rpc(secret, assignment_id, subms, jobs):
+        if secret != get_secret(secret_name="AG_MASTER_SECRET"):
+            raise PermissionError
 
         assignment = Assignment.query.filter_by(ag_key=assignment_id).first()
         if not assignment:
@@ -75,27 +66,17 @@ def create_okpy_endpoints(db):
         ]
 
         for subm_batch, job_batch in zip(subm_batches, job_batches):
-            trigger_job_batch(assignment, subm_batch, job_batch)
-        return dict(success=True)
-
-    def trigger_job_batch(assignment, ids, jobs):
-        try:
-            requests.post(
-                f"{WORKER_URL}/batch_grade",
-                json=dict(
-                    assignment_id=assignment.ag_key,
-                    assignment_name=assignment.name,
-                    command=assignment.command,
-                    jobs=jobs,
-                    backups=ids,
-                    course_key=assignment.course,
-                ),
-                headers=dict(Authorization=get_secret(secret_name="AG_WORKER_SECRET")),
-                timeout=1,
+            batch_grade(
+                assignment_id=assignment.ag_key,
+                assignment_name=assignment.name,
+                command=assignment.command,
+                backups=subm_batch,
+                jobs=job_batch,
+                course_key=assignment.course,
+                secret=get_secret(secret_name="AG_WORKER_SECRET"),
+                noreply=True,
             )
-        except requests.exceptions.ReadTimeout:
-            pass
-        return jobs
+        return dict(success=True)
 
     @app.route("/results/<job_id>", methods=["GET"])
     def get_results_for(job_id):
@@ -115,5 +96,3 @@ def create_okpy_endpoints(db):
                 res[job] = None
 
         return res
-
-    return app

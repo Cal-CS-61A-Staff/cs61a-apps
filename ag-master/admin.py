@@ -1,5 +1,5 @@
 import base64
-from flask import Blueprint, request, abort
+from flask import request, abort
 from google.cloud import storage
 from werkzeug.security import gen_salt
 
@@ -7,9 +7,7 @@ from models import Assignment, Job
 from utils import admin_only, BUCKET
 
 
-def create_admin_endpoints(db):
-    app = Blueprint("admin")
-
+def create_admin_endpoints(app, db):
     @app.route("/upload_zip", methods=["POST"])
     @admin_only
     def upload_zip(course):
@@ -80,5 +78,3 @@ def create_admin_endpoints(db):
                 for a in assignments
             ]
         }
-
-    return app

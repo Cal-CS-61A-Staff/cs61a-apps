@@ -1,13 +1,11 @@
-from flask import Blueprint, request, abort
+from flask import request, abort
 from werkzeug.security import gen_salt
 
 from utils import superadmin_only
 from models import Course, Assignment
 
 
-def create_superadmin_endpoints(db):
-    app = Blueprint("superadmin")
-
+def create_superadmin_endpoints(app, db):
     @app.route("/admin/courses")
     @superadmin_only
     def course_list():
@@ -77,5 +75,3 @@ def create_superadmin_endpoints(db):
         db.session.commit()
 
         return dict(success=True, name=name, semester=sem, secret=secret)
-
-    return app

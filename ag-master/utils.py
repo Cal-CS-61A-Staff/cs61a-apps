@@ -20,13 +20,11 @@ BATCH_SIZE = 100
 
 def check_course_secret(func):
     @wraps(func)
-    def wrapped(*args, **kwargs):
-        course = Course.query.filter_by(
-            secret=request.headers.get("Authorization", None)
-        ).first()
+    def wrapped(*args, course, **kwargs):
+        course = Course.query.filter_by(secret=course).first()
         if course:
             return func(course, *args, **kwargs)
-        abort(403)
+        raise PermissionError
 
     return wrapped
 
