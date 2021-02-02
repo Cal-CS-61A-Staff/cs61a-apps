@@ -25,7 +25,7 @@ def create_rebuilder(app):
                 last_rebuild = db(
                     "SELECT MAX(unix) FROM auto_rebuilds WHERE app=(%s)", [app]
                 ).fetchone()
-                if not last_rebuild or now - last_rebuild > interval.total_seconds():
+                if not last_rebuild or now - last_rebuild[0] > interval.total_seconds():
                     db(
                         "INSERT INTO auto_rebuilds (app, unix) VALUES (%s, %s)",
                         [app, now],
