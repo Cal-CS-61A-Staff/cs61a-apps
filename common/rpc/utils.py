@@ -40,7 +40,8 @@ def create_service(app: str, override=None, providers=None):
                                 endpoints.append(
                                     f"https://{pr}.{app}.pr.cs61a.org{path}"
                                 )
-                    # endpoints.append(f"https://{app}.cs61a.org{path}") @nocommit
+                    if not noreply:  # @nocommit
+                        endpoints.append(f"https://{app}.cs61a.org{path}")
 
                 if (
                     not get_master_secret()
