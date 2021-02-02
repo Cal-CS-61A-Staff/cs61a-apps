@@ -36,7 +36,7 @@ def create_admin_endpoints(app, db):
         db.session.add(existing)
         db.session.commit()
 
-        return dict(assign_id=id)
+        return id
 
     @app.route("/jobs/<job>")
     @admin_only

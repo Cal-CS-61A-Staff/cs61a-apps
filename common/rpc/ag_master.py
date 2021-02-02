@@ -45,5 +45,5 @@ def create_assignment(
     name: str,
     file: str,
     command: str
-):
+) -> str:
     ...
