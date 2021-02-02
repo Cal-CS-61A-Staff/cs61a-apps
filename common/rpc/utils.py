@@ -31,7 +31,7 @@ def create_service(app: str, override=None, providers=None):
                     endpoints = [f"{provider}{path}" for provider in providers]
                 else:
                     endpoints = []
-                    if has_request_context():  # and not noreply @nocommit
+                    if has_request_context() and not noreply:
                         proxied_host = request.headers.get("X-Forwarded-For-Host")
                         if proxied_host:
                             parts = proxied_host.split(".")
@@ -40,8 +40,7 @@ def create_service(app: str, override=None, providers=None):
                                 endpoints.append(
                                     f"https://{pr}.{app}.pr.cs61a.org{path}"
                                 )
-                    if not noreply:  # @nocommit
-                        endpoints.append(f"https://{app}.cs61a.org{path}")
+                    endpoints.append(f"https://{app}.cs61a.org{path}")
 
                 if (
                     not get_master_secret()
