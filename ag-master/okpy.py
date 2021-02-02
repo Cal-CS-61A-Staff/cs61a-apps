@@ -44,7 +44,7 @@ def create_okpy_endpoints(app, db):
             assignment_id=assignment_id,
             subms=subms,
             jobs=jobs,
-            no_reply=True,
+            noreply=True,
         )
 
         return dict(jobs=jobs)
