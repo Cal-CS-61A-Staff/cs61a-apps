@@ -41,6 +41,25 @@ def check_master_secret(func):
     return wrapped
 
 
+def admin_only_rpc(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        token = kwargs.pop("access_token", None)
+        course = kwargs.pop("course", "cs61a")
+        if (token and is_admin_token(access_token=token, course=course)) or (
+            is_staff(course=course)
+            and is_admin(email=get_user()["email"], course=course)
+        ):
+            semester = kwargs.pop("semester", "sp21")
+            crs = Course.query.filter_by(name=course, semester=semester).first()
+            if crs:
+                return func(crs, *args, **kwargs)
+            abort(404)
+        return login()
+
+    return wrapped
+
+
 def admin_only(func):
     @wraps(func)
     def wrapped(*args, **kwargs):

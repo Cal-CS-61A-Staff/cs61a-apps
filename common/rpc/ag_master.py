@@ -27,3 +27,23 @@ def send_score(*, course: str, payload: Dict, job_id: str):
 @service.route("/api/set_results")
 def set_results(*, course: str, job_id: str, status: str, result: str):
     ...
+
+
+@service.route("/api/upload_zip")
+def upload_zip(
+    *, access_token: str = None, course: str, semester: str, name: str, file: str
+):
+    ...
+
+
+@service.route("/api/create_assignment")
+def create_assignment(
+    *,
+    access_token: str = None,
+    course: str,
+    semester: str,
+    name: str,
+    file: str,
+    command: str
+):
+    ...

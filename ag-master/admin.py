@@ -4,30 +4,24 @@ from google.cloud import storage
 from werkzeug.security import gen_salt
 
 from models import Assignment, Job
-from utils import admin_only, BUCKET
+from utils import admin_only, admin_only_rpc, BUCKET
+
+from common.rpc.ag_master import upload_zip, create_assignment
 
 
 def create_admin_endpoints(app, db):
-    @app.route("/upload_zip", methods=["POST"])
-    @admin_only
-    def upload_zip(course):
-        data = request.json
-        file = base64.b64decode(data.get("upload", "").encode("ascii"))
-        name = data.get("filename")
-
+    @upload_zip.bind(app)
+    @admin_only_rpc
+    def upload_zip_rpc(course, name, file):
+        file = base64.b64decode(file.encode("ascii"))
         bucket = storage.Client().get_bucket(BUCKET)
         blob = bucket.blob(f"zips/{course.name}-{course.semester}/{name}")
         blob.upload_from_string(file, content_type="application/zip")
         return dict(success=True)
 
-    @app.route("/create_assignment", methods=["POST"])
-    @admin_only
-    def create_assignment(course):
-        data = request.json
-        name = data["name"]
-        file = data["filename"]
-        command = data["command"]
-
+    @create_assignment.bind(app)
+    @admin_only_rpc
+    def create_assignment_rpc(course, name, file, command):
         existing = Assignment.query.filter_by(name=name, course=course.secret).first()
         if existing:
             existing.file = file
