@@ -27,7 +27,7 @@ def create_admin_endpoints(app, db):
             existing.file = file
             existing.command = command
             db.session.commit()
-            return dict(assign_id=existing.ag_key)
+            return existing.ag_key
 
         id = gen_salt(24)
         existing = Assignment(
