@@ -10,17 +10,17 @@ def trigger_jobs(*, secret: str, assignment_id: str, subms: List[str], jobs: Lis
 
 
 @service.route("/api/get_zip")
-def get_zip(*, course: str, name: str):
+def get_zip(*, course: str, name: str) -> str:
     ...
 
 
 @service.route("/api/get_submission")
-def get_submission(*, course: str, bid: str, job_id: str):
+def get_submission(*, course: str, bid: str, job_id: str) -> Dict:
     ...
 
 
 @service.route("/api/send_score")
-def send_score(*, course: str, payload: str, job_id: str):
+def send_score(*, course: str, payload: Dict, job_id: str):
     ...
 
 
