@@ -12,7 +12,7 @@ from utils import WORKER_URL, BATCH_SIZE
 
 def create_okpy_endpoints(app, db):
     @app.route("/api/ok/v3/grade/batch", methods=["POST"])
-    def batch_grade():
+    def okpy_receiver():
         data = request.json
         subms = data["subm_ids"]
         assignment_id = data["assignment"]
