@@ -1,4 +1,4 @@
-import tempfile, requests, json
+import tempfile, requests, base64
 from flask import abort, send_file
 from google.cloud import storage
 
@@ -20,8 +20,9 @@ def create_worker_endpoints(app, db):
             )
             with tempfile.NamedTemporaryFile() as temp:
                 blob.download_to_filename(temp.name)
-                return send_file(temp.name)
-        abort(404)
+                with open(temp.name, "rb") as zf:
+                    return base64.b64encode(zf.read()).decode("ascii")
+        raise PermissionError
 
     @get_submission.bind(app)
     @check_course_secret
@@ -36,13 +37,12 @@ def create_worker_endpoints(app, db):
                 params=dict(access_token=job.access_token),
             )
             r.raise_for_status()
-            return r.json()
+            return r.json()["data"]
         return dict(success=False)
 
     @send_score.bind(app)
     @check_course_secret
     def send_score_rpc(course, payload, job_id):
-        payload = json.loads(payload)
         job = Job.query.filter_by(job_key=job_id).first()
         assignment = Assignment.query.filter_by(
             ag_key=job.assignment, course=course.secret
