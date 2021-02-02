@@ -31,7 +31,7 @@ def create_service(app: str, override=None, providers=None):
                     endpoints = [f"{provider}{path}" for provider in providers]
                 else:
                     endpoints = []
-                    if has_request_context():
+                    if has_request_context():  # and not noreply @nocommit
                         proxied_host = request.headers.get("X-Forwarded-For-Host")
                         if proxied_host:
                             parts = proxied_host.split(".")
