@@ -17,7 +17,7 @@ export default function CommandIcon(props) {
 function computeIcon(name) {
   return {
     Run: { color: "green", className: "fas fa-play" },
-    Test: { color: "red", className: "fas fa-graduation-cap" },
+    Test: { color: "red", className: "fas fa-vial" },
     Debug: { color: "orange", className: "fas fa-bug" },
     Stop: { color: "red", className: "fas fa-stop" },
     Restart: { color: "green", className: "fas fa-redo" },

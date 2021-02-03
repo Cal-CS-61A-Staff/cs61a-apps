@@ -1,5 +1,6 @@
 import React from "react";
 import Editor from "./Editor";
+import OKResults from "./OKResults";
 import Output from "./Output";
 import { send, sendNoInteract } from "../utils/communication.js";
 import {
@@ -23,6 +24,7 @@ import { ERROR, INPUT, OUTPUT } from "../../common/outputTypes.js";
 const DEBUG_MARKER = "DEBUG: ";
 const EDITOR_MARKER = "EDITOR: ";
 const EXEC_MARKER = "EXEC: ";
+const DOCTEST_MARKER = "DOCTEST: ";
 
 export default class File extends React.Component {
   constructor(props) {
@@ -47,6 +49,8 @@ export default class File extends React.Component {
       editorInDebugMode: false,
       editorDebugData: null,
 
+      doctestData: null,
+
       interactCallback: null,
       killCallback: null,
       detachCallback: null,
@@ -57,6 +61,7 @@ export default class File extends React.Component {
     this.editorRef = React.createRef();
     this.outputRef = React.createRef();
     this.debugRef = React.createRef();
+    this.testRef = React.createRef();
 
     this.props.onActivate(this.props.id);
   }
@@ -121,6 +126,61 @@ export default class File extends React.Component {
     }));
 
     this.outputRef.current.forceOpen();
+  };
+
+  test = async () => {
+    if (this.state.location) {
+      await this.save();
+    }
+    if (this.identifyLanguage() !== PYTHON) {
+      send({
+        type: SHOW_ERROR_DIALOG,
+        title: "Unable to Test",
+        message: "Doctests are only implemented for Python at the moment",
+      });
+      return;
+    }
+    let commandSent = false;
+    const [interactCallback, killCallback, detachCallback] = runCode(
+      this.identifyLanguage()
+    )(
+      this.state.editorText,
+      (out) => {
+        if (!out.startsWith(DOCTEST_MARKER)) {
+          return;
+        }
+        const rawData = out.slice(DOCTEST_MARKER.length);
+        const doctestData = JSON.parse(rawData);
+        this.setState({ doctestData });
+        this.testRef.current.forceOpen();
+        killCallback();
+      },
+      (err) => {
+        if (err.trim() !== ">>>") {
+          // something went wrong in setup
+          send({
+            type: SHOW_ERROR_DIALOG,
+            title: "Doctests Failed",
+            message: err.trim(),
+          });
+          killCallback();
+          detachCallback();
+          commandSent = true;
+        }
+        if (!commandSent) {
+          commandSent = true;
+          interactCallback("__run_all_doctests()\n");
+        }
+      },
+      () => {}
+    );
+  };
+
+  debugTest = (data) => {
+    this.debugExecutedCode(
+      null,
+      `${this.state.editorText}\n${data.code.join("\n")}`
+    );
   };
 
   debug = (data) => {
@@ -289,9 +349,9 @@ export default class File extends React.Component {
   handleEditorChange = (editorText) => {
     if (this.props.srcOrigin) {
       /*
-        It is not possible to exfiltrate data, since srcOrigin is only set when the caller
-        *also* is supplying the _contents_ of the file, so there's no data to steal!
-         */
+              It is not possible to exfiltrate data, since srcOrigin is only set when the caller
+              *also* is supplying the _contents_ of the file, so there's no data to steal!
+               */
       window.parent.postMessage(
         { fileName: this.props.initFile.name, data: editorText },
         this.props.srcOrigin
@@ -366,6 +426,12 @@ export default class File extends React.Component {
           title={`${this.state.name} (Debug)`}
           data={this.state.debugData}
           onUpdate={this.handleDebugUpdate}
+        />
+        <OKResults
+          ref={this.testRef}
+          title="Doctest Results"
+          onDebug={this.debugTest}
+          data={this.state.doctestData}
         />
       </>
     );
