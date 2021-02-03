@@ -614,7 +614,7 @@ def run_doctests(f, *, export_json=False):
 
         if success:
             log_print(
-                f"All {len(block['cases'])} doctests for {f.__name__} > {block['name']} passed!"
+                f"All {len(block['cases'])} tests for {f.__name__} > {block['name']} passed!"
             )
 
         export.append(
