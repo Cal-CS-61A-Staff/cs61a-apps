@@ -169,7 +169,9 @@ def json_repr(elem):
             elem_reprs.append(y)
         return "[" + ", ".join(elem_reprs) + "]"
     elif isinstance(elem, str):
-        return '"' + repr(elem)[1:-1] + '"'
+        # fmt off
+        return repr(elem)
+        # fmt on
     elif isinstance(elem, dict):
         key_val_reprs = [
             json_repr(key) + ": " + json_repr(val) for key, val in elem.items()
@@ -505,8 +507,9 @@ def run_doctests(f, *, export_json=False):
     tests = []
     curr_block = dict(name="Doctests", cases=[])
     curr_case = None
-    for i, line in enumerate(s.strip().split("\n")):
-        line = line.strip()
+    num_leading_spaces = 0
+    for i, raw_line in enumerate(s.strip().split("\n")):
+        line = raw_line.strip()
         if line.startswith("# "):
             if curr_case is not None:
                 curr_block["cases"].append(curr_case)
@@ -516,6 +519,7 @@ def run_doctests(f, *, export_json=False):
             curr_case = None
         elif line.startswith(">>> "):
             # new test case
+            num_leading_spaces = len(raw_line) - len(line)
             if curr_case is not None:
                 curr_block["cases"].append(curr_case)
             curr_case = [line[4:], ""]
@@ -531,7 +535,9 @@ def run_doctests(f, *, export_json=False):
             if curr_case is not None:
                 if curr_case[1]:
                     curr_case[1] += "\n"
-                curr_case[1] += line
+                if not raw_line.startswith(" " * num_leading_spaces):
+                    raise Exception(f"Incorrect indentation in doctest for {f}")
+                curr_case[1] += raw_line[num_leading_spaces:]
 
     if curr_case is not None:
         curr_block["cases"].append(curr_case)
@@ -577,7 +583,7 @@ def run_doctests(f, *, export_json=False):
                 try:
                     ret = eval(inp, namespace)
                     if ret is not None:
-                        print(ret)
+                        print(repr(ret))
                 except SyntaxError as msg:
                     if str(msg) == "eval() argument must be an expression":
                         out[:] = []

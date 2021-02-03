@@ -150,7 +150,8 @@ export default class File extends React.Component {
           return;
         }
         const rawData = out.slice(DOCTEST_MARKER.length);
-        const doctestData = JSON.parse(rawData);
+        // eslint-disable-next-line no-eval
+        const doctestData = (0, eval)(rawData);
         this.setState({ doctestData });
         this.testRef.current.forceOpen();
         killCallback();
