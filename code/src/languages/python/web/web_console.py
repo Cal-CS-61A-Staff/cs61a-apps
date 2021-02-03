@@ -529,7 +529,7 @@ def run_doctests(f):
                     print(ret)
             except SyntaxError as msg:
                 if str(msg) == "eval() argument must be an expression":
-                    out = []
+                    out[:] = []
                     exec(inp, namespace)
                 else:
                     raise
