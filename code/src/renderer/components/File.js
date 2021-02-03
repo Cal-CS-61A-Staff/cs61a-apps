@@ -349,9 +349,9 @@ export default class File extends React.Component {
   handleEditorChange = (editorText) => {
     if (this.props.srcOrigin) {
       /*
-              It is not possible to exfiltrate data, since srcOrigin is only set when the caller
-              *also* is supplying the _contents_ of the file, so there's no data to steal!
-               */
+      It is not possible to exfiltrate data, since srcOrigin is only set when the caller
+      *also* is supplying the _contents_ of the file, so there's no data to steal!
+       */
       window.parent.postMessage(
         { fileName: this.props.initFile.name, data: editorText },
         this.props.srcOrigin
