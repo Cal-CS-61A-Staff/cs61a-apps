@@ -40,9 +40,9 @@ def update_status(packed_ref: str, pr_number: int):
             "Pusher failed to build a modified service",
             "Pusher",
         )
-    elif all(status in (
-            BuildStatus.building, BuildStatus.queued
-        ) for _, status in statuses):
+    elif all(
+        status in (BuildStatus.building, BuildStatus.queued) for _, status in statuses
+    ):
         repo.get_commit(sha).create_status(
             "pending",
             "https://logs.cs61a.org/service/buildserver",
