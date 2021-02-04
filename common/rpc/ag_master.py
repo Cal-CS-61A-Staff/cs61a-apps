@@ -19,8 +19,8 @@ def get_submission(*, course: str, bid: str, job_id: str) -> Dict:
     ...
 
 
-@service.route("/api/send_score")
-def send_score(*, course: str, payload: Dict, job_id: str):
+@service.route("/api/handle_output")
+def handle_output(*, course: str, output: str, job_id: str) -> Dict:
     ...
 
 

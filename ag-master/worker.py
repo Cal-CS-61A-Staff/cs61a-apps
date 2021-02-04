@@ -4,7 +4,7 @@ from google.cloud import storage
 from models import Assignment, Job, db
 from utils import check_course_secret, BUCKET, SUBM_ENDPOINT, SCORE_ENDPOINT
 
-from common.rpc.ag_master import get_zip, get_submission, send_score, set_results
+from common.rpc.ag_master import get_zip, get_submission, handle_output, set_results
 
 
 def create_worker_endpoints(app):
@@ -39,17 +39,22 @@ def create_worker_endpoints(app):
             return r.json()["data"]
         return dict(success=False)
 
-    @send_score.bind(app)
+    @handle_output.bind(app)
     @check_course_secret
-    def send_score_rpc(course, payload, job_id):
+    def handle_output_rpc(course, output, job_id):
         job = Job.query.filter_by(job_key=job_id).first()
         assignment = Assignment.query.filter_by(
             ag_key=job.assignment, course=course.secret
         ).first()  # validates secret
         if job and assignment:
-            requests.post(
-                SCORE_ENDPOINT, data=payload, params=dict(access_token=job.access_token)
-            )
+            scores = parse_scores(output)
+            for score in scores:
+                score["bid"] = job.backup
+                requests.post(
+                    SCORE_ENDPOINT,
+                    data=score,
+                    params=dict(access_token=job.access_token),
+                )
         return dict(success=(job is not None))
 
     @set_results.bind(app)
@@ -64,3 +69,52 @@ def create_worker_endpoints(app):
             job.result = result
             db.session.commit()
         return dict(success=(job is not None))
+
+
+def extract_scores(transcript):
+    """Return a list of (key, score) pairs from a transcript, raising
+    ValueErrors."""
+
+    score_lines = []
+    found_score = False
+    for line in reversed(transcript.split("\n")):
+        line = line.strip()
+        if line.lower() == "score:":
+            found_score = True
+            break
+        if ":" in line:
+            score_lines.append(line)
+
+    if not found_score:
+        raise ValueError('no scores found; "Score" must appear on a line by ' "itself")
+
+    pairs = [l.split(":", 1) for l in reversed(score_lines)]
+
+    if len(pairs) == 0:
+        raise ValueError('no scores found; "Score" must be followed with a ' "colon")
+
+    return [(k, float(v)) for k, v in pairs]
+
+
+def parse_scores(output):
+    all_scores = []
+    try:
+        scores = extract_scores(output)
+        for name, points in scores:
+            if len(output) > 9000:
+                output = (
+                    output[:750]
+                    + "\nTruncated "
+                    + str(len(output) - 1500)
+                    + " Characters.\n"
+                    + output[-750:]
+                )
+
+            all_scores.append(
+                {"score": float(points), "kind": name, "message": str(output)}
+            )
+    except ValueError as e:
+        message = "Error - Parse: " + str(e) + "Got: \n{}".format(output)
+        return [{"score": 0.0, "kind": "Error", "message": message}]
+
+    return all_scores
