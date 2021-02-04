@@ -57,7 +57,6 @@ def create_admin_endpoints(app):
         }
 
     @app.route("/course_info")
-    @app.route("/")
     @admin_only
     def course_info(course):
         assignments = Assignment.query.filter_by(course=course.secret).all()

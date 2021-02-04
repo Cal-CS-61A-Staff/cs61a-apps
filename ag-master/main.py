@@ -20,5 +20,10 @@ create_worker_endpoints(app)
 create_superadmin_endpoints(app)
 
 
+@app.route("/")
+def index():
+    return "it works!"
+
+
 if __name__ == "__main__":
     app.run()
