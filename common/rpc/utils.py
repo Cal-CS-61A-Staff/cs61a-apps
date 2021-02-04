@@ -75,18 +75,13 @@ def create_service(app: str, override=None, providers=None):
                     kwargs["master_secret"] = sudo_secret
 
                 for i, endpoint in enumerate(endpoints):
-                    try:
-                        # check if the / endpoint exists
-                        check_exists = requests.get(endpoint[: -len(path)])
-                        if i != len(endpoints) - 1:
-                            # if a PR build reports failure, try the prod build
+                    if i != len(endpoints) - 1:
+                        try:
+                            # check if the PR / endpoint exists
+                            check_exists = requests.get(endpoint[: -len(path)])
                             check_exists.raise_for_status()
-                    except:
-                        if i != len(endpoints) - 1:
-                            # on a PR build, try the main endpoint next
+                        except:
                             continue
-                        else:
-                            raise
                     if noreply:
                         try:
                             requests.post(endpoint, json=kwargs, timeout=1)
