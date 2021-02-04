@@ -31,7 +31,7 @@ def create_service(app: str, override=None, providers=None):
                     endpoints = [f"{provider}{path}" for provider in providers]
                 else:
                     endpoints = []
-                    if has_request_context() and not noreply:
+                    if has_request_context():
                         proxied_host = request.headers.get("X-Forwarded-For-Host")
                         if proxied_host:
                             parts = proxied_host.split(".")
@@ -75,25 +75,25 @@ def create_service(app: str, override=None, providers=None):
                     kwargs["master_secret"] = sudo_secret
 
                 for i, endpoint in enumerate(endpoints):
+                    try:
+                        # check if the / endpoint exists
+                        check_exists = requests.get(endpoint[: -len(path)])
+                        if i != len(endpoints) - 1:
+                            # if a PR build reports failure, try the prod build
+                            check_exists.raise_for_status()
+                    except:
+                        if i != len(endpoints) - 1:
+                            # on a PR build, try the main endpoint next
+                            continue
+                        else:
+                            raise
                     if noreply:
                         try:
                             requests.post(endpoint, json=kwargs, timeout=1)
                         except requests.exceptions.ReadTimeout:
                             pass
                     else:
-                        try:
-                            resp = requests.post(
-                                endpoint, json=kwargs, stream=streaming
-                            )
-                            if i != len(endpoints) - 1:
-                                # if a PR build reports failure, try the prod build
-                                resp.raise_for_status()
-                        except:
-                            if i != len(endpoints) - 1:
-                                # on a PR build, try the main endpoint next
-                                continue
-                            else:
-                                raise
+                        resp = requests.post(endpoint, json=kwargs, stream=streaming)
                         if resp.status_code == 401:
                             raise PermissionError(resp.text)
                         elif resp.status_code == 500:
