@@ -78,7 +78,9 @@ def create_service(app: str, override=None, providers=None):
                     if i != len(endpoints) - 1:
                         try:
                             # check if the PR / endpoint exists
-                            check_exists = requests.get(endpoint[: -len(path)])
+                            check_exists = requests.get(
+                                endpoint[: -len(path)], allow_redirects=False
+                            )
                             check_exists.raise_for_status()
                         except:
                             continue
