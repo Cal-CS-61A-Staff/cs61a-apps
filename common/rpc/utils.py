@@ -91,7 +91,7 @@ def create_service(app: str, override=None, providers=None):
                         try:
                             requests.post(endpoint, json=kwargs, timeout=1)
                         except requests.exceptions.ReadTimeout:
-                            pass
+                            return
                     else:
                         resp = requests.post(endpoint, json=kwargs, stream=streaming)
                         if resp.status_code == 401:
