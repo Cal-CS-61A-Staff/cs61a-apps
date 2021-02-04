@@ -169,9 +169,7 @@ def json_repr(elem):
             elem_reprs.append(y)
         return "[" + ", ".join(elem_reprs) + "]"
     elif isinstance(elem, str):
-        # fmt off
         return repr(elem)
-        # fmt on
     elif isinstance(elem, dict):
         key_val_reprs = [
             json_repr(key) + ": " + json_repr(val) for key, val in elem.items()
