@@ -75,6 +75,7 @@ def create_okpy_endpoints(app):
                 course_key=assignment.course,
                 secret=get_secret(secret_name="AG_WORKER_SECRET"),
                 noreply=True,
+                timeout=8,
             )
         return dict(success=True)
 

@@ -26,6 +26,7 @@ def create_service(app: str, override=None, providers=None):
             @wraps(func)
             def wrapped(**kwargs):
                 noreply = kwargs.pop("noreply", False)
+                timeout = kwargs.pop("timeout", 1)
 
                 if providers:
                     endpoints = [f"{provider}{path}" for provider in providers]
@@ -86,7 +87,7 @@ def create_service(app: str, override=None, providers=None):
                             continue
                     if noreply:
                         try:
-                            requests.post(endpoint, json=kwargs, timeout=1)
+                            requests.post(endpoint, json=kwargs, timeout=timeout)
                         except requests.exceptions.ReadTimeout:
                             return
                     else:
