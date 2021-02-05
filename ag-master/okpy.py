@@ -70,7 +70,8 @@ def create_okpy_endpoints(app):
         return dict(success=True)
 
     def trigger(assignment, subm, jobs):
-        for line in batch_grade(
+        result = ""
+        for char in batch_grade(
             assignment_id=assignment.ag_key,
             assignment_name=assignment.name,
             command=assignment.command,
@@ -79,7 +80,8 @@ def create_okpy_endpoints(app):
             course_key=assignment.course,
             secret=get_secret(secret_name="AG_WORKER_SECRET"),
         ):
-            if line == "started":
+            result += char
+            if "started" in result:
                 return True
         return False
 
