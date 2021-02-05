@@ -1,4 +1,3 @@
-import requests
 from flask import request, abort
 from werkzeug.security import gen_salt
 
@@ -66,18 +65,23 @@ def create_okpy_endpoints(app):
         ]
 
         for subm_batch, job_batch in zip(subm_batches, job_batches):
-            batch_grade(
-                assignment_id=assignment.ag_key,
-                assignment_name=assignment.name,
-                command=assignment.command,
-                backups=subm_batch,
-                jobs=job_batch,
-                course_key=assignment.course,
-                secret=get_secret(secret_name="AG_WORKER_SECRET"),
-                noreply=True,
-                timeout=8,
-            )
+            if not trigger(assignment, subm_batch, job_batch):
+                trigger(assignment, subm_batch, job_batch)
         return dict(success=True)
+
+    def trigger(assignment, subm, jobs):
+        for line in batch_grade(
+            assignment_id=assignment.ag_key,
+            assignment_name=assignment.name,
+            command=assignment.command,
+            backups=subm,
+            jobs=jobs,
+            course_key=assignment.course,
+            secret=get_secret(secret_name="AG_WORKER_SECRET"),
+        ):
+            if line == "started":
+                return True
+        return False
 
     @app.route("/results/<job_id>", methods=["GET"])
     def get_results_for(job_id):
