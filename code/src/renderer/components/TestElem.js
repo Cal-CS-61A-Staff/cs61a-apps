@@ -8,7 +8,7 @@ export default class TestElem extends React.Component {
   }
 
   componentDidMount() {
-    this.divRef.current.scrollIntoViewIfNeeded();
+    this.divRef.current.scrollIntoView();
   }
 
   handleClick = () => {

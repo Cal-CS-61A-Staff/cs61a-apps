@@ -117,6 +117,7 @@ class OKResults extends React.Component {
           selectedProblemData.success =
             selectedProblemData.success && elem.success;
         }
+        selectedProblemData.code = elem.code;
       }
       selectedProblemData.raw = selectedProblemData.raw.join(
         `\n${"-".repeat(69)}\n`
