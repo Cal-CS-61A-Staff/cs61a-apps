@@ -20,8 +20,14 @@ def admin_only(func):
             email=get_user()["email"], course=course
         )
         if token_good or cookie_good:
-            return func(*args, **kwargs, course=course)
-        return login()
+            try:
+                return func(*args, **kwargs, course=course)
+            except PermissionError:
+                pass
+        if token:
+            raise PermissionError
+        else:
+            return login()
 
     return wrapped
 
@@ -31,7 +37,7 @@ def super_admin_only(func):
     @admin_only
     def wrapped(*args, course, **kwargs):
         if course != "cs61a":
-            return login()
+            raise PermissionError
         return func(*args, **kwargs)
 
     return wrapped

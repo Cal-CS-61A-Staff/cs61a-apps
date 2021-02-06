@@ -14,21 +14,24 @@ db = SQLAlchemy()
 
 class Assignment(db.Model):
     assignment_secret: str = db.Column(db.String(64), primary_key=True, index=True)
-    name: str = db.Column(db.String(64))
-    course: str = db.Column(db.String(64), index=True)
-    endpoint: str = db.Column(db.String(64), index=True)
-    file: str = db.Column(db.String(64))
-    command: str = db.Column(db.Text)
+    name: str = db.Column(db.String(64), nullable=False)
+    course: str = db.Column(db.String(64), index=True, nullable=False)
+    endpoint: str = db.Column(db.String(64), index=True, nullable=False)
+    file: str = db.Column(db.String(64), nullable=False)
+    command: str = db.Column(db.Text, nullable=False)
 
 
 class Job(db.Model):
     job_secret: str = db.Column(db.String(64), index=True, primary_key=True)
-    external_job_id: str = db.Column(db.String(64), index=True)
+    external_job_id: str = db.Column(db.String(64), index=True, nullable=False)
     assignment_secret: int = db.Column(
-        db.Integer, db.ForeignKey("assignment.assignment_secret"), index=True
+        db.Integer,
+        db.ForeignKey("assignment.assignment_secret"),
+        index=True,
+        nullable=False,
     )
     assignment: Assignment = db.relationship("Assignment")
-    backup: str = db.Column(db.String(64))
-    status: str = db.Column(db.String(64))
-    result: str = db.Column(db.Text)
-    access_token: str = db.Column(db.String(64))
+    backup: str = db.Column(db.String(64), nullable=False)
+    status: str = db.Column(db.String(64), default="queued", nullable=False)
+    result: str = db.Column(db.Text, default="", nullable=False)
+    access_token: str = db.Column(db.String(64), nullable=False)

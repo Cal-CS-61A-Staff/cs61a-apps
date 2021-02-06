@@ -9,7 +9,7 @@ def create_worker_endpoints(app):
     @get_submission.bind(app)
     def get_submission_rpc(job_id):
         # @nocommit these should all support batch queries
-        job = Job.query.get(job_key=job_id)
+        job = Job.query.get(job_id)
         if not job:
             raise KeyError
         r = requests.get(

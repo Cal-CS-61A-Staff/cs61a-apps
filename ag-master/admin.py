@@ -17,18 +17,21 @@ def create_admin_endpoints(app):
         bucket = storage.Client().get_bucket(BUCKET)
         blob = bucket.blob(f"zips/{get_endpoint(course=course)}/{name}")
         blob.upload_from_string(file, content_type="application/zip")
-        return dict(success=True)
 
     @create_assignment.bind(app)
     @admin_only
     def create_assignment_rpc(course, name, file, command):
         assignment: Assignment = Assignment.query.filter_by(
-            name=name,
-            course=course,
+            name=name, course=course, endpoint=get_endpoint(course=course)
         ).one_or_none()
 
         if not assignment:
-            assignment = Assignment(name=name, assignment_secret=new_secret())
+            assignment = Assignment(
+                name=name,
+                assignment_secret=new_secret(),
+                course=course,
+                endpoint=get_endpoint(course=course),
+            )
             db.session.add(assignment)
 
         assignment.file = file
