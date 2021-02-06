@@ -50,7 +50,7 @@ def select_endpoint(endpoints: List[str], path: str, retries: int):
                     sleep(1)
                     continue
                 check_exists.raise_for_status()
-                break
+                return endpoint
             else:
                 # if we exhaust all our retries, give up on this endpoint
                 continue
