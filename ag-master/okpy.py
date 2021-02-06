@@ -1,3 +1,4 @@
+import traceback
 from flask import request, abort
 from werkzeug.security import gen_salt
 
@@ -68,7 +69,7 @@ def create_okpy_endpoints(app):
                 Job.query.filter(Job.job_key.in_(job_batch)).update(
                     {
                         Job.status: "failed",
-                        Job.result: "trigger_job failed",
+                        Job.result: "trigger_job error\n" + traceback.format_exc(),
                     }
                 )
                 db.session.commit()
