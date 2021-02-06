@@ -17,9 +17,10 @@ from common.rpc.buildserver import (
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
 from conf import GITHUB_REPO
-from service_management import delete_unused_services
 from github_utils import BuildStatus, pack, set_pr_comment
+from rebuilder import create_rebuilder
 from scheduling import report_build_status
+from service_management import delete_unused_services
 from target_determinator import determine_targets
 from worker import land_commit
 
@@ -30,6 +31,7 @@ if __name__ == "__main__":
     app.debug = True
 
 create_oauth_client(app, "61a-buildserver")
+create_rebuilder(app)
 
 with connect_db() as db:
     db(

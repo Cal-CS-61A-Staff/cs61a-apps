@@ -1,7 +1,9 @@
+import sys
 from time import time
 from typing import Dict, List, Optional
 
 from common.db import connect_db
+from common.rpc.auth import post_slack_message
 from common.rpc.paste import get_paste_url, paste_text
 from github_utils import BuildStatus, update_status
 
@@ -108,7 +110,21 @@ def report_build_status(
     *,
     private: bool
 ):
-    log_url = get_paste_url(paste_text(data=log_data, is_private=private))
+    try:
+        log_url = get_paste_url(
+            paste_text(data=log_data, is_private=private, retries=3)
+        )
+    except Exception:
+        print(log_data, file=sys.stderr)
+        print("Paste failure, logs were dumped to stdout", file=sys.stderr)
+        try:
+            post_slack_message(
+                course="cs61a",
+                message="Paste failed on buildserver, continuing anyway, please check logs ASAP",
+                purpose="infra",
+            )
+        except:
+            pass
     with connect_db() as db:
         existing = db(
             "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND packed_ref=%s",
