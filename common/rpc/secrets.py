@@ -34,7 +34,7 @@ def validates_master_secret(func):
     return wrapped
 
 
-def only(allowed_app, *, allow_staging=False):
+def only(allowed_app, *, allow_staging=True):
     def decorator(func):
         @wraps(func)
         def wrapped(*, master_secret, **kwargs):
