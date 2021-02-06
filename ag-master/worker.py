@@ -1,3 +1,6 @@
+from functools import wraps
+from typing import List, Union
+
 import requests
 
 from common.rpc.ag_master import get_submission, handle_output, set_results
@@ -5,13 +8,34 @@ from models import Job, db
 from utils import SCORE_ENDPOINT, SUBM_ENDPOINT
 
 
+def job_transition(*, at: Union[str, List[str]], to: str):
+    def decorator(func):
+        @wraps(func)
+        def handler(*, job_id, **kwargs):
+            job = Job.query.get(job_id)
+            if not job:
+                raise KeyError
+            if isinstance(at, str):
+                at_list = [at]
+            else:
+                at_list = at
+            if job.status not in at_list:
+                raise PermissionError
+            try:
+                return func(job=job, **kwargs)
+            finally:
+                job.status = to
+                db.session.commit()
+
+        return handler
+
+    return decorator
+
+
 def create_worker_endpoints(app):
     @get_submission.bind(app)
-    def get_submission_rpc(job_id):
-        # @nocommit these should all support batch queries
-        job = Job.query.get(job_id)
-        if not job:
-            raise KeyError
+    @job_transition(at="queued", to="started")
+    def get_submission_rpc(job):
         r = requests.get(
             f"{SUBM_ENDPOINT}/{job.backup}",
             params=dict(access_token=job.access_token),
@@ -20,10 +44,8 @@ def create_worker_endpoints(app):
         return r.json()["data"]
 
     @handle_output.bind(app)
-    def handle_output_rpc(output, job_id):
-        job = Job.query.get(job_id)
-        if not job:
-            raise KeyError
+    @job_transition(at="started", to="finished")
+    def handle_output_rpc(output, job):
         scores = parse_scores(output)
         for score in scores:
             score["bid"] = job.backup
@@ -34,10 +56,8 @@ def create_worker_endpoints(app):
             )
 
     @set_results.bind(app)
-    def set_results_rpc(job_id, status, result):
-        job = Job.query.get(job_id)
-        if not job:
-            raise KeyError
+    @job_transition(at=["queued", "started"], to="failed")
+    def set_results_rpc(job, status, result):
         job.status = status
         job.result = result
         db.session.commit()
