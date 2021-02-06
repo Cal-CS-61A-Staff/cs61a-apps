@@ -76,21 +76,19 @@ def create_okpy_endpoints(app):
         return dict(success=True)
 
     def trigger(assignment, subm, jobs):
-        result = ""
-        for char in batch_grade(
-            assignment_id=assignment.ag_key,
-            assignment_name=assignment.name,
-            command=assignment.command,
-            backups=subm,
-            jobs=jobs,
-            course_key=assignment.course,
-            secret=get_secret(secret_name="AG_WORKER_SECRET"),
-            retries=3,
-        ):
-            result += char
-            if "started" in result:
-                return True
-        return False
+        next(
+            batch_grade(
+                assignment_id=assignment.ag_key,
+                assignment_name=assignment.name,
+                command=assignment.command,
+                backups=subm,
+                jobs=jobs,
+                course_key=assignment.course,
+                secret=get_secret(secret_name="AG_WORKER_SECRET"),
+                retries=3,
+            )
+        )
+        return True
 
     @app.route("/results/<job_id>", methods=["GET"])
     def get_results_for(job_id):
