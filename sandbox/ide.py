@@ -51,7 +51,8 @@ VSCODE_ASSOC = """
     "files.associations": {
         "BUILD": "python",
         "WORKSPACE": "python"
-    }
+    },
+    "files.trimTrailingWhitespace": true
 }
 """
 
