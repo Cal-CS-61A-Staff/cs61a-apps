@@ -43,7 +43,7 @@ def create_worker_endpoints(app):
         )
         job.started_at = int(time.time())
         db.session.commit()
-        
+
         r.raise_for_status()
         return r.json()["data"]
 
