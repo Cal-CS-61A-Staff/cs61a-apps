@@ -63,32 +63,18 @@ def create_okpy_endpoints(app):
         ]
 
         for subm_batch, job_batch in zip(subm_batches, job_batches):
-            try:
-                trigger(assignment, subm_batch, job_batch)
-            except:
-                Job.query.filter(Job.job_key.in_(job_batch)).update(
-                    {
-                        Job.status: "failed",
-                        Job.result: "trigger_job error\n" + traceback.format_exc(),
-                    }
-                )
-                db.session.commit()
-        return dict(success=True)
-
-    def trigger(assignment, subm, jobs):
-        next(
             batch_grade(
                 assignment_id=assignment.ag_key,
                 assignment_name=assignment.name,
                 command=assignment.command,
-                backups=subm,
-                jobs=jobs,
+                backups=subm_batch,
+                jobs=job_batch,
                 course_key=assignment.course,
                 secret=get_secret(secret_name="AG_WORKER_SECRET"),
-                retries=3,
+                noreply=True,
+                timeout=8,
             )
-        )
-        return True
+        return dict(success=True)
 
     @app.route("/results/<job_id>", methods=["GET"])
     def get_results_for(job_id):
