@@ -1,3 +1,4 @@
+import sys
 from time import time
 from typing import Dict, List, Optional
 
@@ -114,8 +115,8 @@ def report_build_status(
             paste_text(data=log_data, is_private=private, retries=3)
         )
     except Exception:
-        print(log_data)
-        print("Paste failure, logs were dumped to stdout")
+        print(log_data, file=sys.stderr)
+        print("Paste failure, logs were dumped to stdout", file=sys.stderr)
         try:
             post_slack_message(
                 course="cs61a",
