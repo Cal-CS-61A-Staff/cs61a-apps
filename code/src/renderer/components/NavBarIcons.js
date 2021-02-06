@@ -2,7 +2,7 @@ import React from "react";
 import NavBarIcon from "./NavBarIcon";
 
 export default function NavBarIcons(props) {
-  const actions = ["Format", "Debug", "Run"];
+  const actions = ["Format", "Debug", "Test", "Run"];
   const icons = actions.map((action) => (
     <NavBarIcon
       key={action}

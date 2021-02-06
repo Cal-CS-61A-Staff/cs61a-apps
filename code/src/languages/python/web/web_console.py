@@ -169,7 +169,7 @@ def json_repr(elem):
             elem_reprs.append(y)
         return "[" + ", ".join(elem_reprs) + "]"
     elif isinstance(elem, str):
-        return '"' + repr(elem)[1:-1] + '"'
+        return repr(elem)
     elif isinstance(elem, dict):
         key_val_reprs = [
             json_repr(key) + ": " + json_repr(val) for key, val in elem.items()
@@ -481,20 +481,45 @@ def indent(s, pad=4):
     return "\n".join(" " * pad + line for line in s.split("\n"))
 
 
-def run_doctests(f):
-    s = f.__doc__
-    if not s:
-        print(f"No doctests found for {f.__name__}, skipping...")
-        return
+def run_all_doctests():
+    export = []
+    done = set()
+    for obj in editor_ns.values():
+        if hasattr(obj, "__doc__") and hasattr(obj, "__name__"):
+            try:
+                if obj in done:
+                    continue
+                done.add(obj)
+            except TypeError:
+                # maybe obj is unhashable? But it might be callable, so try it anyway
+                pass
+            out = run_doctests(obj, export_json=True)
+            if out:
+                export.extend(out)
+    print("DOCTEST: " + json_repr(export))
+
+
+def run_doctests(f, *, export_json=False):
+    s = f.__doc__ or ""
 
     tests = []
+    curr_block = dict(name="Doctests", cases=[])
     curr_case = None
-    for i, line in enumerate(s.strip().split("\n")):
-        line = line.strip()
-        if line.startswith(">>> "):
-            # new test case
+    num_leading_spaces = 0
+    for i, raw_line in enumerate(s.strip().split("\n")):
+        line = raw_line.strip()
+        if line.startswith("# "):
             if curr_case is not None:
-                tests.append(curr_case)
+                curr_block["cases"].append(curr_case)
+            if curr_block["cases"]:
+                tests.append(curr_block)
+            curr_block = dict(name=line[2:].strip(), cases=[])
+            curr_case = None
+        elif line.startswith(">>> "):
+            # new test case
+            num_leading_spaces = len(raw_line) - len(line)
+            if curr_case is not None:
+                curr_block["cases"].append(curr_case)
             curr_case = [line[4:], ""]
         elif line.startswith("... "):
             # continue previous test case
@@ -503,62 +528,111 @@ def run_doctests(f):
             curr_case[0] += "\n" + line[4:]
         else:
             if not line and curr_case is not None:
-                tests.append(curr_case)
+                curr_block["cases"].append(curr_case)
                 curr_case = None
             if curr_case is not None:
                 if curr_case[1]:
                     curr_case[1] += "\n"
-                curr_case[1] += line
+                if not raw_line.startswith(" " * num_leading_spaces):
+                    raise Exception(f"Incorrect indentation in doctest for {f}")
+                curr_case[1] += raw_line[num_leading_spaces:]
 
     if curr_case is not None:
-        tests.append(curr_case)
+        curr_block["cases"].append(curr_case)
+    if curr_block["cases"]:
+        tests.append(curr_block)
+
+    if not tests:
+        if not export_json:
+            print(f"No doctests found for {f.__name__}, skipping...")
+        return
+
+    if len(tests) > 1 and tests[0]["name"] == "Doctests":
+        tests[0]["name"] = "Setup"
 
     namespace = dict(editor_ns)
 
-    print(f"Running {len(tests)} doctests for {f.__name__}:")
-
-    for i, (inp, exp) in enumerate(tests):
-        out = []
-        old_write = sys.stdout.write
-        old_err = sys.stderr.write
-        try:
-            sys.stdout.write = sys.stderr.write = out.append
-            try:
-                ret = eval(inp, namespace)
-                if ret is not None:
-                    print(ret)
-            except SyntaxError as msg:
-                if str(msg) == "eval() argument must be an expression":
-                    out = []
-                    exec(inp, namespace)
-                else:
-                    raise
-        except Exception:
-            print_tb()
-        finally:
-            sys.stdout.write = old_write
-            sys.stderr.write = old_err
-        out = "".join(out)
-        first, *rest = inp.split("\n")
-        if out.strip() != exp.strip():
-            err("Failed example:\n")
-            err(indent(f">>> {first}") + "\n")
-            for r in rest:
-                err(indent(f"... {r}") + "\n")
-            err(f"Expected:\n")
-            err(indent(exp.strip()) + "\n")
-            err("Received:\n")
-            err(indent(out.strip()) + "\n")
-            err(f"{i} out of {len(tests)} tests passed.\n")
-            return
+    export = []
+    executed = []
+    for block in tests:
+        all_out = []
+        if export_json:
+            log_print = lambda x: all_out.append(x + "\n")
+            log_err = all_out.append
+            pad = 0
         else:
-            print(indent(f">>> {first}"))
-            for r in rest:
-                print(indent(f"... {r}"))
-            if out.strip():
-                print(indent(out.strip()))
+            log_print = print
+            log_err = err
+            pad = 4
 
-    print(f"All {len(tests)} doctests for {f.__name__} passed!")
+        log_print(
+            f"Running {len(block['cases'])} tests in {f.__name__} > {block['name']}:"
+        )
+
+        success = True
+
+        for i, (inp, exp) in enumerate(block["cases"]):
+            out = []
+            old_write = sys.stdout.write
+            old_err = sys.stderr.write
+            try:
+                executed.append(inp)
+                sys.stdout.write = sys.stderr.write = out.append
+                try:
+                    ret = eval(inp, namespace)
+                    if ret is not None:
+                        print(repr(ret))
+                except SyntaxError as msg:
+                    if str(msg) == "eval() argument must be an expression":
+                        out[:] = []
+                        exec(inp, namespace)
+                    else:
+                        raise
+            except Exception:
+                print_tb()
+            finally:
+                sys.stdout.write = old_write
+                sys.stderr.write = old_err
+            out = "".join(out)
+            first, *rest = inp.split("\n")
+            success = out.strip() == exp.strip()
+            if not success:
+                log_err("Failed example:\n")
+                log_err(indent(f">>> {first}") + "\n")
+                for r in rest:
+                    log_err(indent(f"... {r}") + "\n")
+                log_err(f"Expected:\n")
+                log_err(indent(exp.strip()) + "\n")
+                log_err("Received:\n")
+                log_err(indent(out.strip()) + "\n")
+                log_err(
+                    f"{i} out of {len(block['cases'])} tests passed in {block['name']}.\n"
+                )
+                break
+            else:
+                log_print(indent(f">>> {first}", pad=pad))
+                for r in rest:
+                    log_print(indent(f"... {r}", pad=pad))
+                if out.strip():
+                    log_print(indent(out.strip(), pad=pad))
+
+        if success:
+            log_print(
+                f"All {len(block['cases'])} tests for {f.__name__} > {block['name']} passed!"
+            )
+
+        export.append(
+            dict(
+                name=[f"Doctests for {f.__name__}", block["name"]],
+                rawName=f"{f.__name__} > {block['name']}",
+                success=success,
+                code=["\n".join(executed)],
+                raw="".join(all_out),
+            )
+        )
+
+    if export_json:
+        return export
 
 
 editor_ns = {
@@ -582,6 +656,7 @@ editor_ns = {
     "label": label,
     "branches": branches,
     "test": run_doctests,
+    "__run_all_doctests": run_all_doctests,
 }
 
 replace_trees(editor_ns)
@@ -606,7 +681,6 @@ def handleInput(line):
         else:
             write(_launchtext)
             err("\n>>> ")
-            # doc['code'].value += 'Type "copyright", "credits" or "license" for more information.'
         firstLine = False
         return
 

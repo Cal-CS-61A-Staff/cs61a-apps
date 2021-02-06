@@ -106,6 +106,8 @@ html {
     width: calc(100% - 20px);
     bottom: 20px;
     height: calc(100% - 90px);
+    white-space: pre-wrap;
+    font-family: 'Consolas', 'Monaco', monospace;
 }
 
 .modalCol {

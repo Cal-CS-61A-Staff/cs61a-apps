@@ -27,6 +27,7 @@
     "babel-eslint": "^10.1.0",
     "eslint-config-prettier": "^7.1.0",
     "firebase": "^8.2.1",
+    "prettier": "^2.2.1",
     "source-map-support": "^0.5.10"
   },
   "devDependencies": {
