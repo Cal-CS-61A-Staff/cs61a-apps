@@ -1,19 +1,19 @@
 import requests
 
 from common.rpc.ag_master import get_submission, handle_output, set_results
-from models import Assignment, Job, db
+from models import Job, db
 from utils import SCORE_ENDPOINT, SUBM_ENDPOINT
 
 
 def create_worker_endpoints(app):
     @get_submission.bind(app)
-    def get_submission_rpc(backup_id, job_id):
+    def get_submission_rpc(job_id):
         # @nocommit these should all support batch queries
         job = Job.query.get(job_key=job_id)
         if not job:
             raise KeyError
         r = requests.get(
-            SUBM_ENDPOINT + "/" + str(backup_id),
+            f"{SUBM_ENDPOINT}/{job.backup}",
             params=dict(access_token=job.access_token),
         )
         r.raise_for_status()

@@ -21,7 +21,7 @@ def trigger_jobs(*, assignment_id: str, jobs: List[str]):
 
 
 @service.route("/api/get_submission")
-def get_submission(*, backup_id: str, job_id: str) -> Dict:
+def get_submission(*, job_id: str) -> Dict:
     ...
 
 
