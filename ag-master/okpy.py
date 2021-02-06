@@ -5,7 +5,7 @@ import traceback
 from flask import abort
 from google.cloud import storage
 
-from common.rpc.ag_master import get_results, trigger_jobs
+from common.rpc.ag_master import get_results, okpy_batch_grade, trigger_jobs
 from common.rpc.ag_worker import batch_grade
 from common.rpc.secrets import only
 from common.secrets import new_secret
@@ -14,8 +14,8 @@ from utils import BATCH_SIZE, BUCKET
 
 
 def create_okpy_endpoints(app):
-    @batch_grade.bind(app)
-    def batch_grade_impl(subm_ids, assignment, access_token):
+    @okpy_batch_grade.bind(app)
+    def okpy_batch_grade_impl(subm_ids, assignment, access_token):
         if assignment == "test":
             # @nocommit can this be jsonified safely?
             return "OK"
@@ -40,15 +40,17 @@ def create_okpy_endpoints(app):
         db.session.bulk_save_objects(objects)
         db.session.commit()
 
-        trigger_jobs(jobs=jobs, noreply=True)
+        trigger_jobs(
+            assignment_id=assignment.assignment_secret, jobs=jobs, noreply=True
+        )
 
         return dict(jobs=jobs)
 
     @trigger_jobs.bind(app)
     @only("ag-master")
-    def trigger_jobs_impl(assignment, jobs):
+    def trigger_jobs_impl(assignment_id, jobs):
         job_batches = [jobs[i : i + BATCH_SIZE] for i in range(len(jobs), BATCH_SIZE)]
-        assignment: Assignment = Assignment.query.get(assignment)
+        assignment: Assignment = Assignment.query.get(assignment_id)
 
         bucket = storage.Client().get_bucket(BUCKET)
         blob = bucket.blob(f"zips/{assignment.endpoint}/{assignment.file}")

@@ -7,13 +7,13 @@ from utils import SCORE_ENDPOINT, SUBM_ENDPOINT
 
 def create_worker_endpoints(app):
     @get_submission.bind(app)
-    def get_submission_rpc(bid, job_id):
+    def get_submission_rpc(backup_id, job_id):
         # @nocommit these should all support batch queries
         job = Job.query.get(job_key=job_id)
         if not job:
             raise KeyError
         r = requests.get(
-            SUBM_ENDPOINT + "/" + str(bid),
+            SUBM_ENDPOINT + "/" + str(backup_id),
             params=dict(access_token=job.access_token),
         )
         r.raise_for_status()
