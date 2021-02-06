@@ -83,7 +83,7 @@ def create_okpy_endpoints(app):
                 )
             except:
                 # @nocommit this is somehow wrong because it errored in a PR build
-                Job.query.filter(Job.job_key.in_(job_batch)).update(
+                Job.query.filter(Job.job_secret.in_(job_batch)).update(
                     {
                         Job.status: "failed",
                         Job.result: "trigger_job error\n" + traceback.format_exc(),
