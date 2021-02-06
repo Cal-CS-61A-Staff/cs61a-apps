@@ -14,12 +14,9 @@ import {
   SHOW_OPEN_DIALOG,
 } from "../../common/communicationEnums.js";
 import NavBar from "./NavBar";
-import OKResults from "./OKResults";
 import { initGoldenLayout } from "../utils/goldenLayout";
-import registerOKPyHandler from "../utils/receiveOKResults";
 import claimMenu from "../utils/menuHandler";
 import File from "./File";
-import generateDebugTrace from "../../languages/python/utils/generateDebugTrace.js";
 import { sendNoInteract } from "../utils/communication.js";
 import Console from "./Console.js";
 import { openHelp } from "../utils/help.js";
@@ -33,11 +30,6 @@ export default class MainScreen extends React.Component {
       activeFileKey: null,
 
       consoles: [],
-
-      okResults: null,
-      cachedOKModules: {},
-      okPath: null,
-      detachOKPyCallback: registerOKPyHandler(this.handleOKPyUpdate),
 
       detachMenuCallback: claimMenu({
         [MENU_NEW]: this.newFile,
@@ -73,7 +65,6 @@ export default class MainScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    this.state.detachOKPyCallback();
     this.state.detachMenuCallback();
   }
 
@@ -136,39 +127,6 @@ export default class MainScreen extends React.Component {
     this.setState((state) => ({ consoles: state.consoles.concat([0]) }));
   };
 
-  handleOKPyUpdate = (okResults, cachedOKModules, okPath) => {
-    this.setState({ okResults, cachedOKModules, okPath });
-    this.okResultsRef.current.forceOpen();
-  };
-
-  handleOKPyDebug = async (testData) => {
-    const setupCode = [];
-    const caseCode = [];
-    let i = 0;
-    for (; i !== testData.code.length; ++i) {
-      if (!testData.code[i].includes("import")) {
-        break;
-      }
-      setupCode.push(testData.code[i]);
-    }
-    for (; i !== testData.code.length; ++i) {
-      caseCode.push(testData.code[i]);
-    }
-
-    const setupCodeStr = setupCode.join("\n");
-    const caseCodeStr = caseCode.join("\n");
-
-    // todo: make language agnostic
-    const debugData = await generateDebugTrace(
-      caseCodeStr,
-      this.state.cachedOKModules,
-      setupCodeStr,
-      this.state.okPath
-    );
-
-    this.state.files[this.state.activeFileKey].ref.current.debug(debugData);
-  };
-
   handleFileActivate = (key) => {
     if (key !== this.state.activeFileKey) {
       this.setState({
@@ -218,12 +176,6 @@ export default class MainScreen extends React.Component {
         {fileElems}
         {consoleElems}
         <div id="tabRoot" />
-        <OKResults
-          ref={this.okResultsRef}
-          title="OKPy Results"
-          onDebug={this.handleOKPyDebug}
-          data={this.state.okResults}
-        />
       </>
     );
   }
