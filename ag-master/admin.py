@@ -2,11 +2,13 @@ import base64
 import time
 
 from google.cloud import storage
+from typing import List
+from flask import jsonify
 
 from common.rpc.ag_master import create_assignment, upload_zip
 from common.rpc.auth import get_endpoint
 from common.secrets import new_secret
-from models import Assignment, db
+from models import Assignment, db, Job
 from utils import BUCKET, admin_only
 
 
@@ -41,3 +43,45 @@ def create_admin_endpoints(app):
         db.session.commit()
 
         return assignment.assignment_secret
+
+    @app.route("/<course>/assignments")
+    @admin_only
+    def get_assignments(course):
+        endpoint = get_endpoint(course=course)
+        assignments: List[Assignment] = Assignment.query.filter(
+            Assignment.endpoint == endpoint
+        ).all()
+
+        return {
+            assign.name: {
+                "last_modified": assign.last_modified,
+            }
+            for assign in assignments
+        }
+
+    @app.route("/<course>/<assign>/jobs")
+    @admin_only
+    def get_jobs(course, assign):
+        endpoint = get_endpoint(course=course)
+        assign = (
+            Assignment.query.filter(Assignment.endpoint == endpoint)
+            .filter(Assignment.name == assign)
+            .one()
+        )
+        jobs: List[Job] = Job.query.filter(
+            Job.assignment_secret == assign.assignment_secret
+        ).all()
+
+        return jsonify(
+            [
+                {
+                    "queued_at": job.queued_at,
+                    "started_at": job.started_at,
+                    "finished_at": job.finished_at,
+                    "backup": job.backup,
+                    "status": job.status,
+                    "result": job.result,
+                }
+                for job in jobs
+            ]
+        )

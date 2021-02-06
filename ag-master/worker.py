@@ -58,6 +58,7 @@ def create_worker_endpoints(app):
                 data=score,
                 params=dict(access_token=job.access_token),
             )
+        job.result = output
         job.finished_at = int(time.time())
         db.session.commit()
 
