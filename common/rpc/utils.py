@@ -185,7 +185,7 @@ def requires_master_secret(func):
 
             print(f"Attempting to impersonate {kwargs.get('_impersonate')}")
 
-            impersonate = kwargs.pop("impersonate")
+            impersonate = kwargs.pop("_impersonate")
 
             try:
                 sudo_secret = get_secret_from_server(
