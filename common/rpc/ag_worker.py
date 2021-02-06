@@ -5,14 +5,5 @@ service = create_service(__name__, "ag-worker")
 
 
 @service.route("/api/batch_grade", streaming=True)
-def batch_grade(
-    *,
-    secret: str,
-    assignment_id: str,
-    assignment_name: str,
-    command: str,
-    backups: List[str],
-    jobs: List[str],
-    course_key: str
-):
+def batch_grade(*, command: str, jobs: List[str], grading_zip: str):
     ...

@@ -1,11 +1,22 @@
 from typing import List, Dict
-from common.rpc.utils import create_service
+from common.rpc.utils import create_service, requires_master_secret
 
 service = create_service(__name__, "ag-master")
 
 
+@service.route("/api/ok/v3/grade/batch")
+def batch_grade(*, subm_ids: List[str], assignment: str, access_token: str):
+    ...
+
+
+@service.route("/results")
+def get_results(job_ids: List[str]):
+    ...
+
+
+@requires_master_secret
 @service.route("/api/trigger_jobs")
-def trigger_jobs(*, secret: str, assignment_id: str, subms: List[str], jobs: List[str]):
+def trigger_jobs(*, assignment_id: str, submissions: List[str], jobs: List[str]):
     ...
 
 

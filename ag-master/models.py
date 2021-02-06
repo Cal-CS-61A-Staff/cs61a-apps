@@ -12,25 +12,22 @@ def create_models(app: Flask):
 db = SQLAlchemy()
 
 
-class Course(db.Model):
-    secret: str = db.Column(db.String(64), index=True, primary_key=True)
-    name: str = db.Column(db.String(64))
-    semester: str = db.Column(db.String(64))
-
-
 class Assignment(db.Model):
-    ag_key: str = db.Column(db.String(64), index=True, primary_key=True)
+    assignment_secret: str = db.Column(db.String(64), primary_key=True, index=True)
     name: str = db.Column(db.String(64))
-    course: int = db.Column(db.String(64), db.ForeignKey("course.secret"), index=True)
+    course: str = db.Column(db.String(64), index=True)
+    endpoint: str = db.Column(db.String(64), index=True)
     file: str = db.Column(db.String(64))
     command: str = db.Column(db.Text)
 
 
 class Job(db.Model):
-    job_key: str = db.Column(db.String(64), index=True, primary_key=True)
-    assignment: str = db.Column(
-        db.String(64), db.ForeignKey("assignment.ag_key"), index=True
+    job_secret: str = db.Column(db.String(64), index=True, primary_key=True)
+    external_job_id: str = db.Column(db.String(64), index=True)
+    assignment_secret: int = db.Column(
+        db.Integer, db.ForeignKey("assignment.assignment_secret"), index=True
     )
+    assignment: Assignment = db.relationship("Assignment")
     backup: str = db.Column(db.String(64))
     status: str = db.Column(db.String(64))
     result: str = db.Column(db.Text)

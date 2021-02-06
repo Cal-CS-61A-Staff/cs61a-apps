@@ -22,7 +22,7 @@ create_superadmin_endpoints(app)
 
 @app.route("/")
 def index():
-    return "it works!"
+    return ""
 
 
 if __name__ == "__main__":
