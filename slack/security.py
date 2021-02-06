@@ -8,7 +8,7 @@ from flask import abort, request
 from common.oauth_client import get_user, login
 from common.rpc.secrets import get_secret
 
-AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
+AUTHORIZED_ROLES = ["staff", "instructor", "grader", "lab assistant"]
 
 
 def slack_signed(route):
