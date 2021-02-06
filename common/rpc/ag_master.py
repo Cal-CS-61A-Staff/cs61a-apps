@@ -4,16 +4,6 @@ from common.rpc.utils import create_service, requires_master_secret
 service = create_service(__name__, "ag-master")
 
 
-@service.route("/api/ok/v3/grade/batch")
-def okpy_batch_grade(*, subm_ids: List[str], assignment: str, access_token: str):
-    ...
-
-
-@service.route("/results")
-def get_results(job_ids: List[str]):
-    ...
-
-
 @requires_master_secret
 @service.route("/api/trigger_jobs")
 def trigger_jobs(*, assignment_id: str, jobs: List[str]):
@@ -30,8 +20,8 @@ def handle_output(*, output: str, job_id: str):
     ...
 
 
-@service.route("/api/set_results")
-def set_results(*, job_id: str, status: str, result: str):
+@service.route("/api/set_failure")
+def set_failure(*, job_id: str, result: str):
     ...
 
 

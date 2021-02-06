@@ -3,7 +3,7 @@ from typing import List, Union
 
 import requests
 
-from common.rpc.ag_master import get_submission, handle_output, set_results
+from common.rpc.ag_master import get_submission, handle_output, set_failure
 from models import Job, db
 from utils import SCORE_ENDPOINT, SUBM_ENDPOINT
 
@@ -55,10 +55,9 @@ def create_worker_endpoints(app):
                 params=dict(access_token=job.access_token),
             )
 
-    @set_results.bind(app)
+    @set_failure.bind(app)
     @job_transition(at=["queued", "started"], to="failed")
-    def set_results_rpc(job, status, result):
-        job.status = status
+    def set_failure_rpc(job, result):
         job.result = result
         db.session.commit()
 

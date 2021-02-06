@@ -3,10 +3,10 @@ import tempfile
 import traceback
 from typing import Optional
 
-from flask import abort
+from flask import abort, request
 from google.cloud import storage
 
-from common.rpc.ag_master import get_results, okpy_batch_grade, trigger_jobs
+from common.rpc.ag_master import trigger_jobs
 from common.rpc.ag_worker import batch_grade
 from common.rpc.auth import get_endpoint
 from common.rpc.secrets import only
@@ -16,10 +16,14 @@ from utils import BATCH_SIZE, BUCKET
 
 
 def create_okpy_endpoints(app):
-    @okpy_batch_grade.bind(app)
-    def okpy_batch_grade_impl(subm_ids, assignment, access_token, **kwargs):
+    @app.route("/api/ok/v3/grade/batch", methods=["POST"])
+    def okpy_batch_grade_impl():
+        data = request.json
+        subm_ids = data["subm_ids"]
+        assignment = data["assignment"]
+        access_token = data["access_token"]
+
         if assignment == "test":
-            # @nocommit can this be jsonified safely?
             return "OK"
 
         assignment: Optional[Assignment] = Assignment.query.get(assignment)
@@ -92,8 +96,9 @@ def create_okpy_endpoints(app):
             return job.result, 200
         return "Nope!", 202
 
-    @get_results.bind(app)
-    def get_results_impl(job_ids):
+    @app.route("/results", methods=["POST"])
+    def get_results_impl():
+        job_ids = request.json
         jobs = Job.query.filter(Job.external_job_id.in_(job_ids)).all()
 
         res = {
