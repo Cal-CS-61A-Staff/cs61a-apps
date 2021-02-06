@@ -3,7 +3,7 @@ import time
 
 from google.cloud import storage
 from typing import List
-from flask import jsonify
+from flask import jsonify, request
 
 from common.rpc.ag_master import create_assignment, upload_zip
 from common.rpc.auth import get_endpoint
@@ -59,29 +59,80 @@ def create_admin_endpoints(app):
             for assign in assignments
         }
 
+    @app.route("/<course>/fail_pending")
+    @admin_only
+    def fail_pending_jobs(course):
+        endpoint = get_endpoint(course=course)
+        jobs = (
+            Job.query.join(Assignment)
+            .filter(Assignment.endpoint == endpoint)
+            .filter(Job.status == "queued")
+            .all()
+        )
+        for job in jobs:
+            job.status = "failed"
+            job.finished_at = int(time.time())
+        db.session.commit()
+
+        return dict(modified=len(jobs))
+
     @app.route("/<course>/<assign>/jobs")
     @admin_only
     def get_jobs(course, assign):
         endpoint = get_endpoint(course=course)
-        assign = (
-            Assignment.query.filter(Assignment.endpoint == endpoint)
+        jobs: List[Job] = (
+            Job.query.join(Assignment)
+            .filter(Assignment.endpoint == endpoint)
             .filter(Assignment.name == assign)
-            .one()
         )
-        jobs: List[Job] = Job.query.filter(
-            Job.assignment_secret == assign.assignment_secret
-        ).all()
 
-        return jsonify(
-            [
-                {
-                    "queued_at": job.queued_at,
-                    "started_at": job.started_at,
-                    "finished_at": job.finished_at,
-                    "backup": job.backup,
-                    "status": job.status,
-                    "result": job.result,
+        queued_at = request.args.get("queued_at", 0)
+        if queued_at:
+            jobs = jobs.filter(Job.queued_at == queued_at)
+
+        status = request.args.get("status", "all")
+        if status != "all":
+            jobs = jobs.filter(Job.status == status)
+        jobs = jobs.all()
+
+        batches = {}
+        for job in jobs:
+            if job.queued_at not in batches:
+                batches[job.queued_at] = {
+                    "jobs": [],
+                    "finished": 0,
+                    "failed": 0,
+                    "running": 0,
+                    "queued": 0,
                 }
-                for job in jobs
-            ]
-        )
+
+            details = {
+                "started_at": job.started_at,
+                "finished_at": job.finished_at,
+                "backup": job.backup,
+                "status": job.status,
+                "result": job.result,
+            }
+
+            if details["finished_at"]:
+                if details["status"] == "finished":
+                    batches[job.queued_at]["finished"] += 1
+                    details["duration"] = details["finished_at"] - details["started_at"]
+                else:
+                    batches[job.queued_at]["failed"] += 1
+            elif details["started_at"]:
+                batches[job.queued_at]["running"] += 1
+            else:
+                batches[job.queued_at]["queued"] += 1
+
+            batches[job.queued_at]["progress"] = (
+                batches[job.queued_at]["finished"] + batches[job.queued_at]["failed"]
+            ) / (
+                batches[job.queued_at]["finished"]
+                + batches[job.queued_at]["failed"]
+                + batches[job.queued_at]["running"]
+                + batches[job.queued_at]["queued"]
+            )
+            batches[job.queued_at]["jobs"].append(details)
+
+        return batches
