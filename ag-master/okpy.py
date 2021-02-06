@@ -1,94 +1,110 @@
+import base64
+import tempfile
 import traceback
-from flask import request, abort
-from werkzeug.security import gen_salt
+from typing import Optional
 
-from common.rpc.secrets import get_secret
+from flask import abort, request
+from google.cloud import storage
+
 from common.rpc.ag_master import trigger_jobs
 from common.rpc.ag_worker import batch_grade
-
+from common.rpc.auth import get_endpoint
+from common.rpc.secrets import only
+from common.secrets import new_secret
 from models import Assignment, Job, db
-from utils import BATCH_SIZE
+from utils import BATCH_SIZE, BUCKET
 
 
 def create_okpy_endpoints(app):
     @app.route("/api/ok/v3/grade/batch", methods=["POST"])
-    def okpy_receiver():
+    def okpy_batch_grade_impl():
         data = request.json
-        subms = data["subm_ids"]
-        assignment_id = data["assignment"]
-        if assignment_id == "test":
-            return "OK"
-        ok_token = data["access_token"]
+        subm_ids = data["subm_ids"]
+        assignment = data["assignment"]
+        access_token = data["access_token"]
 
-        assignment = Assignment.query.filter_by(ag_key=assignment_id).first()
-        if not assignment:
+        if assignment == "test":
+            return "OK"
+
+        assignment: Optional[Assignment] = Assignment.query.get(assignment)
+        if assignment.endpoint != get_endpoint(course=assignment.course):
+            assignment = None
+
+        if assignment is None:
             abort(404, "Unknown Assignment")
 
-        jobs = [gen_salt(24) for _ in subms]
+        job_secrets = [new_secret() for _ in subm_ids]
 
-        objects = [
+        jobs = [
             Job(
-                assignment=assignment.ag_key,
-                backup=id,
+                assignment_secret=assignment.assignment_secret,
+                backup=backup_id,
                 status="queued",
-                job_key=job_id,
-                access_token=ok_token,
+                job_secret=job_secret,
+                external_job_id=new_secret(),
+                access_token=access_token,
             )
-            for id, job_id in zip(subms, jobs)
+            for backup_id, job_secret in zip(subm_ids, job_secrets)
         ]
-        db.session.bulk_save_objects(objects)
+        db.session.bulk_save_objects(jobs)
         db.session.commit()
 
         trigger_jobs(
-            secret=get_secret(secret_name="AG_MASTER_SECRET"),
-            assignment_id=assignment_id,
-            subms=subms,
-            jobs=jobs,
-            noreply=True,
+            assignment_id=assignment.assignment_secret, jobs=job_secrets, noreply=True
         )
 
-        return dict(jobs=jobs)
+        return dict(jobs=[job.external_job_id for job in jobs])
 
     @trigger_jobs.bind(app)
-    def trigger_jobs_rpc(secret, assignment_id, subms, jobs):
-        if secret != get_secret(secret_name="AG_MASTER_SECRET"):
-            raise PermissionError
-        assignment = Assignment.query.filter_by(ag_key=assignment_id).first()
-
-        subm_batches = [
-            subms[i : i + BATCH_SIZE] for i in range(0, len(subms), BATCH_SIZE)
-        ]
+    @only("ag-master")
+    def trigger_jobs_impl(assignment_id, jobs):
         job_batches = [
             jobs[i : i + BATCH_SIZE] for i in range(0, len(jobs), BATCH_SIZE)
         ]
+        assignment: Assignment = Assignment.query.get(assignment_id)
 
-        for subm_batch, job_batch in zip(subm_batches, job_batches):
-            batch_grade(
-                assignment_id=assignment.ag_key,
-                assignment_name=assignment.name,
-                command=assignment.command,
-                backups=subm_batch,
-                jobs=job_batch,
-                course_key=assignment.course,
-                secret=get_secret(secret_name="AG_WORKER_SECRET"),
-                noreply=True,
-                timeout=8,
-            )
-        return dict(success=True)
+        bucket = storage.Client().get_bucket(BUCKET)
+        blob = bucket.blob(f"zips/{assignment.endpoint}/{assignment.file}")
+        with tempfile.NamedTemporaryFile() as temp:
+            blob.download_to_filename(temp.name)
+            with open(temp.name, "rb") as zf:
+                encoded_zip = base64.b64encode(zf.read()).decode("ascii")
+
+        for job_batch in job_batches:
+            try:
+                batch_grade(
+                    command=assignment.command,
+                    jobs=job_batch,
+                    grading_zip=encoded_zip,
+                    noreply=True,
+                    timeout=8,
+                )
+            except:
+                # @nocommit this is somehow wrong because it errored in a PR build
+                Job.query.filter(Job.job_key.in_(job_batch)).update(
+                    {
+                        Job.status: "failed",
+                        Job.result: "trigger_job error\n" + traceback.format_exc(),
+                    }
+                )
+                db.session.commit()
 
     @app.route("/results/<job_id>", methods=["GET"])
     def get_results_for(job_id):
-        job = Job.query.filter_by(job_key=job_id).first()
-        if job and job.status in ("finished", "failed"):
+        job = Job.query.filter_by(external_job_id=job_id).one()
+        if job.status in ("finished", "failed"):
             return job.result, 200
         return "Nope!", 202
 
     @app.route("/results", methods=["POST"])
-    def get_results():
+    def get_results_impl():
         job_ids = request.json
-        jobs = Job.query.filter(Job.job_key.in_(job_ids)).all()
+        jobs = Job.query.filter(Job.external_job_id.in_(job_ids)).all()
 
-        res = {job.job_key: dict(status=job.status, result=job.result) for job in jobs}
+        res = {
+            job.external_job_id: dict(status=job.status, result=job.result)
+            for job in jobs
+        }
         for job in job_ids:
             if job not in res:
                 res[job] = None
