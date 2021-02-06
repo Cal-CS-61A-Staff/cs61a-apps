@@ -11,13 +11,17 @@ app = Flask(__name__)
 create_oauth_client(app, "61a-autograder")
 
 create_models(app)
-db.init_app(app)
-db.create_all(app=app)
 
 create_admin_endpoints(app)
 create_okpy_endpoints(app)
 create_worker_endpoints(app)
 create_superadmin_endpoints(app)
+
+
+@app.before_first_request
+def init_db():
+    db.init_app(app)
+    db.create_all(app=app)
 
 
 @app.route("/")

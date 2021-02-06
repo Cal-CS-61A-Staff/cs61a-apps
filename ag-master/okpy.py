@@ -27,10 +27,9 @@ def create_okpy_endpoints(app):
             return "OK"
 
         assignment: Optional[Assignment] = Assignment.query.get(assignment)
-        if assignment.endpoint != get_endpoint(course=assignment.course):
-            assignment = None
-
-        if assignment is None:
+        if not assignment or assignment.endpoint != get_endpoint(
+            course=assignment.course
+        ):
             abort(404, "Unknown Assignment")
 
         job_secrets = [new_secret() for _ in subm_ids]
