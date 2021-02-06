@@ -114,7 +114,7 @@ def delete(name):
 
 
 @add_domain.bind(app)
-@only(["buildserver", "sandbox"])
+@only(["buildserver", "sandbox"], allow_staging=True)
 def add_domain(
     name, domain, force_wildcard=False, force_provision=False, proxy_set_header={}
 ):
