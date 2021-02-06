@@ -25,7 +25,7 @@ class Job(db.Model):
     job_secret: str = db.Column(db.String(64), index=True, primary_key=True)
     external_job_id: str = db.Column(db.String(64), index=True, nullable=False)
     assignment_secret: int = db.Column(
-        db.Integer,
+        db.String(64),
         db.ForeignKey("assignment.assignment_secret"),
         index=True,
         nullable=False,
