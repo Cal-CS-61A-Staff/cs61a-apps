@@ -185,10 +185,12 @@ def requires_master_secret(func):
 
             print(f"Attempting to impersonate {kwargs.get('_impersonate')}")
 
+            impersonate = kwargs.pop("impersonate")
+
             try:
                 sudo_secret = get_secret_from_server(
                     secret_name="MASTER",
-                    _impersonate=kwargs.pop("_impersonate"),
+                    _impersonate=impersonate,
                     _sudo_token=get_token(),
                 )
             except PermissionError:
@@ -196,7 +198,7 @@ def requires_master_secret(func):
                 try:  # second attempt, in case the first was just an expired token
                     sudo_secret = get_secret_from_server(
                         secret_name="MASTER",
-                        _impersonate=kwargs.pop("_impersonate"),
+                        _impersonate=impersonate,
                         _sudo_token=get_token(),
                     )
                 except PermissionError:
