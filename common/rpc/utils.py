@@ -54,7 +54,7 @@ def select_endpoint(endpoints: List[str], path: str, retries: int):
             else:
                 # if we exhaust all our retries, give up on this endpoint
                 continue
-        except (HTTPError, ConnectionError):
+        except (HTTPError, requests.ConnectionError):
             continue
 
     # fall back to prod
