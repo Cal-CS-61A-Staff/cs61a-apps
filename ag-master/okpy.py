@@ -73,7 +73,7 @@ def create_okpy_endpoints(app):
                     jobs=job_batch,
                     grading_zip=encoded_zip,
                     noreply=True,
-                    timeout=7,
+                    timeout=8,
                 )
             except:
                 # @nocommit this is somehow wrong because it errored in a PR build
