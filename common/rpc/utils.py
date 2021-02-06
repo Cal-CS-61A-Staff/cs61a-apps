@@ -99,11 +99,7 @@ def create_service(app: str, override=None, providers=None):
     def route(path, *, streaming=False):
         def decorator(func):
             @wraps(func)
-            def wrapped(**kwargs):
-                noreply = kwargs.pop("noreply", False)
-                timeout = kwargs.pop("timeout", 1)
-                retries = kwargs.pop("retries", 0)
-
+            def wrapped(*, noreply=False, timeout=1, retries=0, **kwargs):
                 assert (
                     not noreply or not retries
                 ), "Cannot retry a noreply request, use streaming instead"
@@ -173,24 +169,18 @@ def create_service(app: str, override=None, providers=None):
 
 def requires_master_secret(func):
     @wraps(func)
-    def wrapped(**kwargs):
-        if (
-            not get_master_secret()
-            and "_impersonate" in kwargs
-            and "_sudo_token" not in kwargs
-        ):
+    def wrapped(*, _impersonate=None, _sudo_token=None, **kwargs):
+        if not get_master_secret() and _impersonate and not _sudo_token:
             from common.rpc.secrets import (
                 get_secret_from_server,
             )  # placed here to avoid circular imports
 
-            print(f"Attempting to impersonate {kwargs.get('_impersonate')}")
-
-            impersonate = kwargs.pop("_impersonate")
+            print(f"Attempting to impersonate {_impersonate}")
 
             try:
                 sudo_secret = get_secret_from_server(
                     secret_name="MASTER",
-                    _impersonate=impersonate,
+                    _impersonate=_impersonate,
                     _sudo_token=get_token(),
                 )
             except PermissionError:
@@ -198,7 +188,7 @@ def requires_master_secret(func):
                 try:  # second attempt, in case the first was just an expired token
                     sudo_secret = get_secret_from_server(
                         secret_name="MASTER",
-                        _impersonate=impersonate,
+                        _impersonate=_impersonate,
                         _sudo_token=get_token(),
                     )
                 except PermissionError:
