@@ -34,6 +34,7 @@ def create_okpy_endpoints(app):
             abort(404, "Unknown Assignment")
 
         job_secrets = [new_secret() for _ in subm_ids]
+        queue_time = int(time.time())
 
         jobs = [
             Job(
@@ -43,7 +44,7 @@ def create_okpy_endpoints(app):
                 job_secret=job_secret,
                 external_job_id=new_secret(),
                 access_token=access_token,
-                queued_at=int(time.time()),
+                queued_at=queue_time,
             )
             for backup_id, job_secret in zip(subm_ids, job_secrets)
         ]
