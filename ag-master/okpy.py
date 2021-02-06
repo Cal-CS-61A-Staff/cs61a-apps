@@ -1,6 +1,7 @@
 import base64
 import tempfile
 import traceback
+import time
 from typing import Optional
 
 from flask import abort, request
@@ -42,6 +43,7 @@ def create_okpy_endpoints(app):
                 job_secret=job_secret,
                 external_job_id=new_secret(),
                 access_token=access_token,
+                queued_at=int(time.time()),
             )
             for backup_id, job_secret in zip(subm_ids, job_secrets)
         ]

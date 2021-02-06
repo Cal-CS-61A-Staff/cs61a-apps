@@ -2,6 +2,7 @@ from functools import wraps
 from typing import List, Union
 
 import requests
+import time
 
 from common.rpc.ag_master import get_submission, handle_output, set_failure
 from models import Job, db
@@ -40,6 +41,9 @@ def create_worker_endpoints(app):
             f"{SUBM_ENDPOINT}/{job.backup}",
             params=dict(access_token=job.access_token),
         )
+        job.started_at = int(time.time())
+        db.session.commit()
+        
         r.raise_for_status()
         return r.json()["data"]
 
@@ -54,11 +58,14 @@ def create_worker_endpoints(app):
                 data=score,
                 params=dict(access_token=job.access_token),
             )
+        job.finished_at = int(time.time())
+        db.session.commit()
 
     @set_failure.bind(app)
     @job_transition(at=["queued", "started"], to="failed")
     def set_failure_rpc(job, result):
         job.result = result
+        job.finished_at = int(time.time())
         db.session.commit()
 
 

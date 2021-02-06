@@ -19,6 +19,7 @@ class Assignment(db.Model):
     endpoint: str = db.Column(db.String(64), index=True, nullable=False)
     file: str = db.Column(db.String(64), nullable=False)
     command: str = db.Column(db.Text, nullable=False)
+    last_modified: int = db.Column(db.Integer, nullable=False)
 
 
 class Job(db.Model):
@@ -35,3 +36,6 @@ class Job(db.Model):
     status: str = db.Column(db.String(64), default="queued", nullable=False)
     result: str = db.Column(db.Text, default="", nullable=False)
     access_token: str = db.Column(db.String(64), nullable=False)
+    queued_at: int = db.Column(db.Integer, nullable=False)
+    started_at: int = db.Column(db.Integer)
+    finished_at: int = db.Column(db.Integer)

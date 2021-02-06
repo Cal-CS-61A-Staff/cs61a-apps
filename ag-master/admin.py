@@ -1,4 +1,5 @@
 import base64
+import time
 
 from google.cloud import storage
 
@@ -36,6 +37,7 @@ def create_admin_endpoints(app):
 
         assignment.file = file
         assignment.command = command
+        assignment.last_modified = int(time.time())
         db.session.commit()
 
         return assignment.assignment_secret
