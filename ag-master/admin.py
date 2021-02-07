@@ -101,7 +101,7 @@ def create_admin_endpoints(app):
         jobs = (
             Job.query.join(Assignment)
             .filter(Assignment.endpoint == endpoint)
-            .filter(Assignment.name == assignment)
+            .filter(Assignment.name == assignment.name)
             .filter(Job.status == "queued")
             .all()
         )
