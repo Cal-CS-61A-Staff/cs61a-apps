@@ -2,15 +2,17 @@ name: "Non-Blocking Checks"
 on: [pull_request]
 
 jobs:
-  nocommit_check:
+  nocommitCheck:
+    name: "@nocommit Check"
     runs-on: ubuntu-latest
     steps:
     - name: Check for @nocommit
-      uses: itsvs/no-merge-action@releases/v0.3
+      uses: Cal-CS-61A-Staff/no-merge-action@releases/v0.5
       with:
         github-token: ${{github.token}}
         keyword: "@nocommit"
-  python_checks:
+  pythonFormatting:
+    name: "Python Formatting"
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -21,15 +23,28 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest black pytest-custom_exit_code
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install black
     - name: Enforce Black Formatting
       run: |
         black . --check
+  pythonUnitTests:
+    name: "Python Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-custom_exit_code
     - name: Test with pytest
       run: |
         pytest --suppress-no-test-exit-code
-  javascript_checks:
+  javascriptFormatting:
+    name: Javascript Formatting
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
