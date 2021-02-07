@@ -85,7 +85,7 @@ def create_okpy_endpoints(app):
                 Job.query.filter(Job.job_secret.in_(job_batch)).update(
                     {
                         Job.status: "failed",
-                        Job.result: "trigger_job error",
+                        Job.result: "trigger_job error\n" + traceback.format_exc(),
                     },
                     synchronize_session="fetch",
                 )
