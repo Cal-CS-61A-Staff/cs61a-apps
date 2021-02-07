@@ -1,6 +1,6 @@
 build_type: none
-deploy_type: docker
-concurrency: 10
+deploy_type: flask
+concurrency: 4
 permissions:
   - rpc
   - database

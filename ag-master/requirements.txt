@@ -2,5 +2,4 @@ Flask
 gunicorn
 flask_sqlalchemy
 google-cloud-storage==1.30.0
-eventlet==0.27.0
 -r common/requirements.txt
