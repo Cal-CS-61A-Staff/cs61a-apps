@@ -82,7 +82,6 @@ def create_okpy_endpoints(app):
                     timeout=8,
                 )
             except:
-                # @nocommit this is somehow wrong because it errored in a PR build
                 Job.query.filter(Job.job_secret.in_(job_batch)).update(
                     {
                         Job.status: "failed",
