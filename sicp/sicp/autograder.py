@@ -1,6 +1,9 @@
-import base64, requests, os
+import base64
+import requests
+import os
+
 from common.rpc.auth_utils import get_token, refresh_token, set_token_path
-from common.rpc.ag_master import upload_zip as upload, create_assignment as create
+from common.rpc.ag_master import upload_zip, create_assignment
 
 
 class Autograder:
@@ -22,7 +25,7 @@ class Autograder:
         assert zip_file.endswith(".zip"), "Upload Error"
 
         with open(zip_file, "rb") as f:
-            upload(
+            upload_zip(
                 token=get_token(),
                 course=self.course,
                 name=zip_file,
@@ -30,7 +33,7 @@ class Autograder:
             )
 
     def create_assignment(self, assign, script, zip_file):
-        return create(
+        return create_assignment(
             name=assign,
             command=script,
             file=zip_file,
