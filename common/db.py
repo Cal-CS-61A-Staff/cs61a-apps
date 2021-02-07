@@ -40,7 +40,7 @@ elif use_prod_proxy:
         exit(0)
     database_url = sqlalchemy.engine.url.URL(
         drivername="mysql+pymysql",
-        username=app,
+        username="buildserver",
         password=get_secret(secret_name="DATABASE_PW"),
         host="127.0.0.1",
         port=3307,

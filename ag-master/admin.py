@@ -6,7 +6,7 @@ from typing import List
 from flask import request, render_template
 from datetime import datetime
 
-from common.rpc.ag_master import create_assignment, upload_zip
+from common.rpc.ag_master import create_assignment, trigger_jobs, upload_zip
 from common.rpc.auth import get_endpoint
 from common.secrets import new_secret
 from common.oauth_client import get_user
@@ -66,17 +66,17 @@ def create_admin_endpoints(app):
             "assignments.html", course=course, assignments=assignments
         )
 
-    @app.route("/<course>/fail_pending", methods=["POST"])
+    @app.route("/<course>/<assignment>/fail_pending", methods=["POST"])
     @admin_only
-    def fail_pending_jobs(course):
+    def fail_pending_jobs(course, assignment):
         endpoint = get_endpoint(course=course)
         jobs = (
             Job.query.join(Assignment)
             .filter(Assignment.endpoint == endpoint)
+            .filter(Assignment.name == assignment)
             .filter(Job.status == "queued")
             .all()
         )
-
         count = Job.query.filter(
             Job.job_secret.in_([job.job_secret for job in jobs])
         ).update(
@@ -90,6 +90,28 @@ def create_admin_endpoints(app):
         db.session.commit()
 
         return dict(modified=count)
+
+    @app.route("/<course>/<assignment>/retrigger_queued", methods=["POST"])
+    @admin_only
+    def retrigger_queued_jobs(course, assignment):
+        endpoint = get_endpoint(course=course)
+        assignment = Assignment.query.filter_by(
+            name=assignment, endpoint=endpoint
+        ).one()
+        jobs = (
+            Job.query.join(Assignment)
+            .filter(Assignment.endpoint == endpoint)
+            .filter(Assignment.name == assignment)
+            .filter(Job.status == "queued")
+            .all()
+        )
+
+        trigger_jobs(
+            assignment_id=assignment.assignment_secret,
+            jobs=[job.job_secret for job in jobs if job.status == "queued"],
+        )
+
+        return dict(modified=len(jobs))
 
     @app.route("/<course>/<assign>/jobs")
     @admin_only

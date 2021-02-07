@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import List
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
@@ -20,6 +24,7 @@ class Assignment(db.Model):
     file: str = db.Column(db.String(64), nullable=False)
     command: str = db.Column(db.Text, nullable=False)
     last_modified: int = db.Column(db.Integer, nullable=False)
+    jobs: List[Job]
 
 
 class Job(db.Model):
@@ -31,7 +36,7 @@ class Job(db.Model):
         index=True,
         nullable=False,
     )
-    assignment: Assignment = db.relationship("Assignment")
+    assignment: Assignment = db.relationship("Assignment", backref=db.backref("jobs"))
     backup: str = db.Column(db.String(64), nullable=False)
     status: str = db.Column(db.String(64), default="queued", nullable=False)
     result: str = db.Column(db.Text, default="", nullable=False)

@@ -8,6 +8,9 @@ from worker import create_worker_endpoints
 from superadmin import create_superadmin_endpoints
 
 app = Flask(__name__)
+if __name__ == "__main__":
+    app.debug = True
+
 create_oauth_client(app, "61a-autograder")
 
 create_models(app)
@@ -30,4 +33,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
