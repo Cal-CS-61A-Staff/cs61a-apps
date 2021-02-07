@@ -125,6 +125,7 @@ def report_build_status(
             )
         except:
             pass
+        log_url = "https://logs.cs61a.org/service/buildserver"
     with connect_db() as db:
         existing = db(
             "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND packed_ref=%s",
