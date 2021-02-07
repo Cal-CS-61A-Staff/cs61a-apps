@@ -1,5 +1,6 @@
 build_type: none
 deploy_type: flask
+concurrency: 10
 permissions:
   - rpc
   - database
