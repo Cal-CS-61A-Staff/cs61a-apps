@@ -87,7 +87,8 @@ def create_okpy_endpoints(app):
                     {
                         Job.status: "failed",
                         Job.result: "trigger_job error",
-                    }
+                    },
+                    synchronize_session="fetch",
                 )
                 db.session.commit()
 

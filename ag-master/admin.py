@@ -3,11 +3,14 @@ import time
 
 from google.cloud import storage
 from typing import List
-from flask import jsonify, request
+from flask import request, render_template
+from datetime import datetime
 
 from common.rpc.ag_master import create_assignment, upload_zip
 from common.rpc.auth import get_endpoint
 from common.secrets import new_secret
+from common.oauth_client import get_user
+
 from models import Assignment, db, Job
 from utils import BUCKET, admin_only
 
@@ -44,6 +47,13 @@ def create_admin_endpoints(app):
 
         return assignment.assignment_secret
 
+    @app.template_filter("dt")
+    def format_dt(value, format="%b %d, %Y at %I:%M %p"):
+        if value is None:
+            return "no date provided"
+        return datetime.fromtimestamp(int(value)).strftime(format)
+
+    @app.route("/<course>")
     @app.route("/<course>/assignments")
     @admin_only
     def get_assignments(course):
@@ -52,12 +62,9 @@ def create_admin_endpoints(app):
             Assignment.endpoint == endpoint
         ).all()
 
-        return {
-            assign.name: {
-                "last_modified": assign.last_modified,
-            }
-            for assign in assignments
-        }
+        return render_template(
+            "assignments.html", course=course, assignments=assignments
+        )
 
     @app.route("/<course>/fail_pending")
     @admin_only
@@ -69,12 +76,20 @@ def create_admin_endpoints(app):
             .filter(Job.status == "queued")
             .all()
         )
-        for job in jobs:
-            job.status = "failed"
-            job.finished_at = int(time.time())
+
+        count = Job.query.filter(
+            Job.job_secret.in_([job.job_secret for job in jobs])
+        ).update(
+            {
+                Job.status: "failed",
+                Job.finished_at: int(time.time()),
+                Job.result: f"Marked as failed by {get_user()['email']}.",
+            },
+            synchronize_session="fetch",
+        )
         db.session.commit()
 
-        return dict(modified=len(jobs))
+        return dict(modified=count)
 
     @app.route("/<course>/<assign>/jobs")
     @admin_only
@@ -97,14 +112,17 @@ def create_admin_endpoints(app):
 
         batches = {}
         for job in jobs:
-            if job.queued_at not in batches:
-                batches[job.queued_at] = {
+            if str(job.queued_at) not in batches:
+                batches[str(job.queued_at)] = {
                     "jobs": [],
                     "finished": 0,
                     "failed": 0,
                     "running": 0,
                     "queued": 0,
+                    "completed": 0,
+                    "total": 0,
                 }
+            batch = batches[str(job.queued_at)]
 
             details = {
                 "started_at": job.started_at,
@@ -112,27 +130,56 @@ def create_admin_endpoints(app):
                 "backup": job.backup,
                 "status": job.status,
                 "result": job.result,
+                "id": job.external_job_id,
             }
 
             if details["finished_at"]:
                 if details["status"] == "finished":
-                    batches[job.queued_at]["finished"] += 1
+                    batch["finished"] += 1
                     details["duration"] = details["finished_at"] - details["started_at"]
                 else:
-                    batches[job.queued_at]["failed"] += 1
+                    batch["failed"] += 1
+                batch["completed"] += 1
             elif details["started_at"]:
-                batches[job.queued_at]["running"] += 1
+                batch["running"] += 1
             else:
-                batches[job.queued_at]["queued"] += 1
+                batch["queued"] += 1
 
-            batches[job.queued_at]["progress"] = (
-                batches[job.queued_at]["finished"] + batches[job.queued_at]["failed"]
-            ) / (
-                batches[job.queued_at]["finished"]
-                + batches[job.queued_at]["failed"]
-                + batches[job.queued_at]["running"]
-                + batches[job.queued_at]["queued"]
-            )
-            batches[job.queued_at]["jobs"].append(details)
+            batch["total"] += 1
+            batch["progress"] = (batch["completed"]) / (batch["total"])
+            batch["jobs"].append(details)
 
-        return batches
+        return render_template(
+            "jobs.html",
+            course=course,
+            assign=assign,
+            batches={
+                k: v
+                for k, v in sorted(
+                    batches.items(), key=(lambda item: item[0]), reverse=True
+                )
+            },
+            queued_at=str(queued_at),
+            status=status,
+        )
+
+    @app.route("/<course>/job/<id>")
+    @admin_only
+    def job_details(course, id):
+        endpoint = get_endpoint(course=course)
+        job: Job = (
+            Job.query.join(Assignment)
+            .filter(Assignment.endpoint == endpoint)
+            .filter(Job.external_job_id == id)
+            .one()
+        )
+
+        return render_template(
+            "job.html",
+            course=course,
+            backup=job.backup,
+            status=job.status,
+            result=job.result,
+            start=job.started_at,
+            finish=job.finished_at,
+        )
