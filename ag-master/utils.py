@@ -22,8 +22,14 @@ def admin_only(func):
             email=get_user()["email"], course=course
         )
         if token_good or cookie_good:
-            return func(*args, **kwargs, course=course)
-        raise PermissionError
+            try:
+                return func(*args, **kwargs, course=course)
+            except PermissionError:
+                pass
+        if access_token:
+            raise PermissionError
+        else:
+            return login()
 
     return wrapped
 
