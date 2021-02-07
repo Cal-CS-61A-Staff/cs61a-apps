@@ -8,7 +8,7 @@ from flask import abort, request
 from google.cloud import storage
 
 from common.rpc.ag_master import trigger_jobs
-from common.rpc.ag_worker import batch_grade
+from common.rpc.ag_worker import batch_grade, ping_worker
 from common.rpc.auth import get_endpoint
 from common.rpc.secrets import only
 from common.secrets import new_secret
@@ -74,6 +74,7 @@ def create_okpy_endpoints(app):
 
         for job_batch in job_batches:
             try:
+                ping_worker(retries=3)
                 batch_grade(
                     command=assignment.command,
                     jobs=job_batch,

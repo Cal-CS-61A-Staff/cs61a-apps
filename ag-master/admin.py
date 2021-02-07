@@ -66,7 +66,7 @@ def create_admin_endpoints(app):
             "assignments.html", course=course, assignments=assignments
         )
 
-    @app.route("/<course>/fail_pending")
+    @app.route("/<course>/fail_pending", methods=["POST"])
     @admin_only
     def fail_pending_jobs(course):
         endpoint = get_endpoint(course=course)
@@ -146,19 +146,14 @@ def create_admin_endpoints(app):
                 batch["queued"] += 1
 
             batch["total"] += 1
-            batch["progress"] = (batch["completed"]) / (batch["total"])
+            batch["progress"] = batch["completed"] / batch["total"]
             batch["jobs"].append(details)
 
         return render_template(
             "jobs.html",
             course=course,
             assign=assign,
-            batches={
-                k: v
-                for k, v in sorted(
-                    batches.items(), key=(lambda item: item[0]), reverse=True
-                )
-            },
+            batches={k: batches[k] for k in sorted(batches, reverse=True)},
             queued_at=str(queued_at),
             status=status,
         )
