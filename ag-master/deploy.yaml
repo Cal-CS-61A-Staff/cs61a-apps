@@ -1,6 +1,7 @@
 build_type: none
 deploy_type: flask
 concurrency: 4
+memory_limit: 512M
 permissions:
   - rpc
   - database
