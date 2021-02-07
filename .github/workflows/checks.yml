@@ -23,8 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest black pytest-custom_exit_code
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install black
     - name: Enforce Black Formatting
       run: |
         black . --check
@@ -40,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pytest pytest-custom_exit_code
     - name: Test with pytest
       run: |
         pytest --suppress-no-test-exit-code
