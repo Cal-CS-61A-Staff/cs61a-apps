@@ -1,0 +1,8 @@
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/spcss@0.5.0">
+
+<h1>{{ course }}: Autograder Assignments</h1>
+
+{% for assign in assignments %}
+<p><a href="/{{course}}/{{assign.name}}/jobs">{{ assign.name }}</a> (last updated: {{ assign.last_modified | dt }})</p>
+{% endfor %}

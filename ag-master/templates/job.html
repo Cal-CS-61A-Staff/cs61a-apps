@@ -1,0 +1,18 @@
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/spcss@0.5.0">
+
+<h1>Job for {{ backup }} ({{ status }})</h1>
+
+Okpy Backup: <a href="https://okpy.org/admin/grading/{{backup}}">https://okpy.org/admin/grading/{{backup}}</a><br />
+
+<br />
+
+Started at: {{ start | dt }}<br />
+Finished at: {{ finish | dt }}<br />
+
+<br />
+
+Result:
+<pre>
+{{ result }}
+</pre>
