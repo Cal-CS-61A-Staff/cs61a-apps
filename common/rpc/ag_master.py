@@ -29,13 +29,13 @@ def set_failure(*, job_id: str, result: str):
     ...
 
 
-@service.route("/api/upload_zip")
 @requires_access_token
+@service.route("/api/upload_zip")
 def upload_zip(*, course: str, name: str, file: str):
     ...
 
 
-@service.route("/api/create_assignment")
 @requires_access_token
+@service.route("/api/create_assignment")
 def create_assignment(*, course: str, name: str, file: str, command: str) -> str:
     ...
