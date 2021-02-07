@@ -1,5 +1,9 @@
 from typing import List, Dict
-from common.rpc.utils import create_service, requires_master_secret
+from common.rpc.utils import (
+    create_service,
+    requires_master_secret,
+    requires_access_token,
+)
 
 service = create_service(__name__, "ag-master")
 
@@ -26,12 +30,12 @@ def set_failure(*, job_id: str, result: str):
 
 
 @service.route("/api/upload_zip")
-def upload_zip(*, token: str = None, course: str, name: str, file: str):
+@requires_access_token
+def upload_zip(*, course: str, name: str, file: str):
     ...
 
 
 @service.route("/api/create_assignment")
-def create_assignment(
-    *, token: str = None, course: str, name: str, file: str, command: str
-) -> str:
+@requires_access_token
+def create_assignment(*, course: str, name: str, file: str, command: str) -> str:
     ...

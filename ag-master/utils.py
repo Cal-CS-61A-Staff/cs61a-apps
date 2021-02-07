@@ -14,8 +14,10 @@ BATCH_SIZE = 100
 
 def admin_only(func):
     @wraps(func)
-    def wrapped(*args, token=None, course="cs61a", **kwargs):
-        token_good = token and is_admin_token(access_token=token, course=course)
+    def wrapped(*args, access_token=None, course="cs61a", **kwargs):
+        token_good = access_token and is_admin_token(
+            access_token=access_token, course=course
+        )
         cookie_good = is_staff(course=course) and is_admin(
             email=get_user()["email"], course=course
         )
@@ -24,7 +26,7 @@ def admin_only(func):
                 return func(*args, **kwargs, course=course)
             except PermissionError:
                 pass
-        if token:
+        if access_token:
             raise PermissionError
         else:
             return login()
