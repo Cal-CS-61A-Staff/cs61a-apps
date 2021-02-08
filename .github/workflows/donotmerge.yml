@@ -6,7 +6,7 @@ on:
 
 jobs:
   enforce-label:
-    name: "label check"
+    name: "Do Not Merge Check"
     runs-on: ubuntu-latest
     steps:
     - uses: yogevbd/enforce-label-action@2.1.0
