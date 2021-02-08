@@ -6,4 +6,4 @@ permissions:
   - rpc
   - storage
 concurrency: 20
-memory: 512M
+memory_limit: 512M
