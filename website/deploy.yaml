@@ -5,4 +5,5 @@ first_party_domains:
 permissions:
   - rpc
   - storage
-concurrency: 40
+concurrency: 20
+memory: 512M
