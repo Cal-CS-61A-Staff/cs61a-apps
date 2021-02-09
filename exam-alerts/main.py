@@ -102,7 +102,7 @@ def index(request):
 
         exam = request.json["exam"]
         course = exam.split("-")[0]
-        prev_latest_timestamp = int(request.json["latestTimestamp"])
+        prev_latest_timestamp = float(request.json["latestTimestamp"])
 
         def get_message(id):
             message = (
@@ -165,7 +165,7 @@ def index(request):
                     db.collection("exam-alerts")
                     .document(exam)
                     .collection("messages")
-                    .where("timestamp", ">=", prev_latest_timestamp)
+                    .where("timestamp", ">", prev_latest_timestamp)
                     .where("email", "==", email)
                     .stream()
                 )
@@ -174,6 +174,7 @@ def index(request):
 
             messages, latest_timestamp = group_messages(messages, get_message)
             messages = messages[email]
+            latest_timestamp = max(latest_timestamp, prev_latest_timestamp)
 
             for message in messages:
                 if message["question"] is not None:
@@ -338,11 +339,12 @@ def index(request):
                 for message in db.collection("exam-alerts")
                 .document(exam)
                 .collection("messages")
-                .where("timestamp", ">=", prev_latest_timestamp)
+                .where("timestamp", ">", prev_latest_timestamp)
                 .stream()
             ],
             get_message,
         )
+        latest_timestamp = max(prev_latest_timestamp, latest_timestamp)
         messages = sorted(
             [
                 {"email": email, **message}

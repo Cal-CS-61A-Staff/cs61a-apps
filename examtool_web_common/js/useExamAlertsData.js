@@ -22,57 +22,86 @@ export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
     }
   }, [audioQueue, isPlayingAudio]);
 
+  const mergeNewExamData = (data) => {
+    setStale(false);
+    const newData = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (key === "messages") {
+        // messages are merged, not overwritten
+        const lookup = new Map();
+        for (const message of examData.messages) {
+          lookup.set(message.id, message);
+        }
+        // update lookup to merge in changes
+        const newMessages = [];
+        for (const message of data.messages) {
+          if (lookup.has(message.id)) {
+            const oldMessage = lookup.get(message.id);
+            const oldResponses = oldMessage.responses.map(({ id }) => id);
+            lookup.set(message.id, {
+              ...message,
+              responses: oldMessage.responses.concat(
+                message.responses.filter(({ id }) => !oldResponses.includes(id))
+              ),
+            });
+          } else {
+            newMessages.push(message);
+          }
+        }
+        for (const message of examData.messages) {
+          newMessages.push(lookup.get(message.id));
+        }
+        newData.messages = newMessages;
+      } else if (key === "announcements") {
+        // some private announcements may be missing in the response
+        // since they are related to old messages
+        const announcements = new Map();
+        for (const announcement of examData.announcements) {
+          if (announcement.private) {
+            announcements.set(announcement.id, announcement);
+          }
+        }
+        for (const announcement of data.announcements) {
+          announcements.set(announcements.id, announcement);
+        }
+        newData.announcements = Array.from(announcements.values()).sort(
+          ({ time: t1 }, { time: t2 }) => t2 - t1
+        );
+      } else {
+        newData[key] = value;
+      }
+    }
+    setExamData(newData);
+    if (!isStaff) {
+      const newAudio = [];
+      for (const { audio } of data.announcements) {
+        if (audio) {
+          newAudio.push(audio);
+        }
+      }
+      newAudio.reverse();
+      setAudioQueue((queue) => queue.concat(newAudio));
+    }
+  };
+
   useInterval(async () => {
     if (examData) {
       try {
-        const resp = await post(isStaff ? "fetch_staff_data" : "fetch_data", {
-          token: getToken(),
-          exam: selectedExam,
-          receivedAudio: examData
-            ? examData.announcements.map((x) => x.id)
-            : null,
-          latestTimestamp: examData.latestTimestamp,
-        });
+        const resp = await post(
+          isStaff ? "alerts/fetch_staff_data" : "alerts/fetch_data",
+          {
+            token: getToken(),
+            exam: selectedExam,
+            receivedAudio: examData
+              ? examData.announcements.map((x) => x.id)
+              : null,
+            latestTimestamp: examData.latestTimestamp,
+          }
+        );
         if (resp.ok) {
           const data = await resp.json();
           if (data.success) {
-            setStale(false);
-            const newData = {};
-            for (const [key, value] of Object.entries(data)) {
-              if (key === "messages") {
-                // messages are merged, not overwritten
-                const lookup = new Map();
-                for (const message of examData.messages) {
-                  lookup.set(message.id, message);
-                }
-                // update lookup to merge in changes
-                const newMessages = [];
-                for (const message of data.messages) {
-                  if (lookup.has(message.id)) {
-                    lookup.set(message.id, message);
-                  } else {
-                    newMessages.push(message);
-                  }
-                }
-                for (const message of examData.messages) {
-                  newMessages.push(lookup.get(message.id));
-                }
-                newData.messages = newMessages;
-              } else {
-                newData[key] = value;
-              }
-            }
-            setExamData(newData);
-            if (!isStaff) {
-              const newAudio = [];
-              for (const { audio } of data.announcements) {
-                if (audio) {
-                  newAudio.push(audio);
-                }
-              }
-              newAudio.reverse();
-              setAudioQueue((queue) => queue.concat(newAudio));
-            }
+            mergeNewExamData(data);
           }
         }
       } catch (e) {
@@ -84,11 +113,14 @@ export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
 
   const connect = async () => {
     try {
-      const ret = await post(isStaff ? "fetch_staff_data" : "fetch_data", {
-        token: getToken(),
-        exam: selectedExam,
-        latestTimestamp: 0,
-      });
+      const ret = await post(
+        isStaff ? "alerts/fetch_staff_data" : "alerts/fetch_data",
+        {
+          token: getToken(),
+          exam: selectedExam,
+          latestTimestamp: 0,
+        }
+      );
       if (!ret.ok) {
         return `The exam server failed with error ${ret.status}. Please try again.`;
       }
@@ -121,7 +153,7 @@ export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
 
   const send = async (endpoint, args) => {
     try {
-      const resp = await post(endpoint, {
+      const resp = await post(`alerts/${endpoint}`, {
         token: getToken(),
         exam: selectedExam,
         latestTimestamp: examData.latestTimestamp,
@@ -131,7 +163,7 @@ export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
       if (!data.success) {
         throw Error();
       }
-      setExamData(data);
+      mergeNewExamData(data);
     } catch (e) {
       console.error(e);
       return "Something went wrong. Please try again, or reload the page.";

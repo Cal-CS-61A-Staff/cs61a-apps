@@ -14,7 +14,7 @@ export default function AskQuestion({ send }) {
 
   const submit = async () => {
     setIsLoading(true);
-    const err = await send("alerts/ask_question", {
+    const err = await send("ask_question", {
       question: question === "Overall Exam" ? null : question,
       message,
     });

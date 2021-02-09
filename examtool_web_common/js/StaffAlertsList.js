@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Card } from "react-bootstrap";
 
 export default function StaffAlertsList({ staffData, send }) {
-  const deleteAnnouncement = (id) => () => send("/delete_announcement", { id });
+  const deleteAnnouncement = (id) => () => send("delete_announcement", { id });
 
   return (
     <>
