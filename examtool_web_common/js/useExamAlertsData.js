@@ -3,7 +3,12 @@ import { getToken } from "./auth";
 import post from "./post";
 import useInterval from "./useInterval";
 
-export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
+export default function useExamAlertsData(
+  selectedExam,
+  isStaff,
+  setDeadline,
+  onNotify
+) {
   const [examData, setExamData] = useState(null);
   const [stale, setStale] = useState(false);
   const [audioQueue, setAudioQueue] = useState([]); // pop off the next audio to play
@@ -77,10 +82,21 @@ export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
       for (const { audio } of data.announcements) {
         if (audio) {
           newAudio.push(audio);
+          if (onNotify) {
+            onNotify();
+          }
         }
       }
       newAudio.reverse();
       setAudioQueue((queue) => queue.concat(newAudio));
+    }
+    if (setDeadline) {
+      setDeadline(
+        data.endTime -
+          Math.round(data.timestamp) +
+          Math.round(new Date().getTime() / 1000) -
+          2
+      );
     }
   };
 
@@ -132,14 +148,6 @@ export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
           return "The exam server responded but did not produce valid data. Please try again.";
         } else {
           setExamData(data);
-          if (setDeadline) {
-            setDeadline(
-              data.endTime -
-                Math.round(data.timestamp) +
-                Math.round(new Date().getTime() / 1000) -
-                2
-            );
-          }
         }
       } catch {
         return "The web server returned invalid JSON. Please try again.";
