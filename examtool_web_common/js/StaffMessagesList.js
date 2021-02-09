@@ -8,11 +8,7 @@ import StaffMessageReplyBox from "./StaffMessageReplyBox";
 import { timeDeltaMinutesString } from "./timeUtils";
 import post from "./post";
 
-export default function StaffMessagesList({
-  selectedExam,
-  staffData,
-  onUpdate,
-}) {
+export default function StaffMessagesList({ selectedExam, staffData, send }) {
   const time = useTime();
 
   const [showModal, setShowModal] = useState(false);
@@ -42,12 +38,7 @@ export default function StaffMessagesList({
   useEffect(postRenderFormat, [questionData]);
 
   const makeReplyBox = (id, compact) => (
-    <StaffMessageReplyBox
-      message={id}
-      compact={compact}
-      exam={selectedExam}
-      onUpdate={onUpdate}
-    />
+    <StaffMessageReplyBox message={id} compact={compact} send={send} />
   );
 
   return (

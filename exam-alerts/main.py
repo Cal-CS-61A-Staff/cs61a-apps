@@ -54,20 +54,29 @@ def get_email(request):
     return id_info["email"]
 
 
-def group_messages(message_list):
+def group_messages(message_list, get_message):
     students = defaultdict(list)
     messages = {}
+    latest_timestamp = (
+        max(message["timestamp"] for message in message_list) if message_list else 0
+    )
+
+    def add_message(message):
+        message = {**message, "responses": []}
+        students[message["email"]].append(message)
+        messages[message["id"]] = message
+
     for message in message_list:
         if "reply_to" not in message:
-            message = {**message, "responses": []}
-            students[message["email"]].append(message)
-            messages[message["id"]] = message
+            add_message(message)
     for message in message_list:
         if "reply_to" in message:
+            if message["reply_to"] not in messages:
+                add_message(get_message(message["reply_to"]))
             messages[message["reply_to"]]["responses"].append(message)
     for message in messages.values():
         message["responses"].sort(key=lambda response: response["timestamp"])
-    return students
+    return students, latest_timestamp
 
 
 def index(request):
@@ -93,6 +102,21 @@ def index(request):
 
         exam = request.json["exam"]
         course = exam.split("-")[0]
+        prev_latest_timestamp = float(request.json["latestTimestamp"])
+
+        def get_message(id):
+            message = (
+                db.collection("exam-alerts")
+                .document(exam)
+                .collection("messages")
+                .document(id)
+                .get()
+            )
+
+            return {
+                **message.to_dict(),
+                "id": message.id,
+            }
 
         student_reply = False
 
@@ -141,12 +165,16 @@ def index(request):
                     db.collection("exam-alerts")
                     .document(exam)
                     .collection("messages")
+                    .where("timestamp", ">", prev_latest_timestamp)
+                    .where("email", "==", email)
                     .stream()
                 )
                 if message.to_dict()["email"] == email
             ]
 
-            messages = group_messages(messages)[email]
+            messages, latest_timestamp = group_messages(messages, get_message)
+            messages = messages[email]
+            latest_timestamp = max(latest_timestamp, prev_latest_timestamp)
 
             for message in messages:
                 if message["question"] is not None:
@@ -199,6 +227,7 @@ def index(request):
                         key=lambda message: message["time"],
                         reverse=True,
                     ),
+                    "latestTimestamp": latest_timestamp,
                 }
             )
 
@@ -304,18 +333,22 @@ def index(request):
             key=lambda announcement: announcement["timestamp"],
             reverse=True,
         )
+        grouped_messages, latest_timestamp = group_messages(
+            [
+                {**message.to_dict(), "id": message.id}
+                for message in db.collection("exam-alerts")
+                .document(exam)
+                .collection("messages")
+                .where("timestamp", ">", prev_latest_timestamp)
+                .stream()
+            ],
+            get_message,
+        )
+        latest_timestamp = max(prev_latest_timestamp, latest_timestamp)
         messages = sorted(
             [
                 {"email": email, **message}
-                for email, messages in group_messages(
-                    [
-                        {**message.to_dict(), "id": message.id}
-                        for message in db.collection("exam-alerts")
-                        .document(exam)
-                        .collection("messages")
-                        .stream()
-                    ]
-                ).items()
+                for email, messages in grouped_messages.items()
                 for message in messages
             ],
             key=lambda message: (
@@ -331,6 +364,7 @@ def index(request):
                 "exam": exam_data,
                 "announcements": announcements,
                 "messages": messages,
+                "latestTimestamp": latest_timestamp,
             }
         )
 

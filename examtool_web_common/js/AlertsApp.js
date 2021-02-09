@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Col, Container, Form, Row } from "react-bootstrap";
 import AlertsContext from "./AlertsContext";
 import AskQuestion from "./AskQuestion";
-import { getToken } from "./auth";
 import ConnectAlertButton from "./ConnectAlertButton";
 import CreateAnnouncement from "./CreateAnnouncement";
 import GoogleSignInButton from "./GoogleSignInButton";
@@ -12,7 +11,7 @@ import StaffMessagesList from "./StaffMessagesList";
 import StudentMessagesList from "./StudentMessagesList";
 import StudentAlertsList from "./StudentAlertsList";
 import TimerBanner from "./TimerBanner";
-import useInterval from "./useInterval";
+import useExamAlertsData from "./useExamAlertsData";
 import useTick from "./useTick";
 
 export default function Alerts() {
@@ -22,14 +21,13 @@ export default function Alerts() {
     .replace("/", "")
     .trim();
   const [selectedExam, setSelectedExam] = useState(forceSelectedExam);
-  const [examData, setExamData] = useState(null);
-  const [stale, setStale] = useState(false);
 
   const [isStaff, setIsStaff] = useState(false);
-  const [staffData, setStaffData] = useState(null);
 
-  const [audioQueue, setAudioQueue] = useState([]); // pop off the next audio to play
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [examData, stale, onConnect, send] = useExamAlertsData(
+    selectedExam,
+    isStaff
+  );
 
   const time = useTick();
 
@@ -44,59 +42,10 @@ export default function Alerts() {
   }, []);
 
   useEffect(() => {
-    if (audioQueue.length > 0 && !isPlayingAudio) {
-      const nextAudio = audioQueue[0];
-      const sound = new Audio(`data:audio/mp3;base64,${nextAudio}`);
-      setIsPlayingAudio(true);
-      sound.play();
-      sound.addEventListener("ended", () => {
-        setAudioQueue((queue) => queue.slice(1));
-        setIsPlayingAudio(false);
-      });
-    }
-  }, [audioQueue, isPlayingAudio]);
-
-  useEffect(() => {
     document.title = stale
       ? "(DISCONNECTED) Exam Announcements"
       : "Exam Announcements";
   }, [stale]);
-
-  useInterval(async () => {
-    if (examData || staffData) {
-      try {
-        const resp = await post(examData ? "fetch_data" : "fetch_staff_data", {
-          token: getToken(),
-          exam: selectedExam,
-          receivedAudio: examData
-            ? examData.announcements.map((x) => x.id)
-            : null,
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.success) {
-            setStale(false);
-            if (examData) {
-              setExamData(data);
-              const newAudio = [];
-              for (const { audio } of data.announcements) {
-                if (audio) {
-                  newAudio.push(audio);
-                }
-              }
-              newAudio.reverse();
-              setAudioQueue((queue) => queue.concat(newAudio));
-            } else {
-              setStaffData(data);
-            }
-          }
-        }
-      } catch (e) {
-        console.error(e);
-        setStale(true);
-      }
-    }
-  }, 10000);
 
   return (
     <AlertsContext.Provider value={{ time, examData, stale }}>
@@ -113,7 +62,7 @@ export default function Alerts() {
           </Col>
         </Row>
         <br />
-        {username && !examData && !staffData && !forceSelectedExam && (
+        {username && !examData && !forceSelectedExam && (
           <Row>
             <Col>
               <Form>
@@ -147,7 +96,7 @@ export default function Alerts() {
             </Col>
           </Row>
         )}
-        {username && selectedExam && !examData && !staffData && (
+        {username && selectedExam && !examData && (
           <Row>
             <Col>
               <p>
@@ -166,50 +115,44 @@ export default function Alerts() {
               <ConnectAlertButton
                 exam={selectedExam}
                 isStaff={isStaff}
-                onReceive={isStaff ? setStaffData : setExamData}
+                onDownloadClick={onConnect}
               />
             </Col>
           </Row>
         )}
-        {examData && (
+        {!isStaff && examData && (
           <Row>
             <Col>
               <TimerBanner data={examData} />
             </Col>
           </Row>
         )}
-        {examData && (
+        {!isStaff && examData && (
           <Row>
             <Col>
               <StudentAlertsList />
             </Col>
             {examData.enableClarifications === true && (
               <Col xs={6}>
-                <AskQuestion onUpdate={setExamData} exam={selectedExam} />
+                <AskQuestion send={send} />
                 <StudentMessagesList />
               </Col>
             )}
           </Row>
         )}
-        <CreateAnnouncement
-          exam={selectedExam}
-          staffData={staffData}
-          onUpdate={setStaffData}
-        />
-        {staffData && (
+        {isStaff && examData && (
+          <CreateAnnouncement staffData={examData} send={send} />
+        )}
+        {isStaff && examData && (
           <Row>
             <Col xs={6}>
-              <StaffAlertsList
-                selectedExam={selectedExam}
-                staffData={staffData}
-                onUpdate={setStaffData}
-              />
+              <StaffAlertsList staffData={examData} send={send} />
             </Col>
             <Col xs={6}>
               <StaffMessagesList
                 selectedExam={selectedExam}
-                staffData={staffData}
-                onUpdate={setStaffData}
+                staffData={examData}
+                send={send}
               />
             </Col>
           </Row>
