@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { Row, Card, Col, Form } from "react-bootstrap";
 import { useExamData } from "./AlertsContext";
-import { getToken } from "./auth";
 import FailText from "./FailText";
 import LoadingButton from "./LoadingButton";
-import post from "./post";
 
-export default function AskQuestion({ exam, onUpdate }) {
+export default function AskQuestion({ send }) {
   const examData = useExamData();
 
   const [message, setMessage] = useState("");
@@ -16,23 +14,16 @@ export default function AskQuestion({ exam, onUpdate }) {
 
   const submit = async () => {
     setIsLoading(true);
-    try {
-      const resp = await post("alerts/ask_question", {
-        token: getToken(),
-        exam,
-        question: question === "Overall Exam" ? null : question,
-        message,
-      });
-      const data = await resp.json();
-      if (!data.success) {
-        throw Error();
-      }
-      setMessage("");
-      onUpdate(data);
-    } catch {
+    const err = await send("alerts/ask_question", {
+      question: question === "Overall Exam" ? null : question,
+      message,
+    });
+    if (err) {
       setFailText(
         "Something went wrong. Please try again, or reload the page."
       );
+    } else {
+      setMessage("");
     }
     setIsLoading(false);
   };

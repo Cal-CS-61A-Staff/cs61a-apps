@@ -1,24 +1,8 @@
 import React from "react";
 import { Button, Card } from "react-bootstrap";
-import { getToken } from "./auth";
-import post from "./post";
 
-export default function StaffAlertsList({ selectedExam, staffData, onUpdate }) {
-  const deleteAnnouncement = (id) => {
-    (async () => {
-      const resp = await post("/delete_announcement", {
-        id,
-        exam: selectedExam,
-        token: getToken(),
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.success) {
-          onUpdate(data);
-        }
-      }
-    })();
-  };
+export default function StaffAlertsList({ staffData, send }) {
+  const deleteAnnouncement = (id) => () => send("/delete_announcement", { id });
 
   return (
     <>
