@@ -62,10 +62,10 @@ export default function useExamAlertsData(selectedExam, isStaff, setDeadline) {
           }
         }
         for (const announcement of data.announcements) {
-          announcements.set(announcements.id, announcement);
+          announcements.set(announcement.id, announcement);
         }
         newData.announcements = Array.from(announcements.values()).sort(
-          ({ time: t1 }, { time: t2 }) => t2 - t1
+          ({ timestamp: t1 }, { timestamp: t2 }) => t2 - t1
         );
       } else {
         newData[key] = value;
