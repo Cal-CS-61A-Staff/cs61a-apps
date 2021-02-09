@@ -224,7 +224,7 @@ def index(request):
                             }
                             for message in messages
                         ],
-                        key=lambda message: message["time"],
+                        key=lambda message: message["timestamp"],
                         reverse=True,
                     ),
                     "latestTimestamp": latest_timestamp,
