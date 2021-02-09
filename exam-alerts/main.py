@@ -218,7 +218,7 @@ def index(request):
                             {
                                 "id": message["id"],
                                 "message": message["message"],
-                                "time": message["timestamp"],
+                                "timestamp": message["timestamp"],
                                 "question": message["question"] or "Overall Exam",
                                 "responses": message["responses"],
                             }
