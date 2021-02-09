@@ -4,8 +4,6 @@ import Button from "react-bootstrap/Button";
 import Toast from "react-bootstrap/Toast";
 import AlertsContext from "./AlertsContext";
 import AskQuestion from "./AskQuestion";
-import { getToken } from "./auth";
-import post from "./post";
 import StudentMessagesList from "./StudentMessagesList";
 import { timeDeltaMinutesString } from "./timeUtils";
 import useExamAlertsData from "./useExamAlertsData";
@@ -54,7 +52,7 @@ export default function ExamAlerts({ exam, setDeadline }) {
                 id,
                 message,
                 question,
-                time: announcementTime,
+                timestamp: announcementTime,
                 private: isPrivate,
               }) => (
                 <Toast key={id}>
