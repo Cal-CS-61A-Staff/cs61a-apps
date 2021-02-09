@@ -19,9 +19,7 @@ export default function AskQuestion({ send }) {
       message,
     });
     if (err) {
-      setFailText(
-        "Something went wrong. Please try again, or reload the page."
-      );
+      setFailText(err);
     } else {
       setMessage("");
     }

@@ -10,18 +10,23 @@ import useExamAlertsData from "./useExamAlertsData";
 import useTick from "./useTick";
 
 export default function ExamAlerts({ exam, setDeadline }) {
-  const [examData, stale, onConnect, send] = useExamAlertsData(
-    exam,
-    false,
-    setDeadline
-  );
-
   const [fail, setFail] = useState(false);
 
   const [show, setShow] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const announcementListRef = useRef();
+
+  const [examData, stale, onConnect, send] = useExamAlertsData(
+    exam,
+    false,
+    setDeadline,
+    () => {
+      setShow(true);
+      announcementListRef.current.scrollTop =
+        announcementListRef.current.scrollHeight;
+    }
+  );
 
   const time = useTick();
 
@@ -127,7 +132,7 @@ export default function ExamAlerts({ exam, setDeadline }) {
       )}
       {examData && examData.enableClarifications && (
         <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-          <Modal.Header closeButton>Ask a question</Modal.Header>
+          <Modal.Header>Ask a question</Modal.Header>
           <Modal.Body>
             <AskQuestion exam={exam} send={send} />
             <StudentMessagesList />

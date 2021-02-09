@@ -27,9 +27,7 @@ export default function CreateAnnouncement({ staffData, send }) {
       },
     });
     if (err) {
-      setFailText(
-        "Something went wrong. Reload the page to see if the announcement was broadcast"
-      );
+      setFailText(err);
     }
     setIsLoading(false);
   };
