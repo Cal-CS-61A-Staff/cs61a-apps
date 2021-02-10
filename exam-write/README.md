@@ -140,6 +140,15 @@ If `FIXED` and `CORRECT` are used together, use the syntax
 
 Note that the order matters.
 
+To enter `<content>` that spans multiple lines, use a backslash `\` to indicate that the content continues
+on the next line. For instance
+```
+# INPUT <type> FIXED CORRECT <first_content> \
+<more_content> \
+<even_more_content>
+```
+This syntax can be used anywhere to include newlines in a single-line element.
+
 For short / long answer questions, you must provide exactly one input statement within that question.
 The `type` can be `SHORT_ANSWER`, `SHORT_CODE_ANSWER`, `LONG_ANSWER`, or `LONG_CODE_ANSWER`. `CODE`
 means that the font will be monospaced and tab will work to indent text typed in a `LONG_CODE_ANSWER`.
