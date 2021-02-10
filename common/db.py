@@ -2,6 +2,7 @@ import os
 from contextlib import contextmanager
 from os import getenv
 from os.path import exists
+from time import sleep
 from typing import List
 
 import sqlalchemy.engine.url
@@ -73,8 +74,18 @@ engine = sqlalchemy.create_engine(
 
 
 @contextmanager
-def connect_db():
-    with engine.connect() as conn:
+def connect_db(*, retries=3):
+    for i in range(retries):
+        try:
+            conn = engine.connect()
+            break
+        except:
+            sleep(3)
+            continue
+    else:
+        raise
+
+    with conn:
 
         def db(query: str, args: List[str] = []):
             if use_devdb:
