@@ -56,7 +56,11 @@ export default function MainPage(): React.Node {
         <Container>
           <Row>
             <Col>
-              <h1 className="display-4">CS 61A Tutorials</h1>
+              <h1 className="display-4">CS 61A Tutorials</h1>              
+              <p>	
+                Please remember to either attend or watch a discussion orientation before attending a tutorial section.
+                The tutorials are designed to build upon what you’ve gone over in the discussion orientation. 
+              </p>	
             </Col>
             {state.currentUser == null ? (
               <Col>
