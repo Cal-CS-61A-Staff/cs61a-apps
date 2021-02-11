@@ -12,6 +12,7 @@ export default React.createContext<{
     canStudentsChange: true,
     canTutorsChange: true,
     canTutorsReassign: true,
+    message: "",
   },
   currentUser: null,
   sections: [],

@@ -4,6 +4,7 @@
 import "bootstrap/dist/css/bootstrap.css";
 import { useContext, useState } from "react";
 import * as React from "react";
+import Alert from "react-bootstrap/Alert";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Tab from "react-bootstrap/Tab";
@@ -13,6 +14,7 @@ import FormControl from "react-bootstrap/FormControl";
 import InputGroup from "react-bootstrap/InputGroup";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
+import ReactMarkdown from "react-markdown";
 import { Redirect } from "react-router-dom";
 import StateContext from "./StateContext";
 import ToggleSwitch from "./ToggleSwitch";
@@ -21,10 +23,9 @@ import useAPI from "./useStateAPI";
 export default function AdminPage(): React.Node {
   const { config, currentUser } = useContext(StateContext);
 
-  const [sheetURL, setSheetURL] = useState("");
+  const [message, setMessage] = useState(config.message);
 
   const updateConfig = useAPI("update_config");
-  const importSections = useAPI("import_sections");
   const exportAttendance = useAPI(
     "export_attendance",
     ({ custom: { attendances, fileName } }) => {
@@ -113,29 +114,30 @@ export default function AdminPage(): React.Node {
                   </tr>
                 </tbody>
               </Table>
-              <InputGroup>
-                <FormControl
-                  placeholder="Tutorial Spreadsheet URL"
-                  value={sheetURL}
-                  onChange={(e) => setSheetURL(e.target.value)}
-                />
-                <InputGroup.Append>
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => importSections({ sheet_url: sheetURL })}
-                  >
-                    Update
-                  </Button>
-                </InputGroup.Append>
-              </InputGroup>
               <p>
-                <small>
-                  You must share this spreadsheet with the 61A service account{" "}
-                  <a href="mailto:secure-links@ok-server.iam.gserviceaccount.com">
-                    secure-links@ok-server.iam.gserviceaccount.com
-                  </a>
-                  .
-                </small>
+                Welcome message:
+                <InputGroup>
+                  <FormControl
+                    as="textarea"
+                    placeholder="Write a short welcome message for students"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                  />
+                  <InputGroup.Append>
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => updateConfig({ message })}
+                    >
+                      Save
+                    </Button>
+                  </InputGroup.Append>
+                </InputGroup>
+              </p>
+              <p>
+                Preview:
+                <Alert variant="info">
+                  <ReactMarkdown>{message}</ReactMarkdown>
+                </Alert>
               </p>
               <p>
                 <Button onClick={() => exportAttendance({ full: false })}>
