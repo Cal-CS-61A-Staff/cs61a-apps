@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, TypedDict
 
 from common.rpc.utils import create_service
 
-service = create_service(__name__, "deploy.hosted")
+service = create_service(__name__)
 
 
 class Messages(TypedDict):
