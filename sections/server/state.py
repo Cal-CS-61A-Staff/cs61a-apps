@@ -116,7 +116,7 @@ def create_state_client(app: flask.Flask):
         out = {
             "enrolledSection": None,
             "taughtSections": None,
-            "sections": None,
+            "sections": [],
             "currentUser": None,
             "config": config.json,
             "custom": None,
