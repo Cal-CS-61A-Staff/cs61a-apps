@@ -69,6 +69,7 @@ export type CourseConfig = {
   canStudentsChange: boolean,
   canTutorsChange: boolean,
   canTutorsReassign: boolean,
+  message: string,
 };
 
 export type State = {

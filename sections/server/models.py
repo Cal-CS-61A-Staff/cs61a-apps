@@ -200,6 +200,7 @@ class CourseConfig(db.Model):
     can_students_change = db.Column(db.Boolean, default=True)
     can_tutors_change = db.Column(db.Boolean, default=True)
     can_tutors_reassign = db.Column(db.Boolean, default=True)
+    message: str = db.Column(db.String(1024), default="")
 
     @property
     def json(self):
@@ -207,4 +208,5 @@ class CourseConfig(db.Model):
             "canStudentsChange": self.can_students_change,
             "canTutorsChange": self.can_tutors_change,
             "canTutorsReassign": self.can_tutors_reassign,
+            "message": self.message,
         }

@@ -86,10 +86,10 @@ export default function StudentSectionCard({
             {enrolledInThisSection ? (
               <div>Switch to Section {slotText}</div>
             ) : (
-              <a href="#">
+              <span className="btn-link">
                 {enrolledSection == null ? "Join Section" : "Switch to Section"}{" "}
                 {slotText}
-              </a>
+              </span>
             )}
           </ListGroup.Item>
         ) : null}

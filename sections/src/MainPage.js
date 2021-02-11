@@ -57,6 +57,7 @@ export default function MainPage(): React.Node {
           <Row>
             <Col>
               <h1 className="display-4">CS 61A Tutorials</h1>
+              <p className="lead">{state.config.message}</p>
             </Col>
             {state.currentUser == null ? (
               <Col>
