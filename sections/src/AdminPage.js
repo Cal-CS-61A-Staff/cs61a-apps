@@ -4,6 +4,7 @@
 import "bootstrap/dist/css/bootstrap.css";
 import { useContext, useState } from "react";
 import * as React from "react";
+import Alert from "react-bootstrap/Alert";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Tab from "react-bootstrap/Tab";
@@ -13,6 +14,7 @@ import FormControl from "react-bootstrap/FormControl";
 import InputGroup from "react-bootstrap/InputGroup";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
+import ReactMarkdown from "react-markdown";
 import { Redirect } from "react-router-dom";
 import StateContext from "./StateContext";
 import ToggleSwitch from "./ToggleSwitch";
@@ -113,6 +115,7 @@ export default function AdminPage(): React.Node {
                 </tbody>
               </Table>
               <p>
+                Welcome message:
                 <InputGroup>
                   <FormControl
                     as="textarea"
@@ -129,6 +132,12 @@ export default function AdminPage(): React.Node {
                     </Button>
                   </InputGroup.Append>
                 </InputGroup>
+              </p>
+              <p>
+                Preview:
+                <Alert variant="info">
+                  <ReactMarkdown>{message}</ReactMarkdown>
+                </Alert>
               </p>
               <p>
                 <Button onClick={() => exportAttendance({ full: false })}>

@@ -10,6 +10,7 @@ import Jumbotron from "react-bootstrap/Jumbotron";
 import moment from "moment-timezone";
 import { useContext } from "react";
 import Row from "react-bootstrap/Row";
+import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import EnrolledSectionCard from "./EnrolledSectionCard";
 
@@ -57,7 +58,9 @@ export default function MainPage(): React.Node {
           <Row>
             <Col>
               <h1 className="display-4">CS 61A Tutorials</h1>
-              <p className="lead">{state.config.message}</p>
+              <p className="lead">
+                <ReactMarkdown>{state.config.message}</ReactMarkdown>
+              </p>
             </Col>
             {state.currentUser == null ? (
               <Col>
