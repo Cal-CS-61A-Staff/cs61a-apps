@@ -1,7 +1,7 @@
 from random import choice
 from typing import List
 
-from flask import Flask, Response, redirect, request
+from flask import Flask, redirect, request
 from werkzeug.utils import escape
 
 from common.db import connect_db
@@ -9,7 +9,6 @@ from common.html import html, make_row
 from common.oauth_client import create_oauth_client, is_staff, login
 from common.rpc.auth import read_spreadsheet
 from common.rpc.hinting import Messages, get_hints, get_wwpd_hints
-from common.rpc.utils import cached
 from common.url_for import url_for
 
 with connect_db() as db:
