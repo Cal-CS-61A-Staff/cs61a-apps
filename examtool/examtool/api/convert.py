@@ -19,7 +19,6 @@ class LineBuffer:
         self.lines = []
         self.i = 0
         self.insert_next(text)
-        self.onpop = lambda x: None
 
     def insert_next(self, text):
         if isinstance(text, list):
@@ -33,12 +32,19 @@ class LineBuffer:
             raise SyntaxError(f"LineBuffer: unsupported type to insert: {type(text)}")
         self.lines = self.lines[: self.i] + new_lines + self.lines[self.i :]
 
-    def pop(self) -> str:
+    def _pop(self) -> str:
         if self.i == len(self.lines):
             raise SyntaxError("File terminated unexpectedly")
         self.i += 1
-        self.onpop(self)
         return self.lines[self.i - 1]
+
+    def pop(self) -> str:
+        line = self._pop()
+        stripped = line.rstrip()
+        while stripped.endswith("\\"):
+            line = stripped[:-1] + "\n" + self._pop()
+            stripped = line.rstrip()
+        return line
 
     def remove_prev(self):
         self.i -= 1
