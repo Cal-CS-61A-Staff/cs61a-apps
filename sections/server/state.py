@@ -107,33 +107,36 @@ def create_state_client(app: flask.Flask):
 
     @api
     def refresh_state():
-        if current_user.is_authenticated:
-            config = CourseConfig.query.filter_by(course=get_course()).one_or_none()
-            if config is None:
-                config = CourseConfig(course=get_course())
-                db.session.add(config)
-                db.session.commit()
+        config = CourseConfig.query.filter_by(course=get_course()).one_or_none()
+        if config is None:
+            config = CourseConfig(course=get_course())
+            db.session.add(config)
+            db.session.commit()
 
-            return {
-                "enrolledSection": current_user.sections[0].json
-                if current_user.sections
-                else None,
-                "taughtSections": [
-                    section.json
-                    for section in sorted(
-                        current_user.sections_taught, key=section_sorter
-                    )
-                ],
-                "sections": [
-                    section.json
-                    for section in sorted(Section.query.all(), key=section_sorter)
-                ],
-                "currentUser": current_user.full_json,
-                "config": config.json,
-                "custom": None,
-            }
-        else:
-            return {"sections": []}
+        out = {
+            "enrolledSection": None,
+            "taughtSections": None,
+            "sections": None,
+            "currentUser": None,
+            "config": config.json,
+            "custom": None,
+        }
+
+        if current_user.is_authenticated:
+            out["enrolledSection"] = (
+                current_user.sections[0].json if current_user.sections else None
+            )
+            out["taughtSections"] = [
+                section.json
+                for section in sorted(current_user.sections_taught, key=section_sorter)
+            ]
+            out["sections"] = [
+                section.json
+                for section in sorted(Section.query.all(), key=section_sorter)
+            ]
+            out["currentUser"] = current_user.full_json
+
+        return out
 
     @api
     @staff_required
