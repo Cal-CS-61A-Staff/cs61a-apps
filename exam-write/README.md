@@ -140,6 +140,15 @@ If `FIXED` and `CORRECT` are used together, use the syntax
 
 Note that the order matters.
 
+To enter `<content>` that spans multiple lines, use a backslash `\` to indicate that the content continues
+on the next line. For instance
+```
+# INPUT <type> FIXED CORRECT <first_content> \
+<more_content> \
+<even_more_content>
+```
+This syntax can be used anywhere to include newlines in a single-line element.
+
 For short / long answer questions, you must provide exactly one input statement within that question.
 The `type` can be `SHORT_ANSWER`, `SHORT_CODE_ANSWER`, `LONG_ANSWER`, or `LONG_CODE_ANSWER`. `CODE`
 means that the font will be monospaced and tab will work to indent text typed in a `LONG_CODE_ANSWER`.
@@ -229,3 +238,47 @@ This will uniquely set each target with one of the alts. You may have more alts 
 
 Note that this syntax does not support Markdown - it is a very naive text substitution in the generated HTML, so don't
 try anything too fancy with it!
+
+## Inline Groups
+To allow for more advanced scrambling, you can use the config statement
+```
+# CONFIG INLINE
+```
+within a group to move its child elements into its parent. This is useful when using `# CONFIG PICK`.
+
+As an example, consider the following exam pseudo-structure
+```
+# BEGIN GROUP
+    # BEGIN GROUP 1
+        # Q 1A
+        # Q 1B
+        # Q 1C
+        # CONFIG PICK 2
+        # CONFIG INLINE
+    # END GROUP
+    # BEGIN GROUP 2
+        # Q 2A
+        # Q 2B
+        # Q 2C
+        # CONFIG PICK 2
+        # CONFIG INLINE
+    # END GROUP
+    # CONFIG PICK 3
+    # CONFIG SHUFFLE
+# END GROUP
+```
+
+The tool will pick two questions from group 1 and two from group 2. Then these four questions will be placed in
+the enclosing group, replacing their nested groups. Then, out of these four questions, three will be chosen.
+
+Thus, we obtain a single group with three questions in random order, at most two of which can be
+from category 1 or category 2.
+
+## Import Syntax
+
+To write exams over multiple files, use the syntax
+```
+# IMPORT <path>
+```
+to insert the contents of the file at `<path>` in the current file. The `<path>` is evaluated with respect to the
+folder containing the importing file, and may be a relative or absolute path.
