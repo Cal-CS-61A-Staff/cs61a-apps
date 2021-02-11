@@ -1,109 +1,38 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Col, Modal } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Toast from "react-bootstrap/Toast";
 import AlertsContext from "./AlertsContext";
 import AskQuestion from "./AskQuestion";
-import { getToken } from "./auth";
-import post from "./post";
 import StudentMessagesList from "./StudentMessagesList";
 import { timeDeltaMinutesString } from "./timeUtils";
-import useInterval from "./useInterval";
+import useExamAlertsData from "./useExamAlertsData";
 import useTick from "./useTick";
 
 export default function ExamAlerts({ exam, setDeadline }) {
-  const [examData, setExamData] = useState(null);
-  const [stale, setStale] = useState(false);
   const [fail, setFail] = useState(false);
-
-  const [audioQueue, setAudioQueue] = useState([]); // pop off the next audio to play
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const [show, setShow] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const announcementListRef = useRef();
 
+  const [examData, stale, onConnect, send] = useExamAlertsData(
+    exam,
+    false,
+    setDeadline,
+    () => {
+      setShow(true);
+      announcementListRef.current.scrollTop =
+        announcementListRef.current.scrollHeight;
+    }
+  );
+
   const time = useTick();
 
   useEffect(() => {
-    if (audioQueue.length > 0 && !isPlayingAudio) {
-      const nextAudio = audioQueue[0];
-      const sound = new Audio(`data:audio/mp3;base64,${nextAudio}`);
-      setIsPlayingAudio(true);
-      sound.play();
-      sound.addEventListener("ended", () => {
-        setAudioQueue((queue) => queue.slice(1));
-        setIsPlayingAudio(false);
-      });
-    }
-  }, [audioQueue, isPlayingAudio]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await post("/alerts/fetch_data", {
-          token: getToken(),
-          exam,
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.success) {
-            setExamData(data);
-          } else {
-            setFail(true);
-          }
-        } else {
-          setFail(true);
-        }
-      } catch {
-        setFail(true);
-      }
-    })();
+    onConnect().then((err) => !err || setFail(true));
   }, []);
-
-  useInterval(async () => {
-    if (examData) {
-      try {
-        const resp = await post("/alerts/fetch_data", {
-          token: getToken(),
-          exam,
-          receivedAudio: examData.announcements.map((x) => x.id),
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.success) {
-            setExamData(data);
-            setStale(false);
-            setDeadline(
-              data.endTime -
-                Math.round(data.timestamp) +
-                Math.round(new Date().getTime() / 1000) -
-                2
-            );
-            const newAudio = [];
-            for (const { audio } of data.announcements) {
-              if (audio) {
-                newAudio.push(audio);
-                setShow(true);
-                announcementListRef.current.scrollTop =
-                  announcementListRef.current.scrollHeight;
-              }
-            }
-            newAudio.reverse();
-            setAudioQueue((queue) => queue.concat(newAudio));
-          } else {
-            setStale(true);
-          }
-        } else {
-          setStale(true);
-        }
-      } catch (e) {
-        console.error(e);
-        setStale(true);
-      }
-    }
-  }, 10000);
 
   return (
     <AlertsContext.Provider value={{ time, examData, stale }}>
@@ -128,7 +57,7 @@ export default function ExamAlerts({ exam, setDeadline }) {
                 id,
                 message,
                 question,
-                time: announcementTime,
+                timestamp: announcementTime,
                 private: isPrivate,
               }) => (
                 <Toast key={id}>
@@ -191,7 +120,7 @@ export default function ExamAlerts({ exam, setDeadline }) {
       )}
       {fail && (
         <Modal show>
-          <Modal.Header>
+          <Modal.Header closeButton>
             <Modal.Title>Network Connection Lost!</Modal.Title>
           </Modal.Header>
           <Modal.Body>
@@ -203,9 +132,9 @@ export default function ExamAlerts({ exam, setDeadline }) {
       )}
       {examData && examData.enableClarifications && (
         <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-          <Modal.Header closeButton>Ask a question</Modal.Header>
+          <Modal.Header>Ask a question</Modal.Header>
           <Modal.Body>
-            <AskQuestion exam={exam} onUpdate={setExamData} />
+            <AskQuestion exam={exam} send={send} />
             <StudentMessagesList />
           </Modal.Body>
         </Modal>

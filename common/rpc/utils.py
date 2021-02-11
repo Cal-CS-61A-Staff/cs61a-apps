@@ -148,10 +148,11 @@ def create_service(app: str, override=None, providers=None):
                             else:
                                 return jsonify(out)
                         except PermissionError as e:
-                            return str(e), 401
+                            return "", 401
                         except Exception as e:
                             traceback.print_exc()
-                            return str(e), 500
+                            print(str(e))
+                            return "", 500
 
                     app.add_url_rule(path, func.__name__, handler, methods=["POST"])
                     return func

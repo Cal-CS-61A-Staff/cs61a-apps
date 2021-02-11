@@ -15,7 +15,7 @@ export default function StudentMessagesList() {
     <Row>
       <Col>
         {examData.messages.map(
-          ({ id, message, question, time: messageTime, responses }) => (
+          ({ id, message, question, timestamp, responses }) => (
             <div key={id}>
               <Card>
                 <Card.Header>
@@ -29,7 +29,7 @@ export default function StudentMessagesList() {
                 <ListGroup variant="flush">
                   <ListGroup.Item key={id} style={{ whiteSpace: "pre-wrap" }}>
                     <b>You: </b>
-                    {message} ({timeDeltaMinutesString(time - messageTime)})
+                    {message} ({timeDeltaMinutesString(time - timestamp)})
                   </ListGroup.Item>
                   {responses.map(
                     ({

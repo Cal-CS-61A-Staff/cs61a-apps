@@ -5,3 +5,5 @@ first_party_domains:
 permissions:
   - rpc
   - storage
+concurrency: 20
+memory_limit: 512M
