@@ -1,7 +1,8 @@
 from random import choice
 from typing import List
 
-from flask import Flask, redirect, request
+from flask import Flask, Response, redirect, request
+from werkzeug.utils import escape
 
 from common.db import connect_db
 from common.html import html, make_row
@@ -53,12 +54,65 @@ def index():
         for assignment, url, sheet in sources
     )
 
+    data = {}
+    for key in ["assignment", "question", "suite", "case", "prompt", "output"]:
+        if key in request.args:
+            data[key] = request.args[key]
+        else:
+            data = {}
+            break
+
+    if data:
+        question = "Question " + data["question"]
+        output = data["output"] + f"\n Suite {data['suite']} Case {data['case']}"
+        hints = hint_lookup(data["assignment"], question, data["prompt"], output)
+        hint_rows = [
+            f"<p>Hint: {escape(hint)}"
+            + (f" (Prompt: {escape(prompt)})" if prompt else "")
+            for hint, prompt in hints
+        ]
+        hint_html = f"""
+        <h3>Hint Output</h3>
+        {"".join(hint_rows) if hints else "None"}
+        """
+    else:
+        hint_html = ""
+
+    def g(key):
+        return escape(data.get(key, ""))
+
+    with connect_db() as db:
+        assignments = db("SELECT assignment FROM sources").fetchall()
+
     return html(
         f"""
     <h3>Sources</h3>
     {sources}
     <h3>Add Sources</h3>
     {make_row(insert_fields, url_for("add_source"), "Add")}
+    <h3>Test Hints</h3>
+    <form action="/" method="GET">
+        <p>
+        Assignment:
+        <select name="assignment">
+        {''.join(f'<option>{assignment[0]}</option>' for assignment in assignments)}
+        </select>
+        <p>
+        Question: <input name="question" value="{g('question')}"> </input>
+        <p>
+        Suite: <input name="suite" value="{g('suite')}"></input>
+        <p>
+        Case: <input name="case" value="{g('case')}"></input>
+        <p>
+        Prompt: <br />
+        <textarea name="prompt">{g('prompt')}</textarea>
+        <p>
+        Student Output: <br />
+        <textarea name="output">{g('output')}</textarea>
+        <p>
+        <button type="submit">Get Hints!</button>
+    </form>
+    {hint_html}
     """
     )
 
@@ -102,19 +156,25 @@ def remove_source():
 
 
 def get_hint_source(assignment: str):
-    return (
-        "https://docs.google.com/spreadsheets/d/1jjX1Zpak-pHKu-MuHKXd7y2ynWiTNkPfcStBDgX66l8/edit#gid=0",
-        "Sheet1",
-    )
+    with connect_db() as db:
+        source = db(
+            "SELECT url, sheet FROM sources WHERE assignment=(%s)", [assignment]
+        ).fetchone()
+
+    if source:
+        return source
+    return None
 
 
-@cached()
-def load_hint_source(*, assignment: str):
+def load_hint_source(assignment: str, *, _cache={}, skip_cache=False):
+    if assignment in _cache and not skip_cache:
+        return _cache[assignment]
     source = get_hint_source(assignment)
     if source is None:
         return []
     url, sheet_name = source
-    return read_spreadsheet(url=url, sheet_name=sheet_name)
+    _cache[assignment] = read_spreadsheet(url=url, sheet_name=sheet_name)
+    return _cache[assignment]
 
 
 def hint_lookup(
@@ -123,7 +183,7 @@ def hint_lookup(
     return [
         (hint, prompt)
         for question, prompt, suite, case, needle, hint, followup in load_hint_source(
-            assignment=assignment
+            assignment, skip_cache=True
         )
         if question in target_question
         and prompt in target_prompt
