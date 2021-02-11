@@ -54,3 +54,8 @@ def get_hints(
     *, assignment: str, test: str, messages: Messages, user: str
 ) -> HintOutput:
     ...
+
+
+@service.route("/api/check_hints_available")
+def check_hints_available(*, assignment: str) -> HintOutput:
+    ...

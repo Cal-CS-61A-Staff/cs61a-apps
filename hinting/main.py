@@ -8,7 +8,12 @@ from common.db import connect_db
 from common.html import html, make_row
 from common.oauth_client import create_oauth_client, is_staff, login
 from common.rpc.auth import read_spreadsheet
-from common.rpc.hinting import Messages, get_hints, get_wwpd_hints
+from common.rpc.hinting import (
+    Messages,
+    check_hints_available,
+    get_hints,
+    get_wwpd_hints,
+)
 from common.url_for import url_for
 
 with connect_db() as db:
@@ -234,6 +239,15 @@ def get_hints(*, assignment: str, test: str, messages: Messages, user: str):
         return dict(message=message, post_prompt=post_prompt)
     else:
         return {}
+
+
+@check_hints_available.bind(app)
+def check_hints_available(*, assignment: str):
+    with connect_db() as db:
+        exists = db(
+            "SELECT COUNT(*) FROM sources WHERE assignment=(%s)", [assignment]
+        ).fetchone()
+    return bool(exists)
 
 
 if __name__ == "__main__":
