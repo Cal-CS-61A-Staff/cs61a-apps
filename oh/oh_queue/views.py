@@ -84,6 +84,7 @@ def ticket_json(ticket):
         "status": ticket.status.name,
         "user": user_json(ticket.user) if group else student_json(ticket.user),
         "created": ticket.created.isoformat(),
+        "sort_key": ticket.sort_key.isoformat(),
         "rerequest_threshold": ticket.rerequest_threshold
         and ticket.rerequest_threshold.isoformat(),
         "hold_time": ticket.hold_time and ticket.hold_time.isoformat(),
@@ -856,19 +857,19 @@ def get_next_ticket(location=None):
             Ticket.status == TicketStatus.rerequested,
             Ticket.helper_id == current_user.id,
             Ticket.course == get_course(),
-        )
+        ).order_by(Ticket.sort_key)
         ticket = ticket.first()
     if not ticket:
         ticket = Ticket.query.filter(
             Ticket.status == TicketStatus.rerequested,
             Ticket.helper_id == None,
             Ticket.course == get_course(),
-        )
+        ).order_by(Ticket.sort_key)
         ticket = ticket.first()
     if not ticket:
         ticket = Ticket.query.filter(
             Ticket.status == TicketStatus.pending, Ticket.course == get_course()
-        )
+        ).order_by(Ticket.sort_key)
         if location:
             ticket = ticket.filter(Ticket.location == location)
         ticket = ticket.first()
@@ -1041,6 +1042,18 @@ def unassign(ticket_ids):
         ticket.status = TicketStatus.pending
         ticket.helper_id = None
         emit_event(ticket, TicketEventType.unassign)
+    db.session.commit()
+
+
+@api("shuffle_tickets")
+@is_staff
+def shuffle_tickets(ticket_ids):
+    tickets = get_tickets(ticket_ids)
+    ticket_sort_keys = [ticket.sort_key for ticket in tickets]
+    random.shuffle(ticket_sort_keys)
+    for ticket, sort_key in zip(tickets, ticket_sort_keys):
+        ticket.sort_key = sort_key
+        emit_event(ticket, TicketEventType.shuffled)
     db.session.commit()
 
 
