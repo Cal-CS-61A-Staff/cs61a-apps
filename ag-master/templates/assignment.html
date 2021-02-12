@@ -1,0 +1,49 @@
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/spcss@0.5.0">
+<title>{{ assign.name }} ({{ assign.course }}) - CS 61A Autograder</title>
+
+<h1>{{ assign.name }}</h1>
+
+<h2>Assignment Details</h2>
+
+<p>
+    Batch Size: {{ assign.batch_size }} <br />
+    <br />
+    Grading ZIP: {{ assign.file }} <br />
+    Grading Script: <code>{{ assign.command }}</code> <br />
+    <br />
+    Last Modified: {{ assign.last_modified | dt }}
+</p>
+
+<h2>Jobs</h2>
+
+<form action="retrigger_unsuccessful" method="post">
+    <button type="submit">Retrigger Unsuccessful Jobs</button>
+</form>
+
+
+<form action="fail_unfinished" method="post">
+    <button type="submit">Cancel Unfinished Jobs</button>
+</form>
+
+
+{% for batch in batches %}
+<h3>{{ batch | dt }} ({{100 * batches[batch]["completed"]/batches[batch]["total"]}}% done)</h3>
+<pre>
+    Items to Grade: {{ batches[batch]["total"] }} (<a href="/{{course}}/{{assign.name}}?queued_at={{batch}}">See details</a>)
+
+    Queued: {{ batches[batch]["queued"] }} (<a href="/{{course}}/{{assign.name}}?queued_at={{batch}}&status=queued">See details</a>)
+    Running: {{ batches[batch]["running"] }} (<a href="/{{course}}/{{assign.name}}?queued_at={{batch}}&status=running">See details</a>)
+    Successful: {{ batches[batch]["finished"] }} (<a href="/{{course}}/{{assign.name}}?queued_at={{batch}}&status=finished">See details</a>)
+    Failed: {{ batches[batch]["failed"] }} (<a href="/{{course}}/{{assign.name}}?queued_at={{batch}}&status=failed">See details</a>)
+</pre>
+{% endfor %}
+
+{% if queued_at != "0" and queued_at in batches %}
+<h3>Job Details</h3>
+{% for job in batches[queued_at]["jobs"] %}
+
+<p>Job for {{ job["backup"] }} ({{ job["status"] }}) (<a href="/{{course}}/job/{{job['id']}}">see details</a>)</p>
+
+{% endfor %}
+{% endif %}

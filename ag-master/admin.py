@@ -1,9 +1,10 @@
 import base64
 import time
+import pytz
 
 from google.cloud import storage
 from typing import List
-from flask import request, render_template
+from flask import request, render_template, abort
 from datetime import datetime
 
 from common.rpc.ag_master import create_assignment, trigger_jobs, upload_zip
@@ -13,6 +14,8 @@ from common.oauth_client import get_user
 
 from models import Assignment, db, Job
 from utils import BUCKET, admin_only
+
+TZ = pytz.timezone('America/Los_Angeles')
 
 
 def create_admin_endpoints(app):
@@ -26,7 +29,7 @@ def create_admin_endpoints(app):
 
     @create_assignment.bind(app)
     @admin_only
-    def create_assignment_rpc(course, name, file, command):
+    def create_assignment_rpc(course, name, file, command, batch_size):
         assignment: Assignment = Assignment.query.filter_by(
             name=name, course=course, endpoint=get_endpoint(course=course)
         ).one_or_none()
@@ -43,18 +46,18 @@ def create_admin_endpoints(app):
         assignment.file = file
         assignment.command = command
         assignment.last_modified = int(time.time())
+        assignment.batch_size = batch_size
         db.session.commit()
 
         return assignment.assignment_secret
 
     @app.template_filter("dt")
-    def format_dt(value, format="%b %d, %Y at %I:%M %p"):
+    def format_dt(value, format="%b %d, %Y at %I:%M %p %Z"):
         if value is None:
             return "no date provided"
-        return datetime.fromtimestamp(int(value)).strftime(format)
+        return datetime.fromtimestamp(int(value), TZ).strftime(format)
 
     @app.route("/<course>")
-    @app.route("/<course>/assignments")
     @admin_only
     def get_assignments(course):
         endpoint = get_endpoint(course=course)
@@ -63,18 +66,18 @@ def create_admin_endpoints(app):
         ).all()
 
         return render_template(
-            "assignments.html", course=course, assignments=assignments
+            "assignments.html", course=course, assignments=sorted(assignments, key=lambda a: -a.last_modified)
         )
 
-    @app.route("/<course>/<assignment>/fail_pending", methods=["POST"])
+    @app.route("/<course>/<assignment>/fail_unfinished", methods=["POST"])
     @admin_only
-    def fail_pending_jobs(course, assignment):
+    def fail_unfinished_jobs(course, assignment):
         endpoint = get_endpoint(course=course)
         jobs = (
             Job.query.join(Assignment)
             .filter(Assignment.endpoint == endpoint)
             .filter(Assignment.name == assignment)
-            .filter(Job.status == "queued")
+            .filter(Job.status.in_(("queued", "running")))
             .all()
         )
         count = Job.query.filter(
@@ -91,9 +94,9 @@ def create_admin_endpoints(app):
 
         return dict(modified=count)
 
-    @app.route("/<course>/<assignment>/retrigger_queued", methods=["POST"])
+    @app.route("/<course>/<assignment>/retrigger_unsuccessful", methods=["POST"])
     @admin_only
-    def retrigger_queued_jobs(course, assignment):
+    def retrigger_unsuccessful_jobs(course, assignment):
         endpoint = get_endpoint(course=course)
         assignment = Assignment.query.filter_by(
             name=assignment, endpoint=endpoint
@@ -102,9 +105,13 @@ def create_admin_endpoints(app):
             Job.query.join(Assignment)
             .filter(Assignment.endpoint == endpoint)
             .filter(Assignment.name == assignment.name)
-            .filter(Job.status == "queued")
+            .filter(Job.status != "finished")
             .all()
         )
+
+        for job in jobs:
+            job.status = "queued"
+        db.session.commit()
 
         trigger_jobs(
             assignment_id=assignment.assignment_secret,
@@ -113,7 +120,7 @@ def create_admin_endpoints(app):
 
         return dict(modified=len(jobs))
 
-    @app.route("/<course>/<assign>/jobs")
+    @app.route("/<course>/<assign>")
     @admin_only
     def get_jobs(course, assign):
         endpoint = get_endpoint(course=course)
@@ -122,6 +129,10 @@ def create_admin_endpoints(app):
             .filter(Assignment.endpoint == endpoint)
             .filter(Assignment.name == assign)
         )
+        assign = Assignment.query.filter(Assignment.name == assign).filter(Assignment.endpoint == endpoint).one_or_none()
+
+        if not assign:
+            abort(404, "Assignment not found.")
 
         queued_at = request.args.get("queued_at", 0)
         if queued_at:
@@ -172,7 +183,7 @@ def create_admin_endpoints(app):
             batch["jobs"].append(details)
 
         return render_template(
-            "jobs.html",
+            "assignment.html",
             course=course,
             assign=assign,
             batches={k: batches[k] for k in sorted(batches, reverse=True)},
@@ -188,8 +199,11 @@ def create_admin_endpoints(app):
             Job.query.join(Assignment)
             .filter(Assignment.endpoint == endpoint)
             .filter(Job.external_job_id == id)
-            .one()
+            .one_or_none()
         )
+
+        if not job:
+            abort(404, "Job not found.")
 
         return render_template(
             "job.html",
