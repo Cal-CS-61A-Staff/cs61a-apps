@@ -29,6 +29,11 @@ export default function Question({ question, number }) {
   const setValue = (val) => {
     if (!examContext.locked) {
       actuallySetValue(val);
+      try {
+        localStorage.setItem(question.id + Date.now(), val);
+      } catch (e) {
+        console.error(e);
+      }
       if (val[0]) {
         examContext.recordSolved(question.id);
       } else {

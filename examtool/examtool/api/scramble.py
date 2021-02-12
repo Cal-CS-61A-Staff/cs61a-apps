@@ -151,6 +151,10 @@ def scramble(email, exam, *, keep_data=False):
     exam["groups"] = groups
     exam.pop("config", None)
 
+    exam["entropy"] = entropy = []
+    for _ in range(100):
+        entropy.append(random.randrange(1024))
+
     return exam
 
 
