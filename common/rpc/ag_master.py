@@ -37,5 +37,7 @@ def upload_zip(*, course: str, name: str, file: str):
 
 @requires_access_token
 @service.route("/api/create_assignment")
-def create_assignment(*, course: str, name: str, file: str, command: str, batch_size: int) -> str:
+def create_assignment(
+    *, course: str, name: str, file: str, command: str, batch_size: int
+) -> str:
     ...

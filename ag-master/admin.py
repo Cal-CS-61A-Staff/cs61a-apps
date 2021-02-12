@@ -15,7 +15,7 @@ from common.oauth_client import get_user
 from models import Assignment, db, Job
 from utils import BUCKET, admin_only
 
-TZ = pytz.timezone('America/Los_Angeles')
+TZ = pytz.timezone("America/Los_Angeles")
 
 
 def create_admin_endpoints(app):
@@ -66,7 +66,9 @@ def create_admin_endpoints(app):
         ).all()
 
         return render_template(
-            "assignments.html", course=course, assignments=sorted(assignments, key=lambda a: -a.last_modified)
+            "assignments.html",
+            course=course,
+            assignments=sorted(assignments, key=lambda a: -a.last_modified),
         )
 
     @app.route("/<course>/<assignment>/fail_unfinished", methods=["POST"])
@@ -129,7 +131,11 @@ def create_admin_endpoints(app):
             .filter(Assignment.endpoint == endpoint)
             .filter(Assignment.name == assign)
         )
-        assign = Assignment.query.filter(Assignment.name == assign).filter(Assignment.endpoint == endpoint).one_or_none()
+        assign = (
+            Assignment.query.filter(Assignment.name == assign)
+            .filter(Assignment.endpoint == endpoint)
+            .one_or_none()
+        )
 
         if not assign:
             abort(404, "Assignment not found.")

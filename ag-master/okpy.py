@@ -34,7 +34,10 @@ def create_okpy_endpoints(app):
             abort(404, "Unknown Assignment")
 
         if len(subm_ids) / assignment.batch_size > 50:
-            abort(405, "Too many batches! Please set the batch_size so that there are <= 50 batches.")
+            abort(
+                405,
+                "Too many batches! Please set the batch_size so that there are <= 50 batches.",
+            )
 
         job_secrets = [new_secret() for _ in subm_ids]
         queue_time = int(time.time())
@@ -66,7 +69,8 @@ def create_okpy_endpoints(app):
         assignment: Assignment = Assignment.query.get(assignment_id)
 
         job_batches = [
-            jobs[i : i + assignment.batch_size] for i in range(0, len(jobs), assignment.batch_size)
+            jobs[i : i + assignment.batch_size]
+            for i in range(0, len(jobs), assignment.batch_size)
         ]
 
         bucket = storage.Client().get_bucket(BUCKET)
