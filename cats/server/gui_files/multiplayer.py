@@ -5,7 +5,6 @@ from random import randrange
 
 import cats
 from gui_files.common_server import route, forward_to_server, server_only
-from gui_files.db import connect_db
 from gui_files.leaderboard_integrity import (
     get_authorized_limit,
     get_captcha_urls,
@@ -27,6 +26,8 @@ CAPTCHA_SLOWDOWN_FACTOR = 0.6
 
 
 def db_init():
+    global connect_db
+    from gui_files.db import connect_db
     with connect_db() as db:
         db(
             """CREATE TABLE IF NOT EXISTS leaderboard (
