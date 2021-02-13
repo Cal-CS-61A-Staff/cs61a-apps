@@ -24,10 +24,11 @@ class Autograder:
                 file=base64.b64encode(f.read()).decode("ascii"),
             )
 
-    def create_assignment(self, assign, script, zip_file):
+    def create_assignment(self, assign, script, zip_file, batch_size=100):
         return create_assignment(
             name=assign,
             command=script,
             file=zip_file,
+            batch_size=batch_size,
             course=self.course,
         )

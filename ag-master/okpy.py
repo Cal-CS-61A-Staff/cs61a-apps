@@ -13,7 +13,7 @@ from common.rpc.auth import get_endpoint
 from common.rpc.secrets import only
 from common.secrets import new_secret
 from models import Assignment, Job, db
-from utils import BATCH_SIZE, BUCKET
+from utils import BUCKET
 
 
 def create_okpy_endpoints(app):
@@ -32,6 +32,12 @@ def create_okpy_endpoints(app):
             course=assignment.course
         ):
             abort(404, "Unknown Assignment")
+
+        if len(subm_ids) / assignment.batch_size > 50:
+            abort(
+                405,
+                "Too many batches! Please set the batch_size so that there are <= 50 batches.",
+            )
 
         job_secrets = [new_secret() for _ in subm_ids]
         queue_time = int(time.time())
@@ -60,10 +66,12 @@ def create_okpy_endpoints(app):
     @trigger_jobs.bind(app)
     @only("ag-master")
     def trigger_jobs_impl(assignment_id, jobs):
-        job_batches = [
-            jobs[i : i + BATCH_SIZE] for i in range(0, len(jobs), BATCH_SIZE)
-        ]
         assignment: Assignment = Assignment.query.get(assignment_id)
+
+        job_batches = [
+            jobs[i : i + assignment.batch_size]
+            for i in range(0, len(jobs), assignment.batch_size)
+        ]
 
         bucket = storage.Client().get_bucket(BUCKET)
         blob = bucket.blob(f"zips/{assignment.endpoint}/{assignment.file}")

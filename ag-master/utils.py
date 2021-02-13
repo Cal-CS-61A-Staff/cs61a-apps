@@ -9,8 +9,6 @@ OKPY = "https://okpy.org"
 SUBM_ENDPOINT = OKPY + "/api/v3/backups"
 SCORE_ENDPOINT = OKPY + "/api/v3/score/"
 
-BATCH_SIZE = 100
-
 
 def admin_only(func):
     @wraps(func)
