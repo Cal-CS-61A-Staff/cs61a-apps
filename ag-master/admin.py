@@ -29,7 +29,7 @@ def create_admin_endpoints(app):
 
     @create_assignment.bind(app)
     @admin_only
-    def create_assignment_rpc(course, name, file, command, batch_size):
+    def create_assignment_rpc(course, name, file, command, batch_size, grading_base):
         assignment: Assignment = Assignment.query.filter_by(
             name=name, course=course, endpoint=get_endpoint(course=course)
         ).one_or_none()
