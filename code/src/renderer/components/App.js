@@ -85,7 +85,7 @@ const App = ({ path }) => {
         );
       }
     }
-  });
+  }, []);
 
   if (ELECTRON) {
     return primaryElem;
