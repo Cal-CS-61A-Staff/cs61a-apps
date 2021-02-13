@@ -5,9 +5,8 @@ from common.oauth_client import get_user, is_staff, login
 
 BUCKET = "ag-master.buckets.cs61a.org"
 
-OKPY = "https://okpy.org"
-SUBM_ENDPOINT = OKPY + "/api/v3/backups"
-SCORE_ENDPOINT = OKPY + "/api/v3/score/"
+SUBM_ENDPOINT = "/api/v3/backups"
+SCORE_ENDPOINT = "/api/v3/score/"
 
 
 def admin_only(func):
