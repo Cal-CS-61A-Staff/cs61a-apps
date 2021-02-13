@@ -47,6 +47,7 @@ def create_admin_endpoints(app):
         assignment.command = command
         assignment.last_modified = int(time.time())
         assignment.batch_size = batch_size
+        assignment.grading_base = grading_base
         db.session.commit()
 
         return assignment.assignment_secret
