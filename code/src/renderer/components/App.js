@@ -3,7 +3,9 @@ let hot;
 if (!ELECTRON) {
   ({ hot } = require("react-hot-loader/root"));
 }
+import { useEffect, useState } from "react";
 import * as React from "react";
+import useSettings from "../utils/settingsHandler";
 
 import LaunchScreen from "./LaunchScreen.js";
 import MainScreen from "./MainScreen.js";
@@ -15,24 +17,48 @@ if (!ELECTRON) {
 import { sendNoInteract } from "../utils/communication.js";
 import { OPEN_FILE } from "../../common/communicationEnums.js";
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
+const App = ({ path }) => {
+  const [launch, setLaunch] = useState(true);
+  const [initFile, setInitFile] = useState(null);
+  const [startInterpreter, setStartInterpreter] = useState();
+  const [srcOrigin, setSrcOrigin] = useState();
 
-    this.state = {
-      launch: true,
-      initFile: null,
-    };
+  const settings = useSettings();
+
+  const handleAllClosed = () => {
+    setLaunch(true);
+  };
+
+  const handleFileCreate = (file, interpreter, origin) => {
+    setLaunch(false);
+    setInitFile(file);
+    setStartInterpreter(interpreter);
+    setSrcOrigin(origin);
+  };
+
+  let primaryElem;
+  if (launch) {
+    primaryElem = <LaunchScreen onFileCreate={handleFileCreate} />;
+  } else {
+    primaryElem = (
+      <MainScreen
+        onAllClosed={handleAllClosed}
+        initFile={initFile}
+        srcOrigin={srcOrigin}
+        startInterpreter={startInterpreter}
+        settings={settings}
+      />
+    );
   }
 
-  componentDidMount() {
-    if (this.props.path) {
+  useEffect(() => {
+    if (path) {
       sendNoInteract({
         type: OPEN_FILE,
-        location: this.props.path,
+        location: path,
       }).then((value) => {
         if (value.success) {
-          this.handleFileCreate(value.file);
+          handleFileCreate(value.file);
         }
       });
     }
@@ -40,63 +66,37 @@ class App extends React.Component {
     window.history.replaceState(false, "", "/");
 
     if (!ELECTRON && window.initData) {
-      const { loadFile, srcOrigin, startInterpreter } = initData;
+      const {
+        loadFile,
+        srcOrigin: initSrcOrigin,
+        startInterpreter: initStartInterpreter,
+      } = initData;
 
       if (loadFile) {
-        this.handleFileCreate(
+        handleFileCreate(
           {
             name: loadFile.fileName,
             location: null,
             content: loadFile.data,
             shareRef: loadFile.shareRef,
           },
-          startInterpreter,
-          srcOrigin
+          initSrcOrigin,
+          initStartInterpreter
         );
       }
     }
+  }, []);
+
+  if (ELECTRON) {
+    return primaryElem;
+  } else {
+    return (
+      <>
+        <MenuBar />
+        {primaryElem}
+      </>
+    );
   }
-
-  handleAllClosed = () => {
-    this.setState({ launch: true });
-  };
-
-  handleFileCreate = (file, startInterpreter, srcOrigin) => {
-    this.setState({
-      launch: false,
-      initFile: file,
-      startInterpreter,
-      srcOrigin,
-    });
-  };
-
-  render() {
-    let primaryElem;
-    if (this.state.launch) {
-      primaryElem = <LaunchScreen onFileCreate={this.handleFileCreate} />;
-    } else {
-      primaryElem = (
-        <MainScreen
-          onAllClosed={this.handleAllClosed}
-          initFile={this.state.initFile}
-          srcOrigin={this.state.srcOrigin}
-          startInterpreter={this.state.startInterpreter}
-        />
-      );
-    }
-
-    if (ELECTRON) {
-      return primaryElem;
-    } else {
-      console.log(this.state);
-      return (
-        <>
-          <MenuBar />
-          {primaryElem}
-        </>
-      );
-    }
-  }
-}
+};
 
 export default ELECTRON ? App : hot(App);

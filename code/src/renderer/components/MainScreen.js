@@ -1,6 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 import React from "react";
 import {
+  MENU_SETTINGS,
   MENU_CLOSE_TAB,
   MENU_HELP,
   MENU_LOGIN,
@@ -12,7 +13,9 @@ import {
   MENU_SAVE_AS,
   MENU_SHARE,
   SHOW_OPEN_DIALOG,
-} from "../../common/communicationEnums.js";
+  SHOW_SETTINGS_DIALOG,
+} from "../../common/communicationEnums";
+
 import NavBar from "./NavBar";
 import { initGoldenLayout } from "../utils/goldenLayout";
 import claimMenu from "../utils/menuHandler";
@@ -39,6 +42,7 @@ export default class MainScreen extends React.Component {
         [MENU_CLOSE_TAB]: this.closeTab,
         [MENU_SHARE]: this.share,
         [MENU_NEW_CONSOLE]: this.newConsole,
+        [MENU_SETTINGS]: () => sendNoInteract({ type: SHOW_SETTINGS_DIALOG }),
         [MENU_HELP]: openHelp,
         [MENU_LOGIN]: login,
         [MENU_LOGOUT]: logout,
@@ -150,6 +154,7 @@ export default class MainScreen extends React.Component {
         srcOrigin={this.state.files[key].srcOrigin}
         startInterpreter={this.state.files[key].startInterpreter}
         onActivate={this.handleFileActivate}
+        settings={this.props.settings}
       />
     ));
 

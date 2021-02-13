@@ -26,6 +26,7 @@ function Editor({
   debugData,
   language,
   shareRef,
+  enableAutocomplete,
   onChange,
   onActivate,
 }) {
@@ -101,8 +102,8 @@ function Editor({
       fontSize={14}
       readOnly={debugData && debugData.code !== text}
       setOptions={{
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
+        enableBasicAutocompletion: enableAutocomplete,
+        enableLiveAutocompletion: enableAutocomplete,
       }}
       markers={markers}
     />,
