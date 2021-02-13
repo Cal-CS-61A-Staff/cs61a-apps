@@ -38,7 +38,7 @@ def create_worker_endpoints(app):
     @job_transition(at="queued", to="started")
     def get_submission_rpc(job):
         r = requests.get(
-            job.assignment.grading_base + f"{SUBM_ENDPOINT}/{job.backup}",
+            f"{job.assignment.grading_base}{SUBM_ENDPOINT}/{job.backup}",
             params=dict(access_token=job.access_token),
         )
         job.started_at = int(time.time())
