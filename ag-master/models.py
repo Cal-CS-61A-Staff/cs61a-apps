@@ -24,6 +24,7 @@ class Assignment(db.Model):
     file: str = db.Column(db.String(64), nullable=False)
     command: str = db.Column(db.Text, nullable=False)
     last_modified: int = db.Column(db.Integer, nullable=False)
+    batch_size: int = db.Column(db.Integer, nullable=False, default=100)
     jobs: List[Job]
 
 
