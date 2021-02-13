@@ -25,10 +25,11 @@ def upgrade():
         sa.Column(
             "sort_key",
             sa.DateTime(),
-            nullable=False,
-            default=datetime.utcnow(),
+            nullable=True,
         ),
     )
+    op.execute("UPDATE ticket SET sort_key=created")
+    op.alter_column("ticket", "sort_key", nullable=False)
     op.create_index(op.f("ix_ticket_sort_key"), "ticket", ["sort_key"], unique=False)
     # ### end Alembic commands ###
 
