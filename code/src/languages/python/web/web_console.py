@@ -511,7 +511,7 @@ def run_doctests(f, *, export_json=False):
     curr_case = None
     num_leading_spaces = 0
     for i, raw_line in enumerate(s.strip().split("\n")):
-        line = raw_line.strip()
+        line = raw_line.lstrip()
         if line.startswith("# "):
             if curr_case is not None:
                 curr_block["cases"].append(curr_case)
