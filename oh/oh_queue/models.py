@@ -114,6 +114,8 @@ class Ticket(db.Model):
     updated = db.Column(db.DateTime, onupdate=db.func.now())
     status = db.Column(EnumType(TicketStatus), nullable=False, index=True)
 
+    sort_key = db.Column(db.DateTime, default=db.func.now(), index=True)
+
     group = db.relationship("Group", back_populates="ticket", uselist=False)
 
     rerequest_threshold = db.Column(
@@ -166,7 +168,7 @@ class Ticket(db.Model):
 
 TicketEventType = enum.Enum(
     "TicketEventType",
-    "create assign unassign resolve delete update juggle rerequest return_to hold_released message_sent",
+    "create assign unassign resolve delete update juggle rerequest return_to hold_released message_sent shuffled",
 )
 
 

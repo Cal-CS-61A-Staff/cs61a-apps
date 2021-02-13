@@ -25,6 +25,7 @@ type Ticket = {
     | "rerequested",
   user: User,
   created: string, // ISO 8601 datetime string
+  sort_key: string, // ISO 8601 datetime string
   rerequest_threshold: ?string, // ISO 8601 datetime string
   hold_time: ?string, // ISO 8601 datetime string
   rerequest_time: ?string, // ISO 8601 datetime string
@@ -304,9 +305,9 @@ function getTickets(state: State, status: string): Array<Ticket> {
   return Array.from(state.tickets.values())
     .filter((ticket) => ticket.status === status)
     .sort((a, b) => {
-      if (a.created < b.created) {
+      if (a.sort_key < b.sort_key) {
         return -1;
-      } else if (a.created > b.created) {
+      } else if (a.sort_key > b.sort_key) {
         return 1;
       } else {
         return 0;
