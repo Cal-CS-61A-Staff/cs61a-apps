@@ -25,6 +25,9 @@ class Assignment(db.Model):
     command: str = db.Column(db.Text, nullable=False)
     last_modified: int = db.Column(db.Integer, nullable=False)
     batch_size: int = db.Column(db.Integer, nullable=False, default=100)
+    grading_base: str = db.Column(
+        db.String(64), nullable=False, default="https://okpy.org"
+    )
     jobs: List[Job]
 
 

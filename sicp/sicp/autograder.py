@@ -24,11 +24,14 @@ class Autograder:
                 file=base64.b64encode(f.read()).decode("ascii"),
             )
 
-    def create_assignment(self, assign, script, zip_file, batch_size=100):
+    def create_assignment(
+        self, assign, script, zip_file, batch_size=100, grading_base="https://okpy.org"
+    ):
         return create_assignment(
             name=assign,
             command=script,
             file=zip_file,
             batch_size=batch_size,
+            grading_base=grading_base,
             course=self.course,
         )
