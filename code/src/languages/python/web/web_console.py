@@ -64,9 +64,13 @@ POSSIBILITY OF SUCH DAMAGE.
 class Stream:
     def __init__(self, obj):
         self.obj = obj
+        self.buffer = None
 
     def write(self, raw):
-        self.obj.write(raw)
+        if self.buffer is not None:
+            self.buffer.append(raw)
+        else:
+            self.obj.write(raw)
 
 
 stdout = Stream(browser.self.stdout)
@@ -115,7 +119,7 @@ class Trace:
 def print_tb():
     trace = Trace()
     traceback.print_exc(file=trace)
-    sys.stderr.write(trace.format())
+    err(trace.format())
 
 
 def syntax_error(args):
@@ -572,12 +576,9 @@ def run_doctests(f, *, export_json=False):
         success = True
 
         for i, (inp, exp) in enumerate(block["cases"]):
-            out = []
-            old_write = sys.stdout.write
-            old_err = sys.stderr.write
+            stdout.buffer = stderr.buffer = out = []
             try:
                 executed.append(inp)
-                sys.stdout.write = sys.stderr.write = out.append
                 try:
                     ret = eval(inp, namespace)
                     if ret is not None:
@@ -591,8 +592,7 @@ def run_doctests(f, *, export_json=False):
             except Exception:
                 print_tb()
             finally:
-                sys.stdout.write = old_write
-                sys.stderr.write = old_err
+                stdout.buffer = stderr.buffer = None
             out = "".join(out)
             first, *rest = inp.split("\n")
             success = out.strip() == exp.strip()
