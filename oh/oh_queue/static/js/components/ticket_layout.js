@@ -75,7 +75,11 @@ function TicketLayout({ loadTicket, state, socket, match }) {
               state={state}
               ticket={ticket}
               prompt="Please describe your issue below:"
-              placeholder='It would be helpful if you could describe your issue. For example, "I have a SyntaxError in my ___ function. I&apos;ve tried using ____ and ____."'
+              placeholder={
+                state.config.default_description ||
+                "It would be helpful if you could describe your issue. For example," +
+                  ' "I have a SyntaxError in my ___ function. I&apos;ve tried using ____ and ____."'
+              }
               description={description}
               onChange={setDescription}
               onSubmit={handleDescriptionSubmit}

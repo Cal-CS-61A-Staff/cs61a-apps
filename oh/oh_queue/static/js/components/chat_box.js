@@ -87,7 +87,7 @@ function ChatBox({ currentUser, id, mode, messages }) {
 
   return (
     <div className="panel panel-default">
-      <div className="panel-heading">⚠️ Emergency Backup Chat ⚠️</div>
+      <div className="panel-heading">Chat️</div>
       <div className="panel-body">
         <div className="chat-history" ref={historyRef}>
           {body}
