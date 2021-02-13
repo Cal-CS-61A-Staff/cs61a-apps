@@ -28,6 +28,7 @@ CAPTCHA_SLOWDOWN_FACTOR = 0.6
 def db_init():
     global connect_db
     from gui_files.db import connect_db
+
     with connect_db() as db:
         db(
             """CREATE TABLE IF NOT EXISTS leaderboard (
