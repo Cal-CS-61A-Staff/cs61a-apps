@@ -80,8 +80,8 @@ const App = ({ path }) => {
             content: loadFile.data,
             shareRef: loadFile.shareRef,
           },
-          initSrcOrigin,
-          initStartInterpreter
+          initStartInterpreter,
+          initSrcOrigin
         );
       }
     }
