@@ -57,7 +57,7 @@ def load_formatted(name):
     out = load(name)
     if isinstance(out, str):
         return html(
-            f"""<body style="max-width: calc(100% - 40em)">
+            f"""<body style="max-width: calc(100% - 10em)">
                 <h1>61A Paste</h1>
                 <pre>{escape(out)}</pre>
                 <a href=\"{url_for('load_raw', name=name)}\">(raw)</a>
