@@ -205,15 +205,7 @@ def create_slack_client(app):
                             "channel": event["channel"],
                             "ts": event["ts"],
                             "as_user": True,
-                            "blocks": [
-                                {
-                                    "type": "section",
-                                    "text": {
-                                        "type": "mrkdwn",
-                                        "text": combined_integration.message,
-                                    },
-                                }
-                            ],
+                            "text": combined_integration.message,
                             "attachments": combined_integration.attachments,
                         },
                         headers={"Authorization": "Bearer {}".format(token)},
