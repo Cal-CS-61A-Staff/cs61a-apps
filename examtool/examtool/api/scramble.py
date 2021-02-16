@@ -188,7 +188,7 @@ def select_group(substitution_groups):
         v = random.choice(v)
         assert len(k) == len(v)
         for k0, v0 in zip(k, v):
-            out[k0] = random.choice(v0)
+            out[k0] = v0
     return out
 
 
