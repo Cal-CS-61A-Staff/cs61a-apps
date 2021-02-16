@@ -1,5 +1,6 @@
 import {
   CLAIM_MENU,
+  CLAIM_SETTINGS,
   ERR,
   EXIT,
   GET_RECENT_FILES,
@@ -12,6 +13,7 @@ import {
   SHOW_OK_BACKUPS_DIALOG,
   SHOW_OPEN_DIALOG,
   SHOW_SAVE_DIALOG,
+  SHOW_SETTINGS_DIALOG,
   SHOW_SHARE_DIALOG,
   START_CONSOLE,
 } from "../common/communicationEnums.js";
@@ -20,6 +22,8 @@ import python from "../languages/python/web/communication.js";
 import scheme from "../languages/scheme/web/communication.js";
 import sql from "../languages/sql/web/communication.js";
 import { interactProcess, killProcess } from "../main/processes.js";
+import { assignSettingsWatcherKey } from "./settings";
+import showSettingsDialog from "./settingsDialog";
 import { assignMenuKey } from "./webMenuHandler.js";
 import showErrorDialog from "./errorDialog.js";
 import showShareDialog from "./filesharing.js";
@@ -74,6 +78,10 @@ function receive(arg) {
       startConsole(arg.key);
     } else if (arg.type === SHOW_OK_BACKUPS_DIALOG) {
       showBackupsDialog(arg.key);
+    } else if (arg.type === SHOW_SETTINGS_DIALOG) {
+      showSettingsDialog(arg.key);
+    } else if (arg.type === CLAIM_SETTINGS) {
+      assignSettingsWatcherKey(arg.key);
     } else {
       console.error(`Unknown (or missing) type: ${arg.type}`);
     }

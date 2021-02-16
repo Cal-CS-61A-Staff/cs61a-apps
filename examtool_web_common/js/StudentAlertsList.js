@@ -22,16 +22,10 @@ export default function StudentAlertsList() {
           </Card.Header>
           <ListGroup variant="flush">
             {examData.announcements.map(
-              ({
-                id,
-                message,
-                question,
-                time: announcementTime,
-                private: isPrivate,
-              }) => (
+              ({ id, message, question, timestamp, private: isPrivate }) => (
                 <ListGroup.Item key={id} style={{ whiteSpace: "pre-wrap" }}>
                   <b>[{isPrivate ? "Private" : question}]</b> {message} (
-                  {timeDeltaMinutesString(time - announcementTime)})
+                  {timeDeltaMinutesString(time - timestamp)})
                 </ListGroup.Item>
               )
             )}

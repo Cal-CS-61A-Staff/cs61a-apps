@@ -1,39 +1,23 @@
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
-import { getToken } from "./auth";
 import FailText from "./FailText";
 import LoadingButton from "./LoadingButton";
-import post from "./post";
 
-export default function StaffMessageReplyBox({
-  exam,
-  compact,
-  message,
-  onUpdate,
-}) {
+export default function StaffMessageReplyBox({ compact, message, send }) {
   const [reply, setReply] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [failText, setFailText] = useState("");
 
   const submit = async () => {
     setIsLoading(true);
-    try {
-      const resp = await post("send_response", {
-        exam,
-        id: message,
-        token: getToken(),
-        reply: compact ? "Staff has read your message" : reply,
-      });
-      const data = await resp.json();
-      if (!data.success) {
-        throw Error();
-      }
+    const err = await send("send_response", {
+      id: message,
+      reply: compact ? "Staff has read your message" : reply,
+    });
+    if (err) {
+      setFailText(err);
+    } else {
       setReply("");
-      onUpdate(data);
-    } catch {
-      setFailText(
-        "Something went wrong. Reload the page to see if the reply was sent"
-      );
     }
     setIsLoading(false);
   };

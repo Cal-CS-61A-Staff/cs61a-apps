@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 // @flow strict
 
 import { useState } from "react";

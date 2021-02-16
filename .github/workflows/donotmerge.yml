@@ -1,0 +1,14 @@
+name: Block "Do Not Merge"
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, opened, edited, synchronize]
+
+jobs:
+  enforce-label:
+    name: "Do Not Merge Check"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: yogevbd/enforce-label-action@2.1.0
+      with:
+        BANNED_LABELS: "Do not merge"

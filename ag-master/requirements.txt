@@ -1,0 +1,5 @@
+Flask
+gunicorn
+flask_sqlalchemy
+google-cloud-storage==1.30.0
+-r common/requirements.txt

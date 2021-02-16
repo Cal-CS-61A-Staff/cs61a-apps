@@ -16,7 +16,7 @@ class BuildIntegration(Integration):
     reply = None
 
     def _process(self):
-        if "build" not in self._message.lower():
+        if "friend computer please build" not in self._message.lower():
             return
 
         if "cs61a" != self._course:

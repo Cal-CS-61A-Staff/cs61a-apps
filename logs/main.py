@@ -3,9 +3,10 @@ from json import loads
 
 from flask import Flask, abort
 
-from common.oauth_client import create_oauth_client, is_staff, login
+from common.oauth_client import create_oauth_client, get_user, is_staff, login
 from common.shell_utils import sh
 from common.url_for import url_for
+from common.rpc.auth import is_admin
 
 app = Flask(__name__, static_folder="", static_url_path="")
 if __name__ == "__main__":
@@ -19,6 +20,9 @@ create_oauth_client(app, "61a-logs")
 def index():
     if not is_staff("cs61a"):
         return login()
+    email = get_user()["email"]
+    if not is_admin(course="cs61a", email=email):
+        abort(401)
 
     service_list = "\n".join(
         f"<p /><a href={url_for('create_secret', service=service)}>{service}</a>"
@@ -35,6 +39,9 @@ def index():
 def create_secret(service):
     if not is_staff("cs61a"):
         return login()
+    email = get_user()["email"]
+    if not is_admin(course="cs61a", email=email):
+        abort(401)
 
     if service not in list_services():
         abort(404)

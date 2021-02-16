@@ -75,10 +75,18 @@ def new(img, name=None, env={}):
     if not os.path.exists(save):
         os.makedirs(save)
 
+    shared = f"{os.getcwd()}/data/shared"
+    if not os.path.exists(shared):
+        os.makedirs(shared)
+
     volumes = {
         save: {
             "bind": "/save",
             "mode": "rw",
+        },
+        shared: {
+            "bind": "/shared",
+            "mode": "ro",
         },
     }
 
@@ -106,7 +114,7 @@ def delete(name):
 
 
 @add_domain.bind(app)
-@only(["buildserver", "sandbox"])
+@only(["buildserver", "sandbox"], allow_staging=True)
 def add_domain(
     name, domain, force_wildcard=False, force_provision=False, proxy_set_header={}
 ):

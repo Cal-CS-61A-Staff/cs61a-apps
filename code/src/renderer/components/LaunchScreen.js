@@ -7,8 +7,10 @@ import {
   MENU_LOGOUT,
   MENU_NEW,
   MENU_OPEN,
+  MENU_SETTINGS,
   SHOW_OK_BACKUPS_DIALOG,
   SHOW_OPEN_DIALOG,
+  SHOW_SETTINGS_DIALOG,
 } from "../../common/communicationEnums.js";
 import IntroBox from "./IntroBox";
 import { sendNoInteract } from "../utils/communication.js";
@@ -58,10 +60,15 @@ export default function LaunchScreen({ onFileCreate }) {
     }
   };
 
+  const openSettingsDialog = async () => {
+    await sendNoInteract({ type: SHOW_SETTINGS_DIALOG });
+  };
+
   useMenu({
     [MENU_NEW]: handleCreateClick,
     [MENU_OPEN]: handleOpenClick,
     [MENU_CLOSE_TAB]: closeTab,
+    [MENU_SETTINGS]: openSettingsDialog,
     [MENU_HELP]: openHelp,
     [MENU_LOGIN]: login,
     [MENU_LOGOUT]: logout,

@@ -1,6 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 import React from "react";
 import {
+  MENU_SETTINGS,
   MENU_CLOSE_TAB,
   MENU_HELP,
   MENU_LOGIN,
@@ -12,14 +13,13 @@ import {
   MENU_SAVE_AS,
   MENU_SHARE,
   SHOW_OPEN_DIALOG,
-} from "../../common/communicationEnums.js";
+  SHOW_SETTINGS_DIALOG,
+} from "../../common/communicationEnums";
+
 import NavBar from "./NavBar";
-import OKResults from "./OKResults";
 import { initGoldenLayout } from "../utils/goldenLayout";
-import registerOKPyHandler from "../utils/receiveOKResults";
 import claimMenu from "../utils/menuHandler";
 import File from "./File";
-import generateDebugTrace from "../../languages/python/utils/generateDebugTrace.js";
 import { sendNoInteract } from "../utils/communication.js";
 import Console from "./Console.js";
 import { openHelp } from "../utils/help.js";
@@ -34,11 +34,6 @@ export default class MainScreen extends React.Component {
 
       consoles: [],
 
-      okResults: null,
-      cachedOKModules: {},
-      okPath: null,
-      detachOKPyCallback: registerOKPyHandler(this.handleOKPyUpdate),
-
       detachMenuCallback: claimMenu({
         [MENU_NEW]: this.newFile,
         [MENU_OPEN]: this.openFile,
@@ -47,6 +42,7 @@ export default class MainScreen extends React.Component {
         [MENU_CLOSE_TAB]: this.closeTab,
         [MENU_SHARE]: this.share,
         [MENU_NEW_CONSOLE]: this.newConsole,
+        [MENU_SETTINGS]: () => sendNoInteract({ type: SHOW_SETTINGS_DIALOG }),
         [MENU_HELP]: openHelp,
         [MENU_LOGIN]: login,
         [MENU_LOGOUT]: logout,
@@ -73,7 +69,6 @@ export default class MainScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    this.state.detachOKPyCallback();
     this.state.detachMenuCallback();
   }
 
@@ -136,39 +131,6 @@ export default class MainScreen extends React.Component {
     this.setState((state) => ({ consoles: state.consoles.concat([0]) }));
   };
 
-  handleOKPyUpdate = (okResults, cachedOKModules, okPath) => {
-    this.setState({ okResults, cachedOKModules, okPath });
-    this.okResultsRef.current.forceOpen();
-  };
-
-  handleOKPyDebug = async (testData) => {
-    const setupCode = [];
-    const caseCode = [];
-    let i = 0;
-    for (; i !== testData.code.length; ++i) {
-      if (!testData.code[i].includes("import")) {
-        break;
-      }
-      setupCode.push(testData.code[i]);
-    }
-    for (; i !== testData.code.length; ++i) {
-      caseCode.push(testData.code[i]);
-    }
-
-    const setupCodeStr = setupCode.join("\n");
-    const caseCodeStr = caseCode.join("\n");
-
-    // todo: make language agnostic
-    const debugData = await generateDebugTrace(
-      caseCodeStr,
-      this.state.cachedOKModules,
-      setupCodeStr,
-      this.state.okPath
-    );
-
-    this.state.files[this.state.activeFileKey].ref.current.debug(debugData);
-  };
-
   handleFileActivate = (key) => {
     if (key !== this.state.activeFileKey) {
       this.setState({
@@ -192,6 +154,7 @@ export default class MainScreen extends React.Component {
         srcOrigin={this.state.files[key].srcOrigin}
         startInterpreter={this.state.files[key].startInterpreter}
         onActivate={this.handleFileActivate}
+        settings={this.props.settings}
       />
     ));
 
@@ -218,12 +181,6 @@ export default class MainScreen extends React.Component {
         {fileElems}
         {consoleElems}
         <div id="tabRoot" />
-        <OKResults
-          ref={this.okResultsRef}
-          title="OKPy Results"
-          onDebug={this.handleOKPyDebug}
-          data={this.state.okResults}
-        />
       </>
     );
   }

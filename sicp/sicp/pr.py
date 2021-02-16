@@ -39,13 +39,14 @@ def build(num, targets):
         raise Exception("Cannot build targets for a closed PR!")
 
     print(f"PR {num}: {pull.title}")
-    print(f"Building targets: {targets if targets else 'all'}")
+    print(f"Building targets: {targets if targets else ['all']}")
 
-    trigger_build_sync(
-        pr_number=int(num),
-        target_app=targets,
-        _impersonate="buildserver",
-        noreply=True,
-    )
+    for target in targets:
+        trigger_build_sync(
+            pr_number=int(num),
+            target_app=target,
+            _impersonate="buildserver",
+            noreply=True,
+        )
 
     print("Build triggered!")

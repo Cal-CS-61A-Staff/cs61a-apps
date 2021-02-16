@@ -1,3 +1,4 @@
+/* eslint-disable no-eval */
 import * as React from "react";
 import StdoutElem from "./StdoutElem.js";
 import OutputDrawElem from "./OutputDrawElem.js";
@@ -10,7 +11,7 @@ export default function OutputElem(props) {
     try {
       return (
         <OutputDrawElem
-          data={JSON.parse(props.text.substr(DRAW_MARKER.length))}
+          data={(0, eval)(props.text.substr(DRAW_MARKER.length))}
         />
       );
     } catch (e) {

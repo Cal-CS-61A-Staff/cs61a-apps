@@ -106,6 +106,8 @@ html {
     width: calc(100% - 20px);
     bottom: 20px;
     height: calc(100% - 90px);
+    white-space: pre-wrap;
+    font-family: 'Consolas', 'Monaco', monospace;
 }
 
 .modalCol {
@@ -583,4 +585,30 @@ html {
 
 .powered-by-firepad {
     display: none !important;
+}
+
+.settingsDialogForm {
+    width: 100%;
+}
+
+.settingsDialogForm table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.settingsDialogForm th {
+    font-weight: bold;
+}
+
+.settingsDialogForm td {
+    text-align: center;
+}
+
+.settingsDialogForm td label {
+    display: inline-block;
+    width: 100%;
+}
+
+.settingsDialogForm tbody tr {
+    border-top: white solid thin;
 }

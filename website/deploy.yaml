@@ -2,3 +2,8 @@ build_type: none
 deploy_type: flask
 first_party_domains:
   - cs61a.org
+permissions:
+  - rpc
+  - storage
+concurrency: 20
+memory_limit: 512M

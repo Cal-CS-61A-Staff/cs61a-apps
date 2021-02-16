@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.79.0">
+    <title>Dice Gallery</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+
+
+    <style>
+        .dice-view {
+            display: grid;
+            grid-template-columns: repeat(2, 50%);
+            justify-items: center;
+            justify-content: center;
+        }
+
+        .dice-view .dice-img {
+            margin: 10px;
+            max-height: 110px;
+        }
+
+        .dice-view-big {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 260px);
+            justify-items: center;
+            justify-content: center;
+        }
+
+        .dice-view-big .dice-img {
+            margin: 10px;
+            height: 240px;
+        }
+
+        .dice-caption {
+            text-align: center;
+        }
+    </style>
+
+
+</head>
+<body>
+
+<main>
+
+    <section class="py-5 text-center container">
+        <div class="row py-lg-5">
+            <div class="col-lg-6 col-md-8 mx-auto">
+                <h1 class="fw-light">CS 61A Hog Dice Showcase</h1>
+                <p class="lead text-muted">
+                    Your true colors shine<br/>
+                    Through the rolls of your pig dice<br/>
+                    Just like a code rainbow
+                </p>
+                <p>
+                    <a href="https://cs61a.org/proj/hog_dice_design">View Challenge Description</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="album py-5 bg-light">
+        <div class="container">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                {% for artwork in artworks %}
+                    <div class="col">
+                        <div class="card shadow-sm">
+                            <div class="dice-view">
+                                {% for i in range(6) %}
+                                    <img class="dice-img" src="/img?id={{ artwork.id }}&index={{ i }}"/>
+                                {% endfor %}
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text dice-caption">{{ artwork.caption }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal{{ artwork.id }}">Expand</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="modal{{ artwork.id }}" tabindex="-1" aria-labelledby="{{ artwork.id }}label"
+                             aria-hidden="true">
+                            <div class="modal-dialog modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="{{ artwork.id }}label">Beautiful Artwork</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="dice-view-big">
+                                            {% for i in range(6) %}
+                                                <img class="dice-img" src="/img?id={{ artwork.id }}&index={{ i }}"/>
+                                            {% endfor %}
+                                        </div>
+                                        <p class="lead dice-caption">{{ artwork.caption }}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer class="text-muted py-5">
+    <div class="container">
+        <p class="float-end mb-1">
+            <a href="#">Back to top</a>
+        </p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
+        crossorigin="anonymous"></script>
+
+</body>
+</html>

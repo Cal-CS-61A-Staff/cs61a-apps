@@ -129,7 +129,7 @@ def get_announcements(student_data, announcements, messages, received_audio, get
             to_send.append(
                 {
                     "id": announcement_id,
-                    "time": time,
+                    "timestamp": time,
                     "message": announcement["message"],
                     "question": announcement.get("question", "Overall Exam"),
                     "private": False,
@@ -167,7 +167,7 @@ def get_announcements(student_data, announcements, messages, received_audio, get
             to_send.append(
                 {
                     "id": response["id"],
-                    "time": response["timestamp"],
+                    "timestamp": response["timestamp"],
                     "message": response["message"],
                     "question": message["question"] or "Overall Exam",
                     "private": True,
@@ -176,7 +176,7 @@ def get_announcements(student_data, announcements, messages, received_audio, get
             if received_audio is not None and response["id"] not in received_audio:
                 to_send[-1]["audio"] = get_audio(response["id"])
 
-    to_send.sort(key=lambda x: x["time"])
+    to_send.sort(key=lambda x: x["timestamp"])
     to_send.reverse()
     return to_send
 
