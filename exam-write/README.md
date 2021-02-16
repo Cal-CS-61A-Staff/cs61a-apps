@@ -238,7 +238,7 @@ This will uniquely set each target with one of the alts. You may have more alts 
 
 If you have a group of variables that should be replaced with one of a list of alternative groups, you can use the define statement
 ```
-# DEFINE GROUP (<target1> <target2> ...) (<alt1a> <alt2a> ...), (<alt1b> <alt1b>... ) ...
+# DEFINE GROUP (<target1> <target2> ...) (<alt1a> <alt2a> ...) (<alt1b> <alt1b>... ) ...
 ```
 It will either set `target1` to `alt1a` and `target2` to `alt2a`, or `target1` to `alt1b` and `target2` to `alt2b`.
 
