@@ -129,7 +129,7 @@ def parse_define(directive, rest, substitutions, substitutions_match):
         if len(blocks) <= 1:
             raise SyntaxError("DEFINE GROUP is incomplete")
         for i, block in enumerate(blocks):
-            blocks[i] = tuple(block.split(","))
+            blocks[i] = tuple(block.split(" "))
         if not all(len(block) == len(blocks[0]) for block in blocks):
             raise SyntaxError("DEFINE GROUP blocks must all be of the same length")
         substitutions[blocks[0]] = blocks[1:]
