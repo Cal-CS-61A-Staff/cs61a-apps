@@ -104,7 +104,9 @@ def parse(text):
     return {"text": text, "html": ToParse(text, "html"), "tex": ToParse(text, "tex")}
 
 
-def parse_define(directive, rest, substitutions, substitutions_match):
+def parse_define(
+    directive, rest, substitutions, substitutions_match, substitution_groups
+):
     if directive == "MATCH":
         regex = r"\[(.*)\]\s+\[(.*)\]"
         matches = re.match(regex, rest)
@@ -120,6 +122,19 @@ def parse_define(directive, rest, substitutions, substitutions_match):
         substitutions_match.append(
             {"directives": directives_list, "replacements": replacements_list}
         )
+    elif directive == "GROUP":
+        regex = r"(\([^()]+\)\s*)+"
+        matches = re.match(regex, rest)
+        if not matches:
+            raise SyntaxError("Invalid declaration of DEFINE GROUP")
+        blocks = re.findall(r"\([^()]+\)", rest)
+        if len(blocks) <= 1:
+            raise SyntaxError("DEFINE GROUP is incomplete")
+        for i, block in enumerate(blocks):
+            blocks[i] = tuple(block[1:-1].split(" "))
+        if not all(len(block) == len(blocks[0]) for block in blocks):
+            raise SyntaxError("DEFINE GROUP blocks must all be of the same length")
+        substitution_groups.append(blocks)
     else:
         substitutions[directive] = rest.split(" ")
 
@@ -207,6 +222,7 @@ def consume_rest_of_question(buff):
     input_lines = []
     substitutions = {}
     substitutions_match = []
+    substitution_groups = []
     solution = None
     solution_note = None
     config = {}
@@ -251,13 +267,20 @@ def consume_rest_of_question(buff):
                     "options": options,
                     "substitutions": substitutions,
                     "substitutions_match": substitutions_match,
+                    "substitution_groups": substitution_groups,
                 }
             else:
                 raise SyntaxError(
                     f"Unexpected END {directive if directive else line} in QUESTION"
                 )
         elif mode == "DEFINE":
-            parse_define(directive, rest, substitutions, substitutions_match)
+            parse_define(
+                directive,
+                rest,
+                substitutions,
+                substitutions_match,
+                substitution_groups,
+            )
         elif mode == "CONFIG":
             config[directive] = rest
         else:
@@ -272,6 +295,7 @@ def consume_rest_of_group(buff, end):
     started_elements = False
     substitutions = {}
     substitutions_match = []
+    substitution_groups = []
     pick_some = None
     scramble = False
     inline = False
@@ -311,12 +335,15 @@ def consume_rest_of_group(buff, end):
                 "elements": elements,
                 "substitutions": substitutions,
                 "substitutions_match": substitutions_match,
+                "substitution_groups": substitution_groups,
                 "pick_some": pick_some,
                 "scramble": scramble,
                 "inline": inline,
             }
         elif mode == "DEFINE":
-            parse_define(directive, rest, substitutions, substitutions_match)
+            parse_define(
+                directive, rest, substitutions, substitutions_match, substitution_groups
+            )
         elif mode == "CONFIG":
             if directive == "PICK":
                 if pick_some:
@@ -344,6 +371,7 @@ def _convert(text, *, path=None):
     config = {}
     substitutions = {}
     substitutions_match = []
+    substitution_groups = []
     try:
         if path is not None:
             handle_imports(buff, path)
@@ -382,7 +410,13 @@ def _convert(text, *, path=None):
                 else:
                     groups.append(group)
             elif mode == "DEFINE":
-                parse_define(directive, rest, substitutions, substitutions_match)
+                parse_define(
+                    directive,
+                    rest,
+                    substitutions,
+                    substitutions_match,
+                    substitution_groups,
+                )
             else:
                 raise SyntaxError(f"Unexpected directive: {line}")
     except SyntaxError as e:
@@ -396,6 +430,7 @@ def _convert(text, *, path=None):
         "config": config,
         "substitutions": substitutions,
         "substitutions_match": substitutions_match,
+        "substitution_groups": substitution_groups,
         "version": VERSION,
     }
 
