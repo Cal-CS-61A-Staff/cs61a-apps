@@ -222,7 +222,7 @@ def consume_rest_of_question(buff):
     input_lines = []
     substitutions = {}
     substitutions_match = []
-    substitutions_groups = []
+    substitution_groups = []
     solution = None
     solution_note = None
     config = {}
@@ -267,7 +267,7 @@ def consume_rest_of_question(buff):
                     "options": options,
                     "substitutions": substitutions,
                     "substitutions_match": substitutions_match,
-                    "substitutions_groups": substitutions_groups,
+                    "substitution_groups": substitution_groups,
                 }
             else:
                 raise SyntaxError(
@@ -279,7 +279,7 @@ def consume_rest_of_question(buff):
                 rest,
                 substitutions,
                 substitutions_match,
-                substitutions_groups,
+                substitution_groups,
             )
         elif mode == "CONFIG":
             config[directive] = rest

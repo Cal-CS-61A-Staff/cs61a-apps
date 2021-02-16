@@ -63,7 +63,7 @@ def scramble(email, exam, *, keep_data=False):
         return [group]
 
     def scramble_question(question, substitutions, config):
-        question_substitutions = select_substitutions(question["substitutions"])
+        question_substitutions = select_substitutions(question)
         substitute(
             question, [question_substitutions, *substitutions], ["html", "tex", "text"]
         )
@@ -131,7 +131,7 @@ def scramble(email, exam, *, keep_data=False):
         for i, object in zip(movable_object_pos, movable_object_values):
             objects[i] = object
 
-    global_substitutions = select_substitutions(exam["substitutions"])
+    global_substitutions = select_substitutions(exam)
     exam["config"]["scramble_groups"] = exam["config"].get(
         "scramble_groups", [-1]
     ) or range(100)

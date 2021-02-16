@@ -1,6 +1,7 @@
 import json
 import os
 
+from examtool.api.scramble import scramble
 from flask import Flask, abort, send_from_directory, request, jsonify, make_response
 
 from examtool.api.convert import convert_str
@@ -13,9 +14,13 @@ app = Flask(__name__, static_folder="static", static_url_path="")
 def convert():
     text = request.json["text"]
     draft = request.json.get("draft", False)
+    seed = request.json.get("seed", False)
     text = text.replace("\r", "")
     try:
-        return jsonify({"success": True, "examJSON": convert_str(text, draft=draft)})
+        exam = json.loads(convert_str(text, draft=draft))
+        if seed:
+            exam = scramble(seed, exam)
+        return jsonify({"success": True, "examJSON": json.dumps(exam)})
     except SyntaxError as e:
         return jsonify({"success": False, "error": str(e)})
 
