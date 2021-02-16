@@ -7,10 +7,7 @@ def scramble(email, exam, *, keep_data=False):
     version = exam.get("version", 1)
 
     def scramble_group(group, substitutions, config, depth):
-        group_substitutions = select(group["substitutions"])
-        group_substitutions.update(
-            select_no_replace(group.get("substitutions_match", []))
-        )
+        group_substitutions = select_substitutions(group)
         substitute(
             group,
             [*substitutions, group_substitutions],
@@ -66,10 +63,7 @@ def scramble(email, exam, *, keep_data=False):
         return [group]
 
     def scramble_question(question, substitutions, config):
-        question_substitutions = select(question["substitutions"])
-        question_substitutions.update(
-            select_no_replace(question.get("substitutions_match", []))
-        )
+        question_substitutions = select_substitutions(question["substitutions"])
         substitute(
             question, [question_substitutions, *substitutions], ["html", "tex", "text"]
         )
@@ -137,8 +131,7 @@ def scramble(email, exam, *, keep_data=False):
         for i, object in zip(movable_object_pos, movable_object_values):
             objects[i] = object
 
-    global_substitutions = select(exam["substitutions"])
-    global_substitutions.update(select_no_replace(exam.get("substitutions_match", [])))
+    global_substitutions = select_substitutions(exam["substitutions"])
     exam["config"]["scramble_groups"] = exam["config"].get(
         "scramble_groups", [-1]
     ) or range(100)
@@ -158,17 +151,18 @@ def get_elements(group):
     return group.get("elements") if "elements" in group else group.get("questions")
 
 
-def select(substitutions):
+def select_substitutions(element):
+    substitutions = select_regular(element["substitutions"])
+    substitutions.update(select_no_replace(element.get("substitutions_match", [])))
+    substitutions.update(select_group(element.get("substitution_groups", [])))
+    return substitutions
+
+
+def select_regular(substitutions):
     out = {}
-    # DEFINE + DEFINE GROUP
+    # DEFINE
     for k, v in sorted(substitutions.items()):
-        if isinstance(k, str):
-            out[k] = random.choice(v)
-        else:
-            v = random.choice(v)
-            assert len(k) == len(v)
-            for k0, v0 in zip(k, v):
-                out[k0] = random.choice(v0)
+        out[k] = random.choice(v)
     return out
 
 
@@ -183,6 +177,18 @@ def select_no_replace(substitutions_match):
             c = random.choice(values)
             values.remove(c)
             out[choice] = c
+    return out
+
+
+def select_group(substitution_groups):
+    out = {}
+    # DEFINE GROUP
+    for blocks in substitution_groups:
+        k, *v = blocks
+        v = random.choice(v)
+        assert len(k) == len(v)
+        for k0, v0 in zip(k, v):
+            out[k0] = random.choice(v0)
     return out
 
 
