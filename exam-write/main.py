@@ -1,10 +1,10 @@
 import json
 import os
 
-from examtool.api.scramble import scramble
 from flask import Flask, abort, send_from_directory, request, jsonify, make_response
 
 from examtool.api.convert import convert_str
+from examtool.api.scramble import scramble
 from examtool.api.gen_latex import render_latex
 
 app = Flask(__name__, static_folder="static", static_url_path="")
