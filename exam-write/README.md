@@ -240,7 +240,7 @@ If you have a group of variables that should be replaced with one of a list of a
 ```
 # DEFINE GROUP (<target1> <target2> ...) (<alt1a> <alt2a> ...), (<alt1b> <alt1b>... ) ...
 ```
-It will either set `target1` to `alt1a` and `target2` to `alt2a`, or `target1` to `alt1a` and `target2` to `alt2b`.
+It will either set `target1` to `alt1a` and `target2` to `alt2a`, or `target1` to `alt1b` and `target2` to `alt2b`.
 
 Note that this syntax does not support Markdown - it is a very naive text substitution in the generated HTML, so don't
 try anything too fancy with it!
