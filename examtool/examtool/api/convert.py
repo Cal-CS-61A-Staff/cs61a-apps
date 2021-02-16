@@ -120,6 +120,19 @@ def parse_define(directive, rest, substitutions, substitutions_match):
         substitutions_match.append(
             {"directives": directives_list, "replacements": replacements_list}
         )
+    elif directive == "GROUP":
+        regex = r"(\([^()]+\)\s*)+"
+        matches = re.match(regex, rest)
+        if not matches:
+            raise SyntaxError("Invalid declaration of DEFINE GROUP")
+        blocks = re.findall(r"\([^()]+\)", rest)
+        if len(blocks) <= 1:
+            raise SyntaxError("DEFINE GROUP is incomplete")
+        for i, block in enumerate(blocks):
+            blocks[i] = tuple(block.split(","))
+        if not all(len(block) == len(blocks[0]) for block in blocks):
+            raise SyntaxError("DEFINE GROUP blocks must all be of the same length")
+        substitutions[blocks[0]] = blocks[1:]
     else:
         substitutions[directive] = rest.split(" ")
 

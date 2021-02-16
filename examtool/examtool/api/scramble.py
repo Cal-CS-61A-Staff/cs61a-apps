@@ -160,9 +160,15 @@ def get_elements(group):
 
 def select(substitutions):
     out = {}
-    # DEFINE
+    # DEFINE + DEFINE GROUP
     for k, v in sorted(substitutions.items()):
-        out[k] = random.choice(v)
+        if isinstance(k, str):
+            out[k] = random.choice(v)
+        else:
+            v = random.choice(v)
+            assert len(k) == len(v)
+            for k0, v0 in zip(k, v):
+                out[k0] = random.choice(v0)
     return out
 
 
