@@ -13,6 +13,7 @@ import debounce from "./debounce";
 import ExamContext from "./ExamContext";
 import FailText from "./FailText";
 import LoadingButton from "./LoadingButton";
+import { logAnswer } from "./logger";
 import Points from "./Points";
 import post from "./post";
 
@@ -29,11 +30,7 @@ export default function Question({ question, number }) {
   const setValue = (val) => {
     if (!examContext.locked) {
       actuallySetValue(val);
-      try {
-        localStorage.setItem(question.id + Date.now(), val);
-      } catch (e) {
-        console.error(e);
-      }
+      logAnswer(examContext.exam, question.id, val);
       if (val[0]) {
         examContext.recordSolved(question.id);
       } else {

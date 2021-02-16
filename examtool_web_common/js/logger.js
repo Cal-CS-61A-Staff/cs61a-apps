@@ -1,29 +1,50 @@
 import { getToken } from "./auth";
 import post from "./post";
 
-const historyPrefix = "history:";
-const answerPrefix = "answerPrefix:";
+function makePrefixes(exam) {
+  const baseHistoryPrefix = "history:";
+  const baseAnswerPrefix = "answerPrefix:";
 
-export function logAnswer(questionID, value) {
-  localStorage.setItem(`${historyPrefix}|${questionID}|${Date.now()}`, value);
-  localStorage.setItem(`${answerPrefix}|${questionID}`, value);
+  return {
+    historyPrefix: `${exam}|${baseHistoryPrefix}|`,
+    answerPrefix: `${exam}|${baseAnswerPrefix}|`,
+  };
 }
 
-export async function synchronize() {
-  const history = {};
-  for (const [key, value] of Object.entries(localStorage)) {
-    if (key.startsWith(historyPrefix)) {
-      history[key] = value;
-      localStorage.removeItem(key);
-    }
+export function logAnswer(exam, questionID, value) {
+  try {
+    const { historyPrefix, answerPrefix } = makePrefixes(exam);
+    localStorage.setItem(`${historyPrefix}${questionID}|${Date.now()}`, value);
+    localStorage.setItem(`${answerPrefix}${questionID}`, value);
+  } catch (e) {
+    console.error(e);
   }
-  const ret = await post("backup_all", {
-    id: question.id,
-    value: val,
-    sentTime: new Date().getTime(),
-    token: getToken(),
-    exam: examContext.exam,
-  });
+}
+
+export async function synchronize(exam) {
+  try {
+    const history = {};
+    const snapshot = {};
+    const { historyPrefix, answerPrefix } = makePrefixes(exam);
+
+    for (const [key, value] of Object.entries(localStorage)) {
+      console.log(key, historyPrefix, key.startsWith(historyPrefix));
+      if (key.startsWith(historyPrefix)) {
+        history[key.slice(historyPrefix.length)] = value;
+        localStorage.removeItem(key);
+      } else if (key.startsWith(answerPrefix)) {
+        snapshot[key.slice(answerPrefix.length)] = value;
+      }
+    }
+    post("backup_all", {
+      exam,
+      token: getToken(),
+      history,
+      snapshot,
+    });
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 window.synchronize = synchronize;
