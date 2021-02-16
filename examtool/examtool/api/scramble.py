@@ -107,10 +107,12 @@ def scramble(email, exam, *, keep_data=False):
             for attr in attrs:
                 for k, v in substitutions.items():
                     target[attr] = target[attr].replace(k, v)
-                    target[attr] = target[attr].replace(k.title(), v.title())
-                    target[attr] = target[attr].replace(
-                        latex_escape(k), latex_escape(v)
-                    )
+                    if k.title() != k:
+                        target[attr] = target[attr].replace(k.title(), v.title())
+                    if latex_escape(k) != k:
+                        target[attr] = target[attr].replace(
+                            latex_escape(k), latex_escape(v)
+                        )
         if store:
             if keep_data:
                 target["substitutions"] = merged
