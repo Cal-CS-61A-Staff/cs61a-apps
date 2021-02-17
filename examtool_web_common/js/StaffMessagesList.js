@@ -22,6 +22,7 @@ export default function StaffMessagesList({ selectedExam, staffData, send }) {
       const resp = await post("get_question", {
         token: getToken(),
         exam: selectedExam,
+        latestTimestamp: staffData.latestTimestamp,
         student,
         id,
       });
