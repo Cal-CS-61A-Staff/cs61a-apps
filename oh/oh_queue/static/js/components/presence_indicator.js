@@ -147,7 +147,7 @@ let PresenceIndicator = ({ state, hideWaitTime, hideWelcome }) => {
           </div>
         )}
 
-      {!hideWaitTime && false && (
+      {!hideWaitTime && (
         <div
           className={`alert alert-${color} alert-dismissable fade in`}
           role="alert"
