@@ -134,7 +134,12 @@ def parse_define(
             blocks[i] = tuple(block[1:-1].split(" "))
         if not all(len(block) == len(blocks[0]) for block in blocks):
             raise SyntaxError("DEFINE GROUP blocks must all be of the same length")
-        substitution_groups.append(blocks)
+        substitution_groups.append(
+            {
+                "directives": blocks[0],
+                "replacements": {i: x for i, x in enumerate(blocks)},
+            }
+        )
     else:
         substitutions[directive] = rest.split(" ")
 

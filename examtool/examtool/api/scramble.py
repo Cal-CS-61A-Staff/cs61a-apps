@@ -106,6 +106,8 @@ def scramble(email, exam, *, keep_data=False):
             merged = {**merged, **substitutions}
             for attr in attrs:
                 for k, v in substitutions.items():
+                    if target[attr] is None:
+                        raise Exception(target, attr)
                     target[attr] = target[attr].replace(k, v)
                     if k.title() != k:
                         target[attr] = target[attr].replace(k.title(), v.title())
@@ -191,8 +193,12 @@ def select_group(substitution_groups):
     out = {}
     # DEFINE GROUP
     for blocks in substitution_groups:
-        k, *v = blocks
-        v = random.choice(v)
+        k = blocks["directives"]
+        v = blocks["replacements"]
+        replacements = [None] * len(v)
+        for i, x in v.items():
+            replacements[int(i)] = x
+        v = random.choice(replacements)
         assert len(k) == len(v)
         for k0, v0 in zip(k, v):
             out[k0] = v0
