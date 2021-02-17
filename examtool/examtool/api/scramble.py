@@ -147,6 +147,9 @@ def scramble(email, exam, *, keep_data=False):
 
     exam["groups"] = groups
     exam.pop("config", None)
+    exam.pop("substitutions", None)
+    exam.pop("substitution_groups", None)
+    exam.pop("substitutions_match", None)
 
     return exam
 
