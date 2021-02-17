@@ -3,6 +3,8 @@ import re
 from collections import defaultdict
 from contextlib import contextmanager
 
+from examtool.api.scramble import latex_escape
+
 
 def rel_open(path, *args, **kwargs):
     root = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +26,7 @@ def generate(exam):
                 write(fr"\q{{{group['points']}}}")
             else:
                 write(r"\item")
-        write(r"{ \bf " + group["name"] + "}")
+        write(r"{ \bf " + latex_escape(group["name"]) + "}")
         write("\n")
         write(group["tex"])
         write(r"\begin{enumerate}[font=\bfseries]")
