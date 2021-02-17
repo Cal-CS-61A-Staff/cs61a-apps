@@ -411,6 +411,7 @@ export default class File extends React.Component {
           onChange={this.handleEditorChange}
           debugData={editorDebugData}
           shareRef={this.state.shareRef}
+          enableAutocomplete={this.props.settings.enableAutocomplete}
         />
         <Output
           ref={this.outputRef}

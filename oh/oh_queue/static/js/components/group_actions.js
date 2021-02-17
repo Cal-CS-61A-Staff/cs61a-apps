@@ -51,6 +51,13 @@ let GroupActions = ({ state, status, tickets }) => {
           Release my holds
         </button>
       ),
+      <button
+        key="shuffle"
+        onClick={() => app.makeRequest("shuffle_tickets", ticket_ids)}
+        className="btn btn-info pull-right"
+      >
+        Shuffle
+      </button>,
     ];
   } else if (status === "assigned") {
     buttons = [

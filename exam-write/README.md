@@ -138,7 +138,7 @@ If `FIXED` and `CORRECT` are used together, use the syntax
 # INPUT <type> FIXED CORRECT <content>
 ```
 
-Note that the order matters.
+Note that the order matters. Exact duplicate options cannot be used in a single question.
 
 To enter `<content>` that spans multiple lines, use a backslash `\` to indicate that the content continues
 on the next line. For instance
@@ -201,7 +201,7 @@ At the beginning of the exam, before anything else, you can provide config state
 
 The valid choices of `option` are `SCRAMBLE_GROUPS` and `SCRAMBLE_OPTIONS`. These will
 randomize the order of groups and questions or multiple choice options respectively for each student. The tool
-will derandomize all of these before grading.
+will de-randomize all of these before grading.
 
 To randomize just groups at a particular depth, write
 
@@ -235,6 +235,12 @@ If you have a set of variables which should be replaced with a set of another, a
 ```
 
 This will uniquely set each target with one of the alts. You may have more alts than targets but you **must** have at least as many alts as targets.
+
+If you have a group of variables that should be replaced with one of a list of alternative groups, you can use the define statement
+```
+# DEFINE GROUP (<target1> <target2> ...) (<alt1a> <alt2a> ...) (<alt1b> <alt1b>... ) ...
+```
+It will either set `target1` to `alt1a` and `target2` to `alt2a`, or `target1` to `alt1b` and `target2` to `alt2b`.
 
 Note that this syntax does not support Markdown - it is a very naive text substitution in the generated HTML, so don't
 try anything too fancy with it!

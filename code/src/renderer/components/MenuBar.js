@@ -5,6 +5,7 @@ import {
   MENU_NEW_CONSOLE,
   MENU_SAVE,
   MENU_SAVE_AS,
+  MENU_SETTINGS,
   MENU_SHARE,
   MENU_HELP,
   MENU_LOGIN,
@@ -23,6 +24,7 @@ export default function MenuBar() {
     { code: MENU_SAVE, name: "Save", shortcut: "mod+s" },
     { code: MENU_SAVE_AS, name: "Save As", shortcut: "mod+shift+s" },
     { code: MENU_SHARE, name: "Share", shortcut: "mod+shift+option+s" },
+    { code: MENU_SETTINGS, name: "Settings", shortcut: "mod+," },
     { code: MENU_HELP, name: "Help", shortcut: "f1" },
   ];
 
