@@ -172,12 +172,25 @@ def index(request):
             db.collection(exam).document(email).set({question_id: value}, merge=True)
             return jsonify({"success": True})
 
+        if request.path.endswith("backup_all"):
+            exam = request.json["exam"]
+            email = get_email(request)
+            history = request.json["history"]
+            snapshot = request.json["snapshot"]
+            db.collection(exam).document(email).collection("history").document().set(
+                {"timestamp": time.time(), "history": history, "snapshot": snapshot}
+            )
+            return jsonify({"success": True})
+
         if getenv("ENV") == "dev" and "alerts" in request.path:
             from alerts import index as alerts_index
 
             return alerts_index(request)
 
-    except:
+    except Exception as e:
+        if getenv("ENV") == "dev":
+            raise
+        print(e)
         print(dict(request.json))
         return jsonify({"success": False})
 
