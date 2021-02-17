@@ -17,3 +17,14 @@ def sanitize_email(email):
 
 def rand_id():
     return "".join(random.choices(string.ascii_uppercase, k=32))
+
+
+def dict_to_list(d):
+    out = [None] * len(d)
+    for k, v in d.items():
+        out[int(k)] = v
+    return out
+
+
+def list_to_dict(l):
+    return {i: x for i, x in enumerate(l)}

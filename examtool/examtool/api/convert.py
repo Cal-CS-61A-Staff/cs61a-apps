@@ -6,7 +6,7 @@ import pypandoc
 
 from tqdm import tqdm
 
-from examtool.api.utils import rand_id
+from examtool.api.utils import list_to_dict, rand_id
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
@@ -137,7 +137,7 @@ def parse_define(
         substitution_groups.append(
             {
                 "directives": blocks[0],
-                "replacements": {i: x for i, x in enumerate(blocks)},
+                "replacements": list_to_dict([list_to_dict(block) for block in blocks]),
             }
         )
     else:

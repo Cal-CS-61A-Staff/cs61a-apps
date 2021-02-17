@@ -1,5 +1,7 @@
 import random
 
+from examtool.api.utils import dict_to_list
+
 
 def scramble(email, exam, *, keep_data=False):
     random.seed(email)
@@ -192,11 +194,8 @@ def select_group(substitution_groups):
     # DEFINE GROUP
     for blocks in substitution_groups:
         k = blocks["directives"]
-        v = blocks["replacements"]
-        replacements = [None] * len(v)
-        for i, x in v.items():
-            replacements[int(i)] = x
-        v = random.choice(replacements)
+        v = dict_to_list(blocks["replacements"])
+        v = dict_to_list(random.choice(v))
         assert len(k) == len(v)
         for k0, v0 in zip(k, v):
             out[k0] = v0
