@@ -138,7 +138,7 @@ If `FIXED` and `CORRECT` are used together, use the syntax
 # INPUT <type> FIXED CORRECT <content>
 ```
 
-Note that the order matters.
+Note that the order matters. Exact duplicate options cannot be used in a single question.
 
 To enter `<content>` that spans multiple lines, use a backslash `\` to indicate that the content continues
 on the next line. For instance
