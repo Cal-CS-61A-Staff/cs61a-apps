@@ -507,7 +507,3 @@ def handle_imports(buff: LineBuffer, path: str):
             handle_imports(new_buff, folderpath)
             buff.insert_next(new_buff)
     buff.reset()
-
-
-def check_defines():
-    ...
