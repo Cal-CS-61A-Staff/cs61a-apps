@@ -28,7 +28,6 @@ export async function synchronize(exam) {
     const { historyPrefix, answerPrefix } = makePrefixes(exam);
 
     for (const [key, value] of Object.entries(localStorage)) {
-      console.log(key, historyPrefix, key.startsWith(historyPrefix));
       if (key.startsWith(historyPrefix)) {
         history[key.slice(historyPrefix.length)] = value;
         localStorage.removeItem(key);
