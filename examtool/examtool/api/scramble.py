@@ -118,6 +118,8 @@ def scramble(email, exam, *, keep_data=False):
                 target["substitutions"] = merged
             else:
                 target.pop("substitutions", None)
+                target.pop("substitution_groups", None)
+                target.pop("substitutions_match", None)
 
     def scramble_keep_fixed(objects):
         if keep_data:
@@ -145,6 +147,9 @@ def scramble(email, exam, *, keep_data=False):
 
     exam["groups"] = groups
     exam.pop("config", None)
+    exam.pop("substitutions", None)
+    exam.pop("substitution_groups", None)
+    exam.pop("substitutions_match", None)
 
     return exam
 

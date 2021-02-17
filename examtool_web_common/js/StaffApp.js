@@ -129,9 +129,15 @@ export default function StaffApp() {
               <Exam groups={exam.groups} publicGroup={exam.public} />
             )}
             {mode === "json" && (
-              <div style={{ whiteSpace: "pre-wrap" }}>
-                {JSON.stringify(exam, null, "\t")}
-              </div>
+              <textarea
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  whiteSpace: "pre-wrap",
+                }}
+                readOnly
+                value={JSON.stringify(exam, null, "\t")}
+              />
             )}
           </div>
         </Col>
