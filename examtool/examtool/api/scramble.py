@@ -191,8 +191,12 @@ def select_group(substitution_groups):
     out = {}
     # DEFINE GROUP
     for blocks in substitution_groups:
-        k, *v = blocks
-        v = random.choice(v)
+        k = blocks["directives"]
+        v = blocks["replacements"]
+        replacements = [None] * len(v)
+        for i, x in v.items():
+            replacements[int(i)] = x
+        v = random.choice(replacements)
         assert len(k) == len(v)
         for k0, v0 in zip(k, v):
             out[k0] = v0
