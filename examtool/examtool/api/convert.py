@@ -146,6 +146,7 @@ def parse_input_lines(lines):
     correct_options = []
     if directive == "OPTION" or directive == "SELECT":
         options = []
+        existing_options = set()
         for line in lines:
             _, other_directive, rest = parse_directive(line)
             if other_directive != directive:
@@ -164,6 +165,10 @@ def parse_input_lines(lines):
 
             if is_correct:
                 correct_options.append(rest)
+
+            if rest in existing_options:
+                raise SyntaxError("Cannot have duplicate INPUT options")
+            existing_options.add(rest)
 
             options.append(parse(rest))
             options[-1]["fixed"] = is_fixed
