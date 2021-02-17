@@ -201,7 +201,7 @@ At the beginning of the exam, before anything else, you can provide config state
 
 The valid choices of `option` are `SCRAMBLE_GROUPS` and `SCRAMBLE_OPTIONS`. These will
 randomize the order of groups and questions or multiple choice options respectively for each student. The tool
-will derandomize all of these before grading.
+will de-randomize all of these before grading.
 
 To randomize just groups at a particular depth, write
 
