@@ -24,7 +24,13 @@ from examtool.cli.utils import hidden_target_folder_option, exam_name_option, pr
     help="The PDF filename to use.",
     show_default=True,
 )
-def send(exam, target, email, subject, filename):
+@click.option(
+    "--mailtool",
+    is_flag=True,
+    default=False,
+    help="Use the 61A Mailtool, instead of sendgrid",
+)
+def send(exam, target, email, subject, filename, mailtool=False):
     """
     Email an encrypted PDF to all students taking an exam. Specify `email` to email only a particular student.
     """
@@ -94,8 +100,20 @@ def send(exam, target, email, subject, filename):
                 }
             ],
         }
+        if mailtool:
+            from sicp.common.rpc.mail import send_email
 
-        send_email_local(key, data)
+            send_email(
+                sender=f"CS 61A Examtool <cs61a@berkeley.edu>",
+                target=email,
+                subject=subject,
+                body=body,
+                attachments={filename: pdf},
+                _impersonate="mail",
+            )
+
+        else:
+            send_email_local(key, data)
 
 
 if __name__ == "__main__":
