@@ -106,8 +106,6 @@ def scramble(email, exam, *, keep_data=False):
             merged = {**merged, **substitutions}
             for attr in attrs:
                 for k, v in substitutions.items():
-                    if target[attr] is None:
-                        raise Exception(target, attr)
                     target[attr] = target[attr].replace(k, v)
                     if k.title() != k:
                         target[attr] = target[attr].replace(k.title(), v.title())
