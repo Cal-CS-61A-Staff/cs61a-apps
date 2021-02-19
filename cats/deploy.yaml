@@ -4,3 +4,6 @@ dependencies:
   - repo: Cal-CS-61A-Staff/berkeley-cs61a
     src: src/proj/cats/cats.py
     dest: server/cats.py
+  - repo: Cal-CS-61A-Staff/berkeley-cs61a
+    src: src/proj/cats/gui.py
+    dest: server/gui.py
