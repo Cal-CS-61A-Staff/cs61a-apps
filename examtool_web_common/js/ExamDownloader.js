@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getAuthParams, getToken } from "./auth";
+import { getAuthParams } from "./auth";
 import FailText from "./FailText";
 import LoadingButton from "./LoadingButton";
 import post from "./post";

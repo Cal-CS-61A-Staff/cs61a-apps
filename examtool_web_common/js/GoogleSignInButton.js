@@ -34,7 +34,7 @@ export default function GoogleSignInButton({ onSuccess }) {
   if (username) {
     return (
       <>
-        You have signed in as <b>{getAuthParams().loginas || username}</b>. {}
+        You have signed in as <b>{getAuthParams().loginas || username}</b>.{" "}
         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
         <a href="#" onClick={logout}>
           Log out
