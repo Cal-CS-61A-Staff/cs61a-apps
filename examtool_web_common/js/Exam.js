@@ -47,7 +47,7 @@ export default function Exam({ groups, publicGroup, ended }) {
     }
   }, 30 * 1000);
 
-  const showExam = ended || inAdminMode();
+  const showExam = !ended || inAdminMode();
 
   return (
     <div className="exam">
