@@ -50,7 +50,15 @@ class TestSVG(unittest.TestCase):
         svg.write_text(graphic, 10, 20, "Turn over")
         self.assert_contains_str(
             str(graphic),
-            """<text x="10" y="20" stroke="black" fill="black">Turn over</text>""",
+            """<text x="10" y="20" stroke="black" fill="black" font-size="medium" font-family="serif">Turn over</text>""",
+        )
+
+    def test_write_text_font(self):
+        graphic = svg.create_graphic(200, 300)
+        svg.write_text(graphic, 10, 20, "Turn over", font_size="20", font_family="sans-serif")
+        self.assert_contains_str(
+            str(graphic),
+            """<text x="10" y="20" stroke="black" fill="black" font-size="medium" font-family="serif">Turn over</text>""",
         )
 
     def test_stroke_fill(self):
