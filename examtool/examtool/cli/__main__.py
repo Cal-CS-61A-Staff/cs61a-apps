@@ -1,5 +1,6 @@
 import click
 
+from examtool.cli.autograde import autograde
 from examtool.cli.cheaters import cheaters
 from examtool.cli.check_dupes import check_dupes
 from examtool.cli.compile_all import compile_all
@@ -26,6 +27,7 @@ def cli():
     pass
 
 
+cli.add_command(autograde)
 cli.add_command(check_dupes)
 cli.add_command(compile_all)
 cli.add_command(deploy)
