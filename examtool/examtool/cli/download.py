@@ -34,7 +34,7 @@ def download(exam, out, name_question, sid_question, with_substitutions):
         template_questions,
         email_to_data_map,
         total,
-    ) = examtool.api.download.download(exam, ["jierui.xu@berkeley.edu"])
+    ) = examtool.api.download.download(exam)
     examtool.api.download.export(
         template_questions,
         email_to_data_map,
