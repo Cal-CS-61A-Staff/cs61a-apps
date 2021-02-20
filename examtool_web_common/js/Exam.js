@@ -1,11 +1,14 @@
 /* eslint-disable react/no-array-index-key */
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
 import Anchor from "./Anchor";
+import ExamContext from "./ExamContext";
 import Points from "./Points";
 import Question from "./Question";
 import Sidebar from "./Sidebar";
+import useInterval from "./useInterval";
+import { synchronize } from "./logger.js";
 
 export function postRenderFormat() {
   for (const link of document.getElementsByTagName("a")) {
@@ -26,6 +29,8 @@ export function postRenderFormat() {
 }
 
 export default function Exam({ groups, publicGroup, ended }) {
+  const { exam } = useContext(ExamContext);
+
   useEffect(postRenderFormat, [groups, publicGroup]);
 
   const stickyStyle = {
@@ -34,6 +39,12 @@ export default function Exam({ groups, publicGroup, ended }) {
     height: "85vh",
     overflowY: "auto",
   };
+
+  useInterval(() => {
+    if (exam) {
+      synchronize(exam);
+    }
+  }, 30 * 1000);
 
   return (
     <div className="exam">
