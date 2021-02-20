@@ -7,17 +7,19 @@ export function getToken() {
 }
 
 export function getAuthParams() {
-  const hash = window.location.hash.slice(1);
-  const parts = hash
-    ? Object.fromEntries(hash.split(";").map((part) => part.split("=")))
-    : {};
-
   return {
     token: getToken(),
-    ...parts,
+    ...getLoginAsParams(),
   };
 }
 
+export function getLoginAsParams() {
+  const hash = window.location.hash.slice(1);
+  return hash
+    ? Object.fromEntries(hash.split(";").map((part) => part.split("=")))
+    : {};
+}
+
 export function inAdminMode() {
-  return !!getAuthParams().loginas;
+  return !!getLoginAsParams().loginas;
 }

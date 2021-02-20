@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { auth2, signin2, load } from "gapi";
-import { getAuthParams } from "./auth";
+import { getLoginAsParams } from "./auth";
 
 export default function GoogleSignInButton({ onSuccess }) {
   const [username, setUsername] = useState(
@@ -34,7 +34,7 @@ export default function GoogleSignInButton({ onSuccess }) {
   if (username) {
     return (
       <>
-        You have signed in as <b>{getAuthParams().loginas || username}</b>.{" "}
+        You have signed in as <b>{getLoginAsParams().loginas || username}</b>.{" "}
         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
         <a href="#" onClick={logout}>
           Log out
