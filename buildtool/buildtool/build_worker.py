@@ -54,6 +54,9 @@ def worker(build_state: BuildState, index: int):
             # only from caches, will never run a subprocess
             cache_key, deps, uses_dynamic_deps = get_deps(build_state, todo)
 
+            if uses_dynamic_deps:
+                log("Target", todo, "Uses dynamic deps")
+
             if cache_key is None:
                 # unable to compute cache_key, potentially because not all deps are ready
                 log(
@@ -68,6 +71,8 @@ def worker(build_state: BuildState, index: int):
             else:
                 log(f"All the dependencies of target {todo} are ready: {deps}")
                 # if the cache_key is ready, *all* the deps must be ready, not just the discoverable deps!
+                # unless the cache_key is not actually cached, in which case our inputs() could be wrong, so
+                # we have to run in the working directory to verify
                 deps_ready = True
 
             if deps_ready:
@@ -105,9 +110,6 @@ def worker(build_state: BuildState, index: int):
                             )
                             # now, if no exception has thrown, all the deps are available to the deps finder
                             alt_cache_key, deps, _ = get_deps(build_state, todo)
-                            # the alt_cache_key *MAY HAVE CHANGED*, because dynamic dependencies
-                            # are not used for the input() cache_key [since they are only known afterwards]
-                            # however, the alt_cache_key should match the cache_key of the subsequent run
                             try:
                                 alt_cache_key_2 = build(
                                     build_state,
@@ -126,7 +128,7 @@ def worker(build_state: BuildState, index: int):
                                     f"as it failed to build when provided only with them."
                                 )
                             assert (
-                                alt_cache_key == alt_cache_key_2
+                                cache_key == alt_cache_key == alt_cache_key_2
                             ), "An internal error has occurred"
                         else:
                             log(
