@@ -74,6 +74,7 @@ class MemorizeContext(Context):
         super().__init__(repo_root, cwd)
         self.hashstate = hashstate
         self.inputs = []
+        self.uses_dynamic_inputs = False
         self.hashstate.record(self.absolute(self.cwd))
 
     def chdir(self, dest: str):
@@ -92,6 +93,7 @@ class MemorizeContext(Context):
                 self.inputs.append(self.absolute(dep))
 
     def input(self, *, file: Optional[str], sh: Optional[str], env: Env = None):
+        self.uses_dynamic_inputs = True
         self.hashstate.record("input", file, sh, env)
         if file is not None:
             self.inputs.append(self.absolute(file))
