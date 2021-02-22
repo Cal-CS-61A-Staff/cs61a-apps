@@ -143,5 +143,6 @@ def get_deps(build_state: BuildState, rule: Rule):
         return (
             hashstate.state() if ok else None,
             ctx.inputs + rule.deps,
+            ctx.uses_dynamic_inputs,
         )
-    return None, rule.deps
+    return None, rule.deps, None
