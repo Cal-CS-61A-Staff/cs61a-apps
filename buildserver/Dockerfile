@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y hugo zip
 
 RUN apt-get update && apt-get install -y groff
 
+RUN apt-get update && apt-get install -y pandoc
+
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
