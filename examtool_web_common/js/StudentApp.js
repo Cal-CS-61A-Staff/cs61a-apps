@@ -1,6 +1,7 @@
 /* eslint-disable no-shadow */
 import React, { useEffect, useState } from "react";
 import { Col, Container, Form, Navbar, Row } from "react-bootstrap";
+import { inAdminMode } from "./auth";
 import EndModal from "./EndModal";
 import ErrorBoundary from "./ErrorBoundary";
 import Exam from "./Exam";
@@ -95,7 +96,11 @@ export default function StudentApp() {
 
   return (
     <>
-      <Navbar bg="dark" variant="dark" sticky="top">
+      <Navbar
+        bg={inAdminMode() ? "danger" : "dark"}
+        variant="dark"
+        sticky="top"
+      >
         <Navbar.Brand href="#">CS 61A Exam Runner</Navbar.Brand>
         <NavbarWarnings
           unsavedQuestions={unsavedQuestions}
