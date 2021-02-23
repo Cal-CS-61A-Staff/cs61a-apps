@@ -14,7 +14,7 @@ if not os.path.exists("data"):
     except FileExistsError as e:
         print("Data folder exists, false alarm!")
 
-sections = "fa20" in get_endpoint(course="cs61a")
+sections = "sp21" in get_endpoint(course="cs61a")
 
 with connect_db() as db:
     gscope: List[Tuple[str, str]] = db(
