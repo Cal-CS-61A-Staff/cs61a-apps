@@ -27,8 +27,13 @@ def whoami():
 
 
 @auth.command()
-def login():
+@click.option(
+    "--browser/--no-browser",
+    default=True,
+    help="Choose between browser-based and browserless authentication",
+)
+def login(browser):
     """
     Log into Ok and get an access token.
     """
-    refresh_token()
+    refresh_token(no_browser=not browser)
