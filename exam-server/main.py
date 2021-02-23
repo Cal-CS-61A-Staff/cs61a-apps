@@ -2,10 +2,11 @@ import json
 import time
 from os import getenv
 
+import requests
+from google.auth.transport.requests import Request
 from cryptography.fernet import Fernet
 from flask import jsonify, abort
 from google.oauth2 import id_token
-from google.auth.transport import requests
 from google.cloud.exceptions import NotFound
 
 from examtool.api.scramble import scramble
@@ -46,17 +47,34 @@ update_cache()
 
 def get_email(request):
     if getenv("ENV") == "dev":
-        return DEV_EMAIL
+        return request.json.get("loginas") or DEV_EMAIL, "loginas" in request.json
 
     token = request.json["token"]
 
     # validate token
-    id_info = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+    id_info = id_token.verify_oauth2_token(token, Request(), CLIENT_ID)
 
     if id_info["iss"] not in ["accounts.google.com", "https://accounts.google.com"]:
         raise ValueError("Wrong issuer.")
 
-    return id_info["email"]
+    email = id_info["email"]
+
+    if "loginas" in request.json:
+        exam = request.json["exam"]
+        course = exam.split("-")[0]
+        is_admin = requests.post(
+            "https://auth.cs61a.org/admins/is_admin",
+            json={
+                "secret": getenv("AUTH_CLIENT_SECRET"),
+                "email": email,
+                "course": course,
+            },
+        ).json()
+        if is_admin is not True:
+            raise PermissionError("Only admins can login as a student")
+        return request.json["loginas"], True
+
+    return email, False
 
 
 def get_exam_dict(exam, db):
@@ -95,7 +113,7 @@ def index(request):
 
         if request.path.endswith("get_exam"):
             exam = request.json["exam"]
-            email = get_email(request)
+            email, is_admin = get_email(request)
             ref = db.collection(exam).document(email)
             try:
                 answers = ref.get().to_dict() or {}
@@ -111,7 +129,7 @@ def index(request):
             )
 
             # 120 second grace period in case of network latency or something
-            if deadline + 120 < time.time():
+            if deadline + 120 < time.time() and not is_admin:
                 abort(401)
                 return
 
@@ -138,7 +156,7 @@ def index(request):
             question_id = request.json["id"]
             value = request.json["value"]
             sent_time = request.json.get("sentTime", 0)
-            email = get_email(request)
+            email, is_admin = get_email(request)
 
             db.collection(exam).document(email).collection("log").document().set(
                 {"timestamp": time.time(), "sentTime": sent_time, question_id: value}
@@ -146,7 +164,7 @@ def index(request):
 
             deadline = get_deadline(exam, email, db)
 
-            if deadline + 120 < time.time():
+            if deadline + 120 < time.time() and not is_admin:
                 abort(401)
                 return
 
@@ -172,12 +190,25 @@ def index(request):
             db.collection(exam).document(email).set({question_id: value}, merge=True)
             return jsonify({"success": True})
 
+        if request.path.endswith("backup_all"):
+            exam = request.json["exam"]
+            email, is_admin = get_email(request)
+            history = request.json["history"]
+            snapshot = request.json["snapshot"]
+            db.collection(exam).document(email).collection("history").document().set(
+                {"timestamp": time.time(), "history": history, "snapshot": snapshot}
+            )
+            return jsonify({"success": True})
+
         if getenv("ENV") == "dev" and "alerts" in request.path:
             from alerts import index as alerts_index
 
             return alerts_index(request)
 
-    except:
+    except Exception as e:
+        if getenv("ENV") == "dev":
+            raise
+        print(e)
         print(dict(request.json))
         return jsonify({"success": False})
 

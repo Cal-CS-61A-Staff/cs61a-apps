@@ -75,7 +75,7 @@ def index(request):
 
         if request.path.endswith("get_exam"):
             exam = request.json["exam"]
-            if not exam.startswith(course):
+            if not exam.startswith(course + "-"):
                 abort(401)
             exam_json = db.collection("exams").document(exam).get().to_dict()
             secret = exam_json.pop("secret")

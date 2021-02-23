@@ -30,10 +30,10 @@ const App = ({ path }) => {
   };
 
   const handleFileCreate = (file, interpreter, origin) => {
-    setLaunch(false);
-    setInitFile(file);
     setStartInterpreter(interpreter);
     setSrcOrigin(origin);
+    setInitFile(file);
+    setLaunch(false);
   };
 
   let primaryElem;

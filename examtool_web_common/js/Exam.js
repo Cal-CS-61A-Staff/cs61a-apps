@@ -1,11 +1,15 @@
 /* eslint-disable react/no-array-index-key */
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
 import Anchor from "./Anchor";
+import { inAdminMode } from "./auth";
+import ExamContext from "./ExamContext";
 import Points from "./Points";
 import Question from "./Question";
 import Sidebar from "./Sidebar";
+import useInterval from "./useInterval";
+import { synchronize } from "./logger.js";
 
 export function postRenderFormat() {
   for (const link of document.getElementsByTagName("a")) {
@@ -26,6 +30,8 @@ export function postRenderFormat() {
 }
 
 export default function Exam({ groups, publicGroup, ended }) {
+  const { exam } = useContext(ExamContext);
+
   useEffect(postRenderFormat, [groups, publicGroup]);
 
   const stickyStyle = {
@@ -35,12 +41,20 @@ export default function Exam({ groups, publicGroup, ended }) {
     overflowY: "auto",
   };
 
+  useInterval(() => {
+    if (exam) {
+      synchronize(exam);
+    }
+  }, 30 * 1000);
+
+  const showExam = !ended || inAdminMode();
+
   return (
     <div className="exam">
       <Row>
         <Col md={9} sm={12}>
-          {!ended && publicGroup && <Group group={publicGroup} number={0} />}
-          {!ended &&
+          {showExam && publicGroup && <Group group={publicGroup} number={0} />}
+          {showExam &&
             groups &&
             groups.map((group, i) => (
               <Group key={i} group={group} number={i + 1} />
@@ -56,7 +70,7 @@ export default function Exam({ groups, publicGroup, ended }) {
             </Jumbotron>
           )}
         </Col>
-        {!ended && groups && !!groups.length && (
+        {showExam && groups && !!groups.length && (
           <Col md={3} className="d-none d-md-block" style={stickyStyle}>
             <Sidebar groups={groups} />
           </Col>
