@@ -59,6 +59,20 @@ exclude_patterns = [
 #
 html_theme = "furo"
 
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+# html_static_path = ['_static']
+
+# Set a custom page title.
+html_title = "cs61a-apps"
+
+# Allow Markdown files to be parsed using myst.
+source_suffix = [".rst", ".md"]
+
+# -- Options for autodoc -----------------------------------------------------
+
+# Do not import the following libraries, just pretend like they exist.
 autodoc_mock_imports = [
     "colorama",
     "cachetools",
@@ -68,16 +82,13 @@ autodoc_mock_imports = [
     "werkzeug",
 ]
 
+# Use the following structure to shorten URL targets.
 extlinks = {"repo": ("https://github.com/Cal-CS-61A-Staff/tree/master/%s", "repo ")}
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
-
-html_title = "cs61a-apps"
+# Link to parts of other software documentation, if needed.
 intersphinx_mapping = {
     "flask": ("https://flask.palletsprojects.com/en/1.1.x", None),
 }
+
+# Change the order in which autodoc renders members of a file/class.
 # autodoc_member_order = "bysource"
-source_suffix = [".rst", ".md"]
