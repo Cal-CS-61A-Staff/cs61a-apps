@@ -52,7 +52,10 @@ def worker(build_state: BuildState, index: int):
             log(f"Target {todo} popped from queue by worker {index}")
 
             # only from caches, will never run a subprocess
-            cache_key, deps = get_deps(build_state, todo)
+            cache_key, deps, uses_dynamic_deps = get_deps(build_state, todo)
+
+            if uses_dynamic_deps:
+                log("Target", todo, "Uses dynamic deps")
 
             if cache_key is None:
                 # unable to compute cache_key, potentially because not all deps are ready
@@ -68,6 +71,8 @@ def worker(build_state: BuildState, index: int):
             else:
                 log(f"All the dependencies of target {todo} are ready: {deps}")
                 # if the cache_key is ready, *all* the deps must be ready, not just the discoverable deps!
+                # unless the cache_key is not actually cached, in which case our inputs() could be wrong, so
+                # we have to run in the working directory to verify
                 deps_ready = True
 
             if deps_ready:
@@ -89,7 +94,11 @@ def worker(build_state: BuildState, index: int):
                         # don't know all the dependencies it could need. Therefore, we must
                         # run it in the working directory, so the impl can find the dependencies it needs
                         # Then, we run it *again*, to verify that the dependencies are accurate
-                        in_sandbox = cache_key is not None
+                        in_sandbox = cache_key is not None and not uses_dynamic_deps
+                        # if the rule uses_dynamic_deps, then it is possible that a ctx.input() call
+                        # in the rule, that was pulled from a cache, will in fact give different outputs
+                        # since some dependency has changed. So it is not safe to run it in a sandbox directory,
+                        # as the dependencies may not all be ready
 
                         if not in_sandbox:
                             log(
@@ -100,12 +109,9 @@ def worker(build_state: BuildState, index: int):
                                 build_state, todo, deps, scratch_path=None
                             )
                             # now, if no exception has thrown, all the deps are available to the deps finder
-                            alt_cache_key, deps = get_deps(build_state, todo)
-                            # the alt_cache_key *MAY HAVE CHANGED*, because dynamic dependencies
-                            # are not used for the input() cache_key [since they are only known afterwards]
-                            # however, the alt_cache_key should match the cache_key of the subsequent run
+                            alt_cache_key, deps, _ = get_deps(build_state, todo)
                             try:
-                                alt_cache_key = build(
+                                alt_cache_key_2 = build(
                                     build_state,
                                     todo,
                                     deps,
@@ -122,7 +128,7 @@ def worker(build_state: BuildState, index: int):
                                     f"as it failed to build when provided only with them."
                                 )
                             assert (
-                                cache_key == alt_cache_key
+                                cache_key == alt_cache_key == alt_cache_key_2
                             ), "An internal error has occurred"
                         else:
                             log(

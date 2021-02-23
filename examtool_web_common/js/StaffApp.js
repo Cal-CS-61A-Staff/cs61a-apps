@@ -22,6 +22,7 @@ export default function StaffApp() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("live");
   const [draft, setDraft] = useState(false);
+  const [seed, setSeed] = useState("");
 
   const editorRef = useRef();
 
@@ -34,7 +35,7 @@ export default function StaffApp() {
   const generate = async () => {
     const text = editorRef.current.getValue();
     setLoading(true);
-    const ret = await post("convert", { text, draft }, true);
+    const ret = await post("convert", { text, draft, seed }, true);
     setLoading(false);
     if (!ret.ok) {
       return;
@@ -103,6 +104,17 @@ export default function StaffApp() {
               label="Draft mode (fast, but less accurate)"
             />
           </span>
+          <span className="ml-3">
+            <Form.Control
+              id="draftCheckbox"
+              value={seed}
+              placeholder="Scrambling seed"
+              onChange={(e) => setSeed(e.target.value)}
+              custom
+              inline
+              type="text"
+            />
+          </span>
           <FailText text={failText} />
           <br />
           <div
@@ -117,9 +129,15 @@ export default function StaffApp() {
               <Exam groups={exam.groups} publicGroup={exam.public} />
             )}
             {mode === "json" && (
-              <div style={{ whiteSpace: "pre-wrap" }}>
-                {JSON.stringify(exam, null, "\t")}
-              </div>
+              <textarea
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  whiteSpace: "pre-wrap",
+                }}
+                readOnly
+                value={JSON.stringify(exam, null, "\t")}
+              />
             )}
           </div>
         </Col>

@@ -24,7 +24,7 @@ export default function StaffAlertsList({ staffData, send }) {
                 <Button
                   style={{ float: "right" }}
                   variant="primary"
-                  onClick={() => deleteAnnouncement(id)}
+                  onClick={deleteAnnouncement(id)}
                   size="sm"
                 >
                   Delete
