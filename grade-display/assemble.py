@@ -59,14 +59,14 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
         tutorials = tutorials.fillna(0)
         grades = pd.merge(grades, tutorials, how="left", on="Email")
 
-        grades["Tutorial Attendance (Raw)"] = grades[
-            ["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]
-        ].values.max(1)
+        grades["Tutorial Attendance (Raw)"] = grades["Tutorial Attendance (Total)"]
+        # grades["Tutorial Attendance (Raw)"] = grades[
+        #     ["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]
+        # ].values.max(1)
         grades = grades.drop(
             [
                 "Tutorial Attendance (Total)",
-                "Tutorial Attendance CS Scholars (Total)",
-                "Tutorial Attendance (Might be outdated, check tutorials.cs61a.org and howamidoing.cs61a.org) (Total)",
+                #         "Tutorial Attendance CS Scholars (Total)",
             ],
             axis=1,
         )
