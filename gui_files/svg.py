@@ -68,7 +68,13 @@ class SVGText:
 
     def __str__(self):
         return """<text x="{0}" y="{1}" stroke="{2}" fill="{3}" font-size="{4}" font-family="{5}">{6}</text>""".format(
-            self.x, self.y, self.stroke, self.fill, self.font_size, self.font_family, self.text
+            self.x,
+            self.y,
+            self.stroke,
+            self.fill,
+            self.font_size,
+            self.font_family,
+            self.text,
         )
 
 
@@ -120,5 +126,14 @@ def draw_triangle(graphic, x1, y1, x2, y2, x3, y3, stroke="black", fill="black")
     graphic.draw_polygon([[x1, y1], [x2, y2], [x3, y3]], stroke, fill)
 
 
-def write_text(graphic, x, y, text, stroke="black", fill="black", font_size="medium", font_family="serif"):
+def write_text(
+    graphic,
+    x,
+    y,
+    text,
+    stroke="black",
+    fill="black",
+    font_size="medium",
+    font_family="serif",
+):
     graphic.write_text(x, y, text, stroke, fill, font_size, font_family)
