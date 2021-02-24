@@ -41,7 +41,7 @@ update_cache()
 
 def get_email(request):
     if getenv("ENV") == "dev":
-        return DEV_EMAIL
+        return request.json.get("loginas") or DEV_EMAIL
 
     token = request.json["token"]
 
@@ -51,7 +51,16 @@ def get_email(request):
     if id_info["iss"] not in ["accounts.google.com", "https://accounts.google.com"]:
         raise ValueError("Wrong issuer.")
 
-    return id_info["email"]
+    email = id_info["email"]
+
+    if "loginas" in request.json:
+        exam = request.json["exam"]
+        course = exam.split("-")[0]
+        if not is_admin(email, course):
+            raise PermissionError
+        email = request.json["loginas"]
+
+    return email
 
 
 def group_messages(message_list, get_message):

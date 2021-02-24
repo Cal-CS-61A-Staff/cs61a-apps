@@ -1,6 +1,7 @@
 import { createContext } from "react";
 
 const ExamContext = createContext({
+  exam: "",
   savedAnswers: {},
   onInternetError: () => null,
   recordUnsaved: () => null,
