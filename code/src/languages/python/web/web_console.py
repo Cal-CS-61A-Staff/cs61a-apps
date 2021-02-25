@@ -122,15 +122,6 @@ def print_tb():
     err(trace.format())
 
 
-def syntax_error(args):
-    info, filename, lineno, offset, line = args
-    print(f"  File {filename}, line {lineno}")
-    print("    " + line)
-    print("    " + offset * " " + "^")
-    print("SyntaxError:", info)
-    flush()
-
-
 OUT_BUFFER = ""
 src = ""
 
@@ -742,7 +733,7 @@ def handleInput(line):
                 err("... ")
                 _status = "block"
             else:
-                syntax_error(msg.args)
+                print_tb()
                 err(">>> ")
                 _status = "main"
         except Exception as e:

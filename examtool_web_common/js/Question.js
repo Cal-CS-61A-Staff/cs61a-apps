@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { Form, FormControl, InputGroup } from "react-bootstrap";
 import Anchor from "./Anchor";
-import { getToken } from "./auth";
+import { getAuthParams } from "./auth";
 import debounce from "./debounce";
 import ExamContext from "./ExamContext";
 import FailText from "./FailText";
@@ -187,8 +187,8 @@ export default function Question({ question, number }) {
         id: question.id,
         value: val,
         sentTime: new Date().getTime(),
-        token: getToken(),
         exam: examContext.exam,
+        ...getAuthParams(),
       });
       setSaving(false);
       if (!ret.ok) {
