@@ -203,15 +203,7 @@ def requires_master_secret(func):
         else:
             master_secret = get_master_secret()
 
-        if _sudo_token:
-            return func(
-                **kwargs,
-                master_secret=master_secret,
-                _impersonate=_impersonate,
-                _sudo_token=_sudo_token,
-            )
-        else:
-            return func(**kwargs, master_secret=master_secret)
+        return func(**kwargs, master_secret=master_secret)
 
     return wrapped
 
