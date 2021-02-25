@@ -171,7 +171,9 @@ def create_service(app: str, override=None, providers=None):
 def requires_master_secret(func):
     @wraps(func)
     def wrapped(*, _impersonate=None, _sudo_token=None, **kwargs):
-        if not get_master_secret() and _impersonate and not _sudo_token:
+        if _sudo_token:
+            return func(**kwargs, _impersonate=_impersonate, _sudo_token=_sudo_token)
+        elif not get_master_secret() and _impersonate and not _sudo_token:
             from common.rpc.secrets import (
                 get_secret_from_server,
             )  # placed here to avoid circular imports
