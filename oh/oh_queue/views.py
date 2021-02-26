@@ -33,6 +33,7 @@ from oh_queue.models import (
     get_current_time,
 )
 from oh_queue.slack import send_appointment_summary
+from oh_queue.reminders import send_appointment_reminder
 from sqlalchemy import desc, func
 from sqlalchemy.orm import joinedload
 
@@ -43,7 +44,6 @@ from common.course_config import (
     get_domain,
 )
 from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
-from common.rpc.mail import send_email
 from common.url_for import url_for
 
 
@@ -1353,38 +1353,7 @@ def assign_appointment(data):
     db.session.add(signup)
     db.session.commit()
 
-    c = Calendar()
-    e = Event()
-    e.name = f"{format_coursecode(get_course())} Appointment"
-    e.begin = appointment.start_time
-    e.end = appointment.start_time + appointment.duration
-    e.location = appointment.location.name
-    e.organizer = format_coursecode(get_course())
-    c.events.add(e)
-
-    helper_msg = (
-        f"It will be led by {appointment.helper.name}.\n" if appointment.helper else ""
-    )
-
-    send_email(
-        sender="OH Queue <cs61a@berkeley.edu>",
-        target=user.email,
-        subject=f"{format_coursecode(get_course())} Appointment Scheduled",
-        body=(
-            f"""
-Hi {user.short_name},
-
-An appointment has been scheduled for you using the {format_coursecode(get_course())} OH Queue. 
-It is at {appointment.start_time.strftime('%A %B %-d, %I:%M%p')} Pacific Time, at location {appointment.location.name}.
-{helper_msg}
-To edit or cancel this appointment, go to https://{get_domain()}.
-
-Best,
-The 61A Software Team
-""".strip()
-        ),
-        attachments={"invite.ics": b64encode(str(c).encode("utf-8")).decode("ascii")},
-    )
+    send_appointment_reminder(signup)
 
     emit_appointment_event(appointment, "student_assigned")
 
@@ -1656,6 +1625,18 @@ def bulk_appointment_action(data):
         Appointment.query.filter(
             Appointment.id.in_({x.id for x in appointments})
         ).delete(False)
+    elif action == "resend_reminder_emails":
+        appointments = Appointment.query.filter(
+            Appointment.course == get_course(),
+            Appointment.start_time > get_current_time(),
+            Appointment.status == AppointmentStatus.pending,
+        )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        for appointment in appointments:
+            for signup in appointment.signups:
+                send_appointment_reminder(signup)
+
     db.session.commit()
     emit_state(["appointments"])
 
