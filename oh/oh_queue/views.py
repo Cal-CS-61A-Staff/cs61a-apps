@@ -14,6 +14,7 @@ from sqlalchemy import func, desc
 from sqlalchemy.orm import joinedload
 
 from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
+from common.rpc.mail import send_email
 from common.url_for import url_for
 from oh_queue import app, db
 from common.course_config import (
@@ -1231,6 +1232,8 @@ def assign_appointment(data):
         if not user:
             return socket_error("Email could not be found")
         user_id = user.id
+    else:
+        user = current_user
 
     old_signup = AppointmentSignup.query.filter_by(
         appointment_id=data["appointment_id"], user_id=user_id, course=get_course()
@@ -1350,6 +1353,29 @@ def assign_appointment(data):
     )
     db.session.add(signup)
     db.session.commit()
+
+    helper_msg = (
+        f"It will be led by {appointment.helper.name}.\n" if appointment.helper else ""
+    )
+
+    send_email(
+        sender="OH Queue <cs61a@berkeley.edu>",
+        target=user.email,
+        subject=f"{format_coursecode(get_course())} Appointment Scheduled",
+        body=(
+            f"""
+Hi {user.short_name},
+
+An appointment has been scheduled for you using the {format_coursecode(get_course())} OH Queue. 
+It is at {appointment.start_time.strftime('%A %B %-d, %I:%M%p')} Pacific Time, at location {appointment.location.name}.
+{helper_msg}
+To edit or cancel this appointment, go to https://{get_domain()}.
+
+Best,
+The 61A Software Team
+""".strip()
+        ),
+    )
 
     emit_appointment_event(appointment, "student_assigned")
 
@@ -1872,6 +1898,7 @@ def load_group(group_id):
 
 
 @api("join_group")
+@logged_in
 def join_group(group_id):
     group = Group.query.filter_by(
         id=group_id, course=get_course(), group_status=GroupStatus.active
@@ -1892,6 +1919,7 @@ def join_group(group_id):
 
 
 @api("leave_group")
+@logged_in
 def leave_group(group_id):
     leave_current_groups()
     return socket_redirect()
