@@ -1,51 +1,50 @@
 import datetime
 import functools
-import hmac
-
 import random
 import time
+from base64 import b64encode
 from operator import or_
-from os import getenv
 from urllib.parse import urljoin, urlparse
 
-from flask import abort, render_template, g, request, jsonify
+from flask import g, jsonify, render_template, request
 from flask_login import current_user, login_user
-from sqlalchemy import func, desc
-from sqlalchemy.orm import joinedload
-
-from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
-from common.rpc.mail import send_email
-from common.url_for import url_for
+from ics import Calendar, Event
 from oh_queue import app, db
-from common.course_config import (
-    get_course,
-    format_coursecode,
-    get_course_id,
-    get_domain,
-)
 from oh_queue.models import (
+    Appointment,
+    AppointmentSignup,
+    AppointmentStatus,
     Assignment,
+    AttendanceStatus,
     ChatMessage,
     ConfigEntry,
     CourseNotificationState,
+    Group,
+    GroupAttendance,
+    GroupAttendanceStatus,
+    GroupStatus,
     Location,
     Ticket,
     TicketEvent,
     TicketEventType,
     TicketStatus,
-    active_statuses,
-    Appointment,
-    AppointmentSignup,
     User,
-    AppointmentStatus,
-    AttendanceStatus,
+    active_statuses,
     get_current_time,
-    GroupAttendance,
-    GroupAttendanceStatus,
-    Group,
-    GroupStatus,
 )
 from oh_queue.slack import send_appointment_summary
+from sqlalchemy import desc, func
+from sqlalchemy.orm import joinedload
+
+from common.course_config import (
+    format_coursecode,
+    get_course,
+    get_course_id,
+    get_domain,
+)
+from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
+from common.rpc.mail import send_email
+from common.url_for import url_for
 
 
 def user_json(user):
@@ -1354,6 +1353,15 @@ def assign_appointment(data):
     db.session.add(signup)
     db.session.commit()
 
+    c = Calendar()
+    e = Event()
+    e.name = f"{format_coursecode(get_course())} Appointment"
+    e.begin = appointment.start_time
+    e.end = appointment.start_time + appointment.duration
+    e.location = appointment.location.name
+    e.organizer = format_coursecode(get_course())
+    c.events.add(e)
+
     helper_msg = (
         f"It will be led by {appointment.helper.name}.\n" if appointment.helper else ""
     )
@@ -1375,6 +1383,7 @@ Best,
 The 61A Software Team
 """.strip()
         ),
+        attachments={"invite.ics": b64encode(str(c).encode("utf-8")).decode("ascii")},
     )
 
     emit_appointment_event(appointment, "student_assigned")
