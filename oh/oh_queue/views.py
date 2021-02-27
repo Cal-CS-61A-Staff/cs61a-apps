@@ -1,50 +1,50 @@
 import datetime
 import functools
-import hmac
-
 import random
 import time
+from base64 import b64encode
 from operator import or_
-from os import getenv
 from urllib.parse import urljoin, urlparse
 
-from flask import abort, render_template, g, request, jsonify
+from flask import g, jsonify, render_template, request
 from flask_login import current_user, login_user
-from sqlalchemy import func, desc
-from sqlalchemy.orm import joinedload
-
-from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
-from common.url_for import url_for
+from ics import Calendar, Event
 from oh_queue import app, db
-from common.course_config import (
-    get_course,
-    format_coursecode,
-    get_course_id,
-    get_domain,
-)
 from oh_queue.models import (
+    Appointment,
+    AppointmentSignup,
+    AppointmentStatus,
     Assignment,
+    AttendanceStatus,
     ChatMessage,
     ConfigEntry,
     CourseNotificationState,
+    Group,
+    GroupAttendance,
+    GroupAttendanceStatus,
+    GroupStatus,
     Location,
     Ticket,
     TicketEvent,
     TicketEventType,
     TicketStatus,
-    active_statuses,
-    Appointment,
-    AppointmentSignup,
     User,
-    AppointmentStatus,
-    AttendanceStatus,
+    active_statuses,
     get_current_time,
-    GroupAttendance,
-    GroupAttendanceStatus,
-    Group,
-    GroupStatus,
 )
 from oh_queue.slack import send_appointment_summary
+from oh_queue.reminders import send_appointment_reminder
+from sqlalchemy import desc, func
+from sqlalchemy.orm import joinedload
+
+from common.course_config import (
+    format_coursecode,
+    get_course,
+    get_course_id,
+    get_domain,
+)
+from common.rpc.auth import post_slack_message, read_spreadsheet, validate_secret
+from common.url_for import url_for
 
 
 def user_json(user):
@@ -1231,6 +1231,8 @@ def assign_appointment(data):
         if not user:
             return socket_error("Email could not be found")
         user_id = user.id
+    else:
+        user = current_user
 
     old_signup = AppointmentSignup.query.filter_by(
         appointment_id=data["appointment_id"], user_id=user_id, course=get_course()
@@ -1350,6 +1352,8 @@ def assign_appointment(data):
     )
     db.session.add(signup)
     db.session.commit()
+
+    send_appointment_reminder(signup)
 
     emit_appointment_event(appointment, "student_assigned")
 
@@ -1621,6 +1625,18 @@ def bulk_appointment_action(data):
         Appointment.query.filter(
             Appointment.id.in_({x.id for x in appointments})
         ).delete(False)
+    elif action == "resend_reminder_emails":
+        appointments = Appointment.query.filter(
+            Appointment.course == get_course(),
+            Appointment.start_time > get_current_time(),
+            Appointment.status == AppointmentStatus.pending,
+        )
+        if ids is not None:
+            appointments = appointments.filter(Appointment.id.in_(ids))
+        for appointment in appointments:
+            for signup in appointment.signups:
+                send_appointment_reminder(signup)
+
     db.session.commit()
     emit_state(["appointments"])
 
@@ -1872,6 +1888,7 @@ def load_group(group_id):
 
 
 @api("join_group")
+@logged_in
 def join_group(group_id):
     group = Group.query.filter_by(
         id=group_id, course=get_course(), group_status=GroupStatus.active
@@ -1892,6 +1909,7 @@ def join_group(group_id):
 
 
 @api("leave_group")
+@logged_in
 def leave_group(group_id):
     leave_current_groups()
     return socket_redirect()
