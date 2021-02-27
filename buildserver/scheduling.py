@@ -177,10 +177,10 @@ def report_build_status(
                     status.name,
                     url,
                     log_url,
+                    build_limit_time,
                     target,
                     pr_number,
                     packed_ref,
-                    build_limit_time,
                 ],
             )
     update_status(
