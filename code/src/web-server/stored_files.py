@@ -7,7 +7,7 @@ from constants import CSV_ROOT
 
 
 def create_stored_files(app):
-    @app.route("/api/load_file/<file_name>/")
+    @app.route("/api/load_file/<file_name>")
     def load_stored_file(file_name):
         with connect_db() as db:
             out = db(

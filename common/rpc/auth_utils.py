@@ -108,7 +108,7 @@ def _make_refresh_post(server, refresh_token):
     return info["access_token"], int(info["expires_in"]), info["refresh_token"]
 
 
-def _get_code():
+def _get_code(no_browser):
     """ Make the requests to get OK access code """
 
     host_name = REDIRECT_HOST
@@ -134,6 +134,7 @@ def _get_code():
     oauth_exception = None
 
     try:
+        assert not no_browser
         assert webbrowser.open_new(url)
     except AssertionError:
         print("Couldn't open a web browser, performing manual authentication\n")
@@ -257,7 +258,7 @@ class OAuthSession:
         self._dump()
         return True
 
-    def auth(self, force_reauth=False):
+    def auth(self, force_reauth=False, no_browser=False):
         """
         Returns OAuth access token which can be passed to the server
         for identification. If force_reauth is specified then will
@@ -279,7 +280,7 @@ class OAuthSession:
 
         # Perform OAuth
         print("Token is not available, performing OAuth")
-        self.access_token, expires_in, self.refresh_token = _get_code()
+        self.access_token, expires_in, self.refresh_token = _get_code(no_browser)
         return self.access_token
 
 
@@ -288,8 +289,8 @@ def set_token_path(path):
     TOKEN_PATH = abspath(path)
 
 
-def refresh_token():
-    token = OAuthSession().auth()
+def refresh_token(no_browser=False):
+    token = OAuthSession().auth(no_browser=no_browser)
     with open(TOKEN_PATH, "w+") as f:
         f.write(token)
     return token
