@@ -1,5 +1,7 @@
 import random
 
+from examtool.api.utils import dict_to_list
+
 
 def scramble(email, exam, *, keep_data=False):
     random.seed(email)
@@ -7,10 +9,7 @@ def scramble(email, exam, *, keep_data=False):
     version = exam.get("version", 1)
 
     def scramble_group(group, substitutions, config, depth):
-        group_substitutions = select(group["substitutions"])
-        group_substitutions.update(
-            select_no_replace(group.get("substitutions_match", []))
-        )
+        group_substitutions = select_substitutions(group)
         substitute(
             group,
             [*substitutions, group_substitutions],
@@ -66,10 +65,7 @@ def scramble(email, exam, *, keep_data=False):
         return [group]
 
     def scramble_question(question, substitutions, config):
-        question_substitutions = select(question["substitutions"])
-        question_substitutions.update(
-            select_no_replace(question.get("substitutions_match", []))
-        )
+        question_substitutions = select_substitutions(question)
         substitute(
             question, [question_substitutions, *substitutions], ["html", "tex", "text"]
         )
@@ -113,15 +109,19 @@ def scramble(email, exam, *, keep_data=False):
             for attr in attrs:
                 for k, v in substitutions.items():
                     target[attr] = target[attr].replace(k, v)
-                    target[attr] = target[attr].replace(k.title(), v.title())
-                    target[attr] = target[attr].replace(
-                        latex_escape(k), latex_escape(v)
-                    )
+                    if k.title() != k:
+                        target[attr] = target[attr].replace(k.title(), v.title())
+                    if latex_escape(k) != k:
+                        target[attr] = target[attr].replace(
+                            latex_escape(k), latex_escape(v)
+                        )
         if store:
             if keep_data:
                 target["substitutions"] = merged
             else:
                 target.pop("substitutions", None)
+                target.pop("substitution_groups", None)
+                target.pop("substitutions_match", None)
 
     def scramble_keep_fixed(objects):
         if keep_data:
@@ -137,8 +137,7 @@ def scramble(email, exam, *, keep_data=False):
         for i, object in zip(movable_object_pos, movable_object_values):
             objects[i] = object
 
-    global_substitutions = select(exam["substitutions"])
-    global_substitutions.update(select_no_replace(exam.get("substitutions_match", [])))
+    global_substitutions = select_substitutions(exam)
     exam["config"]["scramble_groups"] = exam["config"].get(
         "scramble_groups", [-1]
     ) or range(100)
@@ -150,6 +149,13 @@ def scramble(email, exam, *, keep_data=False):
 
     exam["groups"] = groups
     exam.pop("config", None)
+    exam.pop("substitutions", None)
+    exam.pop("substitution_groups", None)
+    exam.pop("substitutions_match", None)
+
+    exam["entropy"] = entropy = []
+    for _ in range(100):
+        entropy.append(random.randrange(1024))
 
     return exam
 
@@ -158,7 +164,14 @@ def get_elements(group):
     return group.get("elements") if "elements" in group else group.get("questions")
 
 
-def select(substitutions):
+def select_substitutions(element):
+    substitutions = select_regular(element["substitutions"])
+    substitutions.update(select_no_replace(element.get("substitutions_match", [])))
+    substitutions.update(select_group(element.get("substitution_groups", [])))
+    return substitutions
+
+
+def select_regular(substitutions):
     out = {}
     # DEFINE
     for k, v in sorted(substitutions.items()):
@@ -177,6 +190,19 @@ def select_no_replace(substitutions_match):
             c = random.choice(values)
             values.remove(c)
             out[choice] = c
+    return out
+
+
+def select_group(substitution_groups):
+    out = {}
+    # DEFINE GROUP
+    for blocks in substitution_groups:
+        k = blocks["directives"]
+        v = dict_to_list(blocks["replacements"])
+        v = dict_to_list(random.choice(v))
+        assert len(k) == len(v)
+        for k0, v0 in zip(k, v):
+            out[k0] = v0
     return out
 
 

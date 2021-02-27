@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getToken } from "./auth";
+import { getAuthParams } from "./auth";
 import post from "./post";
 import useInterval from "./useInterval";
 
@@ -106,7 +106,7 @@ export default function useExamAlertsData(
         const resp = await post(
           isStaff ? "alerts/fetch_staff_data" : "alerts/fetch_data",
           {
-            token: getToken(),
+            ...getAuthParams(),
             exam: selectedExam,
             receivedAudio: examData
               ? examData.announcements.map((x) => x.id)
@@ -132,7 +132,7 @@ export default function useExamAlertsData(
       const ret = await post(
         isStaff ? "alerts/fetch_staff_data" : "alerts/fetch_data",
         {
-          token: getToken(),
+          ...getAuthParams(),
           exam: selectedExam,
           latestTimestamp: 0,
         }
@@ -162,7 +162,7 @@ export default function useExamAlertsData(
   const send = async (endpoint, args) => {
     try {
       const resp = await post(`alerts/${endpoint}`, {
-        token: getToken(),
+        ...getAuthParams(),
         exam: selectedExam,
         latestTimestamp: examData.latestTimestamp,
         ...args,

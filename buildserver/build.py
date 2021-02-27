@@ -51,6 +51,7 @@ def build(app: App):
             "webpack": run_webpack_build,
             "61a_website": run_61a_website_build,
             "hugo": run_hugo_build,
+            "sphinx": run_sphinx_build,
             "none": run_noop_build,
         }[app.config["build_type"]]()
 
@@ -110,6 +111,15 @@ def run_hugo_build():
     clean_all_except(["public"])
     copytree("public", ".", dirs_exist_ok=True)
     rmtree("public")
+
+
+def run_sphinx_build():
+    sh("python3", "-m", "venv", "env")
+    sh("env/bin/pip", "install", "-r", "requirements.txt")
+    sh("env/bin/sphinx-build", "..", "_build")
+    clean_all_except(["_build"])
+    copytree("_build", ".", dirs_exist_ok=True)
+    rmtree("_build")
 
 
 def run_noop_build():
