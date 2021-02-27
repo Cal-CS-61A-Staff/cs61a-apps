@@ -1,4 +1,5 @@
 import sys
+from datetime import timedelta
 from time import time
 from typing import Dict, List, Optional
 
@@ -7,6 +8,7 @@ from common.rpc.auth import post_slack_message
 from common.rpc.paste import get_paste_url, paste_text
 from github_utils import BuildStatus, update_status
 
+BUILD_TIME = timedelta(minutes=20).total_seconds()
 
 with connect_db() as db:
     db(
@@ -99,8 +101,8 @@ def enqueue_builds(
             else:
                 # we can build now!
                 db(
-                    "UPDATE builds SET status='building' WHERE app=%s AND pr_number=%s AND packed_ref=%s",
-                    [app, pr_number, packed_ref],
+                    "UPDATE builds SET status='building' AND build_limit_time=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+                    [time() + BUILD_TIME, app, pr_number, packed_ref],
                 )
                 can_build_list.append((app, packed_ref))
 
@@ -152,7 +154,9 @@ def report_build_status(
             ],
         ).fetchone()
 
-        build_limit_time = time() + 20 * 60 if status == BuildStatus.building else None
+        build_limit_time = (
+            time() + BUILD_TIME if status == BuildStatus.building else None
+        )
 
         if not existing:
             # we have just been pushed or manually triggered
