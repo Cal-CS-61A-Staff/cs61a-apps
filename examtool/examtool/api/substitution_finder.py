@@ -20,12 +20,12 @@ def find_unexpected_words(exam, logs):
                 scramble(email, json.loads(exam_json), keep_data=True), nest_all=True
             )
         }
-        flagged_questions = set()
+        flagged_question_variants = set()
         for record in log:
             record.pop("timestamp")
             for question, answer in record.items():
                 question = question.split("|")[0]
-                if question not in all_alternatives or question in flagged_questions:
+                if question not in all_alternatives:
                     continue
 
                 student_substitutions = scrambled_questions[question]["substitutions"]
@@ -34,12 +34,14 @@ def find_unexpected_words(exam, logs):
                     for variant in all_alternatives[question][keyword]:
                         if variant == student_substitutions[keyword]:
                             continue
+                        if (question, keyword, variant) in flagged_question_variants:
+                            continue
                         if variant in answer:
                             # check for false positives
                             if variant in scrambled_questions[question]["text"]:
                                 continue
 
-                            flagged_questions.add(question)
+                            flagged_question_variants.add((question, keyword, variant))
 
                             print(
                                 "In question {}, Student {} used keyword {} for {}, when they should have used {}".format(

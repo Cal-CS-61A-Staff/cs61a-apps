@@ -22,4 +22,6 @@ If you do not want the exam to be autograded, run `examtool download` to downloa
 
 Note that if you ran alternate versions of your exam, it is possible that a student might have taken both versions (say, if they switched from the regular to the alternate version after filling out part of the regular version). To check for such students, run `examtool check-dupes`, and then manually decide which of their submissions should be uploaded to Gradescope.
 
+Run `examtool loginas` to log in as a student and view their exam.
+
 To identify cheating or recover from students losing their Internet connection, run `examtool logs` to see the full submission history of a particular student, or all students in the roster.

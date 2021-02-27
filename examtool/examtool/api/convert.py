@@ -137,7 +137,9 @@ def parse_define(
         substitution_groups.append(
             {
                 "directives": blocks[0],
-                "replacements": list_to_dict([list_to_dict(block) for block in blocks]),
+                "replacements": list_to_dict(
+                    [list_to_dict(block) for block in blocks[1:]]
+                ),
             }
         )
     else:
