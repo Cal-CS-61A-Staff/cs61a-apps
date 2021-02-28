@@ -64,8 +64,9 @@ def initialize_workspace(
     cache_fetcher, _ = make_cache_fetcher(state_directory)
     cache_memorize, _ = make_cache_memorize(state_directory)
 
-    status_monitor = create_status_monitor(1, quiet)
-    status_monitor.move(total=1)
+    if work_queue:
+        status_monitor = create_status_monitor(1, quiet)
+        status_monitor.move(total=len(work_queue))
 
     while work_queue:
         todo = work_queue.pop()
