@@ -164,7 +164,9 @@ def cli(
                     "--locate cannot be used with setup rules - they are declared in WORKSPACE"
                 )
 
-            setup_targets = setup_targets or [config.default_setup_rule]
+            setup_targets = setup_targets or (
+                [config.default_setup_rule] if config.default_setup_rule else []
+            )
 
             initialize_workspace(
                 setup_rule_lookup,
