@@ -179,7 +179,7 @@ If we run `bt main`, we get the following error:
 ```
 subprocess.CalledProcessError: Command '['gcc //src/main.c -o ../build/main.out']' returned non-zero exit status 1.
 ```
-We see that `find()` has returned a path relative to the project root, which cannot be directly passed to the shell. One fix would be to again use `os.path.basename` in `rules.py` to extract the filename `main.c`. However, this will cause problems if we later try to use our rule to compile a file in a subfolder. Instead, there exists a method `ctx.resolve()` that takes in a path of any format and outputs a path relative to the working directory in an implementation.
+We see that `find()` has returned a path relative to the project root, which cannot be directly passed to the shell. One fix would be to again use `os.path.basename` in `rules.py` to extract the filename `main.c`. However, this will cause problems if we later try to use our rule to compile a file in a subfolder. Instead, there exists a method `ctx.relative()` that takes in a path of any format and outputs a path relative to the working directory in an implementation.
 
 We can use this method to modify `rules.py` as follows:
 ```python
@@ -207,7 +207,7 @@ main.c:2:10: fatal error: 'another.c' file not found
 ```
 becaues only explicitly stated dependencies are available when running a build.
 
-One solution would be to update `declare()` to take in a list of dependencies and manually specify the `main.c` depends on `another.c`. Alternatively, we can add a dependency dynamically when running the build.
+One solution would be to update `declare()` to take in a list of dependencies and manually specify that `main.c` depends on `another.c`. Alternatively, we can add a dependency dynamically when running the build.
 
 First, we need to know how to detect dependencies. If we run `gcc main.c -MM`, we obtain:
 ```shell
@@ -268,7 +268,7 @@ def declare_gcc_symlink():
         ctx.sh("rm -f env/bin/gcc")
         ctx.sh(f"ln -s {target} env/bin/gcc")
     
-    callback(
+    return callback(
         name="gcc",
         impl=impl,
         out="env/bin/gcc",
