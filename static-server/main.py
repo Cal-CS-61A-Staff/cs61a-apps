@@ -18,6 +18,7 @@ def get(path):
             "react": "react",
             "ok-help": "ok-help",
             "wiki": "wiki",
+            "cs170-website": "cs170-website",
             # simple default app for PR testing
             "static-server": "time",
         },
