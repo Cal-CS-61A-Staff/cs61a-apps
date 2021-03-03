@@ -52,6 +52,7 @@ def build(app: App):
             "61a_website": run_61a_website_build,
             "hugo": run_hugo_build,
             "sphinx": run_sphinx_build,
+            "jekyll": run_jekyll_build,
             "none": run_noop_build,
         }[app.config["build_type"]]()
 
@@ -120,6 +121,13 @@ def run_sphinx_build():
     clean_all_except(["_build"])
     copytree("_build", ".", dirs_exist_ok=True)
     rmtree("_build")
+
+
+def run_jekyll_build():
+    sh("bundle", "exec", "jekyll", "build")
+    clean_all_except(["_site"])
+    copytree("_site", ".", dirs_exist_ok=True)
+    rmtree("_site")
 
 
 def run_noop_build():
