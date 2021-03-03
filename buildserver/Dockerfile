@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y groff
 
 RUN apt-get update && apt-get install -y pandoc
 
-RUN apt-get update && apt-get install ruby-full build-essential zlib1g-dev
+RUN apt-get update && apt-get install -yqq ruby-full build-essential zlib1g-dev
 
 ENV GEM_HOME $HOME/gems
 ENV PATH $HOME/gems/bin:$PATH
