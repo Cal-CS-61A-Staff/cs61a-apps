@@ -32,6 +32,13 @@ RUN apt-get update && apt-get install -y groff
 
 RUN apt-get update && apt-get install -y pandoc
 
+RUN apt-get update && apt-get install ruby-full build-essential zlib1g-dev
+
+ENV GEM_HOME $HOME/gems
+ENV PATH $HOME/gems/bin:$PATH
+
+RUN gem install jekyll bundler
+
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
