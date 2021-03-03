@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -yqq ruby-full build-essential zlib1g-dev
 ENV GEM_HOME $HOME/gems
 ENV PATH $HOME/gems/bin:$PATH
 
-RUN gem install jekyll bundler
+RUN gem install jekyll:3.8.5 bundler:1.17.2
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
