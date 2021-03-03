@@ -124,7 +124,7 @@ def run_sphinx_build():
 
 
 def run_jekyll_build():
-    sh("jekyll", "build")
+    sh("bundle", "exec", "jekyll", "build")
     clean_all_except(["_site"])
     copytree("_site", ".", dirs_exist_ok=True)
     rmtree("_site")
