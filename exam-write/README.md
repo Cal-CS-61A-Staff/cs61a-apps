@@ -92,7 +92,15 @@ Each question block is introduced with
 
 Note that, unlike groups, questions do not have titles. Then you can provide some question
 body text, written in Markdown. Then you must provide at least one `INPUT` statement. Then
-you can provide `SOLUTION` and `NOTE` blocks. Then a question is ended with
+you can provide `SOLUTION` and `NOTE` blocks. 
+
+Additionally, you can set a constant ID for your question by setting the config ID such as
+
+```
+# CONFIG ID MYNEWID
+```
+
+Then a question is ended with
 
 ```
 # END QUESTION
