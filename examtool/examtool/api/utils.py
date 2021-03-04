@@ -33,6 +33,8 @@ class IDFactory:
         self.current_ids = set()
 
     def rand_id(self, length=None):
+        if length is None:
+            length = self.length
         return "".join(random.choices(string.ascii_uppercase, k=length))
 
     def id_from_str(self, string):
