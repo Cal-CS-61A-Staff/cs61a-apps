@@ -6,14 +6,12 @@ import pypandoc
 
 from tqdm import tqdm
 
-from examtool.api.utils import list_to_dict, rand_id
+from examtool.api.utils import list_to_dict, IDFactory
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
 html_convert = lambda x: pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
 tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
-
-exam_ids = set()
 
 class LineBuffer:
     def __init__(self, text):
@@ -61,7 +59,6 @@ class LineBuffer:
 
     def location(self):
         return self.i
-
 
 def parse_directive(line):
     if not any(
@@ -228,7 +225,7 @@ def consume_rest_of_solution(buff, end):
             )
 
 
-def consume_rest_of_question(buff):
+def consume_rest_of_question(buff, idfactory):
     contents = []
     input_lines = []
     substitutions = {}
@@ -264,20 +261,9 @@ def consume_rest_of_question(buff):
 
                 if option_solutions and solution:
                     raise SyntaxError("Received multiple solutions.")
-                
-                if "ID" in config:
-                    qid = config["ID"]
-                    if qid in exam_ids:
-                        raise SyntaxError(f"Received duplicate question ID's {qid}.")
-                else:
-                    qid = rand_id()
-                    while qid in exam_ids:
-                        qid = rand_id()
-
-                exam_ids.add(qid)
 
                 return {
-                    "id": qid,
+                    "id": idfactory.get_id(config.get("ID")),
                     "type": question_type,
                     "solution": {
                         "solution": solution,
@@ -311,7 +297,7 @@ def consume_rest_of_question(buff):
             )
 
 
-def consume_rest_of_group(buff, end):
+def consume_rest_of_group(buff, end, idfactory):
     group_contents = []
     elements = []
     started_elements = False
@@ -336,14 +322,14 @@ def consume_rest_of_group(buff, end):
                 raise SyntaxError(
                     "Unexpected arguments passed in BEGIN QUESTION directive"
                 )
-            question = consume_rest_of_question(buff)
+            question = consume_rest_of_question(buff, idfactory)
             question["points"] = points
             question["fixed"] = is_fixed
             elements.append(question)
         elif mode == "BEGIN" and directive == "GROUP":
             started_elements = True
             title, is_fixed, points = process_title(rest)
-            group = consume_rest_of_group(buff, "GROUP")
+            group = consume_rest_of_group(buff, "GROUP", idfactory)
             if (title or points) and group["inline"]:
                 raise SyntaxError("Cannot create an inline group with title or points")
             group["name"] = title
@@ -394,6 +380,7 @@ def _convert(text, *, path=None):
     substitutions = {}
     substitutions_match = []
     substitution_groups = []
+    idfactory = IDFactory()
     try:
         if path is not None:
             handle_imports(buff, path)
@@ -415,7 +402,7 @@ def _convert(text, *, path=None):
                     )
             elif mode == "BEGIN" and directive in ["GROUP", "PUBLIC"]:
                 title, is_fixed, points = process_title(rest)
-                group = consume_rest_of_group(buff, directive)
+                group = consume_rest_of_group(buff, directive, idfactory)
                 group["name"] = title
                 group["points"] = points
                 group["fixed"] = is_fixed
