@@ -13,6 +13,7 @@ VERSION = 2  # increment when backward-incompatible changes are made
 html_convert = lambda x: pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
 tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
 
+exam_ids = set()
 
 class LineBuffer:
     def __init__(self, text):
@@ -263,9 +264,20 @@ def consume_rest_of_question(buff):
 
                 if option_solutions and solution:
                     raise SyntaxError("Received multiple solutions.")
+                
+                if "ID" in config:
+                    qid = config["ID"]
+                    if qid in exam_ids:
+                        raise SyntaxError(f"Received duplicate question ID's {qid}.")
+                else:
+                    qid = rand_id()
+                    while qid in exam_ids:
+                        qid = rand_id()
+
+                exam_ids.add(qid)
 
                 return {
-                    "id": rand_id(),
+                    "id": qid,
                     "type": question_type,
                     "solution": {
                         "solution": solution,
