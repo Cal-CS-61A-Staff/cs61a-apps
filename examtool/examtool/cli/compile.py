@@ -71,6 +71,11 @@ from examtool.cli.utils import (
     default=False,
     help="Generates a draft copy of the exam, which is faster but less accurate.",
 )
+@click.option(
+    "--allow-random-ids/--disallow-random-ids",
+    default=True,
+    help="Raises an error if an ID is not specified by a question in its config.",
+)
 @hidden_output_folder_option
 def compile(
     exam,
@@ -84,6 +89,7 @@ def compile(
     json_out,
     merged_md,
     draft,
+    allow_random_ids,
     out,
 ):
     """
@@ -107,7 +113,7 @@ def compile(
             merged_md.write("\n".join(buff.lines))
             return
         print("Compiling exam...")
-        exam_data = convert(exam_text_data, path=os.path.dirname(md.name), draft=draft)
+        exam_data = convert(exam_text_data, path=os.path.dirname(md.name), draft=draft, allow_random_ids=allow_random_ids)
     else:
         print("Fetching exam...")
         exam_data = get_exam(exam=exam)

@@ -372,7 +372,7 @@ def consume_rest_of_group(buff, end, idfactory):
             raise SyntaxError(f"Unexpected directive ({line}) in GROUP")
 
 
-def _convert(text, *, path=None):
+def _convert(text, *, path=None, allow_random_ids=True):
     buff = LineBuffer(text)
     groups = []
     public = None
@@ -380,7 +380,7 @@ def _convert(text, *, path=None):
     substitutions = {}
     substitutions_match = []
     substitution_groups = []
-    idfactory = IDFactory()
+    idfactory = IDFactory(allow_random_ids=allow_random_ids)
     try:
         if path is not None:
             handle_imports(buff, path)
@@ -487,12 +487,12 @@ def pandoc(target, *, draft=False):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False):
-    return json.loads(convert_str(text, path=path, draft=draft))
+def convert(text, *, path=None, draft=False, allow_random_ids=True):
+    return json.loads(convert_str(text, path=path, draft=draft, allow_random_ids=allow_random_ids))
 
 
-def convert_str(text, *, path=None, draft=False):
-    return pandoc(_convert(text, path=path), draft=draft)
+def convert_str(text, *, path=None, draft=False, allow_random_ids=True):
+    return pandoc(_convert(text, path=path, allow_random_ids=allow_random_ids), draft=draft)
 
 
 def import_file(filepath: str) -> str:

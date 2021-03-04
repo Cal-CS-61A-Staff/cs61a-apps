@@ -25,10 +25,11 @@ def list_to_dict(l):
     return {i: x for i, x in enumerate(l)}
 
 class IDFactory:
-    def __init__(self, id_start="", id_end="", length=32):
+    def __init__(self, id_start="", id_end="", length=32, allow_random_ids=True):
         self.length = length
         self.id_start = id_start
         self.id_end = id_end
+        self.allow_random_ids = allow_random_ids
         self.current_ids = set()
 
     def rand_id(self, length=None):
@@ -39,6 +40,8 @@ class IDFactory:
 
     def get_id(self, string=None):
         if string is None:
+            if not self.allow_random_ids:
+                raise SyntaxError("A custom ID is required but was not set for this question!")
             qid = self.rand_id()
             while qid in self.current_ids:
                 qid = self.rand_id()
