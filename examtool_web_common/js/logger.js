@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getAuthParams } from "./auth";
 import post from "./post";
 
 function makePrefixes(exam) {
@@ -37,9 +37,9 @@ export async function synchronize(exam) {
     }
     post("backup_all", {
       exam,
-      token: getToken(),
       history,
       snapshot,
+      ...getAuthParams(),
     });
   } catch (e) {
     console.error(e);

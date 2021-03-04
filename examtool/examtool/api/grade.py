@@ -2,10 +2,10 @@ def boolstring(bool):
     return "Matches solution." if bool else "May not match solution."
 
 
-def grade(question, responses, dispatch=None):
+def grade(email, question, responses, dispatch=None):
     if dispatch:
-        if dispatch(question):
-            return dispatch(question)(responses)
+        if dispatch(email, question):
+            return dispatch(email, question)(responses)
     response = responses.get(question["id"])
     if "solution" not in question:
         return "Instant autograder unavailable."

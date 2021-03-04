@@ -11,7 +11,7 @@ from common.rpc.secrets import get_secret
 pd.options.mode.chained_assignment = None
 
 # Change this every semester
-COURSE_CODE = "185229"
+COURSE_CODE = "248326"
 
 
 def export(name, gs_code):

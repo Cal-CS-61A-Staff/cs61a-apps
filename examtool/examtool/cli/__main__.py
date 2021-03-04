@@ -8,6 +8,7 @@ from examtool.cli.deploy import deploy
 from examtool.cli.download import download
 from examtool.cli.gradescope_autograde import gradescope_autograde
 from examtool.cli.gradescope_upload import gradescope_upload
+from examtool.cli.loginas import loginas
 from examtool.cli.login import login
 from examtool.cli.logs import logs
 from examtool.cli.save_logs import save_logs
@@ -36,6 +37,7 @@ cli.add_command(gradescope_autograde)
 cli.add_command(gradescope_upload)
 cli.add_command(logs)
 cli.add_command(send)
+cli.add_command(loginas)
 cli.add_command(login)
 cli.add_command(compile)
 cli.add_command(cheaters)

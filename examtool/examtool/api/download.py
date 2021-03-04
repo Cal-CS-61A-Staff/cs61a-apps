@@ -6,13 +6,14 @@ import pathlib
 from fpdf import FPDF
 from tqdm import tqdm
 
-from examtool.api.database import get_exam, get_submissions
+from examtool.api.database import get_exam, get_roster, get_submissions
 from examtool.api.extract_questions import extract_questions
 from examtool.api.grade import grade
 from examtool.api.scramble import scramble
 
 
 def write_exam(
+    email,
     response,
     exam,
     template_questions,
@@ -53,7 +54,9 @@ def write_exam(
             pdf.multi_cell(
                 200,
                 5,
-                txt=text.encode("latin-1", "replace").decode("latin-1"),
+                txt=text.encode("latin-1", "replace")
+                .decode("latin-1")
+                .replace("\t", " " * 4),
                 align="L",
             )
 
@@ -118,7 +121,11 @@ def write_exam(
 
         out("\nAUTOGRADER")
         if question["id"] in student_question_lookup and question["id"] in response:
-            out(grade(student_question_lookup[question["id"]], response, dispatch))
+            out(
+                grade(
+                    email, student_question_lookup[question["id"]], response, dispatch
+                )
+            )
         elif question["id"] not in student_question_lookup:
             out("STUDENT DID NOT RECEIVE QUESTION")
         else:
@@ -144,6 +151,7 @@ def export(
 
     if include_outline:
         pdf = write_exam(
+            None,
             {},
             exam,
             template_questions,
@@ -158,6 +166,7 @@ def export(
         student_responses.items(), desc="Exporting", unit="Exam", dynamic_ncols=True
     ):
         pdf = write_exam(
+            email,
             data.get("responses"),
             exam,
             template_questions,
@@ -188,6 +197,10 @@ def download(exam, emails_to_download: [str] = None, debug: bool = False):
     ]
 
     email_to_data_map = {}
+
+    if emails_to_download is None:
+        roster = get_roster(exam=exam)
+        emails_to_download = [email for email, _ in roster]
 
     i = 1
     for email, response in tqdm(

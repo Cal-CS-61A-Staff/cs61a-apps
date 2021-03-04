@@ -107,6 +107,15 @@ def get_logs(*, exam, email):
 
 
 @server_only
+@as_list
+def get_full_logs(*, exam, email):
+    db = SafeFirestore()
+
+    for ref in db.collection(exam).document(email).collection("history").stream():
+        yield ref.to_dict()
+
+
+@server_only
 def process_ok_exam_upload(*, exam, data, enable_clarifications=False, clear=True):
     """
     data: {

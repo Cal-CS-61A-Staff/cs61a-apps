@@ -1,4 +1,5 @@
 import sys
+from datetime import timedelta
 from time import time
 from typing import Dict, List, Optional
 
@@ -7,6 +8,7 @@ from common.rpc.auth import post_slack_message
 from common.rpc.paste import get_paste_url, paste_text
 from github_utils import BuildStatus, update_status
 
+BUILD_TIME = timedelta(minutes=20).total_seconds()
 
 with connect_db() as db:
     db(
@@ -17,10 +19,18 @@ with connect_db() as db:
     status varchar(128),
     packed_ref varchar(256),
     url varchar(256),
-    log_url varchar(256)
+    log_url varchar(256),
+    build_limit_time int
 );
 """
     )
+
+"""
+Each pushed_ref corresponds to a particular commit.
+For each (app, pr_number) tuple, there will be a number of rows, at most one row per packed_ref.
+There will be some number of rows with status = success or failure, at most one with status = building,
+at most one with status = queued, and some number with status = pushed. 
+"""
 
 
 def enqueue_builds(
@@ -34,6 +44,11 @@ def enqueue_builds(
     """
 
     with connect_db() as db:
+        # Before anything, we need to clear any stalled builds
+        db(
+            "UPDATE builds SET status='failure' WHERE status='building' AND build_limit_time < %s",
+            [time()],
+        )
         # First, we enqueue all our current targets
         for target in targets:
             status = db(
@@ -56,7 +71,7 @@ def enqueue_builds(
             if status is None:
                 # we have just been pushed or manually triggered
                 db(
-                    "INSERT INTO builds VALUES (%s, %s, %s, 'queued', %s, NULL, NULL)",
+                    "INSERT INTO builds VALUES (%s, %s, %s, 'queued', %s, NULL, NULL, NULL)",
                     [time(), target, pr_number, packed_ref],
                 )
             else:
@@ -65,6 +80,8 @@ def enqueue_builds(
                     [target, pr_number, packed_ref],
                 )
 
+    # force db flush
+    with connect_db() as db:
         # Then, we dequeue any target that is now ready to be built
         can_build_list = []
         queued = db(
@@ -84,8 +101,8 @@ def enqueue_builds(
             else:
                 # we can build now!
                 db(
-                    "UPDATE builds SET status='building' WHERE app=%s AND pr_number=%s AND packed_ref=%s",
-                    [app, pr_number, packed_ref],
+                    "UPDATE builds SET status='building', build_limit_time=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+                    [time() + BUILD_TIME, app, pr_number, packed_ref],
                 )
                 can_build_list.append((app, packed_ref))
 
@@ -126,6 +143,7 @@ def report_build_status(
         except:
             pass
         log_url = "https://logs.cs61a.org/service/buildserver"
+
     with connect_db() as db:
         existing = db(
             "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND packed_ref=%s",
@@ -135,16 +153,39 @@ def report_build_status(
                 packed_ref,
             ],
         ).fetchone()
+
+        build_limit_time = (
+            time() + BUILD_TIME if status == BuildStatus.building else None
+        )
+
         if not existing:
             # we have just been pushed or manually triggered
             db(
-                "INSERT INTO builds VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                [time(), target, pr_number, status.name, packed_ref, url, log_url],
+                "INSERT INTO builds VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                [
+                    time(),
+                    target,
+                    pr_number,
+                    status.name,
+                    packed_ref,
+                    url,
+                    log_url,
+                    build_limit_time,
+                ],
             )
         else:
             db(
-                "UPDATE builds SET status=%s, url=%s, log_url=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
-                [status.name, url, log_url, target, pr_number, packed_ref],
+                "UPDATE builds SET status=%s, url=%s, log_url=%s, build_limit_time=%s "
+                "WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+                [
+                    status.name,
+                    url,
+                    log_url,
+                    build_limit_time,
+                    target,
+                    pr_number,
+                    packed_ref,
+                ],
             )
     update_status(
         packed_ref,
