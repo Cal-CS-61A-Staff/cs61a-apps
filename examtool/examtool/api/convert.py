@@ -13,6 +13,7 @@ VERSION = 2  # increment when backward-incompatible changes are made
 html_convert = lambda x: pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
 tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
 
+
 class LineBuffer:
     def __init__(self, text):
         self.lines = []
@@ -59,6 +60,7 @@ class LineBuffer:
 
     def location(self):
         return self.i
+
 
 def parse_directive(line):
     if not any(
@@ -488,11 +490,15 @@ def pandoc(target, *, draft=False):
 
 
 def convert(text, *, path=None, draft=False, allow_random_ids=True):
-    return json.loads(convert_str(text, path=path, draft=draft, allow_random_ids=allow_random_ids))
+    return json.loads(
+        convert_str(text, path=path, draft=draft, allow_random_ids=allow_random_ids)
+    )
 
 
 def convert_str(text, *, path=None, draft=False, allow_random_ids=True):
-    return pandoc(_convert(text, path=path, allow_random_ids=allow_random_ids), draft=draft)
+    return pandoc(
+        _convert(text, path=path, allow_random_ids=allow_random_ids), draft=draft
+    )
 
 
 def import_file(filepath: str) -> str:
