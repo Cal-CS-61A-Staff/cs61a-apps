@@ -1,6 +1,7 @@
 import random
 import string
 from functools import wraps
+from threading import Lock
 
 
 def as_list(func):
@@ -33,6 +34,7 @@ class IDFactory:
         self.id_end = id_end
         self.allow_random_ids = allow_random_ids
         self.current_ids = set()
+        self.lock = Lock()
 
     def rand_id(self, length=None):
         if length is None:
@@ -49,14 +51,18 @@ class IDFactory:
                     "A custom ID is required but was not set for this question!"
                 )
             qid = self.rand_id()
+            self.lock.acquire()
             while qid in self.current_ids:
                 qid = self.rand_id()
         elif isinstance(string, str):
             qid = self.id_from_str(string)
+            self.lock.acquire()
             if qid in self.current_ids:
+                self.lock.release()
                 raise SyntaxError(f"Received duplicate question ID's {qid}.")
         else:
             raise SyntaxError("ID must be a string or None!")
 
         self.current_ids.add(qid)
+        self.lock.release()
         return qid

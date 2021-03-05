@@ -5,6 +5,7 @@ import os
 import pypandoc
 
 from tqdm import tqdm
+from multiprocessing.pool import ThreadPool
 
 from examtool.api.utils import list_to_dict, IDFactory
 
@@ -446,7 +447,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     }
 
 
-def pandoc(target, *, draft=False):
+def pandoc(target, *, draft=False, threadcount=16):
     to_parse = []
 
     def explore(pos):
@@ -477,9 +478,22 @@ def pandoc(target, *, draft=False):
         for x, t in zip(filter(lambda x: x.type == "tex", to_parse), tex):
             x.tex = t
     else:
-        for x in tqdm(to_parse):
+
+        def f(x):
             x.__dict__[x.type] = (
                 html_convert(x.text) if x.type == "html" else tex_convert(x.text)
+            )
+
+        if threadcount is None:
+            threadcount = 16
+        with ThreadPool(threadcount) as p:
+            list(
+                tqdm(
+                    p.imap_unordered(f, to_parse),
+                    total=len(to_parse),
+                    desc="Parts Processed",
+                    unit="Part",
+                )
             )
 
     def pandoc_dump(obj):
@@ -489,15 +503,25 @@ def pandoc(target, *, draft=False):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False, allow_random_ids=True):
+def convert(text, *, path=None, draft=False, allow_random_ids=True, threadcount=None):
     return json.loads(
-        convert_str(text, path=path, draft=draft, allow_random_ids=allow_random_ids)
+        convert_str(
+            text,
+            path=path,
+            draft=draft,
+            allow_random_ids=allow_random_ids,
+            threadcount=threadcount,
+        )
     )
 
 
-def convert_str(text, *, path=None, draft=False, allow_random_ids=True):
+def convert_str(
+    text, *, path=None, draft=False, allow_random_ids=True, threadcount=None
+):
     return pandoc(
-        _convert(text, path=path, allow_random_ids=allow_random_ids), draft=draft
+        _convert(text, path=path, allow_random_ids=allow_random_ids),
+        draft=draft,
+        threadcount=threadcount,
     )
 
 

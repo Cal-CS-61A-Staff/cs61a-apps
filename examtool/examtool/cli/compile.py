@@ -76,6 +76,12 @@ from examtool.cli.utils import (
     default=True,
     help="Raises an error if an ID is not specified by a question in its config.",
 )
+@click.option(
+    "--threadcount",
+    default=16,
+    type=int,
+    help="The number of threads to process the json file (Default 16).",
+)
 @hidden_output_folder_option
 def compile(
     exam,
@@ -90,6 +96,7 @@ def compile(
     merged_md,
     draft,
     allow_random_ids,
+    threadcount,
     out,
 ):
     """
@@ -118,6 +125,7 @@ def compile(
             path=os.path.dirname(md.name),
             draft=draft,
             allow_random_ids=allow_random_ids,
+            threadcount=threadcount,
         )
     else:
         print("Fetching exam...")
