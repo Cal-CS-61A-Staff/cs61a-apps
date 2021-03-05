@@ -94,7 +94,7 @@ Note that, unlike groups, questions do not have titles. Then you can provide som
 body text, written in Markdown. Then you must provide at least one `INPUT` statement. Then
 you can provide `SOLUTION` and `NOTE` blocks. 
 
-Additionally, you can set a constant ID for your question by setting the config ID such as
+Additionally, you can set a constant ID for your question by setting the config ID.
 
 ```
 # CONFIG ID MYNEWID
