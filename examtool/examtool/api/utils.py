@@ -2,6 +2,8 @@ import random
 import string
 from functools import wraps
 
+from typing import Optional
+
 
 def as_list(func):
     @wraps(func)
@@ -43,20 +45,19 @@ class IDFactory:
     def id_from_str(self, string):
         return self.id_start + string + self.id_end
 
-    def get_id(self, string=None):
+    def get_id(self, string: Optional[str] = None):
         if string is None:
             if not self.allow_random_ids:
                 raise SyntaxError(
                     "A custom ID is required but was not set for this question!"
                 )
             qid = rand_id(length=self.length)
-            assert qid not in self.current_ids
-        elif isinstance(string, str):
+            while qid in self.current_ids:
+                qid = rand_id(length=self.length)
+        else:
             qid = self.id_from_str(string)
             if qid in self.current_ids:
                 raise SyntaxError(f"Received duplicate question IDs {qid}.")
-        else:
-            raise SyntaxError("ID must be a string or None!")
 
         self.current_ids.add(qid)
         return qid

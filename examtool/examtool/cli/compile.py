@@ -119,7 +119,7 @@ def compile(
             exam_text_data,
             path=os.path.dirname(md.name),
             draft=draft,
-            allow_random_ids=require_explicit_ids,
+            allow_random_ids=not require_explicit_ids,
         )
     else:
         print("Fetching exam...")
