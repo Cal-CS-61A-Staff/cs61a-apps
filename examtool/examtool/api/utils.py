@@ -31,7 +31,7 @@ def list_to_dict(l):
 
 
 class IDFactory:
-    def __init__(self, id_start="", id_end="", length=32, allow_random_ids=True):
+    def __init__(self, *, id_start="", id_end="", length=32, allow_random_ids=True):
         if length is None:
             length = 32
         self.length = length
