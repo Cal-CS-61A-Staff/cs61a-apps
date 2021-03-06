@@ -15,22 +15,11 @@ tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
 
 
 class LineBuffer:
-    def __init__(self, text):
+    def __init__(self, text, *, src_map=None):
         self.lines = []
+        self.src_map = src_map
         self.i = 0
-        self.insert_next(text)
-
-    def insert_next(self, text):
-        if isinstance(text, list):
-            new_lines = text
-        elif isinstance(text, str):
-            new_lines = text.strip().split("\n")
-        elif isinstance(text, LineBuffer):
-            new_lines = text.lines
-            self.i += text.i
-        else:
-            raise SyntaxError(f"LineBuffer: unsupported type to insert: {type(text)}")
-        self.lines = self.lines[: self.i] + new_lines + self.lines[self.i :]
+        self.lines = text.strip().split("\n")
 
     def _pop(self) -> str:
         if self.i == len(self.lines):
@@ -59,7 +48,10 @@ class LineBuffer:
         self.i = 0
 
     def location(self):
-        return self.i
+        if self.src_map is None:
+            return [self.i, "<string>"]
+        else:
+            return self.src_map[self.i]
 
 
 def parse_directive(line):
@@ -375,7 +367,6 @@ def consume_rest_of_group(buff, end):
 
 
 def _convert(text, *, path=None):
-    buff = LineBuffer(text)
     groups = []
     public = None
     config = {}
@@ -384,7 +375,9 @@ def _convert(text, *, path=None):
     substitution_groups = []
     try:
         if path is not None:
-            handle_imports(buff, path)
+            buff = load_imports(text, path)
+        else:
+            buff = LineBuffer(text)
         while not buff.empty():
             line = buff.pop()
             if not line.strip():
@@ -430,8 +423,9 @@ def _convert(text, *, path=None):
             else:
                 raise SyntaxError(f"Unexpected directive: {line}")
     except SyntaxError as e:
+        line_num, file = buff.location()
         raise SyntaxError(
-            "Parse stopped on line {} with error {}".format(buff.location(), e)
+            "Parse stopped on {}:{} with error {}".format(file, line_num, e)
         )
 
     return {
@@ -503,17 +497,25 @@ def import_file(filepath: str) -> str:
         return f.read()
 
 
-def handle_imports(buff: LineBuffer, path: str):
-    while not buff.empty():
-        line = buff.pop()
-        mode, directive, rest = parse_directive(line)
-        if mode == "IMPORT":
-            buff.remove_prev()
-            filepath = " ".join([directive, rest]).rstrip()
-            if path:
-                filepath = os.path.join(path, filepath)
-            new_buff = LineBuffer(import_file(filepath))
-            folderpath = os.path.dirname(filepath)
-            handle_imports(new_buff, folderpath)
-            buff.insert_next(new_buff)
-    buff.reset()
+def load_imports(base_src: str, base_path: str):
+    lines = []
+
+    def _load(src: str, path: str):
+        for i, line in enumerate(src.split("\n")):
+            mode, directive, rest = parse_directive(line)
+            if mode == "IMPORT":
+                filepath = " ".join([directive, rest]).rstrip()
+                try:
+                    _load(import_file(filepath))
+                except FileNotFoundError:
+                    raise SyntaxError(f"Unable to import {filepath}")
+            else:
+                lines.append([i, path, line])
+
+    line_strs = []
+    src_map = []
+    for line_num, path, line in lines:
+        line_strs.append(line)
+        src_map.append([line_num, path])
+
+    return LineBuffer("\n".join(line_strs), src_map=src_map)
