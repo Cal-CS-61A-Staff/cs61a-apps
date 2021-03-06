@@ -124,6 +124,7 @@ def compile(
             exam_text_data,
             path=os.path.dirname(md.name),
             draft=draft,
+            mainfilepath=md.name,
             allow_random_ids=allow_random_ids,
             threadcount=threadcount,
         )
