@@ -98,7 +98,6 @@ def compile(
     The exam may be deployed or local (in Markdown or JSON).
     If a seed is specified, it will scramble the exam.
     """
-    print()
     if not out:
         out = ""
 
