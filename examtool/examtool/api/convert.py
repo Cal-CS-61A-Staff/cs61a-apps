@@ -34,17 +34,8 @@ class LineBuffer:
             stripped = line.rstrip()
         return line
 
-    def remove_prev(self):
-        self.i -= 1
-        if self.i < 0:
-            self.i = 0
-        del self.lines[self.i]
-
     def empty(self):
         return self.i == len(self.lines)
-
-    def reset(self):
-        self.i = 0
 
     def location(self):
         if self.src_map is None:
