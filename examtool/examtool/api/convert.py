@@ -387,7 +387,9 @@ def _convert(text, *, path=None, mainfilepath=None, allow_random_ids=True):
     substitutions_match = []
     substitution_groups = []
     idfactory = IDFactory(allow_random_ids=allow_random_ids)
-    importfactory = ImportFactory().handle_imports(buff, path, parentfilepath=mainfilepath)
+    importfactory = ImportFactory().handle_imports(
+        buff, path, parentfilepath=mainfilepath
+    )
     try:
         while not buff.empty():
             line = buff.pop()
@@ -505,7 +507,15 @@ def pandoc(target, *, draft=False, threadcount=16):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False, mainfilepath=None, allow_random_ids=True, threadcount=None):
+def convert(
+    text,
+    *,
+    path=None,
+    draft=False,
+    mainfilepath=None,
+    allow_random_ids=True,
+    threadcount=None,
+):
     return json.loads(
         convert_str(
             text,
@@ -519,10 +529,21 @@ def convert(text, *, path=None, draft=False, mainfilepath=None, allow_random_ids
 
 
 def convert_str(
-    text, *, path=None, draft=False, mainfilepath=None, allow_random_ids=True, threadcount=None
+    text,
+    *,
+    path=None,
+    draft=False,
+    mainfilepath=None,
+    allow_random_ids=True,
+    threadcount=None,
 ):
     return pandoc(
-        _convert(text, path=path, mainfilepath=mainfilepath, allow_random_ids=allow_random_ids),
+        _convert(
+            text,
+            path=path,
+            mainfilepath=mainfilepath,
+            allow_random_ids=allow_random_ids,
+        ),
         draft=draft,
         threadcount=threadcount,
     )
