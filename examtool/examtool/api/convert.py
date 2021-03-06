@@ -16,10 +16,9 @@ tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
 
 class LineBuffer:
     def __init__(self, text, *, src_map=None):
-        self.lines = []
+        self.lines = text.strip().split("\n")
         self.src_map = src_map
         self.i = 0
-        self.lines = text.strip().split("\n")
 
     def _pop(self) -> str:
         if self.i == len(self.lines):
