@@ -6,7 +6,7 @@ import pypandoc
 
 from tqdm import tqdm
 
-from examtool.api.utils import list_to_dict, id_factory
+from examtool.api.utils import list_to_dict, IDFactory
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
@@ -382,7 +382,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     substitutions = {}
     substitutions_match = []
     substitution_groups = []
-    id_factory = id_factory(allow_random_ids=allow_random_ids)
+    id_factory = IDFactory(allow_random_ids=allow_random_ids)
     try:
         if path is not None:
             handle_imports(buff, path)

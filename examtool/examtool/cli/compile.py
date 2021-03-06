@@ -72,8 +72,9 @@ from examtool.cli.utils import (
     help="Generates a draft copy of the exam, which is faster but less accurate.",
 )
 @click.option(
-    "--allow-random-ids/--disallow-random-ids",
-    default=True,
+    "--require-explicit-ids",
+    default=False,
+    is_flag=True,
     help="Raises an error if an ID is not specified by a question in its config.",
 )
 @hidden_output_folder_option
@@ -89,7 +90,7 @@ def compile(
     json_out,
     merged_md,
     draft,
-    allow_random_ids,
+    require_explicit_ids,
     out,
 ):
     """
@@ -97,6 +98,7 @@ def compile(
     The exam may be deployed or local (in Markdown or JSON).
     If a seed is specified, it will scramble the exam.
     """
+    print()
     if not out:
         out = ""
 
@@ -117,7 +119,7 @@ def compile(
             exam_text_data,
             path=os.path.dirname(md.name),
             draft=draft,
-            allow_random_ids=allow_random_ids,
+            allow_random_ids=require_explicit_ids,
         )
     else:
         print("Fetching exam...")
