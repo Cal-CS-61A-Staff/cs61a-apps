@@ -49,7 +49,7 @@ class LineBuffer:
 
     def location(self):
         if self.src_map is None:
-            return [self.i - 1, "<string>"]
+            return [self.i, "<string>"]
         else:
             return self.src_map[self.i - 1]
 
@@ -426,9 +426,7 @@ def _convert(text, *, path=None):
     except SyntaxError as e:
         line_num, file = buff.location()
         raise SyntaxError(
-            "Parse stopped on {}:{} (<merged>:{}) with error {}".format(
-                file, line_num, buff.i, e
-            )
+            "Parse stopped on {}:{} with error {}".format(file, line_num, e)
         )
 
     return {
