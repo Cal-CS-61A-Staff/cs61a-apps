@@ -4,7 +4,7 @@ from json import loads
 import click
 from cryptography.fernet import Fernet
 
-from examtool.api.utils import IDFactory
+from examtool.api.utils import rand_id
 from examtool.api.database import process_ok_exam_upload, set_exam, get_exam, set_roster
 from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import is_compressible_group, scramble
@@ -67,10 +67,9 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
     print("Exam deployed to https://exam.cs61a.org/{}".format(exam))
 
     print("Initializing announcements...")
-    idf = IDFactory()
     elements = list(extract_questions(exam_content, include_groups=True))
     for element in elements:
-        element["id"] = element.get("id", idf.get_id())  # add IDs to groups
+        element["id"] = element.get("id", rand_id())  # add IDs to groups
     elements = {
         element["id"]: get_name(element)
         for element in elements
