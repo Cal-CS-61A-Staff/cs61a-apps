@@ -558,8 +558,6 @@ class ImportFactory:
         self, buff: LineBuffer, path: str, parentfilepath: str = "main.md"
     ):
         self._handle_imports(buff, path, parentfilepath)
-        b = self.line_map[len(self.line_map) - 1]
-        b.local_start -= 1
         buff.reset()
         return self
 
