@@ -50,7 +50,7 @@ class IDFactory:
                     "A custom ID is required but was not set for this question!"
                 )
             qid = rand_id(length=self.length)
-            assert qid not in self.current_ids:
+            assert qid not in self.current_ids
         elif isinstance(string, str):
             qid = self.id_from_str(string)
             if qid in self.current_ids:
