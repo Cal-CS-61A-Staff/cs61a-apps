@@ -6,7 +6,7 @@ from json import load, dump
 import click
 from pikepdf import Pdf
 
-from examtool.api.convert import convert, handle_imports, LineBuffer
+from examtool.api.convert import convert, ImportFactory, LineBuffer
 from examtool.api.database import get_exam
 from examtool.api.gen_latex import render_latex
 from examtool.api.utils import sanitize_email
@@ -116,7 +116,7 @@ def compile(
         exam_text_data = md.read()
         if merged_md:
             buff = LineBuffer(exam_text_data)
-            handle_imports(buff, path=os.path.dirname(md.name))
+            ImportFactory().handle_imports(buff, path=os.path.dirname(md.name))
             merged_md.write("\n".join(buff.lines))
             return
         print("Compiling exam...")

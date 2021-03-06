@@ -62,6 +62,9 @@ class LineBuffer:
     def location(self):
         return self.i
 
+    def __len__(self):
+        return len(self.lines)
+
 
 def parse_directive(line):
     if not any(
@@ -384,9 +387,8 @@ def _convert(text, *, path=None, allow_random_ids=True):
     substitutions_match = []
     substitution_groups = []
     idfactory = IDFactory(allow_random_ids=allow_random_ids)
+    importfactory = ImportFactory().handle_imports(buff, path)
     try:
-        if path is not None:
-            handle_imports(buff, path)
         while not buff.empty():
             line = buff.pop()
             if not line.strip():
@@ -432,9 +434,9 @@ def _convert(text, *, path=None, allow_random_ids=True):
             else:
                 raise SyntaxError(f"Unexpected directive: {line}")
     except SyntaxError as e:
-        raise SyntaxError(
-            "Parse stopped on line {} with error {}".format(buff.location(), e)
-        )
+        merged_loc = buff.location()
+        loc = importfactory.get_path_and_line(merged_loc)
+        raise SyntaxError("Parse stopped on line {} with error {}".format(loc, e))
 
     return {
         "public": public,
@@ -532,17 +534,99 @@ def import_file(filepath: str) -> str:
         return f.read()
 
 
-def handle_imports(buff: LineBuffer, path: str):
-    while not buff.empty():
-        line = buff.pop()
-        mode, directive, rest = parse_directive(line)
-        if mode == "IMPORT":
-            buff.remove_prev()
-            filepath = " ".join([directive, rest]).rstrip()
-            if path:
-                filepath = os.path.join(path, filepath)
-            new_buff = LineBuffer(import_file(filepath))
-            folderpath = os.path.dirname(filepath)
-            handle_imports(new_buff, folderpath)
-            buff.insert_next(new_buff)
-    buff.reset()
+class LineMapBucket:
+    def __init__(self, merged_start: int, merged_end: int, local_start: int, path: str):
+        self.merged_start = merged_start
+        self.merged_end = merged_end
+        self.local_start = local_start
+        self.path = path
+
+    def __str__(self):
+        return f"LineMapBucket({self.merged_start}, {self.merged_end}, {self.local_start}, {self.path})"
+
+    def __repr__(self):
+        return str(self)
+
+
+class ImportFactory:
+    def __init__(self):
+        self.line_map = []
+        self.nopath = True
+        self.loc = 1
+
+    def handle_imports(
+        self, buff: LineBuffer, path: str, parentfilepath: str = "main.md"
+    ):
+        self._handle_imports(buff, path, parentfilepath)
+        b = self.line_map[len(self.line_map) - 1]
+        b.local_start -= 1
+        buff.reset()
+        return self
+
+    def _handle_imports(
+        self, buff: LineBuffer, path: str, parentfilepath: str = "main.md"
+    ):
+        if path is None:
+            return self
+        self.nopath = False
+        merged_start = self.loc
+        loc = 1
+        start_line = loc
+        while not buff.empty():
+            line = buff.pop()
+            mode, directive, rest = parse_directive(line)
+            if mode == "IMPORT":
+                buff.remove_prev()
+                filepath = " ".join([directive, rest]).rstrip()
+                if path:
+                    filepath = os.path.join(path, filepath)
+                try:
+                    new_buff = LineBuffer(import_file(filepath))
+                except FileNotFoundError as e:
+                    raise SyntaxError(
+                        f"Parse stopped on line {parentfilepath}: {loc} with error Could not find the file {filepath} from IMPORT directive ({line})."
+                    )
+                folderpath = os.path.dirname(filepath)
+                merged_end = self.loc - 1
+                if merged_end >= merged_start:
+                    self.register_file_index(
+                        merged_start, merged_end, start_line, parentfilepath
+                    )
+                self._handle_imports(new_buff, folderpath, parentfilepath=filepath)
+                buff.insert_next(new_buff)
+                buff.i += len(new_buff)
+                start_line = loc + 1
+                merged_start = self.loc
+            else:
+                self.loc += 1
+            loc += 1
+
+        merged_end = self.loc - 1
+
+        self.register_file_index(merged_start, merged_end, start_line, parentfilepath)
+        buff.reset()
+        return self
+
+    def register_file_index(
+        self, merged_start: int, merged_end: int, local_start: int, path: str
+    ):
+        bucket = LineMapBucket(merged_start, merged_end, local_start, path)
+        rngset = set(range(merged_start, merged_end))
+        for b in self.line_map:
+            brng = range(b.merged_start, b.merged_end)
+            if rngset.intersection(brng):
+                raise ValueError(f"The Line Map Bucket {bucket} intersects with {b}.")
+        self.line_map.append(bucket)
+
+    def get_path_and_line(self, merged_line_number: int):
+        if self.nopath:
+            return merged_line_number
+        for bucket in self.line_map:
+            if (
+                merged_line_number >= bucket.merged_start
+                and merged_line_number <= bucket.merged_end
+            ):
+                offset = merged_line_number - bucket.merged_start
+                line = bucket.local_start + offset
+                return f"{bucket.path}: {line} (M{merged_line_number})"
+        raise ValueError(f"Could not find the merged line number {merged_line_number}.")
