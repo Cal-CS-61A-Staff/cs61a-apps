@@ -3,8 +3,8 @@ import re
 import os
 
 import pypandoc
-
 from tqdm import tqdm
+from os.path import dirname
 
 from examtool.api.utils import list_to_dict, rand_id
 
@@ -49,9 +49,9 @@ class LineBuffer:
 
     def location(self):
         if self.src_map is None:
-            return [self.i, "<string>"]
+            return [self.i - 1, "<string>"]
         else:
-            return self.src_map[self.i]
+            return self.src_map[self.i - 1]
 
 
 def parse_directive(line):
@@ -373,11 +373,12 @@ def _convert(text, *, path=None):
     substitutions = {}
     substitutions_match = []
     substitution_groups = []
+    if path is not None:
+        buff = load_imports(text, path)
+    else:
+        buff = LineBuffer(text)
+
     try:
-        if path is not None:
-            buff = load_imports(text, path)
-        else:
-            buff = LineBuffer(text)
         while not buff.empty():
             line = buff.pop()
             if not line.strip():
@@ -425,7 +426,9 @@ def _convert(text, *, path=None):
     except SyntaxError as e:
         line_num, file = buff.location()
         raise SyntaxError(
-            "Parse stopped on {}:{} with error {}".format(file, line_num, e)
+            "Parse stopped on {}:{} (<merged>:{}) with error {}".format(
+                file, line_num, buff.i, e
+            )
         )
 
     return {
@@ -504,13 +507,17 @@ def load_imports(base_src: str, base_path: str):
         for i, line in enumerate(src.split("\n")):
             mode, directive, rest = parse_directive(line)
             if mode == "IMPORT":
-                filepath = " ".join([directive, rest]).rstrip()
+                filepath = os.path.join(
+                    dirname(path), " ".join([directive, rest]).rstrip()
+                )
                 try:
-                    _load(import_file(filepath))
+                    _load(import_file(filepath), filepath)
                 except FileNotFoundError:
                     raise SyntaxError(f"Unable to import {filepath}")
             else:
-                lines.append([i, path, line])
+                lines.append([i + 1, path, line])
+
+    _load(base_src, base_path)
 
     line_strs = []
     src_map = []
