@@ -4,6 +4,7 @@ import os
 
 import pypandoc
 from tqdm import tqdm
+from multiprocessing.pool import ThreadPool
 from os.path import dirname
 
 from examtool.api.utils import list_to_dict, IDFactory
@@ -431,7 +432,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     }
 
 
-def pandoc(target, *, draft=False):
+def pandoc(target, *, draft=False, num_threads=None):
     to_parse = []
 
     def explore(pos):
@@ -462,9 +463,21 @@ def pandoc(target, *, draft=False):
         for x, t in zip(filter(lambda x: x.type == "tex", to_parse), tex):
             x.tex = t
     else:
-        for x in tqdm(to_parse):
+        def pandoc_convert(x):
             x.__dict__[x.type] = (
                 html_convert(x.text) if x.type == "html" else tex_convert(x.text)
+            )
+
+        if num_threads is None:
+            num_threads = 16
+        with ThreadPool(num_threads) as p:
+            list(
+                tqdm(
+                    p.imap_unordered(pandoc_convert, to_parse),
+                    total=len(to_parse),
+                    desc="Parts Processed",
+                    unit="Part",
+                )
             )
 
     def pandoc_dump(obj):
@@ -474,15 +487,25 @@ def pandoc(target, *, draft=False):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False, allow_random_ids=True):
+def convert(text, *, path=None, draft=False, allow_random_ids=True, num_threads=None):
     return json.loads(
-        convert_str(text, path=path, draft=draft, allow_random_ids=allow_random_ids)
+        convert_str(
+            text,
+            path=path,
+            draft=draft,
+            allow_random_ids=allow_random_ids,
+            num_threads=num_threads,
+        )
     )
 
 
-def convert_str(text, *, path=None, draft=False, allow_random_ids=True):
+def convert_str(
+    text, *, path=None, draft=False, allow_random_ids=True, num_threads=None
+):
     return pandoc(
-        _convert(text, path=path, allow_random_ids=allow_random_ids), draft=draft
+        _convert(text, path=path, allow_random_ids=allow_random_ids),
+        draft=draft,
+        num_threads=num_threads,
     )
 
 

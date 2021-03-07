@@ -72,6 +72,12 @@ from examtool.cli.utils import (
     help="Generates a draft copy of the exam, which is faster but less accurate.",
 )
 @click.option(
+    "--num-threads",
+    default=16,
+    type=int,
+    help="The number of threads to process the JSON file.",
+)
+@click.option(
     "--require-explicit-ids",
     default=False,
     is_flag=True,
@@ -90,6 +96,7 @@ def compile(
     json_out,
     merged_md,
     draft,
+    num_threads,
     require_explicit_ids,
     out,
 ):
@@ -118,6 +125,7 @@ def compile(
             src,
             path=path,
             draft=draft,
+            num_threads=num_threads,
             allow_random_ids=not require_explicit_ids,
         )
     else:
