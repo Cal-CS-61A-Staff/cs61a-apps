@@ -175,7 +175,7 @@ def compile(
     with render_latex(
         exam_data,
         settings,
-        watermark=create_watermark(exam_data) if include_watermark else None,
+        watermark=create_watermark(exam_data, scale=2) if include_watermark else None,
     ) as pdf:
         pdf = Pdf.open(BytesIO(pdf))
         pdf.save(os.path.join(out, exam + ".pdf"))

@@ -38,6 +38,8 @@ setup(
             "func-timeout",
             "fullGSapi",
             "tqdm",
+            "numpy",
+            "opencv-python",
         ],
     },
 )

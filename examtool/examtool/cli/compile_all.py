@@ -111,7 +111,9 @@ def compile_all(
                 "examtype": exam_type,
                 "semester": semester,
             },
-            watermark=create_watermark(exam_data) if include_watermark else None,
+            watermark=create_watermark(exam_data, scale=2)
+            if include_watermark
+            else None,
             do_twice=do_twice,
         ) as pdf:
             pdf = Pdf.open(BytesIO(pdf))
