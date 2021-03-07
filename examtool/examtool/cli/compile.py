@@ -115,9 +115,9 @@ def compile(
             return
         print("Compiling exam...")
         exam_data = convert(
-            src, 
-            path=path, 
-            draft=draft, 
+            src,
+            path=path,
+            draft=draft,
             allow_random_ids=not require_explicit_ids,
         )
     else:
