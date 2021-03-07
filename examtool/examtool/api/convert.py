@@ -6,7 +6,7 @@ import pypandoc
 from tqdm import tqdm
 from os.path import dirname
 
-from examtool.api.utils import list_to_dict, rand_id
+from examtool.api.utils import list_to_dict, IDFactory
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
@@ -209,7 +209,7 @@ def consume_rest_of_solution(buff, end):
             )
 
 
-def consume_rest_of_question(buff):
+def consume_rest_of_question(buff, id_factory):
     contents = []
     input_lines = []
     substitutions = {}
@@ -247,7 +247,7 @@ def consume_rest_of_question(buff):
                     raise SyntaxError("Received multiple solutions.")
 
                 return {
-                    "id": rand_id(),
+                    "id": id_factory.get_id(config.get("ID")),
                     "type": question_type,
                     "solution": {
                         "solution": solution,
@@ -281,7 +281,7 @@ def consume_rest_of_question(buff):
             )
 
 
-def consume_rest_of_group(buff, end):
+def consume_rest_of_group(buff, end, id_factory):
     group_contents = []
     elements = []
     started_elements = False
@@ -306,14 +306,14 @@ def consume_rest_of_group(buff, end):
                 raise SyntaxError(
                     "Unexpected arguments passed in BEGIN QUESTION directive"
                 )
-            question = consume_rest_of_question(buff)
+            question = consume_rest_of_question(buff, id_factory)
             question["points"] = points
             question["fixed"] = is_fixed
             elements.append(question)
         elif mode == "BEGIN" and directive == "GROUP":
             started_elements = True
             title, is_fixed, points = process_title(rest)
-            group = consume_rest_of_group(buff, "GROUP")
+            group = consume_rest_of_group(buff, "GROUP", id_factory)
             if (title or points) and group["inline"]:
                 raise SyntaxError("Cannot create an inline group with title or points")
             group["name"] = title
@@ -356,7 +356,8 @@ def consume_rest_of_group(buff, end):
             raise SyntaxError(f"Unexpected directive ({line}) in GROUP")
 
 
-def _convert(text, *, path=None):
+def _convert(text, *, path=None, allow_random_ids=True):
+    buff = LineBuffer(text)
     groups = []
     public = None
     config = {}
@@ -367,7 +368,7 @@ def _convert(text, *, path=None):
         buff = load_imports(text, path)
     else:
         buff = LineBuffer(text)
-
+    id_factory = IDFactory(allow_random_ids=allow_random_ids)
     try:
         while not buff.empty():
             line = buff.pop()
@@ -387,7 +388,7 @@ def _convert(text, *, path=None):
                     )
             elif mode == "BEGIN" and directive in ["GROUP", "PUBLIC"]:
                 title, is_fixed, points = process_title(rest)
-                group = consume_rest_of_group(buff, directive)
+                group = consume_rest_of_group(buff, directive, id_factory)
                 group["name"] = title
                 group["points"] = points
                 group["fixed"] = is_fixed
@@ -473,12 +474,16 @@ def pandoc(target, *, draft=False):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False):
-    return json.loads(convert_str(text, path=path, draft=draft))
+def convert(text, *, path=None, draft=False, allow_random_ids=True):
+    return json.loads(
+        convert_str(text, path=path, draft=draft, allow_random_ids=allow_random_ids)
+    )
 
 
-def convert_str(text, *, path=None, draft=False):
-    return pandoc(_convert(text, path=path), draft=draft)
+def convert_str(text, *, path=None, draft=False, allow_random_ids=True):
+    return pandoc(
+        _convert(text, path=path, allow_random_ids=allow_random_ids), draft=draft
+    )
 
 
 def import_file(filepath: str) -> str:
