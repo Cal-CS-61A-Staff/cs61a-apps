@@ -154,8 +154,8 @@ def scramble(email, exam, *, keep_data=False):
     exam.pop("substitutions_match", None)
 
     exam["entropy"] = entropy = []
-    for _ in range(100):
-        entropy.append(random.randrange(1024))
+    for _ in range(10):
+        entropy.append(random.randrange(2 ** 20))
 
     return exam
 
