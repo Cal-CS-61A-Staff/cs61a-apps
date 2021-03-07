@@ -33,7 +33,8 @@ def get_watermark_points(seed):
 
 def create_watermark(seed, *, scale=2):
     graphic = SVGGraphic(100 * scale, 100 * scale)
-    graphic.draw_circle(5, 5, 2, "orange", "white")
+    graphic.draw_line(0, 0, 10, 10, "orange")
+    graphic.draw_line(0, 10, 10, 0, "orange")
     for x, y in get_watermark_points(seed):
         graphic.draw_rect(x * scale, y * scale, scale, scale, "orange", "orange")
     return str(graphic)

@@ -78,8 +78,8 @@ def correct_watermark_bits(corners: List[Point], bits: List[Point]):
     )
 
     return [
-        Point(*pt)
-        for pt in zip(
+        Point(x % 100, y % 100)
+        for x, y in zip(
             homogenized_bits[0] / homogenized_bits[2],
             homogenized_bits[1] / homogenized_bits[2],
         )
