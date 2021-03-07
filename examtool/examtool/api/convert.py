@@ -11,8 +11,13 @@ from examtool.api.utils import list_to_dict, IDFactory
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
-html_convert = lambda x: pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
-tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
+
+def html_convert(x):
+    return pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
+
+
+def tex_convert(x):
+    return pypandoc.convert_text(x, "latex", "md")
 
 
 class LineBuffer:
@@ -358,7 +363,6 @@ def consume_rest_of_group(buff, end, id_factory):
 
 
 def _convert(text, *, path=None, allow_random_ids=True):
-    buff = LineBuffer(text)
     groups = []
     public = None
     config = {}
@@ -432,7 +436,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     }
 
 
-def pandoc(target, *, draft=False, num_threads=None):
+def pandoc(target, *, draft=False, num_threads):
     to_parse = []
 
     def explore(pos):
@@ -447,15 +451,17 @@ def pandoc(target, *, draft=False, num_threads=None):
 
     explore(target)
 
-    DELIMITER = """\n\nDELIMITER\n\n"""
+    pandoc_delimiter = """\n\nDELIMITER\n\n"""
 
     if draft:
-        transpile_target = lambda t: DELIMITER.join(
-            x.text for x in to_parse if x.type == t
-        )
 
-        html = html_convert(transpile_target("html")).split(html_convert(DELIMITER))
-        tex = tex_convert(transpile_target("tex")).split(tex_convert(DELIMITER))
+        def transpile_target(t):
+            return pandoc_delimiter.join(x.text for x in to_parse if x.type == t)
+
+        html = html_convert(transpile_target("html")).split(
+            html_convert(pandoc_delimiter)
+        )
+        tex = tex_convert(transpile_target("tex")).split(tex_convert(pandoc_delimiter))
 
         for x, h in zip(filter(lambda x: x.type == "html", to_parse), html):
             x.html = h
@@ -463,13 +469,12 @@ def pandoc(target, *, draft=False, num_threads=None):
         for x, t in zip(filter(lambda x: x.type == "tex", to_parse), tex):
             x.tex = t
     else:
+
         def pandoc_convert(x):
             x.__dict__[x.type] = (
                 html_convert(x.text) if x.type == "html" else tex_convert(x.text)
             )
 
-        if num_threads is None:
-            num_threads = 16
         with ThreadPool(num_threads) as p:
             list(
                 tqdm(
@@ -487,7 +492,7 @@ def pandoc(target, *, draft=False, num_threads=None):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False, allow_random_ids=True, num_threads=None):
+def convert(text, *, path=None, draft=False, allow_random_ids=True, num_threads):
     return json.loads(
         convert_str(
             text,
@@ -500,7 +505,12 @@ def convert(text, *, path=None, draft=False, allow_random_ids=True, num_threads=
 
 
 def convert_str(
-    text, *, path=None, draft=False, allow_random_ids=True, num_threads=None
+    text,
+    *,
+    path=None,
+    draft=False,
+    allow_random_ids=True,
+    num_threads=16,
 ):
     return pandoc(
         _convert(text, path=path, allow_random_ids=allow_random_ids),
