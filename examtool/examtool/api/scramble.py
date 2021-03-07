@@ -211,7 +211,7 @@ def select_ranges(substitution_ranges):
     out = {}
     # DEFINE RANGE
     for k, [low, high] in sorted(substitution_ranges.items()):
-        out[k] = random.randrange(low, high)
+        out[k] = str(random.randrange(low, high))
     return out
 
 
