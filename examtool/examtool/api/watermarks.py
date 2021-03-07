@@ -4,6 +4,9 @@ from examtool.gui_files.svg import SVGGraphic
 
 
 def create_watermark(seed):
+    if isinstance(seed, dict):
+        seed = seed["entropy"][0]
+
     old_seed = int(random.random() * 100000)
     random.seed(seed)
     graphic = SVGGraphic(100, 100)
