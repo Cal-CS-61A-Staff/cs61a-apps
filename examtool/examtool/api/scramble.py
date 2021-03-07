@@ -165,9 +165,10 @@ def get_elements(group):
 
 
 def select_substitutions(element):
-    substitutions = select_regular(element["substitutions"])
+    substitutions = select_regular(element.get("substitutions", {}))
     substitutions.update(select_no_replace(element.get("substitutions_match", [])))
     substitutions.update(select_group(element.get("substitution_groups", [])))
+    substitutions.update(select_ranges(element.get("substitution_ranges", [])))
     return substitutions
 
 
@@ -203,6 +204,14 @@ def select_group(substitution_groups):
         assert len(k) == len(v)
         for k0, v0 in zip(k, v):
             out[k0] = v0
+    return out
+
+
+def select_ranges(substitution_ranges):
+    out = {}
+    # DEFINE RANGE
+    for k, [low, high] in sorted(substitution_ranges.items()):
+        out[k] = random.randrange(low, high)
     return out
 
 
