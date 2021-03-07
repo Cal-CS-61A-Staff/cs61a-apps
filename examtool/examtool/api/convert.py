@@ -416,7 +416,7 @@ def _convert(text, *, path=None):
     except SyntaxError as e:
         line_num, file = buff.location()
         raise SyntaxError(
-            "Parse stopped on {}:{} with error {}".format(file, line_num, e)
+            "Parse stopped on {}:{} with error: {}".format(file, line_num, e)
         )
 
     return {
@@ -488,11 +488,11 @@ def import_file(filepath: str) -> str:
         return f.read()
 
 
-def load_imports(base_src: str, base_path: str):
+def load_imports(base_text: str, base_path: str):
     lines = []
 
-    def _load(src: str, path: str):
-        for i, line in enumerate(src.split("\n")):
+    def _load(text: str, path: str):
+        for i, line in enumerate(text.split("\n")):
             mode, directive, rest = parse_directive(line)
             if mode == "IMPORT":
                 filepath = os.path.join(
@@ -501,11 +501,13 @@ def load_imports(base_src: str, base_path: str):
                 try:
                     _load(import_file(filepath), filepath)
                 except FileNotFoundError:
-                    raise SyntaxError(f"Unable to import {filepath}")
+                    raise SyntaxError(
+                        f"Parse stopped on {path}:{i + 1}: Unable to import {filepath}"
+                    )
             else:
                 lines.append([i + 1, path, line])
 
-    _load(base_src, base_path)
+    _load(base_text, base_path)
 
     line_strs = []
     src_map = []
