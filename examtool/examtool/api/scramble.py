@@ -168,7 +168,7 @@ def select_substitutions(element):
     substitutions = select_regular(element.get("substitutions", {}))
     substitutions.update(select_no_replace(element.get("substitutions_match", [])))
     substitutions.update(select_group(element.get("substitution_groups", [])))
-    substitutions.update(select_ranges(element.get("substitution_ranges", [])))
+    substitutions.update(select_ranges(element.get("substitution_ranges", {})))
     return substitutions
 
 
