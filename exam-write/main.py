@@ -17,7 +17,7 @@ def convert():
     seed = request.json.get("seed", False)
     text = text.replace("\r", "")
     try:
-        exam = json.loads(convert_str(text, draft=draft))
+        exam = json.loads(convert_str(text, draft=draft, num_threads=1))
         if seed:
             exam = scramble(seed, exam)
         return jsonify({"success": True, "examJSON": json.dumps(exam)})
