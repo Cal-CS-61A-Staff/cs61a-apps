@@ -3,8 +3,8 @@ import re
 import os
 
 import pypandoc
-
 from tqdm import tqdm
+from os.path import dirname
 
 from examtool.api.utils import list_to_dict, IDFactory
 
@@ -15,22 +15,10 @@ tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
 
 
 class LineBuffer:
-    def __init__(self, text):
-        self.lines = []
+    def __init__(self, text, *, src_map=None):
+        self.lines = text.strip().split("\n")
+        self.src_map = src_map
         self.i = 0
-        self.insert_next(text)
-
-    def insert_next(self, text):
-        if isinstance(text, list):
-            new_lines = text
-        elif isinstance(text, str):
-            new_lines = text.strip().split("\n")
-        elif isinstance(text, LineBuffer):
-            new_lines = text.lines
-            self.i += text.i
-        else:
-            raise SyntaxError(f"LineBuffer: unsupported type to insert: {type(text)}")
-        self.lines = self.lines[: self.i] + new_lines + self.lines[self.i :]
 
     def _pop(self) -> str:
         if self.i == len(self.lines):
@@ -46,20 +34,14 @@ class LineBuffer:
             stripped = line.rstrip()
         return line
 
-    def remove_prev(self):
-        self.i -= 1
-        if self.i < 0:
-            self.i = 0
-        del self.lines[self.i]
-
     def empty(self):
         return self.i == len(self.lines)
 
-    def reset(self):
-        self.i = 0
-
     def location(self):
-        return self.i
+        if self.src_map is None:
+            return [self.i, "<string>"]
+        else:
+            return self.src_map[self.i - 1]
 
 
 def parse_directive(line):
@@ -382,10 +364,12 @@ def _convert(text, *, path=None, allow_random_ids=True):
     substitutions = {}
     substitutions_match = []
     substitution_groups = []
+    if path is not None:
+        buff = load_imports(text, path)
+    else:
+        buff = LineBuffer(text)
     id_factory = IDFactory(allow_random_ids=allow_random_ids)
     try:
-        if path is not None:
-            handle_imports(buff, path)
         while not buff.empty():
             line = buff.pop()
             if not line.strip():
@@ -431,8 +415,9 @@ def _convert(text, *, path=None, allow_random_ids=True):
             else:
                 raise SyntaxError(f"Unexpected directive: {line}")
     except SyntaxError as e:
+        line_num, file = buff.location()
         raise SyntaxError(
-            "Parse stopped on line {} with error {}".format(buff.location(), e)
+            "Parse stopped on {}:{} with error: {}".format(file, line_num, e)
         )
 
     return {
@@ -508,17 +493,31 @@ def import_file(filepath: str) -> str:
         return f.read()
 
 
-def handle_imports(buff: LineBuffer, path: str):
-    while not buff.empty():
-        line = buff.pop()
-        mode, directive, rest = parse_directive(line)
-        if mode == "IMPORT":
-            buff.remove_prev()
-            filepath = " ".join([directive, rest]).rstrip()
-            if path:
-                filepath = os.path.join(path, filepath)
-            new_buff = LineBuffer(import_file(filepath))
-            folderpath = os.path.dirname(filepath)
-            handle_imports(new_buff, folderpath)
-            buff.insert_next(new_buff)
-    buff.reset()
+def load_imports(base_text: str, base_path: str):
+    lines = []
+
+    def _load(text: str, path: str):
+        for i, line in enumerate(text.split("\n")):
+            mode, directive, rest = parse_directive(line)
+            if mode == "IMPORT":
+                filepath = os.path.join(
+                    dirname(path), " ".join([directive, rest]).rstrip()
+                )
+                try:
+                    _load(import_file(filepath), filepath)
+                except FileNotFoundError:
+                    raise SyntaxError(
+                        f"Parse stopped on {path}:{i + 1}: Unable to import {filepath}"
+                    )
+            else:
+                lines.append([i + 1, path, line])
+
+    _load(base_text, base_path)
+
+    line_strs = []
+    src_map = []
+    for line_num, path, line in lines:
+        line_strs.append(line)
+        src_map.append([line_num, path])
+
+    return LineBuffer("\n".join(line_strs), src_map=src_map)
