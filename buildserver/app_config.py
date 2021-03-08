@@ -30,7 +30,13 @@ Permission = Literal[
 
 class Config(TypedDict):
     build_type: Literal[
-        "create_react_app", "oh_queue", "webpack", "61a_website", "hugo", "none"
+        "create_react_app",
+        "oh_queue",
+        "webpack",
+        "61a_website",
+        "hugo",
+        "jekyll",
+        "none",
     ]
     deploy_type: Literal[
         "flask",

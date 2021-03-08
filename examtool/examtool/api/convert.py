@@ -3,34 +3,28 @@ import re
 import os
 
 import pypandoc
-
 from tqdm import tqdm
+from multiprocessing.pool import ThreadPool
+from os.path import dirname
 
-from examtool.api.utils import list_to_dict, rand_id
+from examtool.api.utils import list_to_dict, IDFactory
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
-html_convert = lambda x: pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
-tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
+
+def html_convert(x):
+    return pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
+
+
+def tex_convert(x):
+    return pypandoc.convert_text(x, "latex", "md")
 
 
 class LineBuffer:
-    def __init__(self, text):
-        self.lines = []
+    def __init__(self, text, *, src_map=None):
+        self.lines = text.strip().split("\n")
+        self.src_map = src_map
         self.i = 0
-        self.insert_next(text)
-
-    def insert_next(self, text):
-        if isinstance(text, list):
-            new_lines = text
-        elif isinstance(text, str):
-            new_lines = text.strip().split("\n")
-        elif isinstance(text, LineBuffer):
-            new_lines = text.lines
-            self.i += text.i
-        else:
-            raise SyntaxError(f"LineBuffer: unsupported type to insert: {type(text)}")
-        self.lines = self.lines[: self.i] + new_lines + self.lines[self.i :]
 
     def _pop(self) -> str:
         if self.i == len(self.lines):
@@ -46,20 +40,14 @@ class LineBuffer:
             stripped = line.rstrip()
         return line
 
-    def remove_prev(self):
-        self.i -= 1
-        if self.i < 0:
-            self.i = 0
-        del self.lines[self.i]
-
     def empty(self):
         return self.i == len(self.lines)
 
-    def reset(self):
-        self.i = 0
-
     def location(self):
-        return self.i
+        if self.src_map is None:
+            return [self.i, "<string>"]
+        else:
+            return self.src_map[self.i - 1]
 
 
 def parse_directive(line):
@@ -104,9 +92,12 @@ def parse(text):
     return {"text": text, "html": ToParse(text, "html"), "tex": ToParse(text, "tex")}
 
 
-def parse_define(
-    directive, rest, substitutions, substitutions_match, substitution_groups
-):
+def parse_define(directive, rest, defines):
+    defines["substitutions"] = defines.get("substitutions", {})
+    defines["substitutions_match"] = defines.get("substitutions_match", [])
+    defines["substitution_groups"] = defines.get("substitution_groups", [])
+    defines["substitution_ranges"] = defines.get("substitution_ranges", {})
+
     if directive == "MATCH":
         regex = r"\[(.*)\]\s+\[(.*)\]"
         matches = re.match(regex, rest)
@@ -119,7 +110,7 @@ def parse_define(
             raise SyntaxError(
                 "DEFINE MATCH must have at least as many replacements as it has directives"
             )
-        substitutions_match.append(
+        defines["substitutions_match"].append(
             {"directives": directives_list, "replacements": replacements_list}
         )
     elif directive == "GROUP":
@@ -134,7 +125,7 @@ def parse_define(
             blocks[i] = tuple(block[1:-1].split(" "))
         if not all(len(block) == len(blocks[0]) for block in blocks):
             raise SyntaxError("DEFINE GROUP blocks must all be of the same length")
-        substitution_groups.append(
+        defines["substitution_groups"].append(
             {
                 "directives": blocks[0],
                 "replacements": list_to_dict(
@@ -142,8 +133,19 @@ def parse_define(
                 ),
             }
         )
+    elif directive == "RANGE":
+        blocks = rest.split(" ")
+        if len(blocks) != 3:
+            raise SyntaxError("DEFINE RANGE takes exactly three arguments")
+        directive, low, high = blocks
+        try:
+            low = int(low)
+            high = int(high)
+        except ValueError:
+            raise SyntaxError("DEFINE RANGE bounds must be integers")
+        defines["substitution_ranges"][directive] = [low, high]
     else:
-        substitutions[directive] = rest.split(" ")
+        defines["substitutions"][directive] = rest.split(" ")
 
 
 def parse_input_lines(lines):
@@ -229,12 +231,10 @@ def consume_rest_of_solution(buff, end):
             )
 
 
-def consume_rest_of_question(buff):
+def consume_rest_of_question(buff, id_factory):
     contents = []
     input_lines = []
-    substitutions = {}
-    substitutions_match = []
-    substitution_groups = []
+    defines = {}
     solution = None
     solution_note = None
     config = {}
@@ -267,7 +267,7 @@ def consume_rest_of_question(buff):
                     raise SyntaxError("Received multiple solutions.")
 
                 return {
-                    "id": rand_id(),
+                    "id": id_factory.get_id(config.get("ID")),
                     "type": question_type,
                     "solution": {
                         "solution": solution,
@@ -277,22 +277,14 @@ def consume_rest_of_question(buff):
                     **parse("\n".join(contents)),
                     "config": config,
                     "options": options,
-                    "substitutions": substitutions,
-                    "substitutions_match": substitutions_match,
-                    "substitution_groups": substitution_groups,
+                    **defines,
                 }
             else:
                 raise SyntaxError(
                     f"Unexpected END {directive if directive else line} in QUESTION"
                 )
         elif mode == "DEFINE":
-            parse_define(
-                directive,
-                rest,
-                substitutions,
-                substitutions_match,
-                substitution_groups,
-            )
+            parse_define(directive, rest, defines)
         elif mode == "CONFIG":
             config[directive] = rest
         else:
@@ -301,13 +293,11 @@ def consume_rest_of_question(buff):
             )
 
 
-def consume_rest_of_group(buff, end):
+def consume_rest_of_group(buff, end, id_factory):
     group_contents = []
     elements = []
     started_elements = False
-    substitutions = {}
-    substitutions_match = []
-    substitution_groups = []
+    defines = {}
     pick_some = None
     scramble = False
     inline = False
@@ -326,14 +316,14 @@ def consume_rest_of_group(buff, end):
                 raise SyntaxError(
                     "Unexpected arguments passed in BEGIN QUESTION directive"
                 )
-            question = consume_rest_of_question(buff)
+            question = consume_rest_of_question(buff, id_factory)
             question["points"] = points
             question["fixed"] = is_fixed
             elements.append(question)
         elif mode == "BEGIN" and directive == "GROUP":
             started_elements = True
             title, is_fixed, points = process_title(rest)
-            group = consume_rest_of_group(buff, "GROUP")
+            group = consume_rest_of_group(buff, "GROUP", id_factory)
             if (title or points) and group["inline"]:
                 raise SyntaxError("Cannot create an inline group with title or points")
             group["name"] = title
@@ -345,17 +335,13 @@ def consume_rest_of_group(buff, end):
                 "type": "group",
                 **parse("\n".join(group_contents)),
                 "elements": elements,
-                "substitutions": substitutions,
-                "substitutions_match": substitutions_match,
-                "substitution_groups": substitution_groups,
+                **defines,
                 "pick_some": pick_some,
                 "scramble": scramble,
                 "inline": inline,
             }
         elif mode == "DEFINE":
-            parse_define(
-                directive, rest, substitutions, substitutions_match, substitution_groups
-            )
+            parse_define(directive, rest, defines)
         elif mode == "CONFIG":
             if directive == "PICK":
                 if pick_some:
@@ -376,17 +362,17 @@ def consume_rest_of_group(buff, end):
             raise SyntaxError(f"Unexpected directive ({line}) in GROUP")
 
 
-def _convert(text, *, path=None):
-    buff = LineBuffer(text)
+def _convert(text, *, path=None, allow_random_ids=True):
     groups = []
     public = None
     config = {}
-    substitutions = {}
-    substitutions_match = []
-    substitution_groups = []
+    defines = {}
+    if path is not None:
+        buff = load_imports(text, path)
+    else:
+        buff = LineBuffer(text)
+    id_factory = IDFactory(allow_random_ids=allow_random_ids)
     try:
-        if path is not None:
-            handle_imports(buff, path)
         while not buff.empty():
             line = buff.pop()
             if not line.strip():
@@ -405,7 +391,7 @@ def _convert(text, *, path=None):
                     )
             elif mode == "BEGIN" and directive in ["GROUP", "PUBLIC"]:
                 title, is_fixed, points = process_title(rest)
-                group = consume_rest_of_group(buff, directive)
+                group = consume_rest_of_group(buff, directive, id_factory)
                 group["name"] = title
                 group["points"] = points
                 group["fixed"] = is_fixed
@@ -422,32 +408,25 @@ def _convert(text, *, path=None):
                 else:
                     groups.append(group)
             elif mode == "DEFINE":
-                parse_define(
-                    directive,
-                    rest,
-                    substitutions,
-                    substitutions_match,
-                    substitution_groups,
-                )
+                parse_define(directive, rest, defines)
             else:
                 raise SyntaxError(f"Unexpected directive: {line}")
     except SyntaxError as e:
+        line_num, file = buff.location()
         raise SyntaxError(
-            "Parse stopped on line {} with error {}".format(buff.location(), e)
+            "Parse stopped on {}:{} with error: {}".format(file, line_num, e)
         )
 
     return {
         "public": public,
         "groups": groups,
         "config": config,
-        "substitutions": substitutions,
-        "substitutions_match": substitutions_match,
-        "substitution_groups": substitution_groups,
+        **defines,
         "version": VERSION,
     }
 
 
-def pandoc(target, *, draft=False):
+def pandoc(target, *, draft=False, num_threads):
     to_parse = []
 
     def explore(pos):
@@ -462,15 +441,17 @@ def pandoc(target, *, draft=False):
 
     explore(target)
 
-    DELIMITER = """\n\nDELIMITER\n\n"""
+    pandoc_delimiter = """\n\nDELIMITER\n\n"""
 
     if draft:
-        transpile_target = lambda t: DELIMITER.join(
-            x.text for x in to_parse if x.type == t
-        )
 
-        html = html_convert(transpile_target("html")).split(html_convert(DELIMITER))
-        tex = tex_convert(transpile_target("tex")).split(tex_convert(DELIMITER))
+        def transpile_target(t):
+            return pandoc_delimiter.join(x.text for x in to_parse if x.type == t)
+
+        html = html_convert(transpile_target("html")).split(
+            html_convert(pandoc_delimiter)
+        )
+        tex = tex_convert(transpile_target("tex")).split(tex_convert(pandoc_delimiter))
 
         for x, h in zip(filter(lambda x: x.type == "html", to_parse), html):
             x.html = h
@@ -478,9 +459,20 @@ def pandoc(target, *, draft=False):
         for x, t in zip(filter(lambda x: x.type == "tex", to_parse), tex):
             x.tex = t
     else:
-        for x in tqdm(to_parse):
+
+        def pandoc_convert(x):
             x.__dict__[x.type] = (
                 html_convert(x.text) if x.type == "html" else tex_convert(x.text)
+            )
+
+        with ThreadPool(num_threads) as p:
+            list(
+                tqdm(
+                    p.imap_unordered(pandoc_convert, to_parse),
+                    total=len(to_parse),
+                    desc="Parts Processed",
+                    unit="Part",
+                )
             )
 
     def pandoc_dump(obj):
@@ -490,12 +482,31 @@ def pandoc(target, *, draft=False):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False):
-    return json.loads(convert_str(text, path=path, draft=draft))
+def convert(text, *, path=None, draft=False, allow_random_ids=True, num_threads):
+    return json.loads(
+        convert_str(
+            text,
+            path=path,
+            draft=draft,
+            allow_random_ids=allow_random_ids,
+            num_threads=num_threads,
+        )
+    )
 
 
-def convert_str(text, *, path=None, draft=False):
-    return pandoc(_convert(text, path=path), draft=draft)
+def convert_str(
+    text,
+    *,
+    path=None,
+    draft=False,
+    allow_random_ids=True,
+    num_threads=16,
+):
+    return pandoc(
+        _convert(text, path=path, allow_random_ids=allow_random_ids),
+        draft=draft,
+        num_threads=num_threads,
+    )
 
 
 def import_file(filepath: str) -> str:
@@ -505,17 +516,31 @@ def import_file(filepath: str) -> str:
         return f.read()
 
 
-def handle_imports(buff: LineBuffer, path: str):
-    while not buff.empty():
-        line = buff.pop()
-        mode, directive, rest = parse_directive(line)
-        if mode == "IMPORT":
-            buff.remove_prev()
-            filepath = " ".join([directive, rest]).rstrip()
-            if path:
-                filepath = os.path.join(path, filepath)
-            new_buff = LineBuffer(import_file(filepath))
-            folderpath = os.path.dirname(filepath)
-            handle_imports(new_buff, folderpath)
-            buff.insert_next(new_buff)
-    buff.reset()
+def load_imports(base_text: str, base_path: str):
+    lines = []
+
+    def _load(text: str, path: str):
+        for i, line in enumerate(text.split("\n")):
+            mode, directive, rest = parse_directive(line)
+            if mode == "IMPORT":
+                filepath = os.path.join(
+                    dirname(path), " ".join([directive, rest]).rstrip()
+                )
+                try:
+                    _load(import_file(filepath), filepath)
+                except FileNotFoundError:
+                    raise SyntaxError(
+                        f"Parse stopped on {path}:{i + 1}: Unable to import {filepath}"
+                    )
+            else:
+                lines.append([i + 1, path, line])
+
+    _load(base_text, base_path)
+
+    line_strs = []
+    src_map = []
+    for line_num, path, line in lines:
+        line_strs.append(line)
+        src_map.append([line_num, path])
+
+    return LineBuffer("\n".join(line_strs), src_map=src_map)
