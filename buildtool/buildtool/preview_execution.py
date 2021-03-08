@@ -122,10 +122,8 @@ def get_deps(build_state: BuildState, rule: Rule):
             )
             for input_path in ctx.inputs:
                 if input_path.startswith(":"):
-                    input_dep = build_state.target_rule_lookup.lookup(
-                        build_state, input_path
-                    )
-                    if input_dep not in build_state.ready:
+                    input_dep = build_state.target_rule_lookup.try_lookup(input_path)
+                    if input_dep is None or input_dep not in build_state.ready:
                         ok = False
                         log(f"Dynamic rule dependency {input_path} is not yet ready")
                         break

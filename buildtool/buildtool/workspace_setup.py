@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Optional, Sequence, Set
+from typing import Dict, List, Optional, Sequence, Set
 
 from cache import make_cache_fetcher, make_cache_memorize
 from context import Env
@@ -46,25 +46,27 @@ class WorkspaceExecutionContext(ExecutionContext):
 
 def initialize_workspace(
     setup_rule_lookup: TargetLookup,
-    setup_target: str,
+    setup_targets: List[str],
     state_directory: str,
     quiet: bool,
 ):
     # we don't need the indirect lookup as we only have rule and source deps
     direct_lookup: Dict[str, Rule] = setup_rule_lookup.direct_lookup
-
-    if setup_target not in direct_lookup:
-        raise BuildException(f"Unknown or unspecified setup target {setup_target}")
+    work_queue = []
+    for setup_target in setup_targets:
+        if setup_target not in direct_lookup:
+            raise BuildException(f"Unknown or unspecified setup target {setup_target}")
+        work_queue.append(direct_lookup[setup_target])
 
     rebuilt: Set[str] = set()
     ready: Set[str] = set()
-    work_queue = [direct_lookup[setup_target]]
 
     cache_fetcher, _ = make_cache_fetcher(state_directory)
     cache_memorize, _ = make_cache_memorize(state_directory)
 
-    status_monitor = create_status_monitor(1, quiet)
-    status_monitor.move(total=1)
+    if work_queue:
+        status_monitor = create_status_monitor(1, quiet)
+        status_monitor.move(total=len(work_queue))
 
     while work_queue:
         todo = work_queue.pop()

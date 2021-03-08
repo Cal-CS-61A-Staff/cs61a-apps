@@ -111,7 +111,7 @@ def make_callback(
         *,
         name: Optional[str] = None,
         deps: Sequence[str] = (),
-        impl: Callable,
+        impl: Callable = lambda _: None,
         out: Union[str, Sequence[str]] = (),
         do_not_symlink: bool = False,
     ):
