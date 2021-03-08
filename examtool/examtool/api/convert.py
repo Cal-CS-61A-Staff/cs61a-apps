@@ -3,34 +3,28 @@ import re
 import os
 
 import pypandoc
-
 from tqdm import tqdm
+from multiprocessing.pool import ThreadPool
+from os.path import dirname
 
 from examtool.api.utils import list_to_dict, IDFactory
 
 VERSION = 2  # increment when backward-incompatible changes are made
 
-html_convert = lambda x: pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
-tex_convert = lambda x: pypandoc.convert_text(x, "latex", "md")
+
+def html_convert(x):
+    return pypandoc.convert_text(x, "html5", "md", ["--mathjax"])
+
+
+def tex_convert(x):
+    return pypandoc.convert_text(x, "latex", "md")
 
 
 class LineBuffer:
-    def __init__(self, text):
-        self.lines = []
+    def __init__(self, text, *, src_map=None):
+        self.lines = text.strip().split("\n")
+        self.src_map = src_map
         self.i = 0
-        self.insert_next(text)
-
-    def insert_next(self, text):
-        if isinstance(text, list):
-            new_lines = text
-        elif isinstance(text, str):
-            new_lines = text.strip().split("\n")
-        elif isinstance(text, LineBuffer):
-            new_lines = text.lines
-            self.i += text.i
-        else:
-            raise SyntaxError(f"LineBuffer: unsupported type to insert: {type(text)}")
-        self.lines = self.lines[: self.i] + new_lines + self.lines[self.i :]
 
     def _pop(self) -> str:
         if self.i == len(self.lines):
@@ -46,20 +40,14 @@ class LineBuffer:
             stripped = line.rstrip()
         return line
 
-    def remove_prev(self):
-        self.i -= 1
-        if self.i < 0:
-            self.i = 0
-        del self.lines[self.i]
-
     def empty(self):
         return self.i == len(self.lines)
 
-    def reset(self):
-        self.i = 0
-
     def location(self):
-        return self.i
+        if self.src_map is None:
+            return [self.i, "<string>"]
+        else:
+            return self.src_map[self.i - 1]
 
 
 def parse_directive(line):
@@ -375,15 +363,16 @@ def consume_rest_of_group(buff, end, id_factory):
 
 
 def _convert(text, *, path=None, allow_random_ids=True):
-    buff = LineBuffer(text)
     groups = []
     public = None
     config = {}
     defines = {}
+    if path is not None:
+        buff = load_imports(text, path)
+    else:
+        buff = LineBuffer(text)
     id_factory = IDFactory(allow_random_ids=allow_random_ids)
     try:
-        if path is not None:
-            handle_imports(buff, path)
         while not buff.empty():
             line = buff.pop()
             if not line.strip():
@@ -423,8 +412,9 @@ def _convert(text, *, path=None, allow_random_ids=True):
             else:
                 raise SyntaxError(f"Unexpected directive: {line}")
     except SyntaxError as e:
+        line_num, file = buff.location()
         raise SyntaxError(
-            "Parse stopped on line {} with error {}".format(buff.location(), e)
+            "Parse stopped on {}:{} with error: {}".format(file, line_num, e)
         )
 
     return {
@@ -436,7 +426,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     }
 
 
-def pandoc(target, *, draft=False):
+def pandoc(target, *, draft=False, num_threads):
     to_parse = []
 
     def explore(pos):
@@ -451,15 +441,17 @@ def pandoc(target, *, draft=False):
 
     explore(target)
 
-    DELIMITER = """\n\nDELIMITER\n\n"""
+    pandoc_delimiter = """\n\nDELIMITER\n\n"""
 
     if draft:
-        transpile_target = lambda t: DELIMITER.join(
-            x.text for x in to_parse if x.type == t
-        )
 
-        html = html_convert(transpile_target("html")).split(html_convert(DELIMITER))
-        tex = tex_convert(transpile_target("tex")).split(tex_convert(DELIMITER))
+        def transpile_target(t):
+            return pandoc_delimiter.join(x.text for x in to_parse if x.type == t)
+
+        html = html_convert(transpile_target("html")).split(
+            html_convert(pandoc_delimiter)
+        )
+        tex = tex_convert(transpile_target("tex")).split(tex_convert(pandoc_delimiter))
 
         for x, h in zip(filter(lambda x: x.type == "html", to_parse), html):
             x.html = h
@@ -467,9 +459,20 @@ def pandoc(target, *, draft=False):
         for x, t in zip(filter(lambda x: x.type == "tex", to_parse), tex):
             x.tex = t
     else:
-        for x in tqdm(to_parse):
+
+        def pandoc_convert(x):
             x.__dict__[x.type] = (
                 html_convert(x.text) if x.type == "html" else tex_convert(x.text)
+            )
+
+        with ThreadPool(num_threads) as p:
+            list(
+                tqdm(
+                    p.imap_unordered(pandoc_convert, to_parse),
+                    total=len(to_parse),
+                    desc="Parts Processed",
+                    unit="Part",
+                )
             )
 
     def pandoc_dump(obj):
@@ -479,15 +482,30 @@ def pandoc(target, *, draft=False):
     return json.dumps(target, default=pandoc_dump)
 
 
-def convert(text, *, path=None, draft=False, allow_random_ids=True):
+def convert(text, *, path=None, draft=False, allow_random_ids=True, num_threads):
     return json.loads(
-        convert_str(text, path=path, draft=draft, allow_random_ids=allow_random_ids)
+        convert_str(
+            text,
+            path=path,
+            draft=draft,
+            allow_random_ids=allow_random_ids,
+            num_threads=num_threads,
+        )
     )
 
 
-def convert_str(text, *, path=None, draft=False, allow_random_ids=True):
+def convert_str(
+    text,
+    *,
+    path=None,
+    draft=False,
+    allow_random_ids=True,
+    num_threads=16,
+):
     return pandoc(
-        _convert(text, path=path, allow_random_ids=allow_random_ids), draft=draft
+        _convert(text, path=path, allow_random_ids=allow_random_ids),
+        draft=draft,
+        num_threads=num_threads,
     )
 
 
@@ -498,17 +516,31 @@ def import_file(filepath: str) -> str:
         return f.read()
 
 
-def handle_imports(buff: LineBuffer, path: str):
-    while not buff.empty():
-        line = buff.pop()
-        mode, directive, rest = parse_directive(line)
-        if mode == "IMPORT":
-            buff.remove_prev()
-            filepath = " ".join([directive, rest]).rstrip()
-            if path:
-                filepath = os.path.join(path, filepath)
-            new_buff = LineBuffer(import_file(filepath))
-            folderpath = os.path.dirname(filepath)
-            handle_imports(new_buff, folderpath)
-            buff.insert_next(new_buff)
-    buff.reset()
+def load_imports(base_text: str, base_path: str):
+    lines = []
+
+    def _load(text: str, path: str):
+        for i, line in enumerate(text.split("\n")):
+            mode, directive, rest = parse_directive(line)
+            if mode == "IMPORT":
+                filepath = os.path.join(
+                    dirname(path), " ".join([directive, rest]).rstrip()
+                )
+                try:
+                    _load(import_file(filepath), filepath)
+                except FileNotFoundError:
+                    raise SyntaxError(
+                        f"Parse stopped on {path}:{i + 1}: Unable to import {filepath}"
+                    )
+            else:
+                lines.append([i + 1, path, line])
+
+    _load(base_text, base_path)
+
+    line_strs = []
+    src_map = []
+    for line_num, path, line in lines:
+        line_strs.append(line)
+        src_map.append([line_num, path])
+
+    return LineBuffer("\n".join(line_strs), src_map=src_map)
