@@ -121,13 +121,18 @@ def compile(
             merged_md.write("\n".join(buff.lines))
             return
         print("Compiling exam...")
-        exam_data = convert(
-            src,
-            path=path,
-            draft=draft,
-            num_threads=num_threads,
-            allow_random_ids=not require_explicit_ids,
-        )
+        try:
+            exam_data = convert(
+                src,
+                path=path,
+                draft=draft,
+                num_threads=num_threads,
+                allow_random_ids=not require_explicit_ids,
+            )
+        except SyntaxError as e:
+            print("SyntaxError:", e)
+            print("Could not compile your exam!")
+            return
     else:
         print("Fetching exam...")
         exam_data = get_exam(exam=exam)
