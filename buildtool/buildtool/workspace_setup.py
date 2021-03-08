@@ -124,7 +124,7 @@ def initialize_workspace(
                         log(
                             f"Dependency {dep} of setup rule {todo} was rebuilt, so we must rebuild {todo} as well"
                         )
-                        ok = True
+                        ok = False
 
             for out in todo.outputs:
                 if not os.path.exists(out):
