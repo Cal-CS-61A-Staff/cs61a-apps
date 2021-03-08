@@ -6,7 +6,7 @@ function ConfigLinkedMarkdownInput({ title, placeholder, config, configKey }) {
       render={({ onSubmit, onChange, value, submitButton }) => (
         <form onSubmit={onSubmit}>
           <div className="form-group">
-            <label htmlFor="welcome-input">{title} (supports Markdown)</label>
+            <label>{title} (supports Markdown)</label>
             <textarea
               className="form-control"
               name="ticket-input"

@@ -22,17 +22,6 @@ function AdminConfigManager({ state: { config } }) {
               </td>
             </tr>
             <tr>
-              <td>Should the description field be required for new tickets?</td>
-              <td className="col-md-1">
-                <ConfigLinkedToggle
-                  config={config}
-                  configKey="description_required"
-                  offText="No"
-                  onText="Yes"
-                />
-              </td>
-            </tr>
-            <tr>
               <td>Should only students on the roster be allowed to log in?</td>
               <td className="col-md-1">
                 <ConfigLinkedToggle
@@ -50,25 +39,6 @@ function AdminConfigManager({ state: { config } }) {
                   offText="No"
                   onText="Yes"
                 />
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <p>
-                  What type of magic word should the queue require to submit new
-                  tickets?
-                </p>
-                <ul>
-                  <li>Text = staff will provide a hard-coded magic word</li>
-                  <li>
-                    Time-based Numeric = the magic word will be a 4-digit number
-                    that changes every minute. This number is displayed under
-                    "Estimated Wait Time" on the homepage (staff view only).
-                  </li>
-                </ul>
-              </td>
-              <td className="col-md-3">
-                <AdminMagicWordForm config={config} />
               </td>
             </tr>
             <tr>
