@@ -144,9 +144,7 @@ class Main:
     def pick_staff(self, post_id):
         """Given a post ID, assign a staff member and return staff member's email. Staff members selected from
         STAFF dataframe (imported from staff_roster.csv)"""
-        post_hash = sum(
-            [ord(c) for c in hashlib.sha224((str(post_id)).encode("utf-8")).hexdigest()]
-        )
+        post_hash = int(hashlib.sha224((str(post_id)).encode("utf-8")).hexdigest(), 16)
         staff_index = post_hash % len(STAFF_LST)
         return STAFF_LST[staff_index][headers.index("Email")]
 

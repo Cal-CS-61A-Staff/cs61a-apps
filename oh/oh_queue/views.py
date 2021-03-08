@@ -465,6 +465,14 @@ def init_config():
             course=get_course(),
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="default_description",
+            value="",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 
@@ -784,7 +792,9 @@ def create(form):
     assignment_id = form.get("assignment_id")
     location_id = form.get("location_id")
     question = form.get("question")
-    description = form.get("description")
+    description = form.get("description") or (
+        ConfigEntry.query.filter_by(course=get_course(), key="default_").one().value
+    )
 
     call_link = form.get("call-link", "")
     doc_link = form.get("doc-link", "")
