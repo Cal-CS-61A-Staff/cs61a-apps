@@ -793,7 +793,7 @@ def create(form):
     location_id = form.get("location_id")
     question = form.get("question")
     description = form.get("description") or (
-        ConfigEntry.query.filter_by(course=get_course(), key="default_").one().value
+        ConfigEntry.query.filter_by(course=get_course(), key="default_description").one().value
     )
 
     call_link = form.get("call-link", "")
