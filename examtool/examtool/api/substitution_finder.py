@@ -1,4 +1,6 @@
 import json
+from dataclasses import dataclass
+from typing import Dict
 
 from examtool.api.utils import dict_to_list
 from tqdm import tqdm
@@ -8,10 +10,32 @@ from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import scramble, get_elements
 
 
+@dataclass
+class SuspectedCheating:
+    question: str
+    email: str
+    base_keyword: str
+    expected: str
+    observed: str
+    answer: str
+    substitutions: Dict[str, str]
+
+    def explain(self):
+        print(
+            f"In question {self.question}, Student {self.email} used keyword {self.observed} for "
+            f"{self.base_keyword}, when they should have used {self.expected}"
+        )
+
+        print(
+            f"\tThey wrote `{' '.join(self.answer.split())}`. Their substitutions were: {self.substitutions}"
+        )
+
+
 def find_unexpected_words(exam, logs):
     data = get_exam(exam=exam)
     exam_json = json.dumps(data)
     original_questions = {q["id"]: q for q in extract_questions(json.loads(exam_json))}
+    suspected_cheating = []
     for i, (email, log) in enumerate(tqdm(logs)):
         all_alternatives = get_substitutions(data)
         scrambled_questions = {
@@ -43,21 +67,19 @@ def find_unexpected_words(exam, logs):
 
                             flagged_question_variants.add((question, keyword, variant))
 
-                            print(
-                                "In question {}, Student {} used keyword {} for {}, when they should have used {}".format(
+                            suspected_cheating.append(
+                                SuspectedCheating(
                                     get_name(original_questions[question]),
                                     email,
-                                    variant,
                                     keyword,
                                     student_substitutions[keyword],
+                                    variant,
+                                    " ".join(answer.split()),
+                                    student_substitutions,
                                 )
                             )
 
-                            print(
-                                "\tThey wrote `{}`. Their substitutions were: {}".format(
-                                    " ".join(answer.split()), student_substitutions
-                                )
-                            )
+    return suspected_cheating
 
 
 def get_substitutions(exam):
