@@ -101,7 +101,7 @@ def enqueue_builds(
             else:
                 # we can build now!
                 db(
-                    "UPDATE builds SET status='building' AND build_limit_time=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
+                    "UPDATE builds SET status='building', build_limit_time=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
                     [time() + BUILD_TIME, app, pr_number, packed_ref],
                 )
                 can_build_list.append((app, packed_ref))

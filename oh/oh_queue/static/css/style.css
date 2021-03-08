@@ -951,6 +951,7 @@ h4.list-group-item-heading::before {
 }
 
 .appointment-buttons > .btn {
+  margin-top: 10px;
   margin-right: 10px;
 }
 

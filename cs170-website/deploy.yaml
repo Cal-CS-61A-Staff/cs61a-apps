@@ -1,0 +1,5 @@
+build_type: jekyll
+deploy_type: static
+repo: Berkeley-CS170/Website
+first_party_domains:
+  - cs170.org

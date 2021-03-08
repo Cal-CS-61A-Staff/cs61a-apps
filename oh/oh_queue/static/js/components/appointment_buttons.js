@@ -38,6 +38,12 @@ function AppointmentButtons({ ids }) {
       >
         Delete all unassigned appointments
       </button>
+      <button
+        className="btn btn-info"
+        onClick={action("resend_reminder_emails")}
+      >
+        Resend reminder emails
+      </button>
     </div>
   );
 }
