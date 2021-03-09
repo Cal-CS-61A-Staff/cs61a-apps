@@ -74,7 +74,7 @@ def find_unexpected_words(exam, logs):
                                     keyword,
                                     student_substitutions[keyword],
                                     variant,
-                                    " ".join(answer.split()),
+                                    answer,
                                     student_substitutions,
                                 )
                             )
