@@ -674,8 +674,8 @@ class GradescopeGrader:
     ):
         if custom_grouper_map is not None:
             examtool_qid = question.data.get("id")
-            if examtool_qid:
-                return custom_grouper_map[qid](
+            if examtool_qid in custom_grouper_map:
+                return custom_grouper_map[examtool_qid](
                     qid, question, email_to_data_map, email_to_question_sub_id_map
                 )
             if qid in custom_grouper_map:
