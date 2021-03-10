@@ -46,7 +46,7 @@ def scramble(email, exam, *, keep_data=False):
                 )
         get_elements(group)[:] = elements
 
-        if version > 1:
+        if version >= 2:
             scramble_group_children()
 
         if is_compressible_group(group):
@@ -61,6 +61,8 @@ def scramble(email, exam, *, keep_data=False):
                 element["tex"] = tex + "\n" + element["tex"]
                 out.append(element)
             return out
+
+        add_entropy(group)
 
         return [group]
 
@@ -100,6 +102,8 @@ def scramble(email, exam, *, keep_data=False):
         else:
             question.pop("solution", None)
 
+        add_entropy(question)
+
         return question
 
     def substitute(target: dict, list_substitutions, attrs, *, store=True):
@@ -136,6 +140,10 @@ def scramble(email, exam, *, keep_data=False):
         random.shuffle(movable_object_values)
         for i, object in zip(movable_object_pos, movable_object_values):
             objects[i] = object
+
+    def add_entropy(element):
+        if version >= 3:
+            element["entropy"] = hex(random.randrange(2 ** 30))
 
     global_substitutions = select_substitutions(exam)
     exam["config"]["scramble_groups"] = exam["config"].get(
