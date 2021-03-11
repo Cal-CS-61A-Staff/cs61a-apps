@@ -58,8 +58,11 @@ def compile_all(exam, subtitle, out, do_twice, email, exam_type, semester, deadl
         out = "out/latex/" + exam
 
     pathlib.Path(out).mkdir(parents=True, exist_ok=True)
-
-    exam_data = get_exam(exam=exam)
+    try:
+        exam_data = get_exam(exam=exam)
+    except Exception as e:
+        print(f"Exception: Unable to pull the exam {exam}. Received: {e}\nDid you deploy the exam first?")
+        return
     password = exam_data.pop("secret")[:-1]
     print(password)
     exam_str = json.dumps(exam_data)
