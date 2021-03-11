@@ -5,7 +5,7 @@ import click
 from cryptography.fernet import Fernet
 
 from examtool.api.utils import rand_id
-from examtool.api.database import process_ok_exam_upload, set_exam, get_exam, set_roster
+from examtool.api.database import process_ok_exam_upload, set_exam, get_exam, set_roster, verify_roster
 from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import is_compressible_group, scramble
 from examtool.cli.utils import exam_name_option
@@ -44,7 +44,7 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
     You can deploy the JSON multiple times and the password will remain unchanged.
     """
     json = json.read()
-    roster = csv.reader(roster, delimiter=",")
+    rostercsv = csv.reader(roster, delimiter=",")
 
     exam_content = loads(json)
 
@@ -57,10 +57,11 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
         pass
 
     set_exam(exam=exam, json=exam_content)
-
-    next(roster)  # ditch headers
-    roster = list(roster)
-    set_roster(exam=exam, roster=roster)
+    rostercsv = list(rostercsv)
+    if not verify_roster(roster=rostercsv):
+        return
+    rostercsv = rostercsv[1:]  # ditch headers
+    set_roster(exam=exam, roster=rostercsv)
 
     print("Exam uploaded with password:", exam_content["secret"][:-1])
 
