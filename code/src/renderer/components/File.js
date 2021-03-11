@@ -72,6 +72,13 @@ export default class File extends React.Component {
     } else {
       this.editorRef.current.forceOpen();
     }
+    if (this.props.srcOrigin) {
+      window.addEventListener("message", (e) => {
+        if (e.origin === this.props.srcOrigin) {
+          this.handleEditorChange(e.data);
+        }
+      });
+    }
   }
 
   componentWillUnmount() {
