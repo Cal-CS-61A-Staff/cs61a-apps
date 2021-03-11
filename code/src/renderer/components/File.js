@@ -78,6 +78,7 @@ export default class File extends React.Component {
           this.handleEditorChange(e.data);
         }
       });
+      window.parent.postMessage({ requestData: true }, this.props.srcOrigin);
     }
   }
 
