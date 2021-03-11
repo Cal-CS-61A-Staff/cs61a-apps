@@ -19,29 +19,8 @@ from examtool.cli.utils import hidden_target_folder_option, exam_name_option, pr
     show_default=True,
 )
 @click.option(
-    "--filename",
-    default="Encrypted {course} Exam.pdf",
-    help="The PDF filename to use.",
-    show_default=True,
-)
-@click.option(
-    "--mailtool",
-    is_flag=True,
-    default=False,
-    help="Use the 61A Mailtool, instead of sendgrid",
-)
-def send(exam, target, email, subject, filename, mailtool=False):
-    """
-    Email an encrypted PDF to all students taking an exam. Specify `email` to email only a particular student.
-    """
-    if not target:
-        target = "out/latex/" + exam
-
-    course = prettify(exam.split("-")[0])
-
-    filename = filename.format(course=course)
-    subject = subject.format(course=course)
-    body = (
+    "--body",
+    default=(
         "Hello!\n\n"
         "You have an upcoming exam taking place on exam.cs61a.org. "
         "You should complete your exam on that website.\n\n"
@@ -53,8 +32,36 @@ def send(exam, target, email, subject, filename, mailtool=False):
         "rather than submitting using exam.cs61a.org. "
         "To unlock the PDF, its password will be revealed on Piazza when the exam starts.\n\n"
         "Good luck, and remember to have fun!"
-    ).format(course=course, exam=exam)
+    ),
+    help="The body of the email you want sent. You can specify the course with `{course}` and the exam name with `{exam}`.",
+    show_default=True,
+)
+@click.option(
+    "--filename",
+    default="Encrypted {course} Exam.pdf",
+    help="The PDF filename to use.",
+    show_default=True,
+)
 
+@click.option(
+    "--mailtool",
+    is_flag=True,
+    default=False,
+    help="Use the 61A Mailtool, instead of sendgrid",
+)
+def send(exam, target, email, subject, body, filename, mailtool=False):
+    """
+    Email an encrypted PDF to all students taking an exam. Specify `email` to email only a particular student.
+    """
+    if not target:
+        target = "out/latex/" + exam
+
+    course = prettify(exam.split("-")[0])
+
+    filename = filename.format(course=course)
+    subject = subject.format(course=course)
+    body = body.format(course=course, exam=exam)
+    
     roster = []
     if email:
         roster = [email]
