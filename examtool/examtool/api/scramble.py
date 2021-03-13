@@ -153,9 +153,8 @@ def scramble(email, exam, *, keep_data=False):
     exam.pop("substitution_groups", None)
     exam.pop("substitutions_match", None)
 
-    exam["entropy"] = entropy = []
-    for _ in range(10):
-        entropy.append(random.randrange(2 ** 20))
+    if "watermark" in exam:
+        exam["watermark"]["value"] = random.randrange(2 ** 20)
 
     return exam
 

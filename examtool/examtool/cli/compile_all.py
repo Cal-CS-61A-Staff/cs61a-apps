@@ -30,11 +30,6 @@ from examtool.cli.utils import (
     default="Structure and Interpretation of Computer Programs",
 )
 @click.option(
-    "--include-watermark/--exclude-watermark",
-    prompt=True,
-    help="Embeds a unique watermark in the exam background. Requires Inkscape to be installed.",
-)
-@click.option(
     "--do-twice",
     is_flag=True,
     help="Run the compile twice for each student to fix weird rendering bugs.",
@@ -59,7 +54,6 @@ def compile_all(
     exam,
     out,
     subtitle,
-    include_watermark,
     do_twice,
     email,
     exam_type,
@@ -111,9 +105,6 @@ def compile_all(
                 "examtype": exam_type,
                 "semester": semester,
             },
-            watermark=create_watermark(exam_data, scale=2)
-            if include_watermark
-            else None,
             do_twice=do_twice,
         ) as pdf:
             pdf = Pdf.open(BytesIO(pdf))

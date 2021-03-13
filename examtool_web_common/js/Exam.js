@@ -31,13 +31,13 @@ export function postRenderFormat() {
   typeset();
 }
 
-export default function Exam({ groups, publicGroup, entropy, ended }) {
+export default function Exam({ groups, publicGroup, watermark, ended }) {
   const { exam } = useContext(ExamContext);
 
   useEffect(postRenderFormat, [groups, publicGroup]);
 
   const examDivRef = useStyleWatcher(() => {
-    if (entropy) {
+    if (watermark) {
       post("/log_event", {
         exam,
         event: "style_edited",
@@ -49,7 +49,7 @@ export default function Exam({ groups, publicGroup, entropy, ended }) {
           " event."
       );
     }
-  }, [entropy]);
+  }, [watermark]);
 
   const stickyStyle = {
     position: "sticky",
@@ -71,9 +71,9 @@ export default function Exam({ groups, publicGroup, entropy, ended }) {
       className="exam"
       ref={examDivRef}
       style={
-        entropy
+        watermark
           ? {
-              backgroundImage: `url("/watermark.svg?seed=${entropy[0]}")`,
+              backgroundImage: `url("/watermark.svg?seed=${watermark.value}&brightness=${watermark.brightness}")`,
               backgroundRepeat: "repeat-xy",
               textShadow: "0px 0px 2px white",
             }

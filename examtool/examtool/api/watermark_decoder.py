@@ -23,7 +23,7 @@ def decode_watermark(exam_data, roster, corners: List[Point], bits: List[Point])
 
 def bit_distance(observed_points: List[Point], exam_data, email):
     scrambled_exam = scramble(email, loads(dumps(exam_data)))
-    expected_points = get_watermark_points(scrambled_exam)
+    expected_points = get_watermark_points(scrambled_exam["watermark"]["value"])
     assert len(observed_points) <= len(expected_points), "Too many observed bits"
     assert len(observed_points) >= len(expected_points) / 2, "Too few observed bits"
     costs = []

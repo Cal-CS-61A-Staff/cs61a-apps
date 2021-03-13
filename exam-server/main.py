@@ -110,7 +110,10 @@ def index(request):
             )
 
         if request.path.endswith("watermark.svg"):
-            watermark = create_watermark(int(request.args["seed"]))
+            watermark = create_watermark(
+                int(request.args["seed"]),
+                brightness=int(request.args["brightness"]),
+            )
             return Response(watermark, mimetype="image/svg+xml")
 
         if request.path == "/" or request.json is None:
@@ -150,7 +153,7 @@ def index(request):
                         )
                         .decode("ascii")
                     ),
-                    "entropy": exam_data["entropy"],
+                    "watermark": exam_data.get("watermark"),
                     "answers": answers,
                     "deadline": deadline,
                     "timestamp": time.time(),

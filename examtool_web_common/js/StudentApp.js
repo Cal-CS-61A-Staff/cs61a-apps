@@ -30,7 +30,7 @@ export default function StudentApp() {
 
   const [encryptedGroups, setEncryptedGroups] = useState(null);
 
-  const [entropy, setEntropy] = useState(null);
+  const [watermark, setWatermark] = useState(null);
 
   const [savedAnswers, setSavedAnswers] = useState(null);
 
@@ -76,7 +76,7 @@ export default function StudentApp() {
     exam,
     publicGroup,
     privateGroups,
-    entropy,
+    watermark,
     answers,
     deadline,
     timestamp,
@@ -85,7 +85,7 @@ export default function StudentApp() {
     setSelectedExam(exam);
     setPublicGroup(publicGroup);
     setEncryptedGroups(privateGroups);
-    setEntropy(entropy);
+    setWatermark(watermark);
     setDeadline(
       deadline -
         Math.round(timestamp) +
@@ -244,7 +244,7 @@ export default function StudentApp() {
           <Exam
             publicGroup={publicGroup}
             groups={decryptedGroups}
-            entropy={entropy}
+            watermark={watermark}
             ended={examEnded}
           />
           <ErrorBoundary>

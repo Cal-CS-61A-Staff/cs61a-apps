@@ -22,8 +22,6 @@ class Point:
 
 @as_list
 def get_watermark_points(seed):
-    if isinstance(seed, dict):
-        seed = seed["entropy"][0]
     old_seed = int(random.random() * 100000)
     random.seed(seed)
     for _ in range(20):
@@ -31,10 +29,11 @@ def get_watermark_points(seed):
     random.seed(old_seed)
 
 
-def create_watermark(seed, *, scale=2):
+def create_watermark(seed, *, brightness, scale=2):
     graphic = SVGGraphic(100 * scale, 100 * scale)
-    graphic.draw_line(0, 0, 10, 10, "orange")
-    graphic.draw_line(0, 10, 10, 0, "orange")
+    color = f"rgb({255 - brightness}, {255 - brightness / 2}, 0)"
+    graphic.draw_line(0, 0, 10, 10, color)
+    graphic.draw_line(0, 10, 10, 0, color)
     for x, y in get_watermark_points(seed):
-        graphic.draw_rect(x * scale, y * scale, scale, scale, "orange", "orange")
+        graphic.draw_rect(x * scale, y * scale, scale, scale, color, color)
     return str(graphic)

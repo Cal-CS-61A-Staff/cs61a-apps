@@ -39,11 +39,6 @@ from examtool.cli.utils import (
     default=None,
     help="Scrambles the exam based off of the seed (E.g. a student's email).",
 )
-@click.option(
-    "--include-watermark/--exclude-watermark",
-    default=False,
-    help="Embeds a unique watermark in the exam background. Requires Inkscape to be installed.",
-)
 @click.option("--subtitle", prompt=False, default="Sample Exam.")
 @click.option(
     "--with-solutions/--without-solutions",
@@ -96,7 +91,6 @@ def compile(
     md,
     seed,
     subtitle,
-    include_watermark,
     with_solutions,
     exam_type,
     semester,
@@ -114,9 +108,6 @@ def compile(
     """
     if not out:
         out = ""
-
-    if include_watermark and not seed:
-        raise TypeError("A seed must be provided to include a watermark")
 
     pathlib.Path(out).mkdir(parents=True, exist_ok=True)
 
@@ -180,7 +171,6 @@ def compile(
     with render_latex(
         exam_data,
         settings,
-        watermark=create_watermark(exam_data, scale=2) if include_watermark else None,
     ) as pdf:
         pdf = Pdf.open(BytesIO(pdf))
         pdf.save(os.path.join(out, exam + ".pdf"))
