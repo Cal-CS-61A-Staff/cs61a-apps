@@ -7,7 +7,7 @@ export default function Timer({ target, onLock, onEnd }) {
   const [hover, setHover] = useState(false);
   const [timeString, setTimeString] = useState("");
 
-  const updateTimeString = () => {
+  const updateTimeString = (initial) => {
     const time = Math.round(new Date().getTime() / 1000);
     const remaining = Math.max(target - time, 0);
 
@@ -21,20 +21,22 @@ export default function Timer({ target, onLock, onEnd }) {
         .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
     );
 
-    if (target - time < 0 && target - time >= -60) {
-      onLock();
-      setTimeString(`${60 + target - time}s`);
-    }
+    if (!initial) {
+      if (target - time < 0 && target - time >= -60) {
+        onLock();
+        setTimeString(`${60 + target - time}s`);
+      }
 
-    if (target - time < -60) {
-      onEnd();
+      if (target - time < -60) {
+        onEnd();
+      }
     }
   };
 
   useInterval(updateTimeString, 1000);
 
   if (!timeString) {
-    updateTimeString();
+    updateTimeString(true);
   }
 
   return (

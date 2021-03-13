@@ -1,7 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 import React, { useContext, useEffect } from "react";
 import { typeset } from "MathJax";
-import { Col, Form, Jumbotron, Row } from "react-bootstrap";
+import { Col, Jumbotron, Row } from "react-bootstrap";
 import Anchor from "./Anchor";
 import { inAdminMode } from "./auth";
 import ElementEntropy from "./ElementEntropy";

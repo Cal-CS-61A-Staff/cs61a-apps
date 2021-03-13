@@ -38,6 +38,9 @@ def update_cache():
     with open("static/index.html") as f:
         main_html = f.read()
 
+        if getenv("ENV") == "dev":
+            main_html = main_html.replace("production.min", "development")
+
     with open("static/main.js") as f:
         main_js = f.read()
 
