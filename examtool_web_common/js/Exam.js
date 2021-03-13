@@ -4,6 +4,7 @@ import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
 import Anchor from "./Anchor";
 import { inAdminMode } from "./auth";
+import ElementEntropy from "./ElementEntropy";
 import ExamContext from "./ExamContext";
 import Points from "./Points";
 import Question from "./Question";
@@ -94,6 +95,7 @@ export function Group({ group, number, small }) {
         <Points points={group.points} />
         {/* eslint-disable-next-line react/no-danger */}
         <div dangerouslySetInnerHTML={{ __html: group.html }} />
+        <ElementEntropy entropy={group.entropy} />
         {group.elements.map((element, i) =>
           element.type === "group" ? (
             <Group

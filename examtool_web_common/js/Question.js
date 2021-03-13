@@ -10,6 +10,7 @@ import { Form, FormControl, InputGroup } from "react-bootstrap";
 import Anchor from "./Anchor";
 import { getAuthParams } from "./auth";
 import debounce from "./debounce";
+import ElementEntropy from "./ElementEntropy";
 import ExamContext from "./ExamContext";
 import FailText from "./FailText";
 import LoadingButton from "./LoadingButton";
@@ -264,6 +265,7 @@ export default function Question({ question, number }) {
             style={{ marginTop: 8 }}
             dangerouslySetInnerHTML={{ __html: question.html }}
           />
+          <ElementEntropy entropy={question.entropy} />
         </Form.Label>
         {contents}
         <LoadingButton

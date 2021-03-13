@@ -9,7 +9,7 @@ from os.path import dirname
 
 from examtool.api.utils import list_to_dict, IDFactory
 
-VERSION = 2  # increment when backward-incompatible changes are made
+VERSION = 3  # increment when backward-incompatible changes are made
 
 
 def html_convert(x):
