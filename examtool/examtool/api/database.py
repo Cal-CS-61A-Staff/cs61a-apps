@@ -57,14 +57,6 @@ def get_roster(*, exam):
     ):
         yield student.id, student.to_dict()["deadline"]
 
-def verify_roster(*, roster):
-    for i, row in enumerate(roster):
-        j = len(row)
-        if (j != 2):
-            print(f"ValueError: The roster must only contain 2 columns: Email, Timestamp. Found {j} item(s) on row {i + 1}: {row}")
-            return False
-    return True
-
 @server_only
 def set_roster(*, exam, roster):
     db = SafeFirestore()
