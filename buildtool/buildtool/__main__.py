@@ -4,7 +4,7 @@ import os
 import traceback
 from json import loads
 from shutil import rmtree
-from typing import List
+from typing import List, Tuple
 
 import click
 from cache import STATS
@@ -29,22 +29,99 @@ def display_error(error: BuildException):
 
 
 @click.command()
-@click.argument("target", required=False)
-@click.option("--profile", "-p", default=False, is_flag=True)
-@click.option("--locate", "-l", default=False, is_flag=True)
-@click.option("--verbose", "-v", default=False, is_flag=True)
-@click.option("--quiet", "-q", default=False, is_flag=True)
-@click.option("--skip-version-check", default=False, is_flag=True)
-@click.option("--skip-setup", default=False, is_flag=True)
-@click.option("--skip-build", default=False, is_flag=True)
-@click.option("--clean", "-c", default=False, is_flag=True)
-@click.option("--threads", "-t", default=8)
-@click.option("--state-directory", default=".state")
-@click.option("--cache-directory", default=".cache")
-@click.option("--flag", "-f", type=str, multiple=True)
+@click.argument("targets", metavar="target", required=False, nargs=-1)
+@click.option(
+    "--profile",
+    "-p",
+    default=False,
+    is_flag=True,
+    help="Show performance profiling data, cache hit rates, and log all executed commands.",
+)
+@click.option(
+    "--shell-log",
+    "-s",
+    default=False,
+    is_flag=True,
+    help="Log all executed commands.",
+)
+@click.option(
+    "--locate",
+    "-l",
+    default=False,
+    is_flag=True,
+    help="Rather than building, locate the BUILD file declaring a particular target.",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    default=False,
+    is_flag=True,
+    help="Show detailed logs to identify problems. For most purposes, --profile is a better option.",
+)
+@click.option(
+    "--quiet",
+    "-q",
+    default=False,
+    is_flag=True,
+    help="Disable the progress bars normally shown during a build. Does not affect the output of "
+    "--locate or --profile, and errors will still be printed if the build fails.",
+)
+@click.option(
+    "--skip-version-check",
+    default=False,
+    is_flag=True,
+    help="Ignore any minimum version requirements specified in the WORKSPACE file.",
+)
+@click.option(
+    "--skip-setup",
+    default=False,
+    is_flag=True,
+    help="Do not install / verify dependencies in the WORKSPACE file.",
+)
+@click.option(
+    "--skip-build",
+    default=False,
+    is_flag=True,
+    help="Do not build the targets passed in. Automatically set when running --locate.",
+)
+@click.option(
+    "--clean",
+    "-c",
+    default=False,
+    is_flag=True,
+    help="Clean the output directory specified in the WORKSPACE file so only built targets will be kept.",
+)
+@click.option(
+    "--threads",
+    "-t",
+    "num_threads",
+    default=8,
+    help="The number of worker threads used in execution. Increase this number if using a remote build cache.",
+)
+@click.option(
+    "--state-directory",
+    default=".state",
+    help="The local directory used to keep track of the state of the WORKSPACE install.",
+)
+@click.option(
+    "--cache-directory",
+    default=".cache",
+    help="The directory used to cache build outputs and intermediate layers. If a cloud storage bucket is passed "
+    "in as gs://bucket-name, it will be used alongside an .aux_cache local directory as a source for cached outputs.",
+)
+@click.option(
+    "--flag",
+    "-f",
+    "flags",
+    type=str,
+    multiple=True,
+    help="These flags are exposed at load and build time, via `from buildtool import flags`. "
+    "Values can be supplied as JSON like --flag KEY=JSON_VALUE, and flags without values default to `true`.",
+)
 def cli(
-    target: str,
+    targets: Tuple[str],
     profile: bool,
+    shell_log: bool,
     locate: bool,
     verbose: bool,
     quiet: bool,
@@ -52,10 +129,10 @@ def cli(
     skip_setup: bool,
     skip_build: bool,
     clean: bool,
-    threads: int,
+    num_threads: int,
     state_directory: str,
     cache_directory: str,
-    flag: List[str],
+    flags: List[str],
 ):
     """
     This is a `make` alternative with a simpler syntax and some useful features.
@@ -67,10 +144,10 @@ def cli(
         if verbose:
             enable_logging()
 
-        if profile:
+        if profile or shell_log:
             enable_profiling()
 
-        flags = [flag.split("=", 1) + ["true"] for flag in flag]
+        flags = [flag.split("=", 1) + ["true"] for flag in flags]
         flags = {flag[0].lower(): loads(flag[1]) for flag in flags}
 
         if not skip_setup:
@@ -78,15 +155,22 @@ def cli(
                 flags, workspace=True, skip_version_check=skip_version_check
             )
 
-            if target and target.startswith("setup:"):
-                setup_target = target[5:]
-                skip_build = True
-            else:
-                setup_target = config.default_setup_rule
+            setup_targets = [
+                target[5:] for target in targets if target.startswith("setup:")
+            ]
+
+            if locate and setup_targets:
+                raise BuildException(
+                    "--locate cannot be used with setup rules - they are declared in WORKSPACE"
+                )
+
+            setup_targets = setup_targets or (
+                [config.default_setup_rule] if config.default_setup_rule else []
+            )
 
             initialize_workspace(
                 setup_rule_lookup,
-                setup_target,
+                setup_targets,
                 state_directory,
                 quiet,
             )
@@ -109,22 +193,25 @@ def cli(
 
         need_target = locate or not skip_build
 
-        if not target and need_target:
-            target = config.default_build_rule
-            if target is None:
+        if not targets and need_target:
+            if config.default_build_rule is None:
                 raise BuildException("No target provided, and no default target set.")
+            targets = [config.default_build_rule]
 
         if locate:
-            if target in source_files:
-                raise BuildException(
-                    f"Target {target} is a source file, not a build target."
+            for target in targets:
+                if target in source_files:
+                    raise BuildException(
+                        f"Target {target} is a source file, not a build target."
+                    )
+                rule = target_rule_lookup.try_lookup(target)
+                if rule is None and not target.startswith(":"):
+                    rule = target_rule_lookup.try_lookup(f":{target}")
+                if rule is None:
+                    raise BuildException(f"Target {target} was not found.")
+                print(
+                    f"Target {target} is declared by {rule} in {rule.location}/BUILD."
                 )
-            rule = target_rule_lookup.try_lookup(target)
-            if rule is None and not target.startswith(":"):
-                rule = target_rule_lookup.try_lookup(f":{target}")
-            if rule is None:
-                raise BuildException(f"Target {target} was not found.")
-            print(f"Target {target} is built by {rule.name} in {rule.location}/BUILD.")
             exit(0)
 
         if not skip_build:
@@ -144,8 +231,8 @@ def cli(
                         cache_directory=cache_directory,
                         repo_root=repo_root,
                     ),
-                    target,
-                    threads,
+                    [target for target in targets if not target.startswith("setup:")],
+                    num_threads,
                     quiet,
                 )
 

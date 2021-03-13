@@ -11,7 +11,7 @@ class ProcessPool {
   }
 
   pop = (target) => {
-    setInterval(() => this.refill(target));
+    setTimeout(() => this.refill(target));
     return this.pool.get(target).length
       ? this.pool.get(target).shift()
       : this.factories[target];

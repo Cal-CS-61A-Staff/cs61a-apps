@@ -7,7 +7,11 @@ from monitoring import log
 
 
 def enqueue_deps(
-    build_state: BuildState, rule: Rule, candidate_deps: Collection[str]
+    build_state: BuildState,
+    rule: Rule,
+    candidate_deps: Collection[str],
+    *,
+    catch_failure: bool = False,
 ) -> bool:
     waiting_for_deps = False
 
@@ -17,7 +21,14 @@ def enqueue_deps(
                 # nothing to do
                 continue
 
-            runtime_dep: Rule = build_state.target_rule_lookup.lookup(build_state, dep)
+            if catch_failure:
+                runtime_dep: Rule = build_state.target_rule_lookup.try_lookup(dep)
+                if runtime_dep is None:
+                    continue
+            else:
+                runtime_dep: Rule = build_state.target_rule_lookup.lookup(
+                    build_state, dep
+                )
 
             if runtime_dep not in build_state.ready:
                 waiting_for_deps = True
