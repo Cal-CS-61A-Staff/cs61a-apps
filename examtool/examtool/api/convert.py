@@ -92,9 +92,12 @@ def parse(text):
     return {"text": text, "html": ToParse(text, "html"), "tex": ToParse(text, "tex")}
 
 
-def parse_define(
-    directive, rest, substitutions, substitutions_match, substitution_groups
-):
+def parse_define(directive, rest, defines):
+    defines["substitutions"] = defines.get("substitutions", {})
+    defines["substitutions_match"] = defines.get("substitutions_match", [])
+    defines["substitution_groups"] = defines.get("substitution_groups", [])
+    defines["substitution_ranges"] = defines.get("substitution_ranges", {})
+
     if directive == "MATCH":
         regex = r"\[(.*)\]\s+\[(.*)\]"
         matches = re.match(regex, rest)
@@ -107,7 +110,7 @@ def parse_define(
             raise SyntaxError(
                 "DEFINE MATCH must have at least as many replacements as it has directives"
             )
-        substitutions_match.append(
+        defines["substitutions_match"].append(
             {"directives": directives_list, "replacements": replacements_list}
         )
     elif directive == "GROUP":
@@ -122,14 +125,27 @@ def parse_define(
             blocks[i] = tuple(block[1:-1].split(" "))
         if not all(len(block) == len(blocks[0]) for block in blocks):
             raise SyntaxError("DEFINE GROUP blocks must all be of the same length")
-        substitution_groups.append(
+        defines["substitution_groups"].append(
             {
                 "directives": blocks[0],
-                "replacements": list_to_dict([list_to_dict(block) for block in blocks]),
+                "replacements": list_to_dict(
+                    [list_to_dict(block) for block in blocks[1:]]
+                ),
             }
         )
+    elif directive == "RANGE":
+        blocks = rest.split(" ")
+        if len(blocks) != 3:
+            raise SyntaxError("DEFINE RANGE takes exactly three arguments")
+        directive, low, high = blocks
+        try:
+            low = int(low)
+            high = int(high)
+        except ValueError:
+            raise SyntaxError("DEFINE RANGE bounds must be integers")
+        defines["substitution_ranges"][directive] = [low, high]
     else:
-        substitutions[directive] = rest.split(" ")
+        defines["substitutions"][directive] = rest.split(" ")
 
 
 def parse_input_lines(lines):
@@ -218,9 +234,7 @@ def consume_rest_of_solution(buff, end):
 def consume_rest_of_question(buff, id_factory):
     contents = []
     input_lines = []
-    substitutions = {}
-    substitutions_match = []
-    substitution_groups = []
+    defines = {}
     solution = None
     solution_note = None
     config = {}
@@ -263,22 +277,14 @@ def consume_rest_of_question(buff, id_factory):
                     **parse("\n".join(contents)),
                     "config": config,
                     "options": options,
-                    "substitutions": substitutions,
-                    "substitutions_match": substitutions_match,
-                    "substitution_groups": substitution_groups,
+                    **defines,
                 }
             else:
                 raise SyntaxError(
                     f"Unexpected END {directive if directive else line} in QUESTION"
                 )
         elif mode == "DEFINE":
-            parse_define(
-                directive,
-                rest,
-                substitutions,
-                substitutions_match,
-                substitution_groups,
-            )
+            parse_define(directive, rest, defines)
         elif mode == "CONFIG":
             config[directive] = rest
         else:
@@ -291,9 +297,7 @@ def consume_rest_of_group(buff, end, id_factory):
     group_contents = []
     elements = []
     started_elements = False
-    substitutions = {}
-    substitutions_match = []
-    substitution_groups = []
+    defines = {}
     pick_some = None
     scramble = False
     inline = False
@@ -331,17 +335,13 @@ def consume_rest_of_group(buff, end, id_factory):
                 "type": "group",
                 **parse("\n".join(group_contents)),
                 "elements": elements,
-                "substitutions": substitutions,
-                "substitutions_match": substitutions_match,
-                "substitution_groups": substitution_groups,
+                **defines,
                 "pick_some": pick_some,
                 "scramble": scramble,
                 "inline": inline,
             }
         elif mode == "DEFINE":
-            parse_define(
-                directive, rest, substitutions, substitutions_match, substitution_groups
-            )
+            parse_define(directive, rest, defines)
         elif mode == "CONFIG":
             if directive == "PICK":
                 if pick_some:
@@ -366,9 +366,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     groups = []
     public = None
     config = {}
-    substitutions = {}
-    substitutions_match = []
-    substitution_groups = []
+    defines = {}
     if path is not None:
         buff = load_imports(text, path)
     else:
@@ -410,13 +408,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
                 else:
                     groups.append(group)
             elif mode == "DEFINE":
-                parse_define(
-                    directive,
-                    rest,
-                    substitutions,
-                    substitutions_match,
-                    substitution_groups,
-                )
+                parse_define(directive, rest, defines)
             else:
                 raise SyntaxError(f"Unexpected directive: {line}")
     except SyntaxError as e:
@@ -429,9 +421,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
         "public": public,
         "groups": groups,
         "config": config,
-        "substitutions": substitutions,
-        "substitutions_match": substitutions_match,
-        "substitution_groups": substitution_groups,
+        **defines,
         "version": VERSION,
     }
 

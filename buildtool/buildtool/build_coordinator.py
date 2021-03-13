@@ -1,4 +1,5 @@
 from threading import Thread
+from typing import List
 
 from build_worker import worker
 from monitoring import create_status_monitor
@@ -6,16 +7,18 @@ from state import BuildState
 from utils import BuildException
 
 
-def run_build(build_state: BuildState, target: str, num_threads: int, quiet: bool):
-    root_rule = build_state.target_rule_lookup.try_lookup(
-        target
-    ) or build_state.target_rule_lookup.lookup(build_state, ":" + target)
-
+def run_build(
+    build_state: BuildState, targets: List[str], num_threads: int, quiet: bool
+):
     build_state.status_monitor = create_status_monitor(num_threads, quiet)
 
-    build_state.scheduled_but_not_ready.add(root_rule)
-    build_state.work_queue.put(root_rule)
-    build_state.status_monitor.move(total=1)
+    for target in targets:
+        root_rule = build_state.target_rule_lookup.try_lookup(
+            target
+        ) or build_state.target_rule_lookup.lookup(build_state, ":" + target)
+        build_state.scheduled_but_not_ready.add(root_rule)
+        build_state.work_queue.put(root_rule)
+        build_state.status_monitor.move(total=1)
 
     thread_instances = []
     for i in range(num_threads):
@@ -36,9 +39,13 @@ def run_build(build_state: BuildState, target: str, num_threads: int, quiet: boo
 
     if build_state.scheduled_but_not_ready:
         # there is a dependency cycle somewhere!
-        base = root_rule
+        for root_rule in targets:
+            if root_rule in build_state.scheduled_but_not_ready:
+                break
+        else:
+            raise BuildException("An internal error occurred.")
         chain = []
-        pos = base
+        pos = root_rule
         while True:
             if pos in chain:
                 chain.append(pos)
