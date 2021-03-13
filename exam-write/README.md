@@ -202,7 +202,7 @@ If you want to have some questions that can be filled out before the exam starts
 block, just like a group block. This will create a question group that is visible before students start the
 exam. At most one such block can exist in the exam.
 
-## Config Syntax
+## Scramble Syntax
 
 At the beginning of the exam, before anything else, you can provide config statements, written as
 
@@ -305,3 +305,13 @@ To write exams over multiple files, use the syntax
 ```
 to insert the contents of the file at `<path>` in the current file. The `<path>` is evaluated with respect to the
 folder containing the importing file, and may be a relative or absolute path.
+
+
+## Watermark Syntax
+
+Optionally, you can include a repeating watermark in the background of exams, that is unique to each student.
+This can be done using the syntax
+```
+# CONFIG WATERMARK <brightness>
+```
+where `brightness` is an integer from 0 to 255 that represents the brightness of the watermark.
