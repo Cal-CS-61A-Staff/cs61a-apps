@@ -501,7 +501,7 @@ def run_doctests(f, *, export_json=False):
     curr_block = dict(name="Doctests", cases=[])
     curr_case = None
     num_leading_spaces = 0
-    for i, raw_line in enumerate(s.strip().split("\n")):
+    for i, raw_line in enumerate(s.split("\n")):
         line = raw_line.lstrip()
         if line.startswith("# "):
             if curr_case is not None:
@@ -513,10 +513,11 @@ def run_doctests(f, *, export_json=False):
         elif line.startswith(">>> "):
             # new test case
             num_leading_spaces = len(raw_line) - len(line)
+            print("nls", num_leading_spaces)
             if curr_case is not None:
                 curr_block["cases"].append(curr_case)
             curr_case = [line[4:], ""]
-        elif line.startswith("... "):
+        elif line.startswith("... ") or line.rstrip() == "...":
             # continue previous test case
             if curr_case is None:
                 continue
@@ -586,6 +587,7 @@ def run_doctests(f, *, export_json=False):
                 stdout.buffer = stderr.buffer = None
             out = "".join(out)
             first, *rest = inp.split("\n")
+            print(repr(out), repr(exp))
             success = out.strip() == exp.strip()
             if not success:
                 log_err("Failed example:\n")
