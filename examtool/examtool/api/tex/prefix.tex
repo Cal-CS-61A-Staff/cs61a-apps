@@ -372,8 +372,6 @@ to\hsize{\hfil\box\@tempboxa\hfil}
 
 \usepackage{svg}
 
-\usepackage{background}
-
 \pagestyle{myheadings}
 \markboth{}{Exam generated for \texttt{<EMAILADDRESS>}}
 
@@ -470,12 +468,10 @@ to\hsize{\hfil\box\@tempboxa\hfil}
      \includesvg{watermark}%
      \includesvg{watermark}%
      \includesvg{watermark}%
-     \includesvg{watermark}%
-     \includesvg{watermark}%
-     \includesvg{watermark}%
-     \includesvg{watermark}%
 }
 
+\newcommand\ShowWatermark{
+\usepackage{background}
 \backgroundsetup{%
   scale=1,
   angle=0,
@@ -485,19 +481,12 @@ to\hsize{\hfil\box\@tempboxa\hfil}
      \DupImage\\
      \DupImage\\
      \DupImage\\
-     \DupImage\\
-     \DupImage\\
-     \DupImage\\
-     \DupImage\\
-     \DupImage\\
-     \DupImage\\
-     \DupImage\\
-     \DupImage\\
-     \DupImage\\
      \DupImage
      \end{minipage}%
    }
-}
+}}
+
+\ifx\Watermarks 1 \ShowWatermark \fi
 
 %%% Document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

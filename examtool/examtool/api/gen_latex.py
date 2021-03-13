@@ -4,9 +4,8 @@ import subprocess
 from collections import defaultdict
 from contextlib import contextmanager
 
-from examtool.api.watermarks import create_watermark
-
 from examtool.api.scramble import latex_escape
+from examtool.api.watermarks import create_watermark
 
 
 def rel_open(path, *args, **kwargs):
@@ -101,6 +100,9 @@ def generate(exam, *, include_watermark):
             write(r"}")
         write(r"\vspace{10px}")
 
+    if include_watermark:
+        write(r"\let\Watermarks=1")
+
     with rel_open("tex/prefix.tex") as f:
         write(f.read())
     for i, group in enumerate(
@@ -116,8 +118,10 @@ def generate(exam, *, include_watermark):
 
 
 @contextmanager
-def render_latex(exam, subs=None, *, watermark=None, do_twice=False):
-    latex = generate(exam, include_watermark=bool(watermark))
+def render_latex(exam, subs=None, *, do_twice=False):
+    include_watermark = "watermark" in exam and "value" in exam["watermark"]
+
+    latex = generate(exam, include_watermark=include_watermark)
     latex = re.sub(
         r"\\includegraphics(\[.*\])?{(http.*/(.+))}",
         r"\\immediate\\write18{wget -N \2}\n\\includegraphics\1{\3}",
@@ -131,9 +135,14 @@ def render_latex(exam, subs=None, *, watermark=None, do_twice=False):
     with open("temp/out.tex", "w+") as f:
         f.write(latex)
 
-    if watermark:
+    if include_watermark:
         with open("temp/watermark.svg", "w+") as f:
-            f.write(watermark)
+            f.write(
+                create_watermark(
+                    exam["watermark"]["value"],
+                    brightness=exam["watermark"]["brightness"],
+                )
+            )
 
     subprocess.run(
         "cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex",
