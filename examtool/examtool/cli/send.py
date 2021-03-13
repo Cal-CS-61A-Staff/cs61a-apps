@@ -61,8 +61,7 @@ def send(exam, target, email, subject, body, filename, mailtool=False):
     filename = filename.format(course=course)
     subject = subject.format(course=course)
     body = body.read().format(course=course, exam=exam)
-    import ipdb; ipdb.set_trace()
-    return
+    
     roster = []
     if email:
         roster = [email]
