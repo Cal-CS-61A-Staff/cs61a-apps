@@ -122,7 +122,11 @@ function initializePython(writeOutput) {
       100
     );
   } else {
-    __BRYTHON__.run_script(code, "__main__", "https://code.cs61a.org/__main__");
+    __BRYTHON__.run_script(
+      code,
+      "__main__",
+      "https://doesnotexist.cs61a.org/__main__"
+    );
   }
 }
 
