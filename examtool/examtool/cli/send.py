@@ -33,8 +33,8 @@ from examtool.cli.utils import hidden_target_folder_option, exam_name_option, pr
         "To unlock the PDF, its password will be revealed on Piazza when the exam starts.\n\n"
         "Good luck, and remember to have fun!"
     ),
-    help="The body of the email you want sent. You can specify the course with `{course}` and the exam name with `{exam}`.",
-    show_default=True,
+    help="A file to the body of the email you want sent. You can specify the course by adding `{course}` and the exam name by adding `{exam}`.",
+    type=click.File("r"),
 )
 @click.option(
     "--filename",
@@ -60,8 +60,9 @@ def send(exam, target, email, subject, body, filename, mailtool=False):
 
     filename = filename.format(course=course)
     subject = subject.format(course=course)
-    body = body.format(course=course, exam=exam)
-    
+    body = body.read().format(course=course, exam=exam)
+    import ipdb; ipdb.set_trace()
+    return
     roster = []
     if email:
         roster = [email]
