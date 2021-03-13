@@ -183,7 +183,7 @@ def json_repr(elem):
 
 def wrap_debug(out):
     json = json_repr(out)
-    print("DRAW: " + json)
+    print("DRAW: " + json, end="")
 
 
 def autodraw():
@@ -311,11 +311,11 @@ def draw(lst):
 
 
 def visualize():
-    print("DEBUG: ")
+    print("DEBUG: ", end="")
 
 
 def editor():
-    print("EDITOR: ")
+    print("EDITOR: ", end="")
 
 
 def record_exec(code, wrap):
@@ -326,7 +326,7 @@ def record_exec(code, wrap):
         out += "except Exception as e:\n\tprint(e)\n"
         record_exec(out, False)
     else:
-        print("EXEC: " + code)
+        print("EXEC: " + code, end="")
 
 
 def input(prompt=""):
@@ -491,7 +491,7 @@ def run_all_doctests():
             out = run_doctests(obj, export_json=True)
             if out:
                 export.extend(out)
-    print("DOCTEST: " + json_repr(export))
+    print("DOCTEST: " + json_repr(export), end="")
 
 
 def run_doctests(f, *, export_json=False):
