@@ -1,6 +1,6 @@
 import unittest
 
-import gui_files.svg
+import gui_files.svg as svg
 
 
 class TestSVG(unittest.TestCase):
