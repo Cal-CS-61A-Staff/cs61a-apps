@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Union
 
 from tqdm import tqdm
 
+from examtool.api.extract_questions import get_name
 from examtool.api.grade import grade
 
 
@@ -21,7 +22,8 @@ class AssembledExam:
 
 @dataclass(frozen=True)
 class Question:
-    question: Text
+    name: str
+    prompt: Text
     autograde_output: str
 
 
@@ -72,6 +74,8 @@ def assemble_exam(
     student_question_lookup = {q["id"]: q for q in student_questions}
 
     for question in template_questions:
+        question_name = get_name(question)
+
         if substitute_in_question_text:
             question_text = Text(student_question_lookup.get(question["id"], question))
         else:
@@ -112,7 +116,8 @@ def assemble_exam(
             assert len(available_options) == len(student_options)
 
             assembled_question = OptionQuestion(
-                question=question_text,
+                name=question_name,
+                prompt=question_text,
                 options=available_options,
                 selected=(
                     [
@@ -126,10 +131,11 @@ def assemble_exam(
 
         else:
             assembled_question = TextQuestion(
-                question_text,
+                name=question_name,
+                prompt=question_text,
                 autograde_output=autograde_output,
                 response=response.get(question["id"], "").replace("\t", " " * 4),
-                height=question.get("options", 1),
+                height=question.get("options") or 1,
             )
 
         questions.append(assembled_question)

@@ -35,7 +35,7 @@ def render_pdf_exam(assembled_exam: AssembledExam):
     for question in assembled_exam.questions:
         pdf.add_page()
         out("\nQUESTION")
-        for line in question.question.text.split("\n"):
+        for line in question.prompt.text.split("\n"):
             out(line)
 
         out("\nANSWER")

@@ -38,6 +38,7 @@ setup(
             "func-timeout",
             "fullGSapi",
             "tqdm",
+            "pdfkit",
         ],
     },
 )
