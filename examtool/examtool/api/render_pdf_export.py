@@ -49,6 +49,8 @@ def render_pdf_exam(assembled_exam: AssembledExam):
         elif isinstance(question, TextQuestion):
             for line in question.response.split("\n"):
                 out(line)
+        else:
+            assert False, f"Unknown question type {type(question)}"
 
         out("\nAUTOGRADER")
         out(question.autograde_output)
