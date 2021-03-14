@@ -12,7 +12,7 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     licence="MIT",
-    packages=find_packages(include=["examtool.api", "examtool.cli"]),
+    packages=find_packages(include=["examtool.api", "examtool.cli", "examtool.gui_files"]),
     package_data={"": ["**/*.tex"]},
     include_package_data=True,
     entry_points={"console_scripts": ["examtool=examtool.cli.__main__:cli"]},
