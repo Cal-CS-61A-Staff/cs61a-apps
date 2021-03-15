@@ -16,6 +16,9 @@ if ENV == "dev":
 else:
     DEBUG = False
     SECRET_KEY = get_secret(secret_name="SESSION_COOKIE_SECRET")
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
 
 SQLALCHEMY_DATABASE_URI = database_url
 
