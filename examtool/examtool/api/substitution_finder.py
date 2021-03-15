@@ -86,7 +86,7 @@ def get_substitutions(exam):
     out = {}
 
     def process_element(element):
-        substitutions = element.get("substitutions", []).copy()
+        substitutions = element.get("substitutions", {}).copy()
         for item in element.get("substitutions_match", []):
             for directive in item["directives"]:
                 substitutions[directive] = item["replacements"]
