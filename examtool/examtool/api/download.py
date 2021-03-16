@@ -253,4 +253,7 @@ def get_question_to_page_mapping(
                 dispatch,
             )
         pages.append(pdf.page_no())
+    # for i, q in enumerate(questions):
+    #     print(f"[{i}] pg: {pages[i]} - {q['id']}")
+    # import ipdb; ipdb.set_trace()
     return pages

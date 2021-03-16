@@ -569,7 +569,6 @@ class GradescopeGrader:
         if not outline:
             raise ValueError("Failed to upload or get the outline")
         examtool_outline.merge_gs_outline_ids(outline)
-        import ipdb; ipdb.set_trace()
 
     def upload_student_submissions(
         self, out: str, gs_class_id: str, assignment_id: str, emails: [str] = None
@@ -1195,7 +1194,7 @@ class ExamtoolOutline:
 
         qid = 1
         if exam_json.get("public"):
-            prev_page = -1
+            prev_page = 0
             pg = GS_Outline_Question(
                 grader,
                 None,
