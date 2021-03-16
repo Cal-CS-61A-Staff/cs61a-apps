@@ -1,7 +1,9 @@
 import os
+import subprocess
 import re
 from collections import defaultdict
 from contextlib import contextmanager
+from pathlib import Path
 
 from examtool.api.scramble import latex_escape
 
@@ -109,7 +111,16 @@ def generate(exam):
 
 
 @contextmanager
-def render_latex(exam, subs=None, *, do_twice=False):
+def render_latex(
+    exam,
+    subs=None,
+    *,
+    do_twice=False,
+    path="temp",
+    outname="out",
+    supress_output=False,
+    return_out_path=False,
+):
     latex = generate(exam)
     latex = re.sub(
         r"\\includegraphics(\[.*\])?{(http.*/(.+))}",
@@ -119,15 +130,34 @@ def render_latex(exam, subs=None, *, do_twice=False):
     if subs:
         for k, v in subs.items():
             latex = latex.replace(f"<{k.upper()}>", v)
-    if not os.path.exists("temp"):
-        os.mkdir("temp")
-    with open("temp/out.tex", "w+") as f:
+    if not os.path.exists(path):
+        Path(path).mkdir(parents=True, exist_ok=True)
+    with open(os.path.join(path, outname + ".tex"), "w+") as f:
         f.write(latex)
-    old = os.getcwd()
-    os.system("cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex")
+    # old = os.getcwd()
+    pipe = subprocess.DEVNULL if supress_output else subprocess.PIPE
+
+    def compile():
+        subprocess.run(
+            [
+                "pdflatex",
+                "--shell-escape",
+                "-interaction=nonstopmode",
+                f"{outname}.tex",
+            ],
+            stdout=pipe,
+            stderr=pipe,
+            cwd=path,
+        )
+
+    compile()
     if do_twice:
-        os.system("cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex")
-    with open("temp/out.pdf", "rb") as f:
-        os.chdir(old)
-        yield f.read()
-    # shutil.rmtree("temp")
+        compile()
+
+    out_path = os.path.join(path, outname + ".pdf")
+    if return_out_path:
+        yield out_path
+    else:
+        with open(out_path, "rb") as f:
+            # os.chdir(old)
+            yield f.read()

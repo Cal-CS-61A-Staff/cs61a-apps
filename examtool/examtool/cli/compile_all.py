@@ -3,7 +3,10 @@ import os
 import pathlib
 from datetime import datetime
 from io import BytesIO
+import multiprocessing
 
+from multiprocessing.pool import ThreadPool, Pool, queue
+from tqdm import tqdm
 from pikepdf import Pdf, Encryption
 import click
 import pytz
@@ -17,6 +20,7 @@ from examtool.cli.utils import (
     exam_name_option,
     hidden_output_folder_option,
     prettify,
+    UniqueFactory,
 )
 
 
@@ -49,7 +53,15 @@ from examtool.cli.utils import (
     default=None,
     help="Generates exam regardless of if student is in roster with the set deadline.",
 )
-def compile_all(exam, subtitle, out, do_twice, email, exam_type, semester, deadline):
+@click.option(
+    "--num-threads",
+    default=16,
+    type=int,
+    help="The number of simultaneous exams to process.",
+)
+def compile_all(
+    exam, subtitle, out, do_twice, email, exam_type, semester, deadline, num_threads
+):
     """
     Compile individualized PDFs for the specified exam.
     Exam must have been deployed first.
@@ -74,30 +86,71 @@ def compile_all(exam, subtitle, out, do_twice, email, exam_type, semester, deadl
             else:
                 raise ValueError("Email does not exist in the roster!")
 
-    for email, deadline in roster:
-        if not deadline:
-            continue
-        exam_data = json.loads(exam_str)
-        scramble(email, exam_data)
-        deadline_utc = datetime.utcfromtimestamp(int(deadline))
-        deadline_pst = pytz.utc.localize(deadline_utc).astimezone(
-            pytz.timezone("America/Los_Angeles")
-        )
-        deadline_string = deadline_pst.strftime("%I:%M%p")
+    rosterlist = list(roster)
 
-        with render_latex(
-            exam_data,
-            {
-                "emailaddress": sanitize_email(email),
-                "deadline": deadline_string,
-                "coursecode": prettify(exam.split("-")[0]),
-                "description": subtitle,
-                "examtype": exam_type,
-                "semester": semester,
-            },
-            do_twice=do_twice,
-        ) as pdf:
-            pdf = Pdf.open(BytesIO(pdf))
+    for item in rosterlist:
+        item.append(exam_str)
+        item.append(exam)
+        item.append(subtitle)
+        item.append(exam_type)
+        item.append(semester)
+        item.append(do_twice)
+        item.append(password)
+        item.append(out)
+
+    with Pool(num_threads) as p:
+        list(
+            tqdm(
+                p.imap_unordered(render_student_pdf, rosterlist),
+                total=len(rosterlist),
+                desc="Exams Generated",
+                unit="Exam",
+            )
+        )
+
+
+def render_student_pdf(data):
+    (
+        email,
+        deadline,
+        exam_str,
+        exam,
+        subtitle,
+        exam_type,
+        semester,
+        do_twice,
+        password,
+        out,
+    ) = data
+    if not deadline:
+        return
+    exam_data = json.loads(exam_str)
+    scramble(email, exam_data)
+    deadline_utc = datetime.utcfromtimestamp(int(deadline))
+    deadline_pst = pytz.utc.localize(deadline_utc).astimezone(
+        pytz.timezone("America/Los_Angeles")
+    )
+    deadline_string = deadline_pst.strftime("%I:%M%p")
+
+    uid = multiprocessing.current_process().name
+
+    with render_latex(
+        exam_data,
+        {
+            "emailaddress": sanitize_email(email),
+            "deadline": deadline_string,
+            "coursecode": prettify(exam.split("-")[0]),
+            "description": subtitle,
+            "examtype": exam_type,
+            "semester": semester,
+        },
+        do_twice=do_twice,
+        outname=f"out{uid}",
+        supress_output=True,
+        return_out_path=True,
+    ) as out_path:
+        with open(out_path, "rb") as pdf:
+            pdf = Pdf.open(BytesIO(pdf.read()))
             pdf.save(
                 os.path.join(
                     out, "exam_" + email.replace("@", "_").replace(".", "_") + ".pdf"
