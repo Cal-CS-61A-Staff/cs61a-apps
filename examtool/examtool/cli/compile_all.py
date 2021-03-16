@@ -20,7 +20,6 @@ from examtool.cli.utils import (
     exam_name_option,
     hidden_output_folder_option,
     prettify,
-    UniqueFactory,
 )
 
 
@@ -59,13 +58,28 @@ from examtool.cli.utils import (
     type=int,
     help="The number of simultaneous exams to process.",
 )
+@click.option(
+    "--separate-folders/--same-folder",
+    default=False,
+    help="Compiles using the same folder or different folders.",
+)
 def compile_all(
-    exam, subtitle, out, do_twice, email, exam_type, semester, deadline, num_threads
+    exam,
+    subtitle,
+    out,
+    do_twice,
+    email,
+    exam_type,
+    semester,
+    deadline,
+    num_threads,
+    separate_folders,
 ):
     """
     Compile individualized PDFs for the specified exam.
     Exam must have been deployed first.
     """
+    same_folder = separate_folders
     if not out:
         out = "out/latex/" + exam
 
@@ -88,15 +102,20 @@ def compile_all(
 
     rosterlist = list(roster)
 
+    other_data = [
+        exam_str,
+        exam,
+        subtitle,
+        exam_type,
+        semester,
+        do_twice,
+        password,
+        out,
+        same_folder,
+    ]
+
     for item in rosterlist:
-        item.append(exam_str)
-        item.append(exam)
-        item.append(subtitle)
-        item.append(exam_type)
-        item.append(semester)
-        item.append(do_twice)
-        item.append(password)
-        item.append(out)
+        item.append(other_data)
 
     with Pool(num_threads) as p:
         list(
@@ -113,6 +132,9 @@ def render_student_pdf(data):
     (
         email,
         deadline,
+        other_data,
+    ) = data
+    (
         exam_str,
         exam,
         subtitle,
@@ -121,7 +143,8 @@ def render_student_pdf(data):
         do_twice,
         password,
         out,
-    ) = data
+        same_folder,
+    ) = other_data
     if not deadline:
         return
     exam_data = json.loads(exam_str)
@@ -134,6 +157,13 @@ def render_student_pdf(data):
 
     uid = multiprocessing.current_process().name
 
+    if same_folder:
+        outname = f"out{uid}"
+        path = "temp"
+    else:
+        outname = "out"
+        path = f"temp/{uid}"
+
     with render_latex(
         exam_data,
         {
@@ -145,7 +175,8 @@ def render_student_pdf(data):
             "semester": semester,
         },
         do_twice=do_twice,
-        outname=f"out{uid}",
+        path=path,
+        outname=outname,
         supress_output=True,
         return_out_path=True,
     ) as out_path:
