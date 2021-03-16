@@ -115,7 +115,11 @@ class GradescopeGrader:
 
         out = out or "out/export/" + exams[0]
 
-        exam_json, email_to_data_map, question_page_mapping = self.fetch_and_export_examtool_exam_data(
+        (
+            exam_json,
+            email_to_data_map,
+            question_page_mapping,
+        ) = self.fetch_and_export_examtool_exam_data(
             exams,
             out,
             name_question_id,
@@ -152,7 +156,10 @@ class GradescopeGrader:
         # Now that we have the assignment and outline pdf, lets generate the outline.
         print("Generating the examtool outline...")
         examtool_outline = ExamtoolOutline(
-            grader, exam_json, [name_question_id, sid_question_id], question_page_mapping
+            grader,
+            exam_json,
+            [name_question_id, sid_question_id],
+            question_page_mapping,
         )
 
         # Finally we need to upload and sync the outline.
@@ -283,7 +290,11 @@ class GradescopeGrader:
 
         out = out or "out/export/" + exams[0]
 
-        exam_json, email_to_data_map, question_page_mapping = self.fetch_and_export_examtool_exam_data(
+        (
+            exam_json,
+            email_to_data_map,
+            question_page_mapping,
+        ) = self.fetch_and_export_examtool_exam_data(
             exams,
             out,
             name_question_id,
@@ -305,7 +316,10 @@ class GradescopeGrader:
         # Now that we have the assignment and outline pdf, lets generate the outline.
         print("Generating the examtool outline...")
         examtool_outline = ExamtoolOutline(
-            grader, exam_json, [name_question_id, sid_question_id], question_page_mapping
+            grader,
+            exam_json,
+            [name_question_id, sid_question_id],
+            question_page_mapping,
         )
 
         # Merge the outline with the existing one
@@ -448,7 +462,7 @@ class GradescopeGrader:
             )
 
             print(f"[{exam}]: Exporting exam pdfs...")
-            
+
             self.export_exam(
                 tmp_template_questions,
                 tmp_email_to_data_map,
@@ -1160,7 +1174,11 @@ class ExamtoolOutline:
     sid_region = GS_Crop_info(1, 2.4, 18.9, 99, 28.7)
 
     def __init__(
-        self, grader: GS_assignment_Grader, exam_json: dict, id_question_ids: List[str], question_page_mapping: List[int]
+        self,
+        grader: GS_assignment_Grader,
+        exam_json: dict,
+        id_question_ids: List[str],
+        question_page_mapping: List[int],
     ):
         self.exam_json = exam_json
         self.gs_number_to_exam_q, self.gs_outline = self.generate_gs_outline(
@@ -1185,7 +1203,11 @@ class ExamtoolOutline:
         )
 
     def generate_gs_outline(
-        self, grader: GS_assignment_Grader, exam_json: dict, id_question_ids: [str], question_page_mapping: List[int]
+        self,
+        grader: GS_assignment_Grader,
+        exam_json: dict,
+        id_question_ids: [str],
+        question_page_mapping: List[int],
     ):
         gs_number_to_exam_q = {}
         questions = []
@@ -1209,7 +1231,11 @@ class ExamtoolOutline:
                     print(f"Skipping {question_id} as it is an id question.")
                     page += 1  # Still need to increment this as it is still on the exam pdf.
                     continue
-                pg.add_child(self.question_to_gso_question(grader, question_page_mapping[page], question))
+                pg.add_child(
+                    self.question_to_gso_question(
+                        grader, question_page_mapping[page], question
+                    )
+                )
                 gs_number_to_exam_q[f"{qid}.{sqid}"] = question
                 sqid += 1
                 page += 1
@@ -1233,7 +1259,11 @@ class ExamtoolOutline:
             for question in extract_questions(
                 group, extract_public_bool=False, top_level=False
             ):
-                g.add_child(self.question_to_gso_question(grader, question_page_mapping[page], question))
+                g.add_child(
+                    self.question_to_gso_question(
+                        grader, question_page_mapping[page], question
+                    )
+                )
                 gs_number_to_exam_q[f"{qid}.{sqid}"] = question
                 sqid += 1
                 page += 1
