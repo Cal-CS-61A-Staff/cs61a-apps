@@ -59,9 +59,10 @@ from examtool.cli.utils import (
     help="The number of simultaneous exams to process.",
 )
 @click.option(
-    "--separate-folders/--same-folder",
+    "--same-folder",
     default=False,
-    help="Compiles using the same folder or different folders.",
+    is_flag=True,
+    help="This flag will cause the compilation to all occur in the same folder. This improves speed as the tool no longer has to redownload images though can cause images to get overwritten if they share the same name.",
 )
 def compile_all(
     exam,
@@ -73,13 +74,13 @@ def compile_all(
     semester,
     deadline,
     num_threads,
-    separate_folders,
+    same_folder,
 ):
     """
     Compile individualized PDFs for the specified exam.
     Exam must have been deployed first.
     """
-    same_folder = separate_folders
+    print(f"same folder: {same_folder}")
     if not out:
         out = "out/latex/" + exam
 
