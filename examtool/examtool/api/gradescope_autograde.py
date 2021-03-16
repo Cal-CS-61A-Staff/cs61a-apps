@@ -15,6 +15,7 @@ from examtool.api.extract_questions import (
     extract_questions,
     extract_public,
 )
+from fullGSapi.api.login_tokens import LoginTokens
 from fullGSapi.api.client import GradescopeClient
 from fullGSapi.api.assignment_grader import (
     GS_Crop_info,
@@ -52,36 +53,39 @@ class GradescopeGrader:
         self,
         email: str = None,
         password: str = None,
-        gs_client: GradescopeClient = None,
-        gs_api_client: APIClient = None,
+        gs_login_tokens: LoginTokens = None,
+        gs_login_tokens_path: str = None,
         simultaneous_jobs: int = 10,
         simultaneous_sub_jobs: int = 10,
     ):
         print(f"Setting up the Gradescope Grader...")
-        if gs_client is None:
-            gs_client = GradescopeClient()
-        if gs_api_client is None:
-            gs_api_client = APIClient()
+        entered_email_pwd = email is not None and password is not None
 
-        if (not email or not password) and (
-            not gs_client.is_logged_in() or not gs_api_client.is_logged_in()
-        ):
-            raise ValueError(
-                "You must supply the username and password if you are not already logged into the passed in clients!"
+        logged_in = False
+
+        if gs_login_tokens is None and not entered_email_pwd:
+            gs_login_tokens = LoginTokens.load(gs_login_tokens_path)
+            if gs_login_tokens is not None:
+                logged_in = True
+        else:
+            print(
+                "Ignoring current token file since you entered an email and password.\nLogging in with those credentials..."
             )
+        if gs_login_tokens is None:
+            gs_login_tokens = LoginTokens(path=gs_login_tokens_path)
+
+        if entered_email_pwd:
+            logged_in = gs_login_tokens.login(email, password)
+
+        if not logged_in:
+            gs_login_tokens.prompt_login(email=email)
+
+        self.gs_login_tokens = gs_login_tokens
+        self.gs_client = gs_login_tokens.gsFullapi
+        self.gs_api_client = gs_login_tokens.gsAPI
 
         self.simultaneous_jobs = simultaneous_jobs
         self.simultaneous_sub_jobs = simultaneous_sub_jobs
-        self.gs_client = gs_client
-        self.gs_api_client = gs_api_client
-
-        if email and password:
-            if not gs_client.is_logged_in():
-                print(f"Logging into the normal Gradescope API...")
-                self.gs_client.log_in(email, password)
-            if not self.gs_api_client.is_logged_in():
-                print(f"Logging into the full Gradescope API...")
-                self.gs_api_client.log_in(email, password)
         print(f"Finished setting up the Gradescope Grader")
 
     def main(

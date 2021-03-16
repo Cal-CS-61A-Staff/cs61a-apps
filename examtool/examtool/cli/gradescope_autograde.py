@@ -40,9 +40,14 @@ from examtool.api.gradescope_autograde import GradescopeGrader
     default="Examtool Exam",
     help="The title you want the Gradescope assignment to have.",
 )
-@click.option("--email", prompt=True, help="Your Gradescope email address.")
+@click.option("--email", help="Your Gradescope email address.")
+@click.option("--password", hide_input=True, help="Your Gradescope account password.")
 @click.option(
-    "--password", prompt=True, hide_input=True, help="Your Gradescope account password."
+    "--token",
+    "-t",
+    default=None,
+    help="The path to the token file holding your Gradescope credentials.",
+    type=click.Path(),
 )
 @click.option(
     "--emails",
@@ -103,6 +108,7 @@ def gradescope_autograde(
     assignment_title,
     email,
     password,
+    token,
     emails,
     blacklist_emails,
     mutate_emails,
@@ -133,9 +139,11 @@ def gradescope_autograde(
     grader = GradescopeGrader(
         email=email,
         password=password,
+        gs_login_tokens_path=token,
         simultaneous_jobs=jobs,
         simultaneous_sub_jobs=sub_jobs,
     )
+
     email_mutation_list = None
     if mutate_emails:
         with open(mutate_emails, "r") as f:
