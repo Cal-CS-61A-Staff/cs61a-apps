@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import re
 from collections import defaultdict
@@ -135,7 +136,6 @@ def render_latex(
     with open(os.path.join(path, outname + ".tex"), "w+") as f:
         f.write(latex)
     # old = os.getcwd()
-    pipe = subprocess.DEVNULL if supress_output else subprocess.PIPE
 
     def compile():
         subprocess.run(
@@ -145,8 +145,8 @@ def render_latex(
                 "-interaction=nonstopmode",
                 f"{outname}.tex",
             ],
-            stdout=pipe,
-            stderr=pipe,
+            stdout=subprocess.DEVNULL if supress_output else sys.stdout,
+            stderr=subprocess.DEVNULL if supress_output else sys.stderr,
             cwd=path,
         )
 

@@ -80,7 +80,6 @@ def compile_all(
     Compile individualized PDFs for the specified exam.
     Exam must have been deployed first.
     """
-    print(f"same folder: {same_folder}")
     if not out:
         out = "out/latex/" + exam
 
