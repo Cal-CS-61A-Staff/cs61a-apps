@@ -115,7 +115,7 @@ class GradescopeGrader:
 
         out = out or "out/export/" + exams[0]
 
-        exam_json, email_to_data_map = self.fetch_and_export_examtool_exam_data(
+        exam_json, email_to_data_map, question_page_mapping = self.fetch_and_export_examtool_exam_data(
             exams,
             out,
             name_question_id,
@@ -152,7 +152,7 @@ class GradescopeGrader:
         # Now that we have the assignment and outline pdf, lets generate the outline.
         print("Generating the examtool outline...")
         examtool_outline = ExamtoolOutline(
-            grader, exam_json, [name_question_id, sid_question_id]
+            grader, exam_json, [name_question_id, sid_question_id], question_page_mapping
         )
 
         # Finally we need to upload and sync the outline.
@@ -283,7 +283,7 @@ class GradescopeGrader:
 
         out = out or "out/export/" + exams[0]
 
-        exam_json, email_to_data_map = self.fetch_and_export_examtool_exam_data(
+        exam_json, email_to_data_map, question_page_mapping = self.fetch_and_export_examtool_exam_data(
             exams,
             out,
             name_question_id,
@@ -305,7 +305,7 @@ class GradescopeGrader:
         # Now that we have the assignment and outline pdf, lets generate the outline.
         print("Generating the examtool outline...")
         examtool_outline = ExamtoolOutline(
-            grader, exam_json, [name_question_id, sid_question_id]
+            grader, exam_json, [name_question_id, sid_question_id], question_page_mapping
         )
 
         # Merge the outline with the existing one
@@ -438,7 +438,17 @@ class GradescopeGrader:
                         continue
                 email_to_exam_map[email] = exam
                 email_to_data_map[email] = data
+
+            question_page_mapping = examtool.api.download.get_question_to_page_mapping(
+                tmp_template_questions,
+                exam,
+                out,
+                name_question_id,
+                sid_question_id,
+            )
+
             print(f"[{exam}]: Exporting exam pdfs...")
+            
             self.export_exam(
                 tmp_template_questions,
                 tmp_email_to_data_map,
@@ -458,7 +468,7 @@ class GradescopeGrader:
         # Lets finally clean up the student responses
         self.cleanse_student_response_data(email_to_data_map)
 
-        return exam_json, email_to_data_map
+        return exam_json, email_to_data_map, question_page_mapping
 
     def attempt_fix_unknown_gs_email(
         self,
@@ -559,6 +569,7 @@ class GradescopeGrader:
         if not outline:
             raise ValueError("Failed to upload or get the outline")
         examtool_outline.merge_gs_outline_ids(outline)
+        import ipdb; ipdb.set_trace()
 
     def upload_student_submissions(
         self, out: str, gs_class_id: str, assignment_id: str, emails: [str] = None
@@ -578,7 +589,7 @@ class GradescopeGrader:
             # ):
             def func(tup):
                 file_name, student_email = tup
-                if not self.gs_api_client.upload_submission(
+                if not self.gs_api_client.upload_programming_submission(
                     gs_class_id,
                     assignment_id,
                     student_email,
@@ -1150,11 +1161,11 @@ class ExamtoolOutline:
     sid_region = GS_Crop_info(1, 2.4, 18.9, 99, 28.7)
 
     def __init__(
-        self, grader: GS_assignment_Grader, exam_json: dict, id_question_ids: [str]
+        self, grader: GS_assignment_Grader, exam_json: dict, id_question_ids: List[str], question_page_mapping: List[int]
     ):
         self.exam_json = exam_json
         self.gs_number_to_exam_q, self.gs_outline = self.generate_gs_outline(
-            grader, exam_json, id_question_ids
+            grader, exam_json, id_question_ids, question_page_mapping
         )
 
     def get_gs_crop_info(self, page, question=None):
@@ -1175,16 +1186,16 @@ class ExamtoolOutline:
         )
 
     def generate_gs_outline(
-        self, grader: GS_assignment_Grader, exam_json: dict, id_question_ids: [str]
+        self, grader: GS_assignment_Grader, exam_json: dict, id_question_ids: [str], question_page_mapping: List[int]
     ):
         gs_number_to_exam_q = {}
         questions = []
 
-        page = 2  # Page 1 is an info page
+        page = 0  # Page 1 is an info page
 
         qid = 1
         if exam_json.get("public"):
-            prev_page = 1
+            prev_page = -1
             pg = GS_Outline_Question(
                 grader,
                 None,
@@ -1199,7 +1210,7 @@ class ExamtoolOutline:
                     print(f"Skipping {question_id} as it is an id question.")
                     page += 1  # Still need to increment this as it is still on the exam pdf.
                     continue
-                pg.add_child(self.question_to_gso_question(grader, page, question))
+                pg.add_child(self.question_to_gso_question(grader, question_page_mapping[page], question))
                 gs_number_to_exam_q[f"{qid}.{sqid}"] = question
                 sqid += 1
                 page += 1
@@ -1215,7 +1226,7 @@ class ExamtoolOutline:
             g = GS_Outline_Question(
                 grader,
                 None,
-                [self.get_gs_crop_info(page, group)],
+                [self.get_gs_crop_info(question_page_mapping[page], group)],
                 title=group.get("name", ""),
                 weight=weight,
             )
@@ -1223,7 +1234,7 @@ class ExamtoolOutline:
             for question in extract_questions(
                 group, extract_public_bool=False, top_level=False
             ):
-                g.add_child(self.question_to_gso_question(grader, page, question))
+                g.add_child(self.question_to_gso_question(grader, question_page_mapping[page], question))
                 gs_number_to_exam_q[f"{qid}.{sqid}"] = question
                 sqid += 1
                 page += 1
