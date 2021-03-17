@@ -6,11 +6,7 @@ from contextlib import contextmanager
 
 from examtool.api.scramble import latex_escape
 from examtool.api.watermarks import create_watermark
-
-
-def rel_open(path, *args, **kwargs):
-    root = os.path.dirname(os.path.abspath(__file__))
-    return open(os.path.join(root, path), *args, **kwargs)
+from examtool.api.utils import rel_open
 
 
 def generate(exam, *, include_watermark):
