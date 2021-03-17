@@ -98,7 +98,7 @@ def get_substitutions(exam):
             ):
                 substitutions[directive] = directive_replacements
         for key in element.get("substitution_ranges", {}):
-            substitutions[key] = []  # @nocommit hack to make RANGEs not crash
+            substitutions[key] = []  # hack to make RANGEs not crash
         return substitutions
 
     def process_group(group, substitutions):
