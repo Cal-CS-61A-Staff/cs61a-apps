@@ -183,7 +183,7 @@ def json_repr(elem):
 
 def wrap_debug(out):
     json = json_repr(out)
-    print("DRAW: " + json)
+    print("DRAW: " + json, end="")
 
 
 def autodraw():
@@ -311,11 +311,11 @@ def draw(lst):
 
 
 def visualize():
-    print("DEBUG: ")
+    print("DEBUG: ", end="")
 
 
 def editor():
-    print("EDITOR: ")
+    print("EDITOR: ", end="")
 
 
 def record_exec(code, wrap):
@@ -326,7 +326,7 @@ def record_exec(code, wrap):
         out += "except Exception as e:\n\tprint(e)\n"
         record_exec(out, False)
     else:
-        print("EXEC: " + code)
+        print("EXEC: " + code, end="")
 
 
 def input(prompt=""):
@@ -491,7 +491,7 @@ def run_all_doctests():
             out = run_doctests(obj, export_json=True)
             if out:
                 export.extend(out)
-    print("DOCTEST: " + json_repr(export))
+    print("DOCTEST: " + json_repr(export), end="")
 
 
 def run_doctests(f, *, export_json=False):
@@ -501,7 +501,7 @@ def run_doctests(f, *, export_json=False):
     curr_block = dict(name="Doctests", cases=[])
     curr_case = None
     num_leading_spaces = 0
-    for i, raw_line in enumerate(s.strip().split("\n")):
+    for i, raw_line in enumerate(s.split("\n")):
         line = raw_line.lstrip()
         if line.startswith("# "):
             if curr_case is not None:
@@ -516,7 +516,7 @@ def run_doctests(f, *, export_json=False):
             if curr_case is not None:
                 curr_block["cases"].append(curr_case)
             curr_case = [line[4:], ""]
-        elif line.startswith("... "):
+        elif line.startswith("... ") or line.rstrip() == "...":
             # continue previous test case
             if curr_case is None:
                 continue
