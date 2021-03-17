@@ -44,7 +44,6 @@ import examtool.api.assemble_export
     help="The number of threads to process the JSON file.",
 )
 @hidden_output_folder_option
-def download(exam, out, name_question, sid_question, with_substitutions):
 def download(
     exam, out, name_question, sid_question, with_substitutions, via_html, num_threads
 ):
@@ -111,11 +110,12 @@ def dispatch(email, question):
                 data = load(f)
 
             def grade(responses):
-                return (
-                    "All correct"
-                    if data[email][template_name] == "All correct"
-                    else "Some failed."
-                )
+                return data[email][template_name]
+                # return (
+                #     "All correct"
+                #     if data[email][template_name] == "All correct"
+                #     else "Some failed."
+                # )
 
             return grade
 

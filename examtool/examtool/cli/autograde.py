@@ -131,7 +131,7 @@ def indent_fixer(value):
 
 @click.command()
 def autograde(fetch=True):
-    EXAM = "cs61a-mt1-regular"
+    EXAM = "cs61a-mt1-alt-7am"
 
     with open(f"{EXAM}_submissions.json", "w") as f:
         if fetch:
@@ -185,6 +185,7 @@ def autograde(fetch=True):
                         doctest.run_docstring_examples(
                             globs[alias_template_name],
                             globs,
+                            verbose=True,
                         )
                     except SyntaxError as e:
                         print(e)
@@ -198,8 +199,10 @@ def autograde(fetch=True):
 
                 print("-" * 50)
                 value = f.getvalue()
-                # print(value)
-                blocks = [x for x in value.split("*") if x]
+                blocks = [x for x in value.split("*" * 70) if x]
+                print(value)
+                print(blocks)
+                input()
                 blocks = [
                     "\n".join(block.strip().split("\n")[-2:])
                     if "Error" in block
