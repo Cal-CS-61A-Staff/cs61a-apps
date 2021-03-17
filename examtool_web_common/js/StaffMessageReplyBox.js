@@ -8,11 +8,15 @@ export default function StaffMessageReplyBox({ compact, message, send }) {
   const [isLoading, setIsLoading] = useState(false);
   const [failText, setFailText] = useState("");
 
-  const submit = async () => {
+  const submit = async (reject) => {
     setIsLoading(true);
     const err = await send("send_response", {
       id: message,
-      reply: compact ? "Staff has read your message" : reply,
+      reply: compact
+        ? reject
+          ? "Staff cannot answer this question"
+          : "Staff has read your message"
+        : reply,
     });
     if (err) {
       setFailText(err);
@@ -45,6 +49,17 @@ export default function StaffMessageReplyBox({ compact, message, send }) {
         >
           {compact ? "✔" : "Send"}
         </LoadingButton>
+        {compact && (
+          <LoadingButton
+            loading={isLoading}
+            disabled={isLoading}
+            onClick={() => submit(true)}
+            size={compact && "sm"}
+            variant="secondary"
+          >
+            ✖
+          </LoadingButton>
+        )}
         <FailText text={failText} suffixType="alerts" />
       </Form.Group>
     </>
