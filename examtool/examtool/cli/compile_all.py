@@ -4,6 +4,7 @@ import pathlib
 from datetime import datetime
 from io import BytesIO
 
+from examtool.api.watermarks import create_watermark
 from pikepdf import Pdf, Encryption
 import click
 import pytz
@@ -22,12 +23,12 @@ from examtool.cli.utils import (
 
 @click.command()
 @exam_name_option
+@hidden_output_folder_option
 @click.option(
     "--subtitle",
     prompt=True,
     default="Structure and Interpretation of Computer Programs",
 )
-@hidden_output_folder_option
 @click.option(
     "--do-twice",
     is_flag=True,
@@ -49,7 +50,16 @@ from examtool.cli.utils import (
     default=None,
     help="Generates exam regardless of if student is in roster with the set deadline.",
 )
-def compile_all(exam, subtitle, out, do_twice, email, exam_type, semester, deadline):
+def compile_all(
+    exam,
+    out,
+    subtitle,
+    do_twice,
+    email,
+    exam_type,
+    semester,
+    deadline,
+):
     """
     Compile individualized PDFs for the specified exam.
     Exam must have been deployed first.
