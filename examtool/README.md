@@ -26,6 +26,8 @@ To upload PDFs to Gradescope, run `examtool gradescope-upload`.
 
 Note that if you ran alternate versions of your exam, it is possible that a student might have taken both versions (say, if they switched from the regular to the alternate version after filling out part of the regular version). To check for such students, run `examtool check-dupes`, and then manually decide which of their submissions should be uploaded to Gradescope.
 
+Run `examtool loginas` to log in as a student and view their exam.
+
 To identify cheating or recover from students losing their Internet connection, run `examtool logs` to see the full submission history of a particular student, or all students in the roster. 
 
 Run `examtool save-logs` and then `examtool cheaters` to identify students who have used substituted words that did not occur in their exam, implying that they may be cheaters. Run `examtool identify-watermark` if you have a screenshot of a watermarked exam that you wish to identify.
