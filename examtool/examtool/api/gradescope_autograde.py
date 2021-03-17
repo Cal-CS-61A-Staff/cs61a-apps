@@ -402,7 +402,9 @@ class GradescopeGrader:
         email_to_exam_map = {}
 
         first_exam = True
+        assembled_exam_template = None
         for exam in exams:
+            print(f"Processing exam {exam}...")
             (
                 tmp_exam_json,
                 tmp_template_questions,
@@ -457,7 +459,7 @@ class GradescopeGrader:
 
             print(f"[{exam}]: Exporting exam pdfs...")
 
-            question_page_mapping = self.export_exam(
+            tmp_assembled_exam_template = self.export_exam(
                 tmp_template_questions,
                 tmp_email_to_data_map,
                 tmp_total,
@@ -467,11 +469,21 @@ class GradescopeGrader:
                 sid_question_id,
                 include_outline=first_exam,
             )
+            if assembled_exam_template is None:
+                assembled_exam_template = tmp_assembled_exam_template
 
             # Set global data for the examtool
             if first_exam:
                 first_exam = False
                 exam_json = tmp_exam_json
+
+        if assembled_exam_template is None:
+            raise ValueError("Failed to extract the exam template.")
+
+        question_page_mapping = examtool.api.download.get_question_to_page_mapping(
+            assembled_exam_template,
+            num_threads=self.simultaneous_jobs
+        )
 
         # Lets finally clean up the student responses
         self.cleanse_student_response_data(email_to_data_map)
@@ -547,17 +559,6 @@ class GradescopeGrader:
         sid_question_id,
         include_outline=True,
     ):
-        assembled_exam_template = examtool.api.assemble_export.assemble_exam(
-            exam,
-            None,
-            {},
-            template_questions,
-            template_questions,
-            name_question_id,
-            sid_question_id,
-            dispatch=None,
-        )
-
         assembled_exams = examtool.api.assemble_export.export(
             template_questions,
             email_to_data_map,
@@ -584,9 +585,15 @@ class GradescopeGrader:
                 )
             )
 
-        return examtool.api.download.get_question_to_page_mapping(
-            assembled_exam_template,
-            num_threads=self.simultaneous_jobs
+        return examtool.api.assemble_export.assemble_exam(
+            exam,
+            None,
+            {},
+            template_questions,
+            template_questions,
+            name_question_id,
+            sid_question_id,
+            dispatch=None,
         )
 
     def create_assignment(self, gs_class_id: str, gs_title: str, outline_path: str):
