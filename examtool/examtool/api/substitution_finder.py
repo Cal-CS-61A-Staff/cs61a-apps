@@ -22,7 +22,7 @@ class SuspectedCheating:
 
     def explain(self):
         print(
-            f"In question {self.question}, Student {self.email} used keyword {self.observed} for "
+            f"In question {self.question}, student {self.email} used keyword {self.observed} for "
             f"{self.base_keyword}, when they should have used {self.expected}"
         )
 
