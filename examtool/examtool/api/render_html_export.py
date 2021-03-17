@@ -70,8 +70,6 @@ def render_html_exam(assembled_exam: AssembledExam):
                 with pre(className="autogradeOutput"):
                     user_out(question.autograde_output)
 
-    print("".join(blocks))
-
     def export(target):
         pdfkit.from_string(
             "".join(blocks),
