@@ -15,6 +15,7 @@ from examtool.api.extract_questions import (
     extract_questions,
     extract_public,
 )
+from examtool.api.render_html_export import render_html_exam
 from fullGSapi.api.login_tokens import LoginTokens
 from fullGSapi.api.client import GradescopeClient
 from fullGSapi.api.assignment_grader import (
@@ -453,17 +454,9 @@ class GradescopeGrader:
                 email_to_exam_map[email] = exam
                 email_to_data_map[email] = data
 
-            question_page_mapping = examtool.api.download.get_question_to_page_mapping(
-                tmp_template_questions,
-                exam,
-                out,
-                name_question_id,
-                sid_question_id,
-            )
-
             print(f"[{exam}]: Exporting exam pdfs...")
 
-            self.export_exam(
+            question_page_mapping = self.export_exam(
                 tmp_template_questions,
                 tmp_email_to_data_map,
                 tmp_total,
@@ -473,6 +466,7 @@ class GradescopeGrader:
                 sid_question_id,
                 include_outline=first_exam,
             )
+            import ipdb; ipdb.set_trace()
 
             # Set global data for the examtool
             if first_exam:
@@ -553,15 +547,44 @@ class GradescopeGrader:
         sid_question_id,
         include_outline=True,
     ):
-        examtool.api.download.export(
-            template_questions,
-            email_to_data_map,
-            total,
+        assembled_exam_template = examtool.api.assemble_export.assemble_exam(
             exam,
-            out,
+            None,
+            {},
+            template_questions,
+            template_questions,
             name_question_id,
             sid_question_id,
-            include_outline=include_outline,
+            dispatch=None,
+        )
+
+        assembled_exams = examtool.api.assemble_export.export(
+            template_questions,
+            email_to_data_map,
+            exam,
+            name_question_id,
+            sid_question_id,
+            substitute_in_question_text=True
+        )
+
+        def render(name_exam):
+            name, exam = name_exam
+            target = os.path.join(out, f"{name}.pdf")
+            export = render_html_exam(exam)
+            export(target)
+
+        with ThreadPool(self.simultaneous_jobs) as p:
+            list(
+                tqdm(
+                    p.imap_unordered(render, assembled_exams.items()),
+                    total=len(assembled_exams),
+                    desc="Rendering",
+                    unit="Exam",
+                )
+            )
+
+        return examtool.api.download.get_question_to_page_mapping(
+            assembled_exam_template
         )
 
     def create_assignment(self, gs_class_id: str, gs_title: str, outline_path: str):

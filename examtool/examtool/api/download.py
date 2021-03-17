@@ -6,6 +6,11 @@ from examtool.api.database import get_exam, get_roster, get_submissions
 from examtool.api.extract_questions import extract_questions
 from examtool.api.scramble import scramble
 
+from examtool.api.assemble_export import AssembledExam
+from examtool.api.render_html_export import render_html_exam
+
+from PyPDF2 import PdfFileReader
+
 
 def download(exam, emails_to_download: [str] = None, debug: bool = False):
     exam_json = get_exam(exam=exam)
@@ -53,34 +58,25 @@ def download(exam, emails_to_download: [str] = None, debug: bool = False):
 
 
 def get_question_to_page_mapping(
-    template_questions,
-    exam,
-    out,
-    name_question,
-    sid_question,
-    dispatch=None,
+    assembled_exam: AssembledExam
 ):
-    questions = []
+    orig_questions = assembled_exam.questions.copy()
+    assembled_exam.questions = []
     pages = []
+    temp_file = "temp/qtpm_temp.pdf"
     for q in tqdm(
-        template_questions,
+        orig_questions,
         desc="Getting question page numbers",
         unit="Question",
         dynamic_ncols=True,
     ):
-        questions.append(q)
-        pdf = write_exam(
-            None,
-            {},
-            exam,
-            questions,
-            questions,
-            name_question,
-            sid_question,
-            dispatch,
-        )
-        pages.append(pdf.page_no())
-    # for i, q in enumerate(questions):
+        assembled_exam.questions.append(q)
+        export = render_html_exam(assembled_exam)
+        export(temp_file)
+        with open(temp_file, "rb") as pdf_file:
+            pdf_reader = PdfFileReader(pdf_file)
+            pages.append(pdf_reader.numPages)
+    # for i, q in enumerate(assembled_exam.questions):
     #     print(f"[{i}] pg: {pages[i]} - {q['id']}")
     # import ipdb; ipdb.set_trace()
     return pages

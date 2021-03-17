@@ -43,6 +43,7 @@ setup(
             "numpy",
             "opencv-python",
             "pdfkit",
+            "PyPDF2",
         ],
     },
 )
