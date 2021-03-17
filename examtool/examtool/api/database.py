@@ -57,6 +57,7 @@ def get_roster(*, exam):
     ):
         yield student.id, student.to_dict()["deadline"]
 
+
 @server_only
 def set_roster(*, exam, roster):
     db = SafeFirestore()

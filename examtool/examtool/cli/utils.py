@@ -25,8 +25,10 @@ hidden_target_folder_option = click.option(
 def verify_roster(*, roster):
     for i, row in enumerate(roster):
         j = len(row)
-        if (j != 2):
-            print(f"ValueError: The roster must only contain 2 columns: Email, Timestamp. Found {j} item(s) on row {i + 1}: {row}")
+        if j != 2:
+            print(
+                f"ValueError: The roster must only contain 2 columns: Email, Timestamp. Found {j} item(s) on row {i + 1}: {row}"
+            )
             return False
     return True
 
