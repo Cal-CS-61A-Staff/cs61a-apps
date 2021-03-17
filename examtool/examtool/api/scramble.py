@@ -153,9 +153,8 @@ def scramble(email, exam, *, keep_data=False):
     exam.pop("substitution_groups", None)
     exam.pop("substitutions_match", None)
 
-    exam["entropy"] = entropy = []
-    for _ in range(100):
-        entropy.append(random.randrange(1024))
+    if "watermark" in exam:
+        exam["watermark"]["value"] = random.randrange(2 ** 20)
 
     return exam
 
@@ -165,9 +164,10 @@ def get_elements(group):
 
 
 def select_substitutions(element):
-    substitutions = select_regular(element["substitutions"])
+    substitutions = select_regular(element.get("substitutions", {}))
     substitutions.update(select_no_replace(element.get("substitutions_match", [])))
     substitutions.update(select_group(element.get("substitution_groups", [])))
+    substitutions.update(select_ranges(element.get("substitution_ranges", {})))
     return substitutions
 
 
@@ -203,6 +203,14 @@ def select_group(substitution_groups):
         assert len(k) == len(v)
         for k0, v0 in zip(k, v):
             out[k0] = v0
+    return out
+
+
+def select_ranges(substitution_ranges):
+    out = {}
+    # DEFINE RANGE
+    for k, [low, high] in sorted(substitution_ranges.items()):
+        out[k] = str(random.randrange(low, high))
     return out
 
 

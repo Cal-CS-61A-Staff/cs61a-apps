@@ -370,6 +370,8 @@ to\hsize{\hfil\box\@tempboxa\hfil}
 \usepackage{setspace}
 \usepackage{booktabs}
 
+\usepackage{svg}
+
 \pagestyle{myheadings}
 \markboth{}{Exam generated for \texttt{<EMAILADDRESS>}}
 
@@ -458,6 +460,33 @@ to\hsize{\hfil\box\@tempboxa\hfil}
   {\par\xdef\tpd{\the\prevdepth}\egroup
    \prevdepth=\tpd}
 
+
+
+\newcommand\DupImage{%
+     \includesvg{watermark}%
+     \includesvg{watermark}%
+     \includesvg{watermark}%
+     \includesvg{watermark}%
+     \includesvg{watermark}%
+}
+
+\newcommand\ShowWatermark{
+\usepackage{background}
+\backgroundsetup{%
+  scale=1,
+  angle=0,
+  contents={%
+     \begin{minipage}{\paperheight}
+     \DupImage\\
+     \DupImage\\
+     \DupImage\\
+     \DupImage\\
+     \DupImage
+     \end{minipage}%
+   }
+}}
+
+\ifx\Watermarks 1 \ShowWatermark \fi
 
 %%% Document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

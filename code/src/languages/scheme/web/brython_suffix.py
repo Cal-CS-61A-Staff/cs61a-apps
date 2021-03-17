@@ -57,7 +57,7 @@ def record_exec(code, wrap):
         out += ")\n"
         record_exec(out, False)
     else:
-        print("EXEC: " + code)
+        print("EXEC: " + code, end="")
 
 
 frame = create_global_frame()

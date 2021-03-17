@@ -1,0 +1,23 @@
+from buildtool import config, callback
+
+
+def declare_gcc_symlink():
+    def impl(ctx):
+        target = ctx.input(sh=f"which gcc").strip()
+        ctx.sh("mkdir -p env/bin")
+        ctx.sh("rm -f env/bin/gcc")
+        ctx.sh(f"ln -s {target} env/bin/gcc")
+
+    return callback(
+        name="gcc",
+        impl=impl,
+        out="env/bin/gcc",
+    )
+
+
+callback(name="init", deps=[declare_gcc_symlink()])
+
+config.register_default_setup_rule(":init")
+config.register_default_build_rule(":all")
+config.register_output_directory("build")
+config.require_buildtool_version("0.1.25")

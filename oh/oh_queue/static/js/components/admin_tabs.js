@@ -5,6 +5,7 @@ function AdminTabs({ currentTab, partyAlias }) {
 
   const links = [
     "general",
+    "tickets",
     "party",
     "appointments",
     "assignments",

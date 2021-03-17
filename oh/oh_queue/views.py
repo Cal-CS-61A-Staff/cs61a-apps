@@ -2,13 +2,11 @@ import datetime
 import functools
 import random
 import time
-from base64 import b64encode
 from operator import or_
 from urllib.parse import urljoin, urlparse
 
 from flask import g, jsonify, render_template, request
 from flask_login import current_user, login_user
-from ics import Calendar, Event
 from oh_queue import app, db
 from oh_queue.models import (
     Appointment,
@@ -465,6 +463,14 @@ def init_config():
             course=get_course(),
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="default_description",
+            value="",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 
@@ -784,7 +790,11 @@ def create(form):
     assignment_id = form.get("assignment_id")
     location_id = form.get("location_id")
     question = form.get("question")
-    description = form.get("description")
+    description = form.get("description") or (
+        ConfigEntry.query.filter_by(course=get_course(), key="default_description")
+        .one()
+        .value
+    )
 
     call_link = form.get("call-link", "")
     doc_link = form.get("doc-link", "")

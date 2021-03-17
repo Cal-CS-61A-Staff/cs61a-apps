@@ -92,7 +92,18 @@ Each question block is introduced with
 
 Note that, unlike groups, questions do not have titles. Then you can provide some question
 body text, written in Markdown. Then you must provide at least one `INPUT` statement. Then
-you can provide `SOLUTION` and `NOTE` blocks. Then a question is ended with
+you can provide `SOLUTION` and `NOTE` blocks. 
+
+Additionally, you can set a constant ID for your question by setting the config ID. This is
+useful as the examtool randomly generates an ID every time you recompile the exam. This will
+statically set an ID for the question. This is useful in allowing you to recompile and redeploy
+an exam without needing to worry about losing the link of a students answers to a question.
+
+```
+# CONFIG ID MYNEWID
+```
+
+Then a question is ended with
 
 ```
 # END QUESTION
@@ -191,7 +202,7 @@ If you want to have some questions that can be filled out before the exam starts
 block, just like a group block. This will create a question group that is visible before students start the
 exam. At most one such block can exist in the exam.
 
-## Config Syntax
+## Scramble Syntax
 
 At the beginning of the exam, before anything else, you can provide config statements, written as
 
@@ -236,11 +247,17 @@ If you have a set of variables which should be replaced with a set of another, a
 
 This will uniquely set each target with one of the alts. You may have more alts than targets but you **must** have at least as many alts as targets.
 
-If you have a group of variables that should be replaced with one of a list of alternative groups, you can use the define statement
+If you have a group of variables that should be replaced with one of a list of alternative groups, you can use this define syntax:
 ```
 # DEFINE GROUP (<target1> <target2> ...) (<alt1a> <alt2a> ...) (<alt1b> <alt1b>... ) ...
 ```
 It will either set `target1` to `alt1a` and `target2` to `alt2a`, or `target1` to `alt1b` and `target2` to `alt2b`.
+
+If you wish to set a variable to an integer within a range, you can use this define syntax:
+```
+# DEFINE RANGE <target> <low> <high>
+```
+It will set `target` to a random integer in the interval `[low, high)`.
 
 Note that this syntax does not support Markdown - it is a very naive text substitution in the generated HTML, so don't
 try anything too fancy with it!
@@ -288,3 +305,13 @@ To write exams over multiple files, use the syntax
 ```
 to insert the contents of the file at `<path>` in the current file. The `<path>` is evaluated with respect to the
 folder containing the importing file, and may be a relative or absolute path.
+
+
+## Watermark Syntax
+
+Optionally, you can include a repeating watermark in the background of exams, that is unique to each student.
+This can be done using the syntax
+```
+# CONFIG WATERMARK <brightness>
+```
+where `brightness` is an integer from 0 to 255 that represents the brightness of the watermark.

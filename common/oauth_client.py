@@ -36,7 +36,7 @@ def is_enrolled(course, *, roles=None):
         for participation in get_user()["participations"]:
             if roles and participation["role"] not in roles:
                 continue
-            if participation["course"]["offering"] != endpoint and endpoint is not None:
+            if participation["course"]["offering"] != endpoint:
                 continue
             return True
         return False

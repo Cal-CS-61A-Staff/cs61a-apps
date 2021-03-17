@@ -8,6 +8,7 @@ from examtool.cli.deploy import deploy
 from examtool.cli.download import download
 from examtool.cli.gradescope_autograde import gradescope_autograde
 from examtool.cli.gradescope_upload import gradescope_upload
+from examtool.cli.identify_watermark import identify_watermark
 from examtool.cli.loginas import loginas
 from examtool.cli.login import login
 from examtool.cli.logs import logs
@@ -35,6 +36,7 @@ cli.add_command(deploy)
 cli.add_command(download)
 cli.add_command(gradescope_autograde)
 cli.add_command(gradescope_upload)
+cli.add_command(identify_watermark)
 cli.add_command(logs)
 cli.add_command(send)
 cli.add_command(loginas)

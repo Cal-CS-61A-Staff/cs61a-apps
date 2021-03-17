@@ -4,9 +4,10 @@ from io import BytesIO
 from json import load, dump
 
 import click
+from examtool.api.watermarks import create_watermark
 from pikepdf import Pdf
 
-from examtool.api.convert import convert, handle_imports, LineBuffer
+from examtool.api.convert import convert, load_imports, LineBuffer
 from examtool.api.database import get_exam
 from examtool.api.gen_latex import render_latex
 from examtool.api.utils import sanitize_email
@@ -71,6 +72,18 @@ from examtool.cli.utils import (
     default=False,
     help="Generates a draft copy of the exam, which is faster but less accurate.",
 )
+@click.option(
+    "--num-threads",
+    default=16,
+    type=int,
+    help="The number of threads to process the JSON file.",
+)
+@click.option(
+    "--require-explicit-ids",
+    default=False,
+    is_flag=True,
+    help="Raises an error if an ID is not specified by a question in its config.",
+)
 @hidden_output_folder_option
 def compile(
     exam,
@@ -84,6 +97,8 @@ def compile(
     json_out,
     merged_md,
     draft,
+    num_threads,
+    require_explicit_ids,
     out,
 ):
     """
@@ -100,14 +115,25 @@ def compile(
         print("Loading exam...")
         exam_data = load(json)
     elif md:
-        exam_text_data = md.read()
+        src = md.read()
+        path = md.name
         if merged_md:
-            buff = LineBuffer(exam_text_data)
-            handle_imports(buff, path=os.path.dirname(md.name))
+            buff = load_imports(src, path)
             merged_md.write("\n".join(buff.lines))
             return
         print("Compiling exam...")
-        exam_data = convert(exam_text_data, path=os.path.dirname(md.name), draft=draft)
+        try:
+            exam_data = convert(
+                src,
+                path=path,
+                draft=draft,
+                num_threads=num_threads,
+                allow_random_ids=not require_explicit_ids,
+            )
+        except SyntaxError as e:
+            print("SyntaxError:", e)
+            print("Could not compile your exam!")
+            return
     else:
         print("Fetching exam...")
         exam_data = get_exam(exam=exam)
@@ -142,7 +168,10 @@ def compile(
     }
     if seed:
         settings["emailaddress"] = sanitize_email(seed)
-    with render_latex(exam_data, settings) as pdf:
+    with render_latex(
+        exam_data,
+        settings,
+    ) as pdf:
         pdf = Pdf.open(BytesIO(pdf))
         pdf.save(os.path.join(out, exam + ".pdf"))
         pdf.close()

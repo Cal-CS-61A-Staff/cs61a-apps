@@ -27,7 +27,7 @@ from models import (
     db,
 )
 
-FIRST_WEEK_START = datetime(year=2020, month=9, day=1).timestamp()
+FIRST_WEEK_START = datetime(year=2021, month=1, day=25).timestamp()
 
 
 class Failure(Exception):
