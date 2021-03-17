@@ -22,12 +22,12 @@ from examtool.cli.utils import (
 
 @click.command()
 @exam_name_option
+@hidden_output_folder_option
 @click.option(
     "--subtitle",
     prompt=True,
     default="Structure and Interpretation of Computer Programs",
 )
-@hidden_output_folder_option
 @click.option(
     "--do-twice",
     is_flag=True,
@@ -49,7 +49,16 @@ from examtool.cli.utils import (
     default=None,
     help="Generates exam regardless of if student is in roster with the set deadline.",
 )
-def compile_all(exam, subtitle, out, do_twice, email, exam_type, semester, deadline):
+def compile_all(
+    exam,
+    out,
+    subtitle,
+    do_twice,
+    email,
+    exam_type,
+    semester,
+    deadline,
+):
     """
     Compile individualized PDFs for the specified exam.
     Exam must have been deployed first.
@@ -58,8 +67,13 @@ def compile_all(exam, subtitle, out, do_twice, email, exam_type, semester, deadl
         out = "out/latex/" + exam
 
     pathlib.Path(out).mkdir(parents=True, exist_ok=True)
-
-    exam_data = get_exam(exam=exam)
+    try:
+        exam_data = get_exam(exam=exam)
+    except Exception as e:
+        print(
+            f"Exception: Unable to pull the exam {exam}. Received: {e}\nDid you deploy the exam first?"
+        )
+        return
     password = exam_data.pop("secret")[:-1]
     print(password)
     exam_str = json.dumps(exam_data)
