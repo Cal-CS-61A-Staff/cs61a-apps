@@ -4,7 +4,6 @@ import pathlib
 from datetime import datetime
 from io import BytesIO
 
-from examtool.api.watermarks import create_watermark
 from pikepdf import Pdf, Encryption
 import click
 import pytz
@@ -71,7 +70,9 @@ def compile_all(
     try:
         exam_data = get_exam(exam=exam)
     except Exception as e:
-        print(f"Exception: Unable to pull the exam {exam}. Received: {e}\nDid you deploy the exam first?")
+        print(
+            f"Exception: Unable to pull the exam {exam}. Received: {e}\nDid you deploy the exam first?"
+        )
         return
     password = exam_data.pop("secret")[:-1]
     print(password)
