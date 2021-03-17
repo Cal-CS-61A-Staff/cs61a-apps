@@ -50,3 +50,37 @@ def download(exam, emails_to_download: [str] = None, debug: bool = False):
         }
 
     return json.loads(exam_json), template_questions, email_to_data_map, total
+
+
+def get_question_to_page_mapping(
+    template_questions,
+    exam,
+    out,
+    name_question,
+    sid_question,
+    dispatch=None,
+):
+    questions = []
+    pages = []
+    for q in tqdm(
+        template_questions,
+        desc="Getting question page numbers",
+        unit="Question",
+        dynamic_ncols=True,
+    ):
+        questions.append(q)
+        pdf = write_exam(
+            None,
+            {},
+            exam,
+            questions,
+            questions,
+            name_question,
+            sid_question,
+            dispatch,
+        )
+        pages.append(pdf.page_no())
+    # for i, q in enumerate(questions):
+    #     print(f"[{i}] pg: {pages[i]} - {q['id']}")
+    # import ipdb; ipdb.set_trace()
+    return pages
