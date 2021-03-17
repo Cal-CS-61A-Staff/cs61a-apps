@@ -1,6 +1,12 @@
+import os
 import json
+import collections
+import tempfile
+import multiprocessing
 
 from tqdm import tqdm
+from pathlib import Path
+from multiprocessing import Pool
 
 from examtool.api.database import get_exam, get_roster, get_submissions
 from examtool.api.extract_questions import extract_questions
@@ -56,27 +62,65 @@ def download(exam, emails_to_download: [str] = None, debug: bool = False):
 
     return json.loads(exam_json), template_questions, email_to_data_map, total
 
+def _get_question_to_page_mapping_renderer(data):
+    filename = "qtpm_temp.pdf"
+    question_num, assembled_exam, tmpdirname, pages_dict = data
+    tmp_assembled_exam = AssembledExam(
+        assembled_exam.exam, 
+        assembled_exam.email, 
+        assembled_exam.name, 
+        assembled_exam.sid, 
+        assembled_exam.questions[:question_num + 1] # +1 is meant to include the current question.
+    )
+    temp_file = os.path.join(tmpdirname, multiprocessing.current_process().name + "_" + filename)
+    export = render_html_exam(tmp_assembled_exam)
+    export(temp_file)
+    with open(temp_file, "rb") as pdf_file:
+        pdf_reader = PdfFileReader(pdf_file)
+        pages_dict[question_num] = pdf_reader.numPages
 
 def get_question_to_page_mapping(
-    assembled_exam: AssembledExam
+    assembled_exam: AssembledExam,
+    num_threads: int=16,
 ):
-    orig_questions = assembled_exam.questions.copy()
-    assembled_exam.questions = []
-    pages = []
-    temp_file = "temp/qtpm_temp.pdf"
-    for q in tqdm(
-        orig_questions,
-        desc="Getting question page numbers",
-        unit="Question",
-        dynamic_ncols=True,
-    ):
-        assembled_exam.questions.append(q)
-        export = render_html_exam(assembled_exam)
-        export(temp_file)
-        with open(temp_file, "rb") as pdf_file:
-            pdf_reader = PdfFileReader(pdf_file)
-            pages.append(pdf_reader.numPages)
+    pages_dict = {}    
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        num_questions = len(assembled_exam.questions)
+        with multiprocessing.Manager() as manager:
+            managed_pages_dict = manager.dict()
+            with manager.Pool(num_threads) as p:
+                list(
+                    tqdm(
+                        p.imap_unordered(_get_question_to_page_mapping_renderer, [(i, assembled_exam, tmpdirname, managed_pages_dict) for i in range(num_questions)]),
+                        total=num_questions,
+                        desc="Getting question page numbers",
+                        unit="Question",
+                    )
+                )
+            pages_dict = dict(managed_pages_dict)
+
+    pages = list(collections.OrderedDict(sorted(pages_dict.items())).values())
+
+    # for q in tqdm(
+    #     assembled_exam.questions,
+    #     desc="Getting question page numbers",
+    #     unit="Question",
+    #     dynamic_ncols=True,
+    # ):
+    #     questions.append(q)
+    #     tmp_assembled_exam = AssembledExam(
+    #         assembled_exam.exam, 
+    #         assembled_exam.email, 
+    #         assembled_exam.name, 
+    #         assembled_exam.sid, 
+    #         questions
+    #     )
+    #     export = render_html_exam(tmp_assembled_exam)
+    #     export(temp_file)
+    #     with open(temp_file, "rb") as pdf_file:
+    #         pdf_reader = PdfFileReader(pdf_file)
+    #         pages.append(pdf_reader.numPages)
     # for i, q in enumerate(assembled_exam.questions):
-    #     print(f"[{i}] pg: {pages[i]} - {q['id']}")
+    #     print(f"[{i}] pg: {pages[i]}") # - {q['id']}")
     # import ipdb; ipdb.set_trace()
     return pages

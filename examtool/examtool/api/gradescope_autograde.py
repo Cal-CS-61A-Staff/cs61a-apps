@@ -5,6 +5,7 @@ import contextlib
 import sys
 from typing import Callable, List
 
+from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from tqdm.contrib import DummyTqdmFile
 
@@ -466,7 +467,6 @@ class GradescopeGrader:
                 sid_question_id,
                 include_outline=first_exam,
             )
-            import ipdb; ipdb.set_trace()
 
             # Set global data for the examtool
             if first_exam:
@@ -563,9 +563,10 @@ class GradescopeGrader:
             email_to_data_map,
             exam,
             name_question_id,
-            sid_question_id,
-            substitute_in_question_text=True
+            sid_question_id
         )
+
+        Path(out).mkdir(parents=True, exist_ok=True)
 
         def render(name_exam):
             name, exam = name_exam
