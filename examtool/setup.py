@@ -38,7 +38,7 @@ setup(
             "pypandoc",
             "sendgrid",
             "func-timeout",
-            "fullGSapi",
+            "fullGSapi>=1.3.7",
             "tqdm",
             "numpy",
             "opencv-python",
