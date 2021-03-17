@@ -585,7 +585,8 @@ class GradescopeGrader:
             )
 
         return examtool.api.download.get_question_to_page_mapping(
-            assembled_exam_template
+            assembled_exam_template,
+            num_threads=self.simultaneous_jobs
         )
 
     def create_assignment(self, gs_class_id: str, gs_title: str, outline_path: str):
