@@ -602,7 +602,7 @@ class GradescopeGrader:
             # ):
             def func(tup):
                 file_name, student_email = tup
-                if not self.gs_api_client.upload_programming_submission(
+                if not self.gs_api_client.upload_pdf_submission(
                     gs_class_id,
                     assignment_id,
                     student_email,
