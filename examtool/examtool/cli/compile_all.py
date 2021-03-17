@@ -4,7 +4,6 @@ import pathlib
 from datetime import datetime
 from io import BytesIO
 
-from examtool.api.watermarks import create_watermark
 from pikepdf import Pdf, Encryption
 import click
 import pytz
@@ -68,8 +67,13 @@ def compile_all(
         out = "out/latex/" + exam
 
     pathlib.Path(out).mkdir(parents=True, exist_ok=True)
-
-    exam_data = get_exam(exam=exam)
+    try:
+        exam_data = get_exam(exam=exam)
+    except Exception as e:
+        print(
+            f"Exception: Unable to pull the exam {exam}. Received: {e}\nDid you deploy the exam first?"
+        )
+        return
     password = exam_data.pop("secret")[:-1]
     print(password)
     exam_str = json.dumps(exam_data)
