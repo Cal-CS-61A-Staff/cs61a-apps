@@ -4,6 +4,7 @@ from io import BytesIO
 from json import load, dump
 
 import click
+from examtool.api.watermarks import create_watermark
 from pikepdf import Pdf
 
 from examtool.api.convert import convert, load_imports, LineBuffer
@@ -167,7 +168,10 @@ def compile(
     }
     if seed:
         settings["emailaddress"] = sanitize_email(seed)
-    with render_latex(exam_data, settings) as pdf:
+    with render_latex(
+        exam_data,
+        settings,
+    ) as pdf:
         pdf = Pdf.open(BytesIO(pdf))
         pdf.save(os.path.join(out, exam + ".pdf"))
         pdf.close()

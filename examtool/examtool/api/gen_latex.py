@@ -1,27 +1,33 @@
 import os
 import re
+import subprocess
 from collections import defaultdict
 from contextlib import contextmanager
 
 from examtool.api.scramble import latex_escape
+from examtool.api.watermarks import create_watermark
 from examtool.api.utils import rel_open
 
 
-def generate(exam):
+def generate(exam, *, include_watermark):
     out = []
-    write = out.append
+
+    def write(x, *, newline=True):
+        out.append(x)
+        if newline:
+            out.append("\n")
 
     def write_group(group, is_public):
         if is_public:
             if group["points"] is not None:
                 write(rf"{{\bf\item ({group['points']} points)\quad}}")
             else:
-                write(r"\item[]")
+                write(r"\item[]", newline=False)
         else:
             if group["points"] is not None:
                 write(fr"\q{{{group['points']}}}")
             else:
-                write(r"\item")
+                write(r"\item", newline=False)
         write(r"{ \bf " + latex_escape(group["name"]) + "}")
         write("\n")
         write(group["tex"])
@@ -90,6 +96,9 @@ def generate(exam):
             write(r"}")
         write(r"\vspace{10px}")
 
+    if include_watermark:
+        write(r"\let\Watermarks=1")
+
     with rel_open("tex/prefix.tex") as f:
         write(f.read())
     for i, group in enumerate(
@@ -101,12 +110,14 @@ def generate(exam):
     with rel_open("tex/suffix.tex") as f:
         write(f.read())
 
-    return "\n".join(out)
+    return "".join(out)
 
 
 @contextmanager
 def render_latex(exam, subs=None, *, do_twice=False):
-    latex = generate(exam)
+    include_watermark = "watermark" in exam and "value" in exam["watermark"]
+
+    latex = generate(exam, include_watermark=include_watermark)
     latex = re.sub(
         r"\\includegraphics(\[.*\])?{(http.*/(.+))}",
         r"\\immediate\\write18{wget -N \2}\n\\includegraphics\1{\3}",
@@ -119,11 +130,25 @@ def render_latex(exam, subs=None, *, do_twice=False):
         os.mkdir("temp")
     with open("temp/out.tex", "w+") as f:
         f.write(latex)
-    old = os.getcwd()
-    os.system("cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex")
+
+    if include_watermark:
+        with open("temp/watermark.svg", "w+") as f:
+            f.write(
+                create_watermark(
+                    exam["watermark"]["value"],
+                    brightness=exam["watermark"]["brightness"],
+                )
+            )
+
+    subprocess.run(
+        "cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex",
+        shell=True,
+    )
     if do_twice:
-        os.system("cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex")
+        subprocess.run(
+            "cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex",
+            shell=True,
+        )
     with open("temp/out.pdf", "rb") as f:
-        os.chdir(old)
         yield f.read()
     # shutil.rmtree("temp")

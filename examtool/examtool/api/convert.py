@@ -367,6 +367,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     public = None
     config = {}
     defines = {}
+    watermark = {}
     if path is not None:
         buff = load_imports(text, path)
     else:
@@ -385,6 +386,8 @@ def _convert(text, *, path=None, allow_random_ids=True):
                     "SCRAMBLE_OPTIONS",
                 ]:
                     config[directive.lower()] = [int(x) for x in rest.split(" ") if x]
+                elif directive == "WATERMARK":
+                    watermark["brightness"] = int(rest)
                 else:
                     raise SyntaxError(
                         "Unexpected CONFIG directive {}".format(directive)
@@ -422,6 +425,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
         "groups": groups,
         "config": config,
         **defines,
+        "watermark": watermark,
         "version": VERSION,
     }
 

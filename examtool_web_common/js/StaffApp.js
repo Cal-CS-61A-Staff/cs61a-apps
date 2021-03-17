@@ -126,7 +126,11 @@ export default function StaffApp() {
             }}
           >
             {mode === "live" && exam && (
-              <Exam groups={exam.groups} publicGroup={exam.public} />
+              <Exam
+                groups={exam.groups}
+                publicGroup={exam.public}
+                watermark={exam.watermark}
+              />
             )}
             {mode === "json" && (
               <textarea

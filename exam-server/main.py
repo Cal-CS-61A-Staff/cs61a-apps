@@ -3,9 +3,10 @@ import time
 from os import getenv
 
 import requests
+from examtool.api.watermarks import create_watermark
 from google.auth.transport.requests import Request
 from cryptography.fernet import Fernet
-from flask import jsonify, abort
+from flask import Response, jsonify, abort
 from google.oauth2 import id_token
 from google.cloud.exceptions import NotFound
 
@@ -108,6 +109,13 @@ def index(request):
                 db.collection("exams").document("all").get().to_dict()["exam-list"]
             )
 
+        if request.path.endswith("watermark.svg"):
+            watermark = create_watermark(
+                int(request.args["seed"]),
+                brightness=int(request.args["brightness"]),
+            )
+            return Response(watermark, mimetype="image/svg+xml")
+
         if request.path == "/" or request.json is None:
             return main_html
 
@@ -145,6 +153,7 @@ def index(request):
                         )
                         .decode("ascii")
                     ),
+                    "watermark": exam_data.get("watermark"),
                     "answers": answers,
                     "deadline": deadline,
                     "timestamp": time.time(),
@@ -197,6 +206,18 @@ def index(request):
             snapshot = request.json["snapshot"]
             db.collection(exam).document(email).collection("history").document().set(
                 {"timestamp": time.time(), "history": history, "snapshot": snapshot}
+            )
+            return jsonify({"success": True})
+
+        if request.path.endswith("log_event"):
+            exam = request.json["exam"]
+            email, is_admin = get_email(request)
+            event = request.json["event"]
+            db.collection(exam).document(email).collection("history").document().set(
+                {
+                    "timestamp": time.time(),
+                    "event": event,
+                }
             )
             return jsonify({"success": True})
 

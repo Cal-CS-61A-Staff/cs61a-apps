@@ -3,13 +3,15 @@ import React, { useContext, useEffect } from "react";
 import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
 import Anchor from "./Anchor";
-import { inAdminMode } from "./auth";
+import { getAuthParams, inAdminMode } from "./auth";
 import ExamContext from "./ExamContext";
 import Points from "./Points";
+import post from "./post";
 import Question from "./Question";
 import Sidebar from "./Sidebar";
 import useInterval from "./useInterval";
 import { synchronize } from "./logger.js";
+import useStyleWatcher from "./useStyleWatcher";
 
 export function postRenderFormat() {
   for (const link of document.getElementsByTagName("a")) {
@@ -29,10 +31,25 @@ export function postRenderFormat() {
   typeset();
 }
 
-export default function Exam({ groups, publicGroup, ended }) {
+export default function Exam({ groups, publicGroup, watermark, ended }) {
   const { exam } = useContext(ExamContext);
 
   useEffect(postRenderFormat, [groups, publicGroup]);
+
+  const examDivRef = useStyleWatcher(() => {
+    if (watermark) {
+      post("/log_event", {
+        exam,
+        event: "style_edited",
+        ...getAuthParams(),
+      });
+      alert(
+        "You must not edit the DOM during the exam. This is considered academic dishonesty." +
+          " This event has been logged. We will follow up with you after the exam regarding this" +
+          " event."
+      );
+    }
+  }, [watermark]);
 
   const stickyStyle = {
     position: "sticky",
@@ -50,7 +67,19 @@ export default function Exam({ groups, publicGroup, ended }) {
   const showExam = !ended || inAdminMode();
 
   return (
-    <div className="exam">
+    <div
+      className="exam"
+      ref={examDivRef}
+      style={
+        watermark
+          ? {
+              backgroundImage: `url("/watermark.svg?seed=${watermark.value}&brightness=${watermark.brightness}")`,
+              backgroundRepeat: "repeat-xy",
+              textShadow: "0px 0px 2px white",
+            }
+          : {}
+      }
+    >
       <Row>
         <Col md={9} sm={12}>
           {showExam && publicGroup && <Group group={publicGroup} number={0} />}
