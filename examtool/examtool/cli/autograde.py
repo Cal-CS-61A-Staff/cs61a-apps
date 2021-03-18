@@ -21,22 +21,6 @@ class Test:
     result: Optional[str] = None
 
 
-doctests = dict(
-    digit_replacer_iterative=[
-        Test("is_div_three = lambda d: d % 3 == 0"),
-        Test("lt_eight = lambda d: d < 8"),
-        Test("always_six = lambda d: 6"),
-        Test("floor_divide_five = lambda d: d // 5"),
-        Test("digit_replacer(lambda _: True, always_six)(23096)", "66666"),
-        Test("digit_replacer(is_div_three, floor_divide_five)(23096)", "20011"),
-        Test("digit_replacer(lt_eight, always_six)(9064892)", "9666896"),
-        Test("digit_replacer(lt_eight, always_six)(2)", "6"),
-    ]
-)
-
-templates = dict(digit_replacer_iterative="""{SAKEBHLXNXOTVSAZTVFNYQQRGLCECPZY}""")
-
-
 def depth(line):
     return len(line) - len(line.strip())
 
@@ -87,6 +71,8 @@ def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
 
 @click.command()
 def autograde(fetch=True):
+    from examtool.cli.DO_NOT_UPLOAD_MT2_DOCTESTS import doctests, templates
+
     EXAM = "cs61a-mt1-alt-7am"
 
     with open(f"{EXAM}_submissions.json", "w") as f:
