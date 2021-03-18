@@ -44,7 +44,7 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
     You can deploy the JSON multiple times and the password will remain unchanged.
     """
     json = json.read()
-    rostercsv = csv.reader(roster, delimiter=",")
+    roster = csv.reader(roster, delimiter=",")
 
     exam_content = loads(json)
 
@@ -57,11 +57,11 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
         pass
 
     set_exam(exam=exam, json=exam_content)
-    rostercsv = list(rostercsv)
-    if not verify_roster(roster=rostercsv):
+    roster = list(roster)
+    if not verify_roster(roster=roster):
         return
-    rostercsv = rostercsv[1:]  # ditch headers
-    set_roster(exam=exam, roster=rostercsv)
+    roster = roster[1:]  # ditch headers
+    set_roster(exam=exam, roster=roster)
 
     print("Exam uploaded with password:", exam_content["secret"][:-1])
 
