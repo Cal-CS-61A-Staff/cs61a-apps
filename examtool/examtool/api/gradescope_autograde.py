@@ -1229,7 +1229,7 @@ class GradescopeGrader:
         return rubric
 
     def grade_question(
-        self, qid: str, question: GS_Question, rubric: QuestionRubric, groups: dict, total_attempts: int=10
+        self, qid: str, question: GS_Question, rubric: QuestionRubric, groups: dict, total_attempts: int=1
     ):
         question_data = question.get_question_info()
         sub_id_mapping = {str(sub["id"]): sub for sub in question_data["submissions"]}
@@ -1242,12 +1242,12 @@ class GradescopeGrader:
             group_sids = group.get_sids()
             if len(group_sids) > 0:
                 sid = group_sids[0]
-                actual_total_attempts = max(len(group_sids), total_attempts)
+                actual_total_attempts = total_attempts #max(len(group_sids), total_attempts)
                 if not sub_id_mapping[str(sid)]["graded"]:
                     attempt = 0
                     while attempt < actual_total_attempts:
                         sid = group_sids[attempt % len(group_sids)]
-                        res = rubric.grade(sid, group_sel, save_group=True)
+                        res = rubric.grade(sid, group_sel, save_group=True, qid=f"[{qid}] ")
                         if res:
                             if attempt > 0:
                                 tqdm.write(f"[{qid}]: Failed to grade group {group.get_name()} finally worked on {sid}!")
