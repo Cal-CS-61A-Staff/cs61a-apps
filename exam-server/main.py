@@ -153,7 +153,8 @@ def index(request):
                         )
                         .decode("ascii")
                     ),
-                    "watermark": exam_data.get("watermark"),
+                    # `or None` is to handle the case of watermark={}, which is truthy in JS
+                    "watermark": exam_data.get("watermark") or None,
                     "answers": answers,
                     "deadline": deadline,
                     "timestamp": time.time(),
