@@ -111,11 +111,6 @@ def dispatch(email, question):
 
             def grade(responses):
                 return data[email][template_name]
-                # return (
-                #     "All correct"
-                #     if data[email][template_name] == "All correct"
-                #     else "Some failed."
-                # )
 
             return grade
 
