@@ -1,17 +1,16 @@
 import os
 import pathlib
 from io import BytesIO
-from json import load, dump
+from json import dump, load
 
 import click
-from examtool.api.watermarks import create_watermark
 from pikepdf import Pdf
 
-from examtool.api.convert import convert, load_imports, LineBuffer
+from examtool.api.convert import convert, load_imports
 from examtool.api.database import get_exam
 from examtool.api.gen_latex import render_latex
-from examtool.api.utils import sanitize_email
 from examtool.api.scramble import scramble
+from examtool.api.utils import sanitize_email
 from examtool.cli.utils import (
     determine_semester,
     exam_name_option,
