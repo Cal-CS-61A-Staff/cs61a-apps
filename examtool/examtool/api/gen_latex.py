@@ -115,7 +115,7 @@ def generate(exam, *, include_watermark):
 
 @contextmanager
 def render_latex(exam, subs=None, *, do_twice=False):
-    include_watermark = "watermark" in exam and "value" in exam["watermark"]
+    include_watermark = exam.get("watermark") and "value" in exam["watermark"]
 
     latex = generate(exam, include_watermark=include_watermark)
     latex = re.sub(
