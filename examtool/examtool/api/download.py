@@ -179,8 +179,8 @@ def get_question_to_page_mapping(
                         y0 = 4
                     else:
                         y0 = ceil(prev[2]) + 1
-                        if i == len(local_y_coord_map) - 1:
-                            y1 = 96
+                        # if i == len(local_y_coord_map) - 1:
+                        #     y1 = 96
                     prev = coord
                     y_coord_map.append((page, y0, ceil(y1)))
     return y_coord_map

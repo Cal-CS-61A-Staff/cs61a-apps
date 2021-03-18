@@ -1332,8 +1332,8 @@ class ExamtoolOutline:
         sid_question_id: str,
         question_page_mapping: List[int],
     ):
-        name_region = self.name_region
-        sid_region = self.sid_region
+        name_region = None
+        sid_region = None
         gs_number_to_exam_q = {}
         questions = []
 
@@ -1352,14 +1352,22 @@ class ExamtoolOutline:
             sqid = 1
             for question in extract_public(exam_json):
                 question_id = question.get("id")
-                if question_id == name_question_id:
-                    print(f"Found name question: {question_id}.")
-                    name_region = self.get_gs_crop_info(question_page_mapping[page], question)
-                    page += 1
-                    continue
-                if question_id == sid_question_id:
-                    print(f"Found sid question: {question_id}.")
-                    sid_region = self.get_gs_crop_info(question_page_mapping[page], question)
+                if question_id in [name_question_id, sid_question_id]:
+                    print(f"Found ID question: {question_id}.")
+                    pdfpage, y0, y1 = question_page_mapping[page]
+                    new_y1 = y1 - 3
+                    new_y0 = new_y1 - 5
+                    if page > 0:
+                        prev_page, prev_y0, prev_y1 = question_page_mapping[page - 1]
+                        if prev_y1 >= new_y0:
+                            new_y0 = prev_y1 + 1
+                    else:
+                        if new_y0 <= 4:
+                            new_y0 = 4
+                    if question_id == name_question_id:
+                        name_region = self.get_gs_crop_info((pdfpage, new_y0, new_y1), question)
+                    elif question_id == sid_question_id:
+                        sid_region = self.get_gs_crop_info((pdfpage, new_y0, new_y1), question)
                     page += 1
                     continue
                 pg.add_child(
@@ -1401,7 +1409,10 @@ class ExamtoolOutline:
             if page != prev_page:
                 questions.append(g)
                 qid += 1
-
+        if name_region is None:
+            name_region = self.name_region
+        if sid_region is None:
+            sid_region = self.sid_region
         outline = GS_Outline(name_region, sid_region, questions)
         return (gs_number_to_exam_q, outline)
 
