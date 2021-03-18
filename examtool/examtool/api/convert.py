@@ -367,7 +367,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
     public = None
     config = {}
     defines = {}
-    watermark = {}
+    watermark = None
     if path is not None:
         buff = load_imports(text, path)
     else:
@@ -387,7 +387,7 @@ def _convert(text, *, path=None, allow_random_ids=True):
                 ]:
                     config[directive.lower()] = [int(x) for x in rest.split(" ") if x]
                 elif directive == "WATERMARK":
-                    watermark["brightness"] = int(rest)
+                    watermark = dict(brightness=int(rest))
                 else:
                     raise SyntaxError(
                         "Unexpected CONFIG directive {}".format(directive)
