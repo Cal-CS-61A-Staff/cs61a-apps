@@ -194,7 +194,6 @@ class GradescopeGrader:
         self.set_group_types(gs_outline)
 
         # Fetch the student email to question id map
-        print("Fetching the student email to submission id's mapping...")
         email_to_question_sub_id = self.fetch_email_to_qid_map(grader, gradescope_export_evaluations_zip)
 
         # Check to see which emails may not be in the Gradescope roster and attempt to correct
@@ -668,7 +667,7 @@ class GradescopeGrader:
         gs_outline = examtool_outline.get_gs_outline()
         updated_outline = grader.update_outline(gs_outline, return_outline=False)
         while not updated_outline:
-            print(f"Failed to update the outline! Got {res}. Trying again...")
+            print(f"Failed to update the outline! Got {updated_outline}. Trying again...")
             updated_outline = grader.update_outline(gs_outline, return_outline=False)
         outline = grader.get_outline()
         while not outline:
@@ -1132,7 +1131,7 @@ class GradescopeGrader:
                         f"[{qid}]: Failed to group submissions to {group_id}. SIDS: {sids}"
                     )
                     failed_groups_names.append(g_name)
-                break
+                break # FIXME IS this logic correct?
             else:
                 tqdm.write(f"[{qid}]: Failed to create group for {g_name}! ({groups})")
                 failed_groups_names.append(g_name)
@@ -1230,22 +1229,37 @@ class GradescopeGrader:
         return rubric
 
     def grade_question(
-        self, qid: str, question: GS_Question, rubric: QuestionRubric, groups: dict
+        self, qid: str, question: GS_Question, rubric: QuestionRubric, groups: dict, total_attempts: int=10
     ):
         question_data = question.get_question_info()
         sub_id_mapping = {str(sub["id"]): sub for sub in question_data["submissions"]}
         # for group in tqdm(
         #     groups.get_groups(), desc=f"[{qid}]: Grading", unit="Group", **def_tqdm_args
         # ):
-        def sg(group):
+        def sg(data):
+            group = data
             group_sel = group.get_selected_items()
             group_sids = group.get_sids()
             if len(group_sids) > 0:
                 sid = group_sids[0]
+                actual_total_attempts = max(len(group_sids), total_attempts)
                 if not sub_id_mapping[str(sid)]["graded"]:
-                    if not rubric.grade(sid, group_sel, save_group=True):
+                    attempt = 0
+                    while attempt < actual_total_attempts:
+                        sid = group_sids[attempt % len(group_sids)]
+                        res = rubric.grade(sid, group_sel, save_group=True)
+                        if res:
+                            if attempt > 0:
+                                tqdm.write(f"[{qid}]: Failed to grade group {group.get_name()} finally worked on {sid}!")
+                            break
+                        attempt += 1
                         tqdm.write(
-                            f"[{qid}]: Failed to grade group {group.get_name()}!"
+                            f"[{qid}]: Failed to grade group {group.get_name()}! Got {res}. {res.content}" + (" Trying again..." if attempt < total_attempts else "")
+                        )
+                        time.sleep(1)
+                    else:
+                        tqdm.write(
+                            f"[{qid}]: Failed to grade group {group.get_name()} exceeded maximum attempts!"
                         )
 
         gps = groups.get_groups()
