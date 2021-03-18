@@ -153,7 +153,7 @@ def scramble(email, exam, *, keep_data=False):
     exam.pop("substitution_groups", None)
     exam.pop("substitutions_match", None)
 
-    if "watermark" in exam and exam["watermark"]:
+    if exam.get("watermark"):
         exam["watermark"]["value"] = random.randrange(2 ** 20)
 
     return exam
