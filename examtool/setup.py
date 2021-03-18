@@ -44,6 +44,7 @@ setup(
             "opencv-python",
             "pdfkit",
             "PyPDF2",
+            "pdfminer",
         ],
     },
 )

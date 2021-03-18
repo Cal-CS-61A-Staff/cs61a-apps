@@ -166,7 +166,8 @@ class GradescopeGrader:
         examtool_outline = ExamtoolOutline(
             grader,
             exam_json,
-            [name_question_id, sid_question_id],
+            name_question_id,
+            sid_question_id,
             question_page_mapping,
         )
 
@@ -332,7 +333,8 @@ class GradescopeGrader:
         examtool_outline = ExamtoolOutline(
             grader,
             exam_json,
-            [name_question_id, sid_question_id],
+            name_question_id,
+            sid_question_id,
             question_page_mapping,
         )
 
@@ -528,19 +530,25 @@ class GradescopeGrader:
         if assembled_exam_template is None:
             raise ValueError("Failed to extract the exam template.")
         
+        question_page_mapping = None
         if store_page_numbers:
             try:
                 with open(store_page_numbers, "r") as f:
                     question_page_mapping = json.load(f)
             except Exception as e:
                 print(f"Failed to load question page mapping file {store_page_numbers}! Got: {e}")
-                question_page_mapping = None
 
         if question_page_mapping is None:
             question_page_mapping = examtool.api.download.get_question_to_page_mapping(
                 assembled_exam_template,
                 num_threads=self.simultaneous_jobs
             )
+            if len(question_page_mapping) != len(assembled_exam_template.questions):
+                print("Robust question page mapping resulted in a different number of questions than the exam had! Reverting to old method...")
+                question_page_mapping = examtool.api.download.fallback_get_question_to_page_mapping(
+                    assembled_exam_template,
+                    num_threads=self.simultaneous_jobs
+                )
         
         if store_page_numbers:
             try:
@@ -1283,16 +1291,24 @@ class ExamtoolOutline:
         self,
         grader: GS_assignment_Grader,
         exam_json: dict,
-        id_question_ids: List[str],
+        name_question_id: str,
+        sid_question_id: str,
         question_page_mapping: List[int],
     ):
         self.exam_json = exam_json
         self.gs_number_to_exam_q, self.gs_outline = self.generate_gs_outline(
-            grader, exam_json, id_question_ids, question_page_mapping
+            grader, exam_json, name_question_id, sid_question_id, question_page_mapping
         )
 
     def get_gs_crop_info(self, page, question=None):
-        return GS_Crop_info(page, 4, 4, 96, 96)
+        if isinstance(page, tuple):
+            y0 = page[1]
+            y1 = page[2]
+            page = page[0]
+        else:
+            y0 = 4
+            y1 = 96
+        return GS_Crop_info(page, 4, y0, 96, y1)
 
     def question_to_gso_question(
         self, grader: GS_assignment_Grader, page, question: dict
@@ -1312,9 +1328,12 @@ class ExamtoolOutline:
         self,
         grader: GS_assignment_Grader,
         exam_json: dict,
-        id_question_ids: [str],
+        name_question_id: str,
+        sid_question_id: str,
         question_page_mapping: List[int],
     ):
+        name_region = self.name_region
+        sid_region = self.sid_region
         gs_number_to_exam_q = {}
         questions = []
 
@@ -1326,16 +1345,22 @@ class ExamtoolOutline:
             pg = GS_Outline_Question(
                 grader,
                 None,
-                [self.get_gs_crop_info(page, exam_json.get("public"))],
+                [self.get_gs_crop_info(question_page_mapping[page], exam_json.get("public"))],
                 title="Public",
                 weight=0,
             )
             sqid = 1
             for question in extract_public(exam_json):
                 question_id = question.get("id")
-                if question_id in id_question_ids:
-                    print(f"Skipping {question_id} as it is an id question.")
-                    page += 1  # Still need to increment this as it is still on the exam pdf.
+                if question_id == name_question_id:
+                    print(f"Found name question: {question_id}.")
+                    name_region = self.get_gs_crop_info(question_page_mapping[page], question)
+                    page += 1
+                    continue
+                if question_id == sid_question_id:
+                    print(f"Found sid question: {question_id}.")
+                    sid_region = self.get_gs_crop_info(question_page_mapping[page], question)
+                    page += 1
                     continue
                 pg.add_child(
                     self.question_to_gso_question(
@@ -1377,7 +1402,7 @@ class ExamtoolOutline:
                 questions.append(g)
                 qid += 1
 
-        outline = GS_Outline(self.name_region, self.sid_region, questions)
+        outline = GS_Outline(name_region, sid_region, questions)
         return (gs_number_to_exam_q, outline)
 
     def get_gs_outline(self):
