@@ -77,7 +77,7 @@ from examtool.api.gradescope_autograde import GradescopeGrader
 @click.option(
     "--create/--update",
     default=True,
-    help="Create will generate the outline and set the grouping type, update will ",
+    help="Create will generate the outline and set the grouping type, update will not attempt to reupload the rubric.",
 )
 @click.option(
     "--custom-grouper",
@@ -97,6 +97,28 @@ from examtool.api.gradescope_autograde import GradescopeGrader
     default=10,
     type=int,
     help="This is the number of simultaneous jobs of a question currently being processed. Note this is per question. Default: 10",
+)
+@click.option(
+    "--do-not-export-exams",
+    is_flag=True,
+    help="When set, the autograder will skip the exam generation phase. It will error later on if the exam pdfs do not exist if it needs to upload them!",
+)
+@click.option(
+    "--store-page-numbers",
+    default=None,
+    help="If set, the autograder will store the question to page number mapping to the specified file if it exists. If it does not exist or does not match the number of questions, it will generate the mapping and save it in JSON format.",
+    type=click.Path(),
+)
+@click.option(
+    "--gradescope-export-evaluations-zip",
+    default=None,
+    help="This is the path to a zip file which holds the gradescope evaluations zip file. If it does not exist, it will be fetched and saved.",
+    type=click.Path(),
+)
+@click.option(
+    "--only-grade",
+    is_flag=True,
+    help="When set, the autograder will skip all of the not required parts to grade the uploaded submissions. This flag only works with the `--update` flag set.",
 )
 @hidden_target_folder_option
 def gradescope_autograde(
@@ -118,11 +140,16 @@ def gradescope_autograde(
     custom_grouper,
     jobs,
     sub_jobs,
+    do_not_export_exams,
+    store_page_numbers,
+    gradescope_export_evaluations_zip,
+    only_grade,
     target,
 ):
     """
     Uploads and autogrades the given exam(s).
     """
+    export_exams = not do_not_export_exams
     exam = [e.strip() for e in exam.split(",")]
     target = target or "out/export/" + exam[0]
 
@@ -175,6 +202,9 @@ def gradescope_autograde(
             question_numbers=question_numbers,
             blacklist_question_numbers=blacklist_question_numbers,
             custom_grouper_map=grouper_map,
+            export_exams=export_exams,
+            store_page_numbers=store_page_numbers,
+            gradescope_export_evaluations_zip=gradescope_export_evaluations_zip,
         )
     else:
         grader.add_additional_exams(
@@ -190,6 +220,10 @@ def gradescope_autograde(
             question_numbers=question_numbers,
             blacklist_question_numbers=blacklist_question_numbers,
             custom_grouper_map=grouper_map,
+            export_exams=export_exams,
+            store_page_numbers=store_page_numbers,
+            only_grade=only_grade,
+            gradescope_export_evaluations_zip=gradescope_export_evaluations_zip,
         )
 
 

@@ -4,6 +4,7 @@ Developed by ThaumicMekanism [Stephan K.] - all credit goes to him!
 import contextlib
 import sys
 from typing import Callable, List
+import json
 
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
@@ -107,6 +108,9 @@ class GradescopeGrader:
         custom_grouper_map: {
             str: Callable[[str, GS_Question, dict, dict], "QuestionGrouper"]
         } = None,
+        export_exams: bool = True,
+        store_page_numbers: str = None,
+        gradescope_export_evaluations_zip: str = None,
     ):
         if gs_assignment_title is None:
             gs_assignment_title = "Examtool Exam"
@@ -128,6 +132,8 @@ class GradescopeGrader:
             sid_question_id,
             emails=emails,
             email_mutation_list=email_mutation_list,
+            export_exams=export_exams,
+            store_page_numbers=store_page_numbers,
         )
 
         # Remove blacklisted emails
@@ -189,7 +195,7 @@ class GradescopeGrader:
 
         # Fetch the student email to question id map
         print("Fetching the student email to submission id's mapping...")
-        email_to_question_sub_id = grader.email_to_qids()
+        email_to_question_sub_id = self.fetch_email_to_qid_map(grader, gradescope_export_evaluations_zip)
 
         # Check to see which emails may not be in the Gradescope roster and attempt to correct
         self.attempt_fix_unknown_gs_email(
@@ -277,6 +283,10 @@ class GradescopeGrader:
         custom_grouper_map: {
             str: Callable[[str, GS_Question, dict, dict], "QuestionGrouper"]
         } = None,
+        export_exams: bool = True,
+        store_page_numbers: str = None,
+        only_grade: bool = False,
+        gradescope_export_evaluations_zip: str = None
     ):
         """
         If emails is None, we will import the entire exam, if it has emails in it, it will only upload submissions
@@ -303,6 +313,9 @@ class GradescopeGrader:
             sid_question_id,
             emails=emails,
             email_mutation_list=email_mutation_list,
+            export_exams=export_exams,
+            store_page_numbers=store_page_numbers,
+            only_grade=only_grade,
         )
 
         # Remove blacklisted emails
@@ -331,10 +344,14 @@ class GradescopeGrader:
         examtool_outline.merge_gs_outline_ids(outline)
 
         # We can now upload the student submission since we have an outline
-        print("Uploading student submissions...")
-        failed_uploads = self.upload_student_submissions(
-            out, gs_class_id, gs_assignment_id, emails=email_to_data_map.keys()
-        )
+        failed_uploads = None
+        if only_grade:
+            print("Skipping uploading of student submissions!")
+        else:
+            print("Uploading student submissions...")
+            failed_uploads = self.upload_student_submissions(
+                out, gs_class_id, gs_assignment_id, emails=email_to_data_map.keys()
+            )
 
         # Removing emails which failed to upload
         if failed_uploads:
@@ -345,8 +362,7 @@ class GradescopeGrader:
                 email_to_data_map.pop(email)
 
         # Fetch the student email to question id map
-        print("Fetching the student email to submission id's mapping...")
-        email_to_question_sub_id = grader.email_to_qids()
+        email_to_question_sub_id = self.fetch_email_to_qid_map(grader, gradescope_export_evaluations_zip)
 
         # Check to see which emails may not be in the Gradescope roster and attempt to correct
         self.attempt_fix_unknown_gs_email(
@@ -370,6 +386,24 @@ class GradescopeGrader:
             custom_grouper_map,
         )
 
+    def fetch_email_to_qid_map(self, grader, gradescope_export_evaluations_zip):
+        if gradescope_export_evaluations_zip:
+            try:
+                with open(gradescope_export_evaluations_zip, "rb") as f:
+                    grader.last_eval_export = f.read()
+                print("Using stored gradescope export evaluations zip file!")
+            except Exception as e:
+                print(f"Failed to open the evaluations zip file! Got {e}")
+
+        print("Fetching the student email to submission id's mapping...")
+        email_to_question_sub_id = grader.email_to_qids()
+
+        if gradescope_export_evaluations_zip:
+            with open(gradescope_export_evaluations_zip, "w+b") as f:
+                f.write(grader.last_eval_export)
+
+        return email_to_question_sub_id
+
     def fetch_and_export_examtool_exam_data(
         self,
         exams: [str],
@@ -378,6 +412,9 @@ class GradescopeGrader:
         sid_question_id: str,
         emails: [str] = None,
         email_mutation_list: {str: str} = {},
+        export_exams: bool = True,
+        store_page_numbers: str = None,
+        only_grade: bool = False,
     ):
         """
         Fetches the submissions from the exams in the exams list.
@@ -457,20 +494,32 @@ class GradescopeGrader:
                 email_to_exam_map[email] = exam
                 email_to_data_map[email] = data
 
-            print(f"[{exam}]: Exporting exam pdfs...")
-
-            tmp_assembled_exam_template = self.export_exam(
-                tmp_template_questions,
-                tmp_email_to_data_map,
-                tmp_total,
-                exam,
-                out,
-                name_question_id,
-                sid_question_id,
-                include_outline=first_exam,
-            )
+            if export_exams and not only_grade:
+                print(f"[{exam}]: Exporting exam pdfs...")
+                self.export_exam(
+                    tmp_template_questions,
+                    tmp_email_to_data_map,
+                    tmp_total,
+                    exam,
+                    out,
+                    name_question_id,
+                    sid_question_id,
+                    include_outline=first_exam,
+                )
+            else:
+                print(f"[{exam}]: Skipping exam pdf export! You should only do this if you have already generated the PDFs.")
+            
             if assembled_exam_template is None:
-                assembled_exam_template = tmp_assembled_exam_template
+                assembled_exam_template = examtool.api.assemble_export.assemble_exam(
+                    exam,
+                    None,
+                    {},
+                    tmp_template_questions,
+                    tmp_template_questions,
+                    name_question_id,
+                    sid_question_id,
+                    dispatch=None,
+                )
 
             # Set global data for the examtool
             if first_exam:
@@ -479,11 +528,27 @@ class GradescopeGrader:
 
         if assembled_exam_template is None:
             raise ValueError("Failed to extract the exam template.")
+        
+        if store_page_numbers:
+            try:
+                with open(store_page_numbers, "r") as f:
+                    question_page_mapping = json.load(f)
+            except Exception as e:
+                print(f"Failed to load question page mapping file {store_page_numbers}! Got: {e}")
+                question_page_mapping = None
 
-        question_page_mapping = examtool.api.download.get_question_to_page_mapping(
-            assembled_exam_template,
-            num_threads=self.simultaneous_jobs
-        )
+        if question_page_mapping is None:
+            question_page_mapping = examtool.api.download.get_question_to_page_mapping(
+                assembled_exam_template,
+                num_threads=self.simultaneous_jobs
+            )
+        
+        if store_page_numbers:
+            try:
+                with open(store_page_numbers, "w+") as f:
+                    json.dump(question_page_mapping, f)
+            except Exception as e:
+                print(f"Failed to store question page mapping to file {store_page_numbers}! Got: {e}")
 
         # Lets finally clean up the student responses
         self.cleanse_student_response_data(email_to_data_map)
@@ -585,17 +650,6 @@ class GradescopeGrader:
                 )
             )
 
-        return examtool.api.assemble_export.assemble_exam(
-            exam,
-            None,
-            {},
-            template_questions,
-            template_questions,
-            name_question_id,
-            sid_question_id,
-            dispatch=None,
-        )
-
     def create_assignment(self, gs_class_id: str, gs_title: str, outline_path: str):
         assignment_id = self.gs_client.create_exam(gs_class_id, gs_title, outline_path)
         if not assignment_id:
@@ -610,10 +664,16 @@ class GradescopeGrader:
 
     def upload_outline(
         self, grader: GS_assignment_Grader, examtool_outline: "ExamtoolOutline"
-    ):
-        outline = grader.update_outline(examtool_outline.get_gs_outline())
-        if not outline:
-            raise ValueError("Failed to upload or get the outline")
+    ):  
+        gs_outline = examtool_outline.get_gs_outline()
+        updated_outline = grader.update_outline(gs_outline, return_outline=False)
+        while not updated_outline:
+            print(f"Failed to update the outline! Got {res}. Trying again...")
+            updated_outline = grader.update_outline(gs_outline, return_outline=False)
+        outline = grader.get_outline()
+        while not outline:
+            print("Failed to get the outline! Trying again...")
+            outline = grader.get_outline()
         examtool_outline.merge_gs_outline_ids(outline)
 
     def upload_student_submissions(
