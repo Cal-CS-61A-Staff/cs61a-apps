@@ -94,8 +94,8 @@ Note that, unlike groups, questions do not have titles. Then you can provide som
 body text, written in Markdown. Then you must provide at least one `INPUT` statement. Then
 you can provide `SOLUTION` and `NOTE` blocks. 
 
-If you provide text after an input statement, but outside `SOLUTION` or `NOTE` blocks, it will be used as the default 
-value to the input field. For instance,
+If you provide text after an input statement, but outside `SOLUTION` or `NOTE` blocks, it will be used as an optional template 
+for the input field. For instance,
 ```
 # BEGIN QUESTION
 
