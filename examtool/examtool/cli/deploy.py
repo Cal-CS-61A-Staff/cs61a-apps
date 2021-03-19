@@ -55,7 +55,7 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
         old_secret = get_exam(exam=exam)["secret"]
         if old_secret:
             print("Reusing old secret...")
-        exam_content["secret"] = old_secret
+            exam_content["secret"] = old_secret
     except:
         pass
 
