@@ -67,7 +67,9 @@ def scramble(email, exam, *, keep_data=False):
     def scramble_question(question, substitutions, config):
         question_substitutions = select_substitutions(question)
         substitute(
-            question, [question_substitutions, *substitutions], ["html", "tex", "text"]
+            question,
+            [question_substitutions, *substitutions],
+            ["html", "tex", "text", "template"],
         )
         if isinstance(question["options"], list):
             if "scramble_options" in config:
@@ -107,6 +109,8 @@ def scramble(email, exam, *, keep_data=False):
         for substitutions in list_substitutions:
             merged = {**merged, **substitutions}
             for attr in attrs:
+                if attr not in target:
+                    continue
                 for k, v in substitutions.items():
                     target[attr] = target[attr].replace(k, v)
                     if k.title() != k:
