@@ -89,7 +89,10 @@ def set_roster(*, exam, roster):
         doc_ref = ref.document(email)
         batch.set(
             doc_ref,
-            {"deadline": int(deadline), "no_watermark": bool(rest.get(0, False))},
+            {
+                "deadline": int(deadline),
+                "no_watermark": bool(rest[0] if rest else False),
+            },
         )
         cnt += 1
         if cnt > 400:
