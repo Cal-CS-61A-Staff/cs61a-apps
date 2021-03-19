@@ -21,7 +21,7 @@ export default function Question({ question, number }) {
   const examContext = useContext(ExamContext);
 
   const defaultValue =
-    examContext.savedAnswers[question.id] || question.template;
+    examContext.savedAnswers[question.id] || question.template || "";
 
   const [value, actuallySetValue] = useState(defaultValue);
   const [savedValue, setSavedValue] = useState(defaultValue);
