@@ -98,6 +98,10 @@ def get_deadline(exam, email, db):
     return get_student_data(exam, email, db)["deadline"]
 
 
+def list_exams(db):
+    return db.collection("exams").document("all").get().to_dict()["exam-list"]
+
+
 def index(request):
     try:
         if getenv("ENV") == "dev":
@@ -109,9 +113,7 @@ def index(request):
             return main_js
 
         if request.path.endswith("list_exams"):
-            return jsonify(
-                db.collection("exams").document("all").get().to_dict()["exam-list"]
-            )
+            return jsonify(list_exams(db))
 
         if request.path.endswith("watermark.svg"):
             watermark = create_watermark(
@@ -176,6 +178,9 @@ def index(request):
             sent_time = request.json.get("sentTime", 0)
             email, is_admin = get_email(request)
 
+            if exam not in list_exams(db):
+                abort(401)
+
             db.collection(exam).document(email).collection("log").document().set(
                 {"timestamp": time.time(), "sentTime": sent_time, question_id: value}
             )
@@ -210,6 +215,8 @@ def index(request):
 
         if request.path.endswith("backup_all"):
             exam = request.json["exam"]
+            if exam not in list_exams(db):
+                abort(401)
             email, is_admin = get_email(request)
             history = request.json["history"]
             snapshot = request.json["snapshot"]
@@ -221,6 +228,8 @@ def index(request):
         if request.path.endswith("log_event"):
             exam = request.json["exam"]
             email, is_admin = get_email(request)
+            if exam not in list_exams(db):
+                abort(401)
             event = request.json["event"]
             db.collection(exam).document(email).collection("history").document().set(
                 {
