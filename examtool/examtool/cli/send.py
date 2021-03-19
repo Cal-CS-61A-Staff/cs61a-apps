@@ -51,7 +51,7 @@ def send(exam, target, email, subject, filename, mailtool=False):
         "we have attached an encrypted PDF containing the same exam. "
         "You can then email your exam solutions to course staff before the deadline "
         "rather than submitting using exam.cs61a.org. "
-        "To unlock the PDF, its password will be revealed on Piazza when the exam starts.\n\n"
+        "To unlock the PDF, use the password that is revealed on Piazza when the exam starts.\n\n"
         "Good luck, and remember to have fun!"
     ).format(course=course, exam=exam)
 
