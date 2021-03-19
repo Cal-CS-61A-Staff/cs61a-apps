@@ -91,7 +91,7 @@ def set_roster(*, exam, roster):
             doc_ref,
             {
                 "deadline": int(deadline),
-                "no_watermark": bool(rest[0] if rest else False),
+                "no_watermark": bool(int(rest[0]) if rest else False),
             },
         )
         cnt += 1

@@ -85,7 +85,7 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
             "email": email,
             "start_time": start_time,
             "end_time": int(deadline),
-            "no_watermark": bool(rest[0] if rest else False),
+            "no_watermark": bool(int(rest[0]) if rest else False),
         }
         for email, deadline, *rest in roster
     ]
