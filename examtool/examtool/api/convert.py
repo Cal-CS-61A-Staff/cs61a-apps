@@ -238,12 +238,13 @@ def consume_rest_of_question(buff, id_factory):
     solution = None
     solution_note = None
     config = {}
+    template = []
     while True:
         line = buff.pop()
         mode, directive, rest = parse_directive(line)
         if mode is None:
             if input_lines and line.strip():
-                raise SyntaxError("Unexpected content in QUESTION after INPUT")
+                template.append(line)
             elif not input_lines:
                 contents.append(line)
         elif mode == "INPUT":
@@ -259,12 +260,32 @@ def consume_rest_of_question(buff, id_factory):
                 )
         elif mode == "END":
             if directive == "QUESTION":
-                question_type, options, option_solutions = parse_input_lines(
-                    input_lines
-                )
+                (
+                    question_type,
+                    options,
+                    option_solutions,
+                ) = parse_input_lines(input_lines)
 
                 if option_solutions and solution:
                     raise SyntaxError("Received multiple solutions.")
+
+                template = "\n".join(template)
+                if template:
+                    if (
+                        question_type == "long_answer"
+                        or question_type == "long_code_answer"
+                    ):
+                        # OK
+                        pass
+                    elif question_type in ("short_answer", "short_code_answer"):
+                        if "\n" in template:
+                            raise SyntaxError(
+                                "Cannot have newlines in default value for short answe"
+                            )
+                    else:
+                        raise SyntaxError(
+                            f"Cannot have a default value for question type {question_type}"
+                        )
 
                 return {
                     "id": id_factory.get_id(config.get("ID")),
@@ -277,6 +298,7 @@ def consume_rest_of_question(buff, id_factory):
                     **parse("\n".join(contents)),
                     "config": config,
                     "options": options,
+                    "template": template,
                     **defines,
                 }
             else:

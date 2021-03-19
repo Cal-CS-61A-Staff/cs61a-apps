@@ -20,7 +20,8 @@ import post from "./post";
 export default function Question({ question, number }) {
   const examContext = useContext(ExamContext);
 
-  const defaultValue = examContext.savedAnswers[question.id] || "";
+  const defaultValue =
+    examContext.savedAnswers[question.id] || question.template;
 
   const [value, actuallySetValue] = useState(defaultValue);
   const [savedValue, setSavedValue] = useState(defaultValue);
@@ -31,7 +32,7 @@ export default function Question({ question, number }) {
     if (!examContext.locked) {
       actuallySetValue(val);
       logAnswer(examContext.exam, question.id, val);
-      if (val[0]) {
+      if (val[0] && val !== question.template) {
         examContext.recordSolved(question.id);
       } else {
         examContext.recordUnsolved(question.id);
@@ -40,7 +41,7 @@ export default function Question({ question, number }) {
   };
 
   useEffect(() => {
-    if (defaultValue[0]) {
+    if (defaultValue[0] && defaultValue !== question.template) {
       examContext.recordSolved(question.id);
     } else {
       examContext.recordUnsolved(question.id);
@@ -208,10 +209,12 @@ export default function Question({ question, number }) {
           setFailText("");
         }
       } catch {
+        setSavedValue(null);
         setFailText("Server returned invalid JSON. Please try again.");
         examContext.onInternetError();
       }
     } catch {
+      setSavedValue(null);
       setSaving(false);
       setFailText("Unable to reach server, your network may have issues.");
       examContext.onInternetError();
