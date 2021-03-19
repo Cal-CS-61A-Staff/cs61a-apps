@@ -52,7 +52,10 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
     exam_content["secret"] = Fernet.generate_key().decode("utf-8")
 
     try:
-        exam_content["secret"] = get_exam(exam=exam)["secret"]
+        old_secret = get_exam(exam=exam)["secret"]
+        if old_secret:
+            print("Reusing old secret...")
+        exam_content["secret"] = old_secret
     except:
         pass
 
