@@ -271,10 +271,7 @@ def consume_rest_of_question(buff, id_factory):
 
                 template = "\n".join(template)
                 if template:
-                    if (
-                        question_type == "long_answer"
-                        or question_type == "long_code_answer"
-                    ):
+                    if question_type in ("long_answer", "long_code_answer"):
                         # OK
                         pass
                     elif question_type in ("short_answer", "short_code_answer"):
