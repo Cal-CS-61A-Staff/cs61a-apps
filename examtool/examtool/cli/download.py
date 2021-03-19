@@ -110,6 +110,9 @@ def dispatch(email, question):
                 data = load(f)
 
             def grade(responses):
+                if email is None:
+                    return next(iter(data.values()))[template_name]
+
                 return data[email][template_name]
 
             return grade

@@ -21,6 +21,35 @@ class Test:
     result: Optional[str] = None
 
 
+def parse_doctests(s: str):
+    out = []
+    case = None
+    for line in s.strip().split("\n"):
+        line = line.strip()
+        if not line:
+            if case:
+                out.append(case)
+            case = None
+            continue
+
+        if line.startswith(">>> "):
+            if case:
+                out.append(case)
+            case = Test(stmt=line[4:])
+        else:
+            if not case:
+                continue
+
+            assert not line.startswith("..."), "multiline not supported"
+            assert not case.out, "multiline not supported"
+            case.out = line
+
+    if case:
+        out.append(case)
+
+    return out
+
+
 def depth(line):
     return len(line) - len(line.strip())
 
@@ -84,7 +113,7 @@ def autograde(fetch=True):
 
     exam = get_exam(exam=EXAM)
 
-    out = {None: {}}
+    out = {}
 
     try:
         for email, _ in get_roster(exam=EXAM):
@@ -132,18 +161,27 @@ def autograde(fetch=True):
                             test.result = f"FAILED: Expected {test.out}, got {result}"
                         else:
                             test.result = f"SUCCESS: Got {result}"
+                        test.result.replace("\n", r"\n")
 
                 print(status, tests)
 
-                ag = "\n".join(
-                    ">>> " + test.stmt + "\n" + test.result
-                    if test.result is not None
-                    else "DID NOT EXECUTE"
-                    for test in tests
+                ag = (
+                    (status or "No issues")
+                    + "\n"
+                    + "\n".join(
+                        ">>>"
+                        + test.stmt
+                        + "\n"
+                        + (
+                            test.result
+                            if test.result is not None
+                            else "DID NOT EXECUTE"
+                        )
+                        for test in tests
+                    )
                 )
 
                 out[email][template_name] = ag
-                out[None][template_name] = ag
                 # input("continue?")
 
     finally:
