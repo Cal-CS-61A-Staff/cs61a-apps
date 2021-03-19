@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 from examtool.api.utils import rand_id
 from examtool.api.database import process_ok_exam_upload, set_exam, get_exam, set_roster
 from examtool.api.extract_questions import extract_questions, get_name
-from examtool.api.scramble import is_compressible_group, scramble
+from examtool.api.scramble import is_compressible_group
 from examtool.cli.utils import exam_name_option, verify_roster
 
 
@@ -82,8 +82,9 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
             "email": email,
             "start_time": start_time,
             "end_time": int(deadline),
+            "no_watermark": rest.get(0, False),
         }
-        for email, deadline in roster
+        for email, deadline, *rest in roster
     ]
 
     print("Updating announcements roster with {} students...".format(len(students)))

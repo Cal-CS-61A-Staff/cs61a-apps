@@ -82,16 +82,20 @@ def get_exam_dict(exam, db):
     return db.collection("exams").document(exam).get().to_dict()
 
 
-def get_deadline(exam, email, db):
+def get_student_data(exam, email, db):
     ref = db.collection("roster").document(exam).collection("deadline").document(email)
     try:
         data = ref.get().to_dict()
         if data:
-            return data["deadline"]
+            return data
     except NotFound:
         pass
 
     abort(401)
+
+
+def get_deadline(exam, email, db):
+    return get_student_data(exam, email, db)["deadline"]
 
 
 def index(request):
@@ -128,7 +132,9 @@ def index(request):
             except NotFound:
                 answers = {}
 
-            deadline = get_deadline(exam, email, db)
+            student_data = get_student_data(exam, email, db)
+            deadline = student_data["deadline"]
+            no_watermark = student_data.get("no_watermark", False)
 
             exam_data = get_exam_dict(exam, db)
             exam_data = scramble(
@@ -154,7 +160,9 @@ def index(request):
                         .decode("ascii")
                     ),
                     # `or None` is to handle the case of watermark={}, which is truthy in JS
-                    "watermark": exam_data.get("watermark") or None,
+                    "watermark": (
+                        None if no_watermark else (exam_data.get("watermark") or None)
+                    ),
                     "answers": answers,
                     "deadline": deadline,
                     "timestamp": time.time(),
