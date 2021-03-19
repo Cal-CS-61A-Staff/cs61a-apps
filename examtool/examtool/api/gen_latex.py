@@ -139,6 +139,10 @@ def render_latex(exam, subs=None, *, do_twice=False):
                     brightness=exam["watermark"]["brightness"],
                 )
             )
+        subprocess.run(
+            "inkscape -D -z --file=temp/watermark.svg --export-pdf=temp/watermark.pdf",
+            shell=True,
+        ).check_returncode()
 
     subprocess.run(
         "cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex",
