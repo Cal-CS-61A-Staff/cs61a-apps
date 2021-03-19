@@ -280,7 +280,7 @@ def consume_rest_of_question(buff, id_factory):
                     elif question_type in ("short_answer", "short_code_answer"):
                         if "\n" in template:
                             raise SyntaxError(
-                                "Cannot have newlines in default value for short answe"
+                                "Cannot have newlines in default value for INPUT SHORT ANSWER"
                             )
                     else:
                         raise SyntaxError(
