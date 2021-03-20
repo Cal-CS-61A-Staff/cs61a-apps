@@ -1,9 +1,8 @@
 import random
 
 from common.rpc.secrets import only
-from flask import request, abort, session
+from flask import request, abort
 
-from english_words import english_words_set as words  # list of words to generate links
 
 from common.db import connect_db
 from common.rpc.code import create_code_shortlink
@@ -46,6 +45,12 @@ def attempt_generated_shortlink(path, app):
 
 
 def create_shortlink_generator(app):
+    if not app.debug:
+        with open("sanitized_words.txt") as f:
+            words = f.read().split("\n")
+    else:
+        words = [f"word{i}" for i in range(1000)]
+
     def save_file_web(staff_only):
         file_name, file_content, share_ref = (
             request.form["fileName"],
@@ -57,7 +62,7 @@ def create_shortlink_generator(app):
     def save_file(file_name, file_content, share_ref, staff_only):
         db_name = "studentLinks" if staff_only else "staffLinks"
         with connect_db() as db:
-            link = "".join(random.sample(words, 1)[0].title() for _ in range(3))
+            link = "".join(random.sample(words, 1)[0].strip().title() for _ in range(3))
             db(
                 f"INSERT INTO {db_name} VALUES (%s, %s, %s, %s)",
                 [link, file_name, file_content, share_ref],
