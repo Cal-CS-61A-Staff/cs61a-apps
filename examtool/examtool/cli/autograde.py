@@ -1,5 +1,6 @@
 import io
 import signal
+import sys
 from collections import defaultdict
 from contextlib import redirect_stdout
 from dataclasses import dataclass, replace
@@ -9,10 +10,13 @@ from typing import Optional
 
 import click
 
-from common.rpc.code import create_code_shortlink
 from examtool.api.database import get_exam, get_roster, get_submissions
 from examtool.api.extract_questions import extract_questions
 from examtool.api.scramble import scramble
+from examtool.api.utils import rel_path
+
+sys.path.append(rel_path("../../../"))
+from common.rpc.code import create_code_shortlink
 
 
 @dataclass
@@ -100,12 +104,12 @@ def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
 
 
 @click.command()
-def autograde(fetch=True):
+def autograde(fetch=False):
     from examtool.cli.DO_NOT_UPLOAD_MT2_DOCTESTS import doctests, templates
 
     EXAM = "cs61a-sp21-mt2-regular"
 
-    with open(f"{EXAM}_submissions.json", "w") as f:
+    with open(f"{EXAM}_submissions.json", "w" if fetch else "r") as f:
         if fetch:
             submissions = {k: v for k, v in get_submissions(exam=EXAM)}
             dump(submissions, f)
@@ -192,26 +196,29 @@ def autograde(fetch=True):
                         # print(status, tests)
 
                 cases = "\n".join(
-                    f">>> {test.stmt}" + (f"\n{test.out}" if test.out else "")
-                    for test in tests
+                    f"# Case {i}\n>>> {test.stmt}"
+                    + (f"\n{test.out}" if test.out else "")
+                    for i, test in enumerate(tests)
                 )
 
                 content = (
                     soln
                     + f"""
-        def doctest(): pass
-        doctest.__doc__ = '''
-        {cases}
+def placeholder(): pass
+placeholder.__doc__ = '''
+{cases}
         '''
         """
                 )
 
                 url = create_code_shortlink(
-                    name=f"{template_name}.py", content=content, staff_only=True
+                    name=f"{template_name}.py",
+                    contents=content,
+                    staff_only=True,
+                    _impersonate="examtool",
                 )
 
                 print(url)
-                input()
 
                 ag = (
                     url
