@@ -14,5 +14,5 @@ dependencies:
     dest: static
 
   - repo: Cal-CS-61A-Staff/61a-code-static-resources
-    src: static
-    dest: static
+    src: static/english.txt
+    dest: src/web-server/sanitized_words.txt
