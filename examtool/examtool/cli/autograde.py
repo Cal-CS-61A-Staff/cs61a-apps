@@ -204,9 +204,9 @@ def autograde(fetch=False, num_threads=1):
                 content = (
                     soln
                     + f"""
-    def placeholder(): pass
-    placeholder.__doc__ = '''
-    {cases}
+def placeholder(): pass
+placeholder.__doc__ = '''
+{cases}
             '''
             """
                 )
@@ -217,6 +217,8 @@ def autograde(fetch=False, num_threads=1):
                     staff_only=True,
                     _impersonate="examtool",
                 )
+
+                print(url)
 
                 ag = (
                     url
