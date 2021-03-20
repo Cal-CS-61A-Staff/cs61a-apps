@@ -74,7 +74,11 @@ def render_html_exam(assembled_exam: AssembledExam):
         pdfkit.from_string(
             "".join(blocks),
             target,
-            options={"log-level": "none"},
+            options={
+                "log-level": "none",
+                "disable-smart-shrinking": None,
+                "zoom": 0.75,
+            },
             css=rel_path("css/style.css"),
         )
 
