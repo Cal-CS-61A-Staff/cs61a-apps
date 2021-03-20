@@ -52,7 +52,7 @@ def create_shortlink_generator(app):
             request.form["fileContent"],
             request.form["shareRef"],
         )
-        save_file(file_name, file_content, share_ref, staff_only)
+        return save_file(file_name, file_content, share_ref, staff_only)
 
     def save_file(file_name, file_content, share_ref, staff_only):
         db_name = "studentLinks" if staff_only else "staffLinks"
