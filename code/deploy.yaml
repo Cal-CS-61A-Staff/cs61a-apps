@@ -1,5 +1,6 @@
 build_type: create_react_app # lmao
 deploy_type: flask
+memory_limit: 512M
 dependencies:
   - repo: Cal-CS-61A-Staff/61a-code-compiled-scheme-js
     src: scheme.js
