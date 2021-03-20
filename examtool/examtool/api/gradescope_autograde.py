@@ -10,6 +10,8 @@ from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from tqdm.contrib import DummyTqdmFile
 
+from requests import Response
+
 import examtool.api.download
 from examtool.api.gradescope_upload import APIClient
 from examtool.api.extract_questions import (
@@ -60,6 +62,7 @@ class GradescopeGrader:
         gs_login_tokens_path: str = None,
         simultaneous_jobs: int = 10,
         simultaneous_sub_jobs: int = 10,
+        log_file: str = "gradescope_autograder.log"
     ):
         print(f"Setting up the Gradescope Grader...")
         entered_email_pwd = email is not None and password is not None
@@ -89,7 +92,11 @@ class GradescopeGrader:
 
         self.simultaneous_jobs = simultaneous_jobs
         self.simultaneous_sub_jobs = simultaneous_sub_jobs
+        self.log_file = open(log_file, "a+")
         print(f"Finished setting up the Gradescope Grader")
+    
+    def __del__(self):
+        self.log_file.close()
 
     def main(
         self,
@@ -181,13 +188,8 @@ class GradescopeGrader:
             out, gs_class_id, gs_assignment_id, emails=email_to_data_map.keys()
         )
 
-        # Removing emails which failed to upload
-        if failed_uploads:
-            print(
-                f"Removing emails which failed to upload. Note: These will NOT be graded! {failed_uploads}"
-            )
-            for email in tqdm(failed_uploads, **def_tqdm_args):
-                email_to_data_map.pop(email)
+        # Handling emails which failed to upload
+        self.handle_failed_uploads(failed_uploads, email_to_data_map)
 
         # For each question, group, add rubric and grade
         print("Setting the grade type for grouping for each question...")
@@ -254,6 +256,8 @@ class GradescopeGrader:
 
                 traceback.print_exc(file=tqdm)
                 tqdm.write(str(e))
+                traceback.print_exc(file=self.log_file)
+                log_file.write(str(e))
 
         qi = list(gs_outline.questions_iterator())
         with ThreadPool(self.simultaneous_jobs) as p:
@@ -354,13 +358,8 @@ class GradescopeGrader:
                 out, gs_class_id, gs_assignment_id, emails=email_to_data_map.keys()
             )
 
-        # Removing emails which failed to upload
-        if failed_uploads:
-            print(
-                f"Removing emails which failed to upload. Note: These will NOT be graded! {failed_uploads}"
-            )
-            for email in failed_uploads:
-                email_to_data_map.pop(email)
+        # Handling emails which failed to upload
+        self.handle_failed_uploads(failed_uploads, email_to_data_map)
 
         # Fetch the student email to question id map
         email_to_question_sub_id = self.fetch_email_to_qid_map(grader, gradescope_export_evaluations_zip)
@@ -387,11 +386,66 @@ class GradescopeGrader:
             custom_grouper_map,
         )
 
+    def handle_failed_uploads(self, failed_uploads, email_to_data_map):
+        if failed_uploads:
+            show_error = True
+            def print_failed():
+                num_failed = len(failed_uploads)
+                print("index. Operation Email")
+                for i, failed in enumerate(failed_uploads):
+                    i += 1
+                    num = (len(str(num_failed)) - len(str(i))) * " " + str(i)
+                    print(f"{i}. {failed.option} {failed.email} Error: {failed.response.statuscode}" + (" " + str(failed.response.content) if show_error else ""))
+            print("Here is the list of failed uploads.\nPlease set what you would like to do with each. For each, please separate the index by only commas and spearate the choice to apply to the index by a space.\n E.g. `2,4 r` will set the emails 2 and 4 into remove mode.\nHere are your options:\nr = Remove emails and do not grade them\nk = keep emails and attempt to grade. You must upload the exam manually and group before you continue.\nOther Commands:\nerrors = This will show/hide the errors corresponding to each upload.\ncontinue = continue with program execution\ncancel/quit/exit/abort = Any of these options will stop this program and exit.")
+            while True:
+                print_failed()
+                orig_choice = input("> ")
+                choice = orig_choice.strip().lower()
+                if choice in ["q", "quit", "exit", "cancel", "abort"]:
+                    raise ValueError("Failed uploads has aborted!")
+                elif choice in ["e", "error", "errors"]:
+                    show_error = not show_error
+                elif choice in ["c", "continue"]:
+                    break
+                elif orig_choice.startswith("eval "):
+                    try:
+                        eval(choice[len("eval "):])
+                    except Exception as e:
+                        print(e)
+                        continue
+                else:
+                    parsed = choice.split(" ")
+                    if len(parsed) != 2:
+                        print("Could not parse what you entered!")
+                        continue
+                    numbers, option = parsed
+                    if option not in ["r", "k"]:
+                        print(f"Unknown option {option}!")
+                        continue
+
+                    numbers_list = numbers.split(",")
+                    casted_numbers_list = []
+                    try:
+                        for num in numbers_list:
+                            casted_num = int(num) - 1
+                            if casted_num > len(failed_uploads):
+                                raise ValueError("Number falls outside of choices")
+                            casted_numbers_list.append(casted_num)
+                    except ValueError as e:
+                        print(f"Could not parse the numbers you entered! {e}")
+                        continue
+                    for num in casted_numbers_list:
+                        failed_uploads[num].data = option
+            for failed in failed_uploads:
+                if failed.option == "r":
+                    print(f"Removing email {failed.email}!")
+                    email_to_data_map.pop(failed.email)
+
     def fetch_email_to_qid_map(self, grader, gradescope_export_evaluations_zip):
         if gradescope_export_evaluations_zip:
             try:
                 with open(gradescope_export_evaluations_zip, "rb") as f:
-                    grader.last_eval_export = f.read()
+                    grader.last_eval_export =`` f.read()
                 print("Using stored gradescope export evaluations zip file!")
             except Exception as e:
                 print(f"Failed to open the evaluations zip file! Got {e}")
@@ -701,13 +755,14 @@ class GradescopeGrader:
             # ):
             def func(tup):
                 file_name, student_email = tup
-                if not self.gs_api_client.upload_pdf_submission(
+                res = self.gs_api_client.upload_pdf_submission(
                     gs_class_id,
                     assignment_id,
                     student_email,
                     os.path.join(out, file_name),
-                ):
-                    failed_emails.append(student_email)
+                )
+                if not res:
+                    failed_emails.append(FailedEmail(student_email, res))
 
             with ThreadPool(self.simultaneous_jobs) as p:
                 list(
@@ -1495,3 +1550,10 @@ class QuestionGrouper:
 
     def __contains__(self, key):
         return key in self.groups
+
+
+class FailedEmail:
+    def __init__(self, email: str, response: Response):
+        self.email = email
+        self.response = response
+        self.option = "r"
