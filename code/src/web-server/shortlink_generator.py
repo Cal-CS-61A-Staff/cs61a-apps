@@ -66,14 +66,14 @@ def create_shortlink_generator(app):
 
     @app.route("/api/share", methods=["POST"])
     def share():
-        return save_file_web(False)
+        return save_file_web(True)
 
     @app.route("/api/staff_share", methods=["POST"])
     def staff_share():
         if not check_auth(app):
             abort(403)
 
-        return save_file_web(True)
+        return save_file_web(False)
 
     @create_code_shortlink.bind(app)
     @only("examtool")
