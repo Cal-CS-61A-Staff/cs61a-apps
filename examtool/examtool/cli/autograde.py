@@ -9,6 +9,7 @@ from typing import Optional
 
 import click
 
+from common.rpc.code import create_code_shortlink
 from examtool.api.database import get_exam, get_roster, get_submissions
 from examtool.api.extract_questions import extract_questions
 from examtool.api.scramble import scramble
@@ -188,10 +189,34 @@ def autograde(fetch=True):
                             test.result = f"SUCCESS: Got {result}"
                         test.result = test.result.replace("\n", r"\n")
 
-                # print(status, tests)
+                        # print(status, tests)
+
+                cases = "\n".join(
+                    f">>> {test.stmt}" + (f"\n{test.out}" if test.out else "")
+                    for test in tests
+                )
+
+                content = (
+                    soln
+                    + f"""
+        def doctest(): pass
+        doctest.__doc__ = '''
+        {cases}
+        '''
+        """
+                )
+
+                url = create_code_shortlink(
+                    name=f"{template_name}.py", content=content, staff_only=True
+                )
+
+                print(url)
+                input()
 
                 ag = (
-                    (status or "No issues")
+                    url
+                    + "\n"
+                    + (status or "No issues")
                     + "\n"
                     + "\n".join(
                         ">>>"
