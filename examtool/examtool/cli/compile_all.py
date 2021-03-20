@@ -78,21 +78,23 @@ def compile_all(
     print(password)
     exam_str = json.dumps(exam_data)
 
-    roster = get_roster(exam=exam)
+    roster = get_roster(exam=exam, include_no_watermark=True)
 
     if email:
         roster = [line_info for line_info in roster if line_info[0] == email]
         if len(roster) == 0:
             if deadline:
-                roster = [(email, deadline)]
+                roster = [(email, deadline, False)]
             else:
                 raise ValueError("Email does not exist in the roster!")
 
-    for email, deadline in roster:
+    for email, deadline, no_watermark in roster:
         if not deadline:
             continue
         exam_data = json.loads(exam_str)
         scramble(email, exam_data)
+        if no_watermark:
+            exam_data.pop("watermark")
         deadline_utc = datetime.utcfromtimestamp(int(deadline))
         deadline_pst = pytz.utc.localize(deadline_utc).astimezone(
             pytz.timezone("America/Los_Angeles")

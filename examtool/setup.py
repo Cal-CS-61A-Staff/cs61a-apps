@@ -15,7 +15,7 @@ setup(
     packages=find_packages(
         include=["examtool.api", "examtool.cli", "examtool.gui_files"]
     ),
-    package_data={"": ["**/*.tex"]},
+    package_data={"": ["**/*.tex", "**/*.css"]},
     include_package_data=True,
     entry_points={"console_scripts": ["examtool=examtool.cli.__main__:cli"]},
     python_requires=">=3.6",
@@ -38,7 +38,7 @@ setup(
             "pypandoc",
             "sendgrid",
             "func-timeout",
-            "fullGSapi",
+            "fullGSapi>=1.3.7",
             "tqdm",
             "numpy",
             "opencv-python",

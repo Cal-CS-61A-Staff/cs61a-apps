@@ -12,7 +12,10 @@ To deploy exams to the server, you must be registered as an admin for your cours
 
 First, visit https://write.final.cs61a.org to write your exam, following [these instructions](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/exam-write/README.md). When your exam is ready, export it as a JSON and place the JSON in a folder.
 
-In that folder, run `examtool deploy` and select that JSON along with a roster CSV. When deployed, the exam will be accessible at https://exam.cs61a.org.
+In that folder, run `examtool deploy` and select that JSON along with a roster CSV. When deployed, the exam will be accessible at https://exam.cs61a.org. Roster CSVs must have a header and the columns:
+* `Email` - The email of a student
+* `Deadline` - The due date of an exam for a particular student expressed as a Unix timestamp
+* `No Watermark` - An optional column that is `1` if this student should not receive a watermarked exam (e.g. for DSP accomodations). Defaults to `0` if not specified.
 
 You may wish to send exam PDFs to your students. To do so, run `examtool compile-all` to generate unique encrypted PDFs for each student. When they are all generated, run `examtool send` to email them to your students. Note that compilation requires `pdflatex` and `wget`. Compilation of watermarked PDFs also requires `inkscape`.
 

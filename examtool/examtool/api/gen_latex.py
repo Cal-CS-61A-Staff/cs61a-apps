@@ -115,7 +115,7 @@ def generate(exam, *, include_watermark):
 
 @contextmanager
 def render_latex(exam, subs=None, *, do_twice=False):
-    include_watermark = "watermark" in exam and "value" in exam["watermark"]
+    include_watermark = exam.get("watermark") and "value" in exam["watermark"]
 
     latex = generate(exam, include_watermark=include_watermark)
     latex = re.sub(
@@ -139,6 +139,10 @@ def render_latex(exam, subs=None, *, do_twice=False):
                     brightness=exam["watermark"]["brightness"],
                 )
             )
+        subprocess.run(
+            "inkscape -D -z --file=temp/watermark.svg --export-pdf=temp/watermark.pdf",
+            shell=True,
+        ).check_returncode()
 
     subprocess.run(
         "cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex",
