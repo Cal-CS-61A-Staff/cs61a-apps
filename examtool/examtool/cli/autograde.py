@@ -5,10 +5,12 @@ from collections import defaultdict
 from contextlib import redirect_stdout
 from dataclasses import dataclass, replace
 from json import dump, dumps, load, loads
+from multiprocessing.pool import ThreadPool
 from textwrap import indent
 from typing import Optional
 
 import click
+from tqdm import tqdm
 
 from examtool.api.database import get_exam, get_roster, get_submissions
 from examtool.api.extract_questions import extract_questions
@@ -104,7 +106,7 @@ def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
 
 
 @click.command()
-def autograde(fetch=False):
+def autograde(fetch=False, num_threads=1):
     from examtool.cli.DO_NOT_UPLOAD_MT2_DOCTESTS import doctests, templates
 
     EXAM = "cs61a-sp21-mt2-regular"
@@ -121,7 +123,8 @@ def autograde(fetch=False):
     out = {}
 
     try:
-        for email, _ in get_roster(exam=EXAM):
+
+        def grade_student(email):
             submission = submissions.get(email, {})
             data = submission.copy()
             exam_copy = loads(dumps(exam))
@@ -175,9 +178,6 @@ def autograde(fetch=False):
                 soln = sub(template.format_map(defaultdict(str, **data)))
                 globs = {}
 
-                print("GRADING " + template_name)
-                print(soln)
-
                 status = run(soln, globs, is_stmt=True, only_err=True)
 
                 tests = [replace(test) for test in doctests[template_name]]
@@ -204,11 +204,11 @@ def autograde(fetch=False):
                 content = (
                     soln
                     + f"""
-def placeholder(): pass
-placeholder.__doc__ = '''
-{cases}
-        '''
-        """
+    def placeholder(): pass
+    placeholder.__doc__ = '''
+    {cases}
+            '''
+            """
                 )
 
                 url = create_code_shortlink(
@@ -217,8 +217,6 @@ placeholder.__doc__ = '''
                     staff_only=True,
                     _impersonate="examtool",
                 )
-
-                print(url)
 
                 ag = (
                     url
@@ -238,10 +236,23 @@ placeholder.__doc__ = '''
                     )
                 )
 
-                print(ag)
-
                 out[email][template_name] = ag
                 # input("continue?")
+
+        roster = get_roster(exam=EXAM)
+
+        if num_threads > 1:
+            with ThreadPool(num_threads) as p:
+                list(
+                    tqdm(
+                        p.imap_unordered(grade_student, [email for email, _ in roster]),
+                        total=len(roster),
+                    )
+                )
+
+        else:
+            for email, _ in tqdm(roster):
+                grade_student(email)
 
     finally:
         with open(f"doctests.json", "w+") as f:
