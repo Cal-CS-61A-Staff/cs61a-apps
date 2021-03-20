@@ -55,7 +55,7 @@ def create_shortlink_generator(app):
         save_file(file_name, file_content, share_ref, staff_only)
 
     def save_file(file_name, file_content, share_ref, staff_only):
-        db_name = "stafflinks" if staff_only else "studentLinks"
+        db_name = "studentLinks" if staff_only else "staffLinks"
         with connect_db() as db:
             link = "".join(random.sample(words, 1)[0].title() for _ in range(3))
             db(
