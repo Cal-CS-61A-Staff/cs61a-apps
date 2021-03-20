@@ -78,7 +78,7 @@ def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
                 try:
                     ret = eval(code, globs)
                     if ret is not None:
-                        print(ret)
+                        print(repr(ret))
                 except SyntaxError:
                     is_stmt = True
             if is_stmt:
@@ -102,7 +102,7 @@ def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
 def autograde(fetch=True):
     from examtool.cli.DO_NOT_UPLOAD_MT2_DOCTESTS import doctests, templates
 
-    EXAM = "cs61a-mt1-alt-7am"
+    EXAM = "cs61a-sp21-mt2-regular"
 
     with open(f"{EXAM}_submissions.json", "w") as f:
         if fetch:
@@ -125,8 +125,15 @@ def autograde(fetch=True):
                 for q in extract_questions(scramble(email, exam_copy, keep_data=True))
             }
             out[email] = {}
+
+            subs = {}
+
+            def sub(s):
+                for k, v in subs.items():
+                    s = s.replace(k, v)
+                return s
+
             for template_name, template in templates.items():
-                alias_template_name = template_name
                 for key, value in submission.items():
                     if key not in questions:
                         continue
@@ -134,17 +141,33 @@ def autograde(fetch=True):
                         continue
                     if key not in template:
                         continue
-                    for original, replacement in questions[key][
-                        "substitutions"
-                    ].items():
-                        template = template.replace(original, replacement)
-                        alias_template_name = alias_template_name.replace(
-                            original, replacement
-                        )
+                    subs.update(questions[key]["substitutions"])
+
                     value = indent_fixer(value)
+
+                    if key == "MTHIHANUNUJGFKADFIKMETSNZCIBAYSG":
+                        if value.startswith("return max(") and value.endswith(")"):
+                            value = value[len("return max(") : -1]
+
+                    if key == "QBRFSLWKPHSQQRGRIVJSKCGRDCZKXFDD":
+                        if not value.endswith(":"):
+                            value += ":"
+
+                    if key == "CQOORRXLPBRHSHZQJNLJOYJIWDRCNBVY":
+                        if not value.startswith("def"):
+                            # add missing signature
+                            value = f"def separate(separator, lnk):\n{indent(value, ' ' * 4)}"
+                    elif key == "XJPBFIMVDTTPAEVWJJDGRVGWQXAEMLGH":
+                        if not value.startswith("def"):
+                            # add missing signature
+                            value = f"def word_finder(letter_tree, words_list):\n{indent(value, ' ' * 4)}"
+                    else:
+                        value = value.strip()
+
                     for level in range(0, 12, 4):
                         data["_" * level + key] = indent(value, " " * level)
-                soln = template.format_map(defaultdict(str, **data))
+
+                soln = sub(template.format_map(defaultdict(str, **data)))
                 globs = {}
 
                 print("GRADING " + template_name)
@@ -156,14 +179,16 @@ def autograde(fetch=True):
 
                 if status is None:
                     for test in tests:
+                        test.stmt = sub(test.stmt)
+                        test.out = sub(test.out)
                         result = run(test.stmt, globs).strip()
                         if result != test.out.strip():
                             test.result = f"FAILED: Expected {test.out}, got {result}"
                         else:
                             test.result = f"SUCCESS: Got {result}"
-                        test.result.replace("\n", r"\n")
+                        test.result = test.result.replace("\n", r"\n")
 
-                print(status, tests)
+                # print(status, tests)
 
                 ag = (
                     (status or "No issues")
@@ -180,6 +205,8 @@ def autograde(fetch=True):
                         for test in tests
                     )
                 )
+
+                print(ag)
 
                 out[email][template_name] = ag
                 # input("continue?")

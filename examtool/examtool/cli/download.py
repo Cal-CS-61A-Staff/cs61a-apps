@@ -101,13 +101,19 @@ def download(
         )
 
 
+data = None
+
+
 def dispatch(email, question):
+    global data
+
     question = question["id"]
 
     for template_name, template in templates.items():
         if question in template:
-            with open("doctests.json") as f:
-                data = load(f)
+            if data is None:
+                with open("doctests.json") as f:
+                    data = load(f)
 
             def grade(responses):
                 if email is None:
