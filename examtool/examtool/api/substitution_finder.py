@@ -5,7 +5,7 @@ from typing import Dict
 from examtool.api.utils import dict_to_list
 from tqdm import tqdm
 
-from examtool.api.database import get_exam
+from examtool.api.database import get_exam, get_roster
 from examtool.api.extract_questions import extract_questions, get_name
 from examtool.api.scramble import scramble, get_elements
 
@@ -80,6 +80,15 @@ def find_unexpected_words(exam, logs):
                             )
 
     return suspected_cheating
+
+
+def find_keyword(exam, phrase):
+    data = get_exam(exam=exam)
+    exam_json = json.dumps(data)
+    for email, _ in get_roster(exam=exam):
+        scrambled = scramble(email, json.loads(exam_json))
+        if phrase in json.dumps(scrambled):
+            print(email)
 
 
 def get_substitutions(exam):
