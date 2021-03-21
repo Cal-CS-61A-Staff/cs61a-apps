@@ -33,4 +33,4 @@ Run `examtool loginas` to log in as a student and view their exam.
 
 To identify cheating or recover from students losing their Internet connection, run `examtool logs` to see the full submission history of a particular student, or all students in the roster. 
 
-Run `examtool save-logs` and then `examtool cheaters` to identify students who have used substituted words that did not occur in their exam, implying that they may be cheaters. Run `examtool identify-watermark` if you have a screenshot of a watermarked exam that you wish to identify.
+Run `examtool save-logs` and then `examtool cheaters` to identify students who have used substituted words that did not occur in their exam, implying that they may be cheaters. Run `examtool identify-watermark` if you have a screenshot of a watermarked exam that you wish to identify. Run `examtool identify-keyword` if you wish to determine which students received exams with a particular keyword.
