@@ -70,6 +70,7 @@ def set_roster(*, exam, roster):
     db = SafeFirestore()
 
     ref = db.collection("roster").document(exam).collection("deadline")
+    emails = []
 
     batch = db.batch()
     cnt = 0
@@ -94,12 +95,17 @@ def set_roster(*, exam, roster):
                 "no_watermark": bool(int(rest[0]) if rest else False),
             },
         )
+        emails.append(email)
         cnt += 1
         if cnt > 400:
             batch.commit()
             batch = db.batch()
             cnt = 0
     batch.commit()
+
+    ref = db.collection("roster").document(exam)
+    data = {"all_students": emails}
+    ref.set(data)
 
 
 @server_only
