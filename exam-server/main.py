@@ -98,8 +98,14 @@ def get_deadline(exam, email, db):
     return get_student_data(exam, email, db)["deadline"]
 
 
-def list_exams(db):
-    return db.collection("exams").document("all").get().to_dict()["exam-list"]
+def list_exams(email, db):
+    all_exams = db.collection("exams").document("all").get().to_dict()["exam-list"]
+    roster_exams = [exam.id for exam in db.collection("roster").where("all_students", "array_contains", email).get()]
+    valid = [
+        exam for exam in all_exams
+        if exam in roster_exams
+    ]
+    return valid
 
 
 def index(request):
@@ -113,7 +119,8 @@ def index(request):
             return main_js
 
         if request.path.endswith("list_exams"):
-            return jsonify(list_exams(db))
+            email, is_admin = get_email(request)
+            return jsonify(list_exams(email, db))
 
         if request.path.endswith("watermark.svg"):
             watermark = create_watermark(
