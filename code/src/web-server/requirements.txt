@@ -1,5 +1,4 @@
 black
-english-words
 flask
 gunicorn
 braceexpand

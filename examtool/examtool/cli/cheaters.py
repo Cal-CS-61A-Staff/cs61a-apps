@@ -7,7 +7,7 @@ from dataclasses import asdict
 import click
 
 from examtool.api.database import get_roster
-from examtool.api.substitution_finder import SuspectedCheating, find_unexpected_words
+from examtool.api.substitution_finder import find_unexpected_words
 from examtool.cli.utils import exam_name_option, hidden_target_folder_option
 
 
@@ -37,12 +37,15 @@ def cheaters(exam, target, out):
             with open(full_target) as f:
                 data = json.load(f)
                 for record in data:
-                    logs[email].append(
-                        {**record["snapshot"], "timestamp": record["timestamp"]}
-                    )
-                    logs[email].append(
-                        {**record["history"], "timestamp": record["timestamp"]}
-                    )
+                    if "snapshot" not in record:
+                        print(email, record)
+                    else:
+                        logs[email].append(
+                            {**record["snapshot"], "timestamp": record["timestamp"]}
+                        )
+                        logs[email].append(
+                            {**record["history"], "timestamp": record["timestamp"]}
+                        )
     logs = list(logs.items())
     suspects = find_unexpected_words(exam, logs)
     if out:
