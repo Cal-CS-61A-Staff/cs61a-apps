@@ -1482,7 +1482,7 @@ class ExamtoolOutline:
                 print(f"Could not find the mapping for the question {qnum} ([{q.weight}] {q.title})! Provide the number mapping or enter `skip` if it is not in the original rubric!")
                 while True:
                     inpt = input("> ")
-                    if inpt == "skip":
+                    if inpt in ["skip", "s"]:
                         process = False
                         break                
                     if inpt not in self.gs_number_to_exam_q:
