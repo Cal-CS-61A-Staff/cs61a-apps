@@ -100,11 +100,13 @@ def get_deadline(exam, email, db):
 
 def list_exams(email, db):
     all_exams = db.collection("exams").document("all").get().to_dict()["exam-list"]
-    roster_exams = [exam.id for exam in db.collection("roster").where("all_students", "array_contains", email).get()]
-    valid = [
-        exam for exam in all_exams
-        if exam in roster_exams
+    roster_exams = [
+        exam.id
+        for exam in db.collection("roster")
+        .where("all_students", "array_contains", email)
+        .get()
     ]
+    valid = [exam for exam in all_exams if exam in roster_exams]
     return valid
 
 
