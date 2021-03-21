@@ -395,7 +395,7 @@ class GradescopeGrader:
                 for i, failed in enumerate(failed_uploads):
                     i += 1
                     num = (len(str(num_failed)) - len(str(i))) * " " + str(i)
-                    print(f"{i}. {failed.option} {failed.email} Error: {failed.response.statuscode}" + (" " + str(failed.response.content) if show_error else ""))
+                    print(f"{i}. {failed.option} {failed.email} Error: {failed.response.status_code}" + (" " + str(failed.response.content) if show_error else ""))
             print("Here is the list of failed uploads.\nPlease set what you would like to do with each. For each, please separate the index by only commas and spearate the choice to apply to the index by a space.\n E.g. `2,4 r` will set the emails 2 and 4 into remove mode.\nHere are your options:\nr = Remove emails and do not grade them\nk = keep emails and attempt to grade. You must upload the exam manually and group before you continue.\nOther Commands:\nerrors = This will show/hide the errors corresponding to each upload.\ncontinue = continue with program execution\ncancel/quit/exit/abort = Any of these options will stop this program and exit.")
             while True:
                 print_failed()
@@ -445,7 +445,7 @@ class GradescopeGrader:
         if gradescope_export_evaluations_zip:
             try:
                 with open(gradescope_export_evaluations_zip, "rb") as f:
-                    grader.last_eval_export =`` f.read()
+                    grader.last_eval_export = f.read()
                 print("Using stored gradescope export evaluations zip file!")
             except Exception as e:
                 print(f"Failed to open the evaluations zip file! Got {e}")
@@ -1477,7 +1477,21 @@ class ExamtoolOutline:
     def merge_gs_outline_ids(self, outline: GS_Outline):
         self.gs_outline = outline
         for qnum, q in outline.questions_iterator():
-            q.data = self.gs_number_to_exam_q[qnum]
+            process = True
+            if qnum not in self.gs_number_to_exam_q: # FIXME This should have better support for manual outline changes.
+                print(f"Could not find the mapping for the question {qnum} ([{q.weight}] {q.title})! Provide the number mapping or enter `skip` if it is not in the original rubric!")
+                while True:
+                    inpt = input("> ")
+                    if inpt == "skip":
+                        process = False
+                        break                
+                    if inpt not in self.gs_number_to_exam_q:
+                        print("Invalid Input: Unknown question number.")
+                    else:
+                        qnum = inpt
+                        break
+            if process:
+                q.data = self.gs_number_to_exam_q[qnum]
 
     def questions_iterator(self):
         yield from self.gs_outline.questions_iterator()
