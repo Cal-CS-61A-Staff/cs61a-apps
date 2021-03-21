@@ -185,6 +185,7 @@ export default class File extends React.Component {
             title: "Doctests Failed",
             message: err.trim(),
           });
+          clearInterval(timeoutTimer);
           killCallback();
           detachCallback();
           commandSent = true;
