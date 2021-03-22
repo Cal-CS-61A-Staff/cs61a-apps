@@ -30,7 +30,6 @@ from examtool.cli.utils import hidden_target_folder_option, exam_name_option, pr
     help="The PDF filename to use.",
     show_default=True,
 )
-
 @click.option(
     "--mailtool",
     is_flag=True,
@@ -66,7 +65,7 @@ def send(exam, target, email, subject, body, filename, mailtool=False):
         body = body.read()
 
     body = body.format(course=course, exam=exam)
-    
+
     roster = []
     if email:
         roster = [email]
