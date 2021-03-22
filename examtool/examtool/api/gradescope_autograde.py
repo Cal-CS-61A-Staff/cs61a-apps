@@ -258,6 +258,7 @@ class GradescopeGrader:
                 tqdm.write(str(e))
                 traceback.print_exc(file=self.log_file)
                 self.log_file.write(str(e))
+                self.log_file.flush()
 
         qi = list(gs_outline.questions_iterator())
         with ThreadPool(self.simultaneous_jobs) as p:
@@ -821,7 +822,7 @@ class GradescopeGrader:
         },
     ):
         # Group questions
-        if question.data.get("id") in [name_question_id, sid_question_id]:
+        if question.data and question.data.get("id") in [name_question_id, sid_question_id]:
             tqdm.write("Skipping grouping of an id question!")
             return
         tqdm.write(f"[{qid}]: Grouping...")
