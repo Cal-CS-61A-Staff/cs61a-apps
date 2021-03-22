@@ -1572,3 +1572,79 @@ class FailedEmail:
         self.email = email
         self.response = response
         self.option = "r"
+
+
+GrouperFunction = Callable[[str, GS_Question, dict, dict], QuestionGrouper]
+
+def create_grouper_fn(
+    rubric: List[RubricItem],
+    grade_question: Callable[[str], List[RubricItem]],
+) -> GrouperFunction:
+    def grouper_fn(
+        qid: str,
+        question: GS_Question,
+        email_to_data_map: dict,
+        email_to_question_sub_id_map: dict,
+    ) -> QuestionGrouper:
+        data = question.data
+
+        rubric_blank = RubricItem(description="Blank", weight=0)
+        rubric_dnr = RubricItem(description="Student did not receive this question", weight=0)
+        final_rubric = rubric + [
+            rubric_blank,
+            rubric_dnr,
+        ]
+
+        groups = QuestionGrouper(question, rubric=final_rubric)
+
+        eqid = question.data["id"]
+        for email, data in email_to_data_map.items():
+            responses = data.get("responses", {})
+            response = responses.get(eqid)
+            if response is not None:
+                response = response.strip()
+            group_name = response
+            selection = [False] * len(final_rubric)
+            if response is None:
+                apply_rubric_item(final_rubric, selection, rubric_dnr, email, response)
+                group_name = "Student did not receive this question"
+            elif response == "":
+                apply_rubric_item(final_rubric, selection, rubric_blank, email, response)
+                group_name = "Blank"
+            else:
+                applied_rubric_items = grade_question(response)
+                if len(applied_rubric_items) == 0:
+                    raise GradingException(f"Returned no rubric items", email, response)
+                for item in applied_rubric_items:
+                    apply_rubric_item(final_rubric, selection, item, email, response)
+                applied_rubric_indexes = [i + 1 for i, v in enumerate(selection) if v]
+                group_name = "|".join(map(str, applied_rubric_indexes))
+
+            sid = email_to_question_sub_id_map[email][qid]
+            if group_name not in groups:
+                groups.add_group(QuestionGroup(group_name, selection))
+            groups.get_group(group_name).add_sid(sid)
+        return groups
+    return grouper_fn
+
+def apply_rubric_item(
+    rubric: List[RubricItem],
+    selection: List[bool],
+    item: RubricItem,
+    email: str,
+    response: str,
+):
+    try:
+        index = rubric.index(item)
+        selection[index] = True
+    except ValueError:
+        raise GradingException(f"Returned rubric item not in rubric", email, response)
+
+class GradingException(Exception):
+    def __init__(self, message, email, response):
+        response_trunc = f"{response[:16-3]}..." if len(response) > 16 else response
+        self.message = f"{message} (email='{email}', response='{response_trunc}')"
+        self.email = email
+        self.response = response
+        super().__init__(self.message)
+
