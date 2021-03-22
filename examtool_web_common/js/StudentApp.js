@@ -64,8 +64,10 @@ export default function StudentApp() {
     const go = async () => {
       setExamList(await (await post("list_exams", getAuthParams())).json());
     };
-    go();
-  }, []);
+    if (username) {
+      go();
+    }
+  }, [username]);
 
   const handleExamSelect = (e) => {
     setSelectedExam(e.target.value);
