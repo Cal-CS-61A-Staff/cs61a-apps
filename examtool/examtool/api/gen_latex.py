@@ -124,7 +124,7 @@ def render_latex(
     do_twice=False,
     path="temp",
     outname="out",
-    supress_output=False,
+    suppress_output=False,
     return_out_path=False,
 ):
     include_watermark = exam.get("watermark") and "value" in exam["watermark"]
@@ -164,8 +164,8 @@ def render_latex(
                 f"--file={watermark_svg}",
                 f"--export-pdf={watermark_pdf}",
             ],
-            stdout=subprocess.DEVNULL if supress_output else sys.stdout,
-            stderr=subprocess.DEVNULL if supress_output else sys.stderr,
+            stdout=subprocess.DEVNULL if suppress_output else sys.stdout,
+            stderr=subprocess.DEVNULL if suppress_output else sys.stderr,
             cwd=path,
         )
 
@@ -177,8 +177,8 @@ def render_latex(
                 "-interaction=nonstopmode",
                 f"{outname}.tex",
             ],
-            stdout=subprocess.DEVNULL if supress_output else sys.stdout,
-            stderr=subprocess.DEVNULL if supress_output else sys.stderr,
+            stdout=subprocess.DEVNULL if suppress_output else sys.stdout,
+            stderr=subprocess.DEVNULL if suppress_output else sys.stderr,
             cwd=path,
         )
 

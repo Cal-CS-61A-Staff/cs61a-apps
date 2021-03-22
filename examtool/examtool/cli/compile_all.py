@@ -185,7 +185,7 @@ def render_student_pdf(data):
         do_twice=do_twice,
         path=path,
         outname=outname,
-        supress_output=True,
+        suppress_output=True,
         return_out_path=True,
     ) as out_path:
         with open(out_path, "rb") as pdf:
