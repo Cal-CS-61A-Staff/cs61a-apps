@@ -62,7 +62,7 @@ class GradescopeGrader:
         gs_login_tokens_path: str = None,
         simultaneous_jobs: int = 10,
         simultaneous_sub_jobs: int = 10,
-        log_file: str = "gradescope_autograder.log"
+        log_file: str = "gradescope_autograder.log",
     ):
         print(f"Setting up the Gradescope Grader...")
         entered_email_pwd = email is not None and password is not None
@@ -94,7 +94,7 @@ class GradescopeGrader:
         self.simultaneous_sub_jobs = simultaneous_sub_jobs
         self.log_file = open(log_file, "a+")
         print(f"Finished setting up the Gradescope Grader")
-    
+
     def __del__(self):
         self.log_file.close()
 
@@ -197,7 +197,9 @@ class GradescopeGrader:
         self.set_group_types(gs_outline)
 
         # Fetch the student email to question id map
-        email_to_question_sub_id = self.fetch_email_to_qid_map(grader, gradescope_export_evaluations_zip)
+        email_to_question_sub_id = self.fetch_email_to_qid_map(
+            grader, gradescope_export_evaluations_zip
+        )
 
         # Check to see which emails may not be in the Gradescope roster and attempt to correct
         self.attempt_fix_unknown_gs_email(
@@ -291,7 +293,7 @@ class GradescopeGrader:
         export_exams: bool = True,
         store_page_numbers: str = None,
         only_grade: bool = False,
-        gradescope_export_evaluations_zip: str = None
+        gradescope_export_evaluations_zip: str = None,
     ):
         """
         If emails is None, we will import the entire exam, if it has emails in it, it will only upload submissions
@@ -363,7 +365,9 @@ class GradescopeGrader:
         self.handle_failed_uploads(failed_uploads, email_to_data_map)
 
         # Fetch the student email to question id map
-        email_to_question_sub_id = self.fetch_email_to_qid_map(grader, gradescope_export_evaluations_zip)
+        email_to_question_sub_id = self.fetch_email_to_qid_map(
+            grader, gradescope_export_evaluations_zip
+        )
 
         # Check to see which emails may not be in the Gradescope roster and attempt to correct
         self.attempt_fix_unknown_gs_email(
@@ -390,14 +394,21 @@ class GradescopeGrader:
     def handle_failed_uploads(self, failed_uploads, email_to_data_map):
         if failed_uploads:
             show_error = True
+
             def print_failed():
                 num_failed = len(failed_uploads)
                 print("index. Operation Email")
                 for i, failed in enumerate(failed_uploads):
                     i += 1
                     num = (len(str(num_failed)) - len(str(i))) * " " + str(i)
-                    print(f"{i}. {failed.option} {failed.email} Error: {failed.response.status_code}" + (" " + str(failed.response.content) if show_error else ""))
-            print("Here is the list of failed uploads.\nPlease set what you would like to do with each. For each, please separate the index by only commas and spearate the choice to apply to the index by a space.\n E.g. `2,4 r` will set the emails 2 and 4 into remove mode.\nHere are your options:\nr = Remove emails and do not grade them\nk = keep emails and attempt to grade. You must upload the exam manually and group before you continue.\nOther Commands:\nerrors = This will show/hide the errors corresponding to each upload.\ncontinue = continue with program execution\ncancel/quit/exit/abort = Any of these options will stop this program and exit.")
+                    print(
+                        f"{i}. {failed.option} {failed.email} Error: {failed.response.status_code}"
+                        + (" " + str(failed.response.content) if show_error else "")
+                    )
+
+            print(
+                "Here is the list of failed uploads.\nPlease set what you would like to do with each. For each, please separate the index by only commas and spearate the choice to apply to the index by a space.\n E.g. `2,4 r` will set the emails 2 and 4 into remove mode.\nHere are your options:\nr = Remove emails and do not grade them\nk = keep emails and attempt to grade. You must upload the exam manually and group before you continue.\nOther Commands:\nerrors = This will show/hide the errors corresponding to each upload.\ncontinue = continue with program execution\ncancel/quit/exit/abort = Any of these options will stop this program and exit."
+            )
             while True:
                 print_failed()
                 orig_choice = input("> ")
@@ -410,7 +421,7 @@ class GradescopeGrader:
                     break
                 elif orig_choice.startswith("eval "):
                     try:
-                        eval(choice[len("eval "):])
+                        eval(choice[len("eval ") :])
                     except Exception as e:
                         print(e)
                         continue
@@ -563,8 +574,10 @@ class GradescopeGrader:
                     include_outline=first_exam,
                 )
             else:
-                print(f"[{exam}]: Skipping exam pdf export! You should only do this if you have already generated the PDFs.")
-            
+                print(
+                    f"[{exam}]: Skipping exam pdf export! You should only do this if you have already generated the PDFs."
+                )
+
             if assembled_exam_template is None:
                 assembled_exam_template = examtool.api.assemble_export.assemble_exam(
                     exam,
@@ -584,33 +597,39 @@ class GradescopeGrader:
 
         if assembled_exam_template is None:
             raise ValueError("Failed to extract the exam template.")
-        
+
         question_page_mapping = None
         if store_page_numbers:
             try:
                 with open(store_page_numbers, "r") as f:
                     question_page_mapping = json.load(f)
             except Exception as e:
-                print(f"Failed to load question page mapping file {store_page_numbers}! Got: {e}")
+                print(
+                    f"Failed to load question page mapping file {store_page_numbers}! Got: {e}"
+                )
 
         if question_page_mapping is None:
             question_page_mapping = examtool.api.download.get_question_to_page_mapping(
-                assembled_exam_template,
-                num_threads=self.simultaneous_jobs
+                assembled_exam_template, num_threads=self.simultaneous_jobs
             )
             if len(question_page_mapping) != len(assembled_exam_template.questions):
-                print("Robust question page mapping resulted in a different number of questions than the exam had! Reverting to old method...")
-                question_page_mapping = examtool.api.download.fallback_get_question_to_page_mapping(
-                    assembled_exam_template,
-                    num_threads=self.simultaneous_jobs
+                print(
+                    "Robust question page mapping resulted in a different number of questions than the exam had! Reverting to old method..."
                 )
-        
+                question_page_mapping = (
+                    examtool.api.download.fallback_get_question_to_page_mapping(
+                        assembled_exam_template, num_threads=self.simultaneous_jobs
+                    )
+                )
+
         if store_page_numbers:
             try:
                 with open(store_page_numbers, "w+") as f:
                     json.dump(question_page_mapping, f)
             except Exception as e:
-                print(f"Failed to store question page mapping to file {store_page_numbers}! Got: {e}")
+                print(
+                    f"Failed to store question page mapping to file {store_page_numbers}! Got: {e}"
+                )
 
         # Lets finally clean up the student responses
         self.cleanse_student_response_data(email_to_data_map)
@@ -691,7 +710,7 @@ class GradescopeGrader:
             email_to_data_map,
             exam,
             name_question_id,
-            sid_question_id
+            sid_question_id,
         )
 
         Path(out).mkdir(parents=True, exist_ok=True)
@@ -726,11 +745,13 @@ class GradescopeGrader:
 
     def upload_outline(
         self, grader: GS_assignment_Grader, examtool_outline: "ExamtoolOutline"
-    ):  
+    ):
         gs_outline = examtool_outline.get_gs_outline()
         updated_outline = grader.update_outline(gs_outline, return_outline=False)
         while not updated_outline:
-            print(f"Failed to update the outline! Got {updated_outline}. Trying again...")
+            print(
+                f"Failed to update the outline! Got {updated_outline}. Trying again..."
+            )
             updated_outline = grader.update_outline(gs_outline, return_outline=False)
         outline = grader.get_outline()
         while not outline:
@@ -822,7 +843,10 @@ class GradescopeGrader:
         },
     ):
         # Group questions
-        if question.data and question.data.get("id") in [name_question_id, sid_question_id]:
+        if question.data and question.data.get("id") in [
+            name_question_id,
+            sid_question_id,
+        ]:
             tqdm.write("Skipping grouping of an id question!")
             return
         tqdm.write(f"[{qid}]: Grouping...")
@@ -1195,7 +1219,7 @@ class GradescopeGrader:
                         f"[{qid}]: Failed to group submissions to {group_id}. SIDS: {sids}"
                     )
                     failed_groups_names.append(g_name)
-                break # FIXME IS this logic correct?
+                break  # FIXME IS this logic correct?
             else:
                 tqdm.write(f"[{qid}]: Failed to create group for {g_name}! ({groups})")
                 failed_groups_names.append(g_name)
@@ -1293,7 +1317,12 @@ class GradescopeGrader:
         return rubric
 
     def grade_question(
-        self, qid: str, question: GS_Question, rubric: QuestionRubric, groups: dict, total_attempts: int=1
+        self,
+        qid: str,
+        question: GS_Question,
+        rubric: QuestionRubric,
+        groups: dict,
+        total_attempts: int = 1,
     ):
         question_data = question.get_question_info()
         sub_id_mapping = {str(sub["id"]): sub for sub in question_data["submissions"]}
@@ -1306,19 +1335,26 @@ class GradescopeGrader:
             group_sids = group.get_sids()
             if len(group_sids) > 0:
                 sid = group_sids[0]
-                actual_total_attempts = total_attempts #max(len(group_sids), total_attempts)
+                actual_total_attempts = (
+                    total_attempts  # max(len(group_sids), total_attempts)
+                )
                 if not sub_id_mapping[str(sid)]["graded"]:
                     attempt = 0
                     while attempt < actual_total_attempts:
                         sid = group_sids[attempt % len(group_sids)]
-                        res = rubric.grade(sid, group_sel, save_group=True, qid=f"[{qid}] ")
+                        res = rubric.grade(
+                            sid, group_sel, save_group=True, qid=f"[{qid}] "
+                        )
                         if res:
                             if attempt > 0:
-                                tqdm.write(f"[{qid}]: Failed to grade group {group.get_name()} finally worked on {sid}!")
+                                tqdm.write(
+                                    f"[{qid}]: Failed to grade group {group.get_name()} finally worked on {sid}!"
+                                )
                             break
                         attempt += 1
                         tqdm.write(
-                            f"[{qid}]: Failed to grade group {group.get_name()}! Got {res}. {res.content}" + (" Trying again..." if attempt < total_attempts else "")
+                            f"[{qid}]: Failed to grade group {group.get_name()}! Got {res}. {res.content}"
+                            + (" Trying again..." if attempt < total_attempts else "")
                         )
                         time.sleep(1)
                     else:
@@ -1401,7 +1437,11 @@ class ExamtoolOutline:
             pg = GS_Outline_Question(
                 grader,
                 None,
-                [self.get_gs_crop_info(question_page_mapping[page], exam_json.get("public"))],
+                [
+                    self.get_gs_crop_info(
+                        question_page_mapping[page], exam_json.get("public")
+                    )
+                ],
                 title="Public",
                 weight=0,
             )
@@ -1421,9 +1461,13 @@ class ExamtoolOutline:
                         if new_y0 <= 4:
                             new_y0 = 4
                     if question_id == name_question_id:
-                        name_region = self.get_gs_crop_info((pdfpage, new_y0, new_y1), question)
+                        name_region = self.get_gs_crop_info(
+                            (pdfpage, new_y0, new_y1), question
+                        )
                     elif question_id == sid_question_id:
-                        sid_region = self.get_gs_crop_info((pdfpage, new_y0, new_y1), question)
+                        sid_region = self.get_gs_crop_info(
+                            (pdfpage, new_y0, new_y1), question
+                        )
                     page += 1
                     continue
                 pg.add_child(
@@ -1479,13 +1523,17 @@ class ExamtoolOutline:
         self.gs_outline = outline
         for qnum, q in outline.questions_iterator():
             process = True
-            if qnum not in self.gs_number_to_exam_q: # FIXME This should have better support for manual outline changes.
-                print(f"Could not find the mapping for the question {qnum} ([{q.weight}] {q.title})! Provide the number mapping or enter `skip` if it is not in the original rubric!")
+            if (
+                qnum not in self.gs_number_to_exam_q
+            ):  # FIXME This should have better support for manual outline changes.
+                print(
+                    f"Could not find the mapping for the question {qnum} ([{q.weight}] {q.title})! Provide the number mapping or enter `skip` if it is not in the original rubric!"
+                )
                 while True:
                     inpt = input("> ")
                     if inpt in ["skip", "s"]:
                         process = False
-                        break                
+                        break
                     if inpt not in self.gs_number_to_exam_q:
                         print("Invalid Input: Unknown question number.")
                     else:
@@ -1576,6 +1624,7 @@ class FailedEmail:
 
 GrouperFunction = Callable[[str, GS_Question, dict, dict], QuestionGrouper]
 
+
 def create_grouper_fn(
     rubric: List[RubricItem],
     grade_question: Callable[[str], List[RubricItem]],
@@ -1589,7 +1638,9 @@ def create_grouper_fn(
         data = question.data
 
         rubric_blank = RubricItem(description="Blank", weight=0)
-        rubric_dnr = RubricItem(description="Student did not receive this question", weight=0)
+        rubric_dnr = RubricItem(
+            description="Student did not receive this question", weight=0
+        )
         final_rubric = rubric + [
             rubric_blank,
             rubric_dnr,
@@ -1609,7 +1660,9 @@ def create_grouper_fn(
                 apply_rubric_item(final_rubric, selection, rubric_dnr, email, response)
                 group_name = "Student did not receive this question"
             elif response == "":
-                apply_rubric_item(final_rubric, selection, rubric_blank, email, response)
+                apply_rubric_item(
+                    final_rubric, selection, rubric_blank, email, response
+                )
                 group_name = "Blank"
             else:
                 applied_rubric_items = grade_question(response)
@@ -1625,7 +1678,9 @@ def create_grouper_fn(
                 groups.add_group(QuestionGroup(group_name, selection))
             groups.get_group(group_name).add_sid(sid)
         return groups
+
     return grouper_fn
+
 
 def apply_rubric_item(
     rubric: List[RubricItem],
@@ -1640,6 +1695,7 @@ def apply_rubric_item(
     except ValueError:
         raise GradingException(f"Returned rubric item not in rubric", email, response)
 
+
 class GradingException(Exception):
     def __init__(self, message, email, response):
         response_trunc = f"{response[:16-3]}..." if len(response) > 16 else response
@@ -1647,4 +1703,3 @@ class GradingException(Exception):
         self.email = email
         self.response = response
         super().__init__(self.message)
-
