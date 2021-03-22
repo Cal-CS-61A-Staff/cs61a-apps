@@ -125,7 +125,6 @@ def render_latex(
     path="temp",
     out_name="out",
     suppress_output=False,
-    return_out_path=False,
 ):
     include_watermark = exam.get("watermark") and "value" in exam["watermark"]
     watermark_name = out_name + "_watermark"
@@ -185,9 +184,7 @@ def render_latex(
         compile()
 
     out_path = os.path.join(path, out_name + ".pdf")
-    if return_out_path:
-        yield out_path
-    else:
-        with open(out_path, "rb") as f:
-            # os.chdir(old)
-            yield f.read()
+
+    with open(out_path, "rb") as f:
+        # os.chdir(old)
+        yield f.read()

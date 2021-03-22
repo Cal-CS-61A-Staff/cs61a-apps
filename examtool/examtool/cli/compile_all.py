@@ -146,17 +146,15 @@ def compile_all(
             path=path,
             out_name=out_name,
             suppress_output=True,
-            return_out_path=True,
-        ) as out_path:
-            with open(out_path, "rb") as pdf:
-                pdf = Pdf.open(BytesIO(pdf.read()))
-                pdf.save(
-                    os.path.join(
-                        out, "exam_" + email.replace("@", "_").replace(".", "_") + ".pdf"
-                    ),
-                    encryption=Encryption(owner=password, user=password),
-                )
-                pdf.close()
+        ) as pdf:
+            pdf = Pdf.open(BytesIO(pdf))
+            pdf.save(
+                os.path.join(
+                    out, "exam_" + email.replace("@", "_").replace(".", "_") + ".pdf"
+                ),
+                encryption=Encryption(owner=password, user=password),
+            )
+            pdf.close()
 
     with ThreadPool(num_threads) as p:
         list(
