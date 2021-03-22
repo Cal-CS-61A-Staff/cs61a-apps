@@ -3,9 +3,9 @@ import os
 import pathlib
 from datetime import datetime
 from io import BytesIO
-import multiprocessing
 
-from multiprocessing.pool import ThreadPool, Pool, queue
+from multiprocessing.pool import ThreadPool
+import threading
 from tqdm import tqdm
 from pikepdf import Pdf, Encryption
 import click
@@ -122,7 +122,7 @@ def compile_all(
     for item in rosterlist:
         item.append(other_data)
 
-    with Pool(num_threads) as p:
+    with ThreadPool(num_threads) as p:
         list(
             tqdm(
                 p.imap_unordered(render_student_pdf, rosterlist),
@@ -163,7 +163,7 @@ def render_student_pdf(data):
     )
     deadline_string = deadline_pst.strftime("%I:%M%p")
 
-    uid = multiprocessing.current_process().name
+    uid = threading.get_ident()
 
     if same_folder:
         outname = f"out{uid}"

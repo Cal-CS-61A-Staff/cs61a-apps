@@ -143,8 +143,7 @@ def render_latex(
             latex = latex.replace(f"<{k.upper()}>", v)
     if include_watermark:
         latex = latex.replace("EXAMTOOL_WATERMARK_PDF_PATH", watermark_pdf)
-    if not os.path.exists(path):
-        Path(path).mkdir(parents=True, exist_ok=True)
+    Path(path).mkdir(parents=True, exist_ok=True)
     with open(os.path.join(path, outname + ".tex"), "w+") as f:
         f.write(latex)
 
