@@ -62,7 +62,7 @@ from examtool.cli.utils import (
     "--same-folder",
     default=False,
     is_flag=True,
-    help="This flag will cause the compilation to all occur in the same folder. This improves speed as the tool no longer has to redownload images though can cause images to get overwritten if they share the same name.",
+    help="This flag will cause the compilation to all occur in the same folder.",
 )
 def compile_all(
     exam,
@@ -107,20 +107,58 @@ def compile_all(
 
     rosterlist = list(roster)
 
-    other_data = [
-        exam_str,
-        exam,
-        subtitle,
-        exam_type,
-        semester,
-        do_twice,
-        password,
-        out,
-        same_folder,
-    ]
+    def render_student_pdf(data):
+        (
+            email,
+            deadline,
+            no_watermark,
+        ) = data
+        if not deadline:
+            return
+        exam_data = json.loads(exam_str)
+        scramble(email, exam_data)
+        if no_watermark:
+            exam_data.pop("watermark")
+        deadline_utc = datetime.utcfromtimestamp(int(deadline))
+        deadline_pst = pytz.utc.localize(deadline_utc).astimezone(
+            pytz.timezone("America/Los_Angeles")
+        )
+        deadline_string = deadline_pst.strftime("%I:%M%p")
 
-    for item in rosterlist:
-        item.append(other_data)
+        uid = threading.get_ident()
+
+        if same_folder:
+            out_name = f"out{uid}"
+            path = "temp"
+        else:
+            out_name = "out"
+            path = f"temp/{uid}"
+
+        with render_latex(
+            exam_data,
+            {
+                "emailaddress": sanitize_email(email),
+                "deadline": deadline_string,
+                "coursecode": prettify(exam.split("-")[0]),
+                "description": subtitle,
+                "examtype": exam_type,
+                "semester": semester,
+            },
+            do_twice=do_twice,
+            path=path,
+            out_name=out_name,
+            suppress_output=True,
+            return_out_path=True,
+        ) as out_path:
+            with open(out_path, "rb") as pdf:
+                pdf = Pdf.open(BytesIO(pdf.read()))
+                pdf.save(
+                    os.path.join(
+                        out, "exam_" + email.replace("@", "_").replace(".", "_") + ".pdf"
+                    ),
+                    encryption=Encryption(owner=password, user=password),
+                )
+                pdf.close()
 
     with ThreadPool(num_threads) as p:
         list(
@@ -131,72 +169,6 @@ def compile_all(
                 unit="Exam",
             )
         )
-
-
-def render_student_pdf(data):
-    (
-        email,
-        deadline,
-        no_watermark,
-        other_data,
-    ) = data
-    (
-        exam_str,
-        exam,
-        subtitle,
-        exam_type,
-        semester,
-        do_twice,
-        password,
-        out,
-        same_folder,
-    ) = other_data
-    if not deadline:
-        return
-    exam_data = json.loads(exam_str)
-    scramble(email, exam_data)
-    if no_watermark:
-        exam_data.pop("watermark")
-    deadline_utc = datetime.utcfromtimestamp(int(deadline))
-    deadline_pst = pytz.utc.localize(deadline_utc).astimezone(
-        pytz.timezone("America/Los_Angeles")
-    )
-    deadline_string = deadline_pst.strftime("%I:%M%p")
-
-    uid = threading.get_ident()
-
-    if same_folder:
-        outname = f"out{uid}"
-        path = "temp"
-    else:
-        outname = "out"
-        path = f"temp/{uid}"
-
-    with render_latex(
-        exam_data,
-        {
-            "emailaddress": sanitize_email(email),
-            "deadline": deadline_string,
-            "coursecode": prettify(exam.split("-")[0]),
-            "description": subtitle,
-            "examtype": exam_type,
-            "semester": semester,
-        },
-        do_twice=do_twice,
-        path=path,
-        outname=outname,
-        suppress_output=True,
-        return_out_path=True,
-    ) as out_path:
-        with open(out_path, "rb") as pdf:
-            pdf = Pdf.open(BytesIO(pdf.read()))
-            pdf.save(
-                os.path.join(
-                    out, "exam_" + email.replace("@", "_").replace(".", "_") + ".pdf"
-                ),
-                encryption=Encryption(owner=password, user=password),
-            )
-            pdf.close()
 
 
 

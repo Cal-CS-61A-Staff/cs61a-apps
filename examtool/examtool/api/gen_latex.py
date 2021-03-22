@@ -123,12 +123,12 @@ def render_latex(
     *,
     do_twice=False,
     path="temp",
-    outname="out",
+    out_name="out",
     suppress_output=False,
     return_out_path=False,
 ):
     include_watermark = exam.get("watermark") and "value" in exam["watermark"]
-    watermark_name = outname + "_watermark"
+    watermark_name = out_name + "_watermark"
     watermark_svg = watermark_name + ".svg"
     watermark_pdf = watermark_name + ".pdf"
 
@@ -141,10 +141,9 @@ def render_latex(
     if subs:
         for k, v in subs.items():
             latex = latex.replace(f"<{k.upper()}>", v)
-    if include_watermark:
-        latex = latex.replace("EXAMTOOL_WATERMARK_PDF_PATH", watermark_pdf)
+    latex = latex.replace("EXAMTOOL_WATERMARK_PDF_PATH", watermark_pdf)
     Path(path).mkdir(parents=True, exist_ok=True)
-    with open(os.path.join(path, outname + ".tex"), "w+") as f:
+    with open(os.path.join(path, out_name + ".tex"), "w+") as f:
         f.write(latex)
 
     if include_watermark:
@@ -174,7 +173,7 @@ def render_latex(
                 "pdflatex",
                 "--shell-escape",
                 "-interaction=nonstopmode",
-                f"{outname}.tex",
+                f"{out_name}.tex",
             ],
             stdout=subprocess.DEVNULL if suppress_output else sys.stdout,
             stderr=subprocess.DEVNULL if suppress_output else sys.stderr,
@@ -185,7 +184,7 @@ def render_latex(
     if do_twice:
         compile()
 
-    out_path = os.path.join(path, outname + ".pdf")
+    out_path = os.path.join(path, out_name + ".pdf")
     if return_out_path:
         yield out_path
     else:
