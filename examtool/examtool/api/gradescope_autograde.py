@@ -256,8 +256,8 @@ class GradescopeGrader:
 
                 traceback.print_exc(file=tqdm)
                 tqdm.write(str(e))
+                self.log_file.write(f"[ERROR]: {qid} raised an exception: {e}")
                 traceback.print_exc(file=self.log_file)
-                self.log_file.write(str(e))
                 self.log_file.flush()
 
         qi = list(gs_outline.questions_iterator())
