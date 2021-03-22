@@ -2,33 +2,35 @@ import os
 import sys
 import subprocess
 import re
+import subprocess
 from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 
 from examtool.api.scramble import latex_escape
+from examtool.api.watermarks import create_watermark
+from examtool.api.utils import rel_open
 
 
-def rel_open(path, *args, **kwargs):
-    root = os.path.dirname(os.path.abspath(__file__))
-    return open(os.path.join(root, path), *args, **kwargs)
-
-
-def generate(exam):
+def generate(exam, *, include_watermark):
     out = []
-    write = out.append
+
+    def write(x, *, newline=True):
+        out.append(x)
+        if newline:
+            out.append("\n")
 
     def write_group(group, is_public):
         if is_public:
             if group["points"] is not None:
                 write(rf"{{\bf\item ({group['points']} points)\quad}}")
             else:
-                write(r"\item[]")
+                write(r"\item[]", newline=False)
         else:
             if group["points"] is not None:
                 write(fr"\q{{{group['points']}}}")
             else:
-                write(r"\item")
+                write(r"\item", newline=False)
         write(r"{ \bf " + latex_escape(group["name"]) + "}")
         write("\n")
         write(group["tex"])
@@ -97,6 +99,9 @@ def generate(exam):
             write(r"}")
         write(r"\vspace{10px}")
 
+    if include_watermark:
+        write(r"\let\Watermarks=1")
+
     with rel_open("tex/prefix.tex") as f:
         write(f.read())
     for i, group in enumerate(
@@ -108,7 +113,7 @@ def generate(exam):
     with rel_open("tex/suffix.tex") as f:
         write(f.read())
 
-    return "\n".join(out)
+    return "".join(out)
 
 
 @contextmanager
@@ -122,7 +127,9 @@ def render_latex(
     supress_output=False,
     return_out_path=False,
 ):
-    latex = generate(exam)
+    include_watermark = exam.get("watermark") and "value" in exam["watermark"]
+
+    latex = generate(exam, include_watermark=include_watermark)
     latex = re.sub(
         r"\\includegraphics(\[.*\])?{(http.*/(.+))}",
         r"\\immediate\\write18{wget -N \2}\n\\includegraphics\1{\3}",
@@ -144,6 +151,30 @@ def render_latex(
                 "--shell-escape",
                 "-interaction=nonstopmode",
                 f"{outname}.tex",
+            ],
+            stdout=subprocess.DEVNULL if supress_output else sys.stdout,
+            stderr=subprocess.DEVNULL if supress_output else sys.stderr,
+            cwd=path,
+        )
+
+    if include_watermark:
+        watermark_name = outname + "_watermark"
+        watermark_svg = watermark_name + ".svg"
+        watermark_pdf = watermark_name + ".pdf"
+        with open(os.path.join(path, watermark_svg), "w+") as f:
+            f.write(
+                create_watermark(
+                    exam["watermark"]["value"],
+                    brightness=exam["watermark"]["brightness"],
+                )
+            )
+        subprocess.run(
+            [
+                "inkscape",
+                "-D",
+                "-z", 
+                f"--file={watermark_svg}",
+                f"--export-pdf={watermark_pdf}",
             ],
             stdout=subprocess.DEVNULL if supress_output else sys.stdout,
             stderr=subprocess.DEVNULL if supress_output else sys.stderr,

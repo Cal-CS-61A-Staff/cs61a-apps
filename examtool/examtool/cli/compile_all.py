@@ -25,12 +25,12 @@ from examtool.cli.utils import (
 
 @click.command()
 @exam_name_option
+@hidden_output_folder_option
 @click.option(
     "--subtitle",
     prompt=True,
     default="Structure and Interpretation of Computer Programs",
 )
-@hidden_output_folder_option
 @click.option(
     "--do-twice",
     is_flag=True,
@@ -66,8 +66,8 @@ from examtool.cli.utils import (
 )
 def compile_all(
     exam,
-    subtitle,
     out,
+    subtitle,
     do_twice,
     email,
     exam_type,
@@ -84,19 +84,24 @@ def compile_all(
         out = "out/latex/" + exam
 
     pathlib.Path(out).mkdir(parents=True, exist_ok=True)
-
-    exam_data = get_exam(exam=exam)
+    try:
+        exam_data = get_exam(exam=exam)
+    except Exception as e:
+        print(
+            f"Exception: Unable to pull the exam {exam}. Received: {e}\nDid you deploy the exam first?"
+        )
+        return
     password = exam_data.pop("secret")[:-1]
     print(password)
     exam_str = json.dumps(exam_data)
 
-    roster = get_roster(exam=exam)
+    roster = get_roster(exam=exam, include_no_watermark=True)
 
     if email:
         roster = [line_info for line_info in roster if line_info[0] == email]
         if len(roster) == 0:
             if deadline:
-                roster = [(email, deadline)]
+                roster = [(email, deadline, False)]
             else:
                 raise ValueError("Email does not exist in the roster!")
 
@@ -125,13 +130,13 @@ def compile_all(
                 desc="Exams Generated",
                 unit="Exam",
             )
-        )
 
 
 def render_student_pdf(data):
     (
         email,
         deadline,
+        no_watermark,
         other_data,
     ) = data
     (
@@ -149,6 +154,8 @@ def render_student_pdf(data):
         return
     exam_data = json.loads(exam_str)
     scramble(email, exam_data)
+    if no_watermark:
+        exam_data.pop("watermark")
     deadline_utc = datetime.utcfromtimestamp(int(deadline))
     deadline_pst = pytz.utc.localize(deadline_utc).astimezone(
         pytz.timezone("America/Los_Angeles")
@@ -189,6 +196,7 @@ def render_student_pdf(data):
                 encryption=Encryption(owner=password, user=password),
             )
             pdf.close()
+
 
 
 if __name__ == "__main__":

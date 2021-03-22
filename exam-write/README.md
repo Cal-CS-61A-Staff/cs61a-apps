@@ -94,13 +94,29 @@ Note that, unlike groups, questions do not have titles. Then you can provide som
 body text, written in Markdown. Then you must provide at least one `INPUT` statement. Then
 you can provide `SOLUTION` and `NOTE` blocks. 
 
-Additionally, you can set a constant ID for your question by setting the config ID. This is
-useful as the examtool randomly generates an ID every time you recompile the exam. This will
-statically set an ID for the question. This is useful in allowing you to recompile and redeploy
-an exam without needing to worry about losing the link of a students answers to a question.
-
+If you provide text after an input statement, but outside `SOLUTION` or `NOTE` blocks, it will be used as an optional template 
+for the input field. For instance,
 ```
-# CONFIG ID MYNEWID
+# BEGIN QUESTION
+
+Question prompt.
+
+# INPUT SHORT_ANSWER
+
+Template answer.
+
+# BEGIN SOLUTION
+Correct answer.
+# END SOLUTION
+
+# END QUESTION
+```
+
+A random ID is generated for each question whenever the exam is compiled. Student submissions are associated
+with a particular question ID. To recompile an exam while keeping the same IDs, to avoid losing this association, 
+you can set a fixed question ID, using the following syntax:
+```
+# CONFIG ID <question-id>
 ```
 
 Then a question is ended with
@@ -202,7 +218,7 @@ If you want to have some questions that can be filled out before the exam starts
 block, just like a group block. This will create a question group that is visible before students start the
 exam. At most one such block can exist in the exam.
 
-## Config Syntax
+## Scramble Syntax
 
 At the beginning of the exam, before anything else, you can provide config statements, written as
 
@@ -305,3 +321,13 @@ To write exams over multiple files, use the syntax
 ```
 to insert the contents of the file at `<path>` in the current file. The `<path>` is evaluated with respect to the
 folder containing the importing file, and may be a relative or absolute path.
+
+
+## Watermark Syntax
+
+Optionally, you can include a repeating watermark in the background of exams, that is unique to each student.
+This can be done using the syntax
+```
+# CONFIG WATERMARK <brightness>
+```
+where `brightness` is an integer from 0 to 255 that represents the brightness of the watermark.

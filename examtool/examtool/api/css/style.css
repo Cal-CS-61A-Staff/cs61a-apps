@@ -1,0 +1,34 @@
+body {
+    font-family: "Consolas", "Menlo", "Monaco", monospace;
+}
+
+label > p {
+    display: inline-block;
+}
+p:last-child {
+    margin-bottom: 0;
+}
+
+pre {
+    padding: 10px;
+    background: rgb(239, 240, 241) !important;
+}
+
+.blockquote {
+    border-left: gray 5px solid;
+}
+
+.gradable {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.question {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.answer {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}

@@ -7,8 +7,8 @@ from cryptography.fernet import Fernet
 from examtool.api.utils import rand_id
 from examtool.api.database import process_ok_exam_upload, set_exam, get_exam, set_roster
 from examtool.api.extract_questions import extract_questions, get_name
-from examtool.api.scramble import is_compressible_group, scramble
-from examtool.cli.utils import exam_name_option
+from examtool.api.scramble import is_compressible_group
+from examtool.cli.utils import exam_name_option, verify_roster
 
 
 @click.command()
@@ -52,14 +52,18 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
     exam_content["secret"] = Fernet.generate_key().decode("utf-8")
 
     try:
-        exam_content["secret"] = get_exam(exam=exam)["secret"]
+        old_secret = get_exam(exam=exam)["secret"]
+        if old_secret:
+            print("Reusing old secret...")
+            exam_content["secret"] = old_secret
     except:
         pass
 
     set_exam(exam=exam, json=exam_content)
-
-    next(roster)  # ditch headers
     roster = list(roster)
+    if not verify_roster(roster=roster):
+        return
+    roster = roster[1:]  # ditch headers
     set_roster(exam=exam, roster=roster)
 
     print("Exam uploaded with password:", exam_content["secret"][:-1])
@@ -81,8 +85,9 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
             "email": email,
             "start_time": start_time,
             "end_time": int(deadline),
+            "no_watermark": bool(int(rest[0]) if rest else False),
         }
-        for email, deadline in roster
+        for email, deadline, *rest in roster
     ]
 
     print("Updating announcements roster with {} students...".format(len(students)))

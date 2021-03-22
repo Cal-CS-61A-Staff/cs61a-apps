@@ -1,3 +1,4 @@
+import os
 import random
 import string
 from functools import wraps
@@ -30,6 +31,15 @@ def rand_id(length=32):
 
 def list_to_dict(l):
     return {i: x for i, x in enumerate(l)}
+
+
+def rel_path(path):
+    root = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(root, path)
+
+
+def rel_open(path, *args, **kwargs):
+    return open(rel_path(path), *args, **kwargs)
 
 
 class IDFactory:

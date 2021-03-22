@@ -1,16 +1,16 @@
 import os
 import pathlib
 from io import BytesIO
-from json import load, dump
+from json import dump, load
 
 import click
 from pikepdf import Pdf
 
-from examtool.api.convert import convert, load_imports, LineBuffer
+from examtool.api.convert import convert, load_imports
 from examtool.api.database import get_exam
 from examtool.api.gen_latex import render_latex
-from examtool.api.utils import sanitize_email
 from examtool.api.scramble import scramble
+from examtool.api.utils import sanitize_email
 from examtool.cli.utils import (
     determine_semester,
     exam_name_option,
@@ -167,7 +167,10 @@ def compile(
     }
     if seed:
         settings["emailaddress"] = sanitize_email(seed)
-    with render_latex(exam_data, settings) as pdf:
+    with render_latex(
+        exam_data,
+        settings,
+    ) as pdf:
         pdf = Pdf.open(BytesIO(pdf))
         pdf.save(os.path.join(out, exam + ".pdf"))
         pdf.close()
