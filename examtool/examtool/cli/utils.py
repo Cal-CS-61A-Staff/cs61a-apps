@@ -22,6 +22,18 @@ hidden_target_folder_option = click.option(
 )
 
 
+def verify_roster(*, roster):
+    for i, row in enumerate(roster):
+        j = len(row)
+        if j != 2 and j != 3:
+            print(
+                f"ValueError: The roster must contain 2 or 3 columns: Email, Timestamp, Skip Watermarks [Optional]. "
+                f"Found {j} item(s) on row {i + 1}: {row}"
+            )
+            return False
+    return True
+
+
 def prettify(course_code):
     m = re.match(r"([a-z]+)([0-9]+[a-z]?)", course_code)
     return m and (m.group(1) + " " + m.group(2)).upper()

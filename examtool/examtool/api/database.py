@@ -50,12 +50,19 @@ def set_exam(*, exam, json):
 
 @server_only
 @as_list
-def get_roster(*, exam):
+def get_roster(*, exam, include_no_watermark=False):
     db = SafeFirestore()
     for student in (
         db.collection("roster").document(exam).collection("deadline").stream()
     ):
-        yield student.id, student.to_dict()["deadline"]
+        if include_no_watermark:
+            yield (
+                student.id,
+                student.to_dict()["deadline"],
+                student.to_dict().get("no_watermark", False),
+            )
+        else:
+            yield student.id, student.to_dict()["deadline"]
 
 
 @server_only
@@ -63,6 +70,7 @@ def set_roster(*, exam, roster):
     db = SafeFirestore()
 
     ref = db.collection("roster").document(exam).collection("deadline")
+    emails = []
 
     batch = db.batch()
     cnt = 0
@@ -77,15 +85,27 @@ def set_roster(*, exam, roster):
 
     batch = db.batch()
     cnt = 0
-    for email, deadline in roster:
+    for email, deadline, *rest in roster:
+        assert len(rest) <= 1
         doc_ref = ref.document(email)
-        batch.set(doc_ref, {"deadline": int(deadline)})
+        batch.set(
+            doc_ref,
+            {
+                "deadline": int(deadline),
+                "no_watermark": bool(int(rest[0]) if rest else False),
+            },
+        )
+        emails.append(email)
         cnt += 1
         if cnt > 400:
             batch.commit()
             batch = db.batch()
             cnt = 0
     batch.commit()
+
+    ref = db.collection("roster").document(exam)
+    data = {"all_students": emails}
+    ref.set(data)
 
 
 @server_only

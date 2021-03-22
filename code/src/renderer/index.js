@@ -63,6 +63,8 @@ function render(Component) {
 }
 
 async function init() {
+  Pace.options.ajax.trackWebSockets = false;
+
   await Promise.all([
     injectScript("d3.v2.min.js"),
     injectScript("jquery-1.8.2.min.js"),

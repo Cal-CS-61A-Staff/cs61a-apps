@@ -1,7 +1,16 @@
 import json
 import os
 
-from flask import Flask, abort, send_from_directory, request, jsonify, make_response
+from examtool.api.watermarks import create_watermark
+from flask import (
+    Flask,
+    Response,
+    abort,
+    send_from_directory,
+    request,
+    jsonify,
+    make_response,
+)
 
 from examtool.api.convert import convert_str
 from examtool.api.scramble import scramble
@@ -39,6 +48,17 @@ def render():
 @app.route("/")
 def index():
     return send_from_directory("static", "index.html")
+
+
+@app.route("/watermark.svg")
+def watermark():
+    return Response(
+        create_watermark(
+            int(request.args["seed"]),
+            brightness=int(request.args["brightness"]),
+        ),
+        mimetype="image/svg+xml",
+    )
 
 
 if __name__ == "__main__":

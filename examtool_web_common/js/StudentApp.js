@@ -1,7 +1,7 @@
 /* eslint-disable no-shadow */
 import React, { useEffect, useState } from "react";
 import { Col, Container, Form, Navbar, Row } from "react-bootstrap";
-import { inAdminMode } from "./auth";
+import { getAuthParams, inAdminMode } from "./auth";
 import EndModal from "./EndModal";
 import ErrorBoundary from "./ErrorBoundary";
 import Exam from "./Exam";
@@ -29,6 +29,8 @@ export default function StudentApp() {
   const [publicGroup, setPublicGroup] = useState(null);
 
   const [encryptedGroups, setEncryptedGroups] = useState(null);
+
+  const [watermark, setWatermark] = useState(null);
 
   const [savedAnswers, setSavedAnswers] = useState(null);
 
@@ -60,10 +62,12 @@ export default function StudentApp() {
 
   useEffect(() => {
     const go = async () => {
-      setExamList(await (await post("list_exams")).json());
+      setExamList(await (await post("list_exams", getAuthParams())).json());
     };
-    go();
-  }, []);
+    if (username) {
+      go();
+    }
+  }, [username]);
 
   const handleExamSelect = (e) => {
     setSelectedExam(e.target.value);
@@ -74,6 +78,7 @@ export default function StudentApp() {
     exam,
     publicGroup,
     privateGroups,
+    watermark,
     answers,
     deadline,
     timestamp,
@@ -82,6 +87,7 @@ export default function StudentApp() {
     setSelectedExam(exam);
     setPublicGroup(publicGroup);
     setEncryptedGroups(privateGroups);
+    setWatermark(watermark);
     setDeadline(
       deadline -
         Math.round(timestamp) +
@@ -240,6 +246,7 @@ export default function StudentApp() {
           <Exam
             publicGroup={publicGroup}
             groups={decryptedGroups}
+            watermark={watermark}
             ended={examEnded}
           />
           <ErrorBoundary>

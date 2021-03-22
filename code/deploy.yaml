@@ -1,5 +1,6 @@
 build_type: create_react_app # lmao
 deploy_type: flask
+memory_limit: 512M
 dependencies:
   - repo: Cal-CS-61A-Staff/61a-code-compiled-scheme-js
     src: scheme.js
@@ -12,3 +13,7 @@ dependencies:
   - repo: Cal-CS-61A-Staff/61a-code-static-resources
     src: static
     dest: static
+
+  - repo: Cal-CS-61A-Staff/berkeley-cs61a
+    src: src/proj/cats/data/common_words.txt
+    dest: src/web-server/sanitized_words.txt

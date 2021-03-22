@@ -459,6 +459,33 @@ to\hsize{\hfil\box\@tempboxa\hfil}
    \prevdepth=\tpd}
 
 
+
+\newcommand\DupImage{%
+    \includegraphics{watermark.pdf}%
+    \includegraphics{watermark.pdf}%
+    \includegraphics{watermark.pdf}%
+    \includegraphics{watermark.pdf}%
+    \includegraphics{watermark.pdf}%
+}
+
+\newcommand\ShowWatermark{
+\usepackage{background}
+\backgroundsetup{%
+  scale=1,
+  angle=0,
+  contents={%
+     \begin{minipage}{\paperheight}
+     \DupImage\\
+     \DupImage\\
+     \DupImage\\
+     \DupImage\\
+     \DupImage
+     \end{minipage}%
+   }
+}}
+
+\ifx\Watermarks 1 \ShowWatermark \fi
+
 %%% Document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \title{\sc <EXAMTYPE>}

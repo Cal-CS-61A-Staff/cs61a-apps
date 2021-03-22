@@ -107,7 +107,7 @@ def paste_text(app, is_staging, data: str, name: str = None, is_private: bool = 
 
 def paste_worker(data: str, name: str = None, is_private: bool = False):
     if name is None:
-        name = "".join(choice(ascii_lowercase) for _ in range(12))
+        name = "".join(choice(ascii_lowercase) for _ in range(24))
     with connect_db() as db:
         db("DELETE FROM pastes WHERE name=%s", [name])
         db(
