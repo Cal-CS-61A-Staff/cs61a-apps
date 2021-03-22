@@ -120,6 +120,11 @@ from examtool.api.gradescope_autograde import GradescopeGrader
     is_flag=True,
     help="When set, the autograder will skip all of the not required parts to grade the uploaded submissions. This flag only works with the `--update` flag set.",
 )
+@click.option(
+    "--only-group",
+    is_flag=True,
+    help="When set, the autograder will only group questions and upload those groups on Gradescope. This flag can be added with `--only-grade` to skip the other non-required steps.",
+)
 @hidden_target_folder_option
 def gradescope_autograde(
     exam,
@@ -144,6 +149,7 @@ def gradescope_autograde(
     store_page_numbers,
     gradescope_export_evaluations_zip,
     only_grade,
+    only_group,
     target,
 ):
     """
@@ -205,6 +211,7 @@ def gradescope_autograde(
             export_exams=export_exams,
             store_page_numbers=store_page_numbers,
             gradescope_export_evaluations_zip=gradescope_export_evaluations_zip,
+            only_group=only_group,
         )
     else:
         grader.add_additional_exams(
@@ -224,6 +231,7 @@ def gradescope_autograde(
             store_page_numbers=store_page_numbers,
             only_grade=only_grade,
             gradescope_export_evaluations_zip=gradescope_export_evaluations_zip,
+            only_group=only_group,
         )
 
 

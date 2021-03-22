@@ -118,6 +118,7 @@ class GradescopeGrader:
         export_exams: bool = True,
         store_page_numbers: str = None,
         gradescope_export_evaluations_zip: str = None,
+        only_group: bool = False,
     ):
         if gs_assignment_title is None:
             gs_assignment_title = "Examtool Exam"
@@ -219,6 +220,7 @@ class GradescopeGrader:
             name_question_id,
             sid_question_id,
             custom_grouper_map,
+            only_group,
         )
 
     def process_questions(
@@ -231,6 +233,7 @@ class GradescopeGrader:
         name_question_id,
         sid_question_id,
         custom_grouper_map,
+        only_group,
     ):
         def proc_q(d):
             qid, question = d
@@ -252,6 +255,7 @@ class GradescopeGrader:
                     name_question_id,
                     sid_question_id,
                     custom_grouper_map,
+                    only_group,
                 )
             except Exception as e:
                 import traceback
@@ -294,6 +298,7 @@ class GradescopeGrader:
         store_page_numbers: str = None,
         only_grade: bool = False,
         gradescope_export_evaluations_zip: str = None,
+        only_group: bool = False,
     ):
         """
         If emails is None, we will import the entire exam, if it has emails in it, it will only upload submissions
@@ -389,6 +394,7 @@ class GradescopeGrader:
             name_question_id,
             sid_question_id,
             custom_grouper_map,
+            only_group,
         )
 
     def handle_failed_uploads(self, failed_uploads, email_to_data_map):
@@ -841,6 +847,7 @@ class GradescopeGrader:
         custom_grouper_map: {
             str: Callable[[str, GS_Question, dict, dict], "QuestionGrouper"]
         },
+        only_group: bool,
     ):
         # Group questions
         if question.data and question.data.get("id") in [
@@ -861,6 +868,11 @@ class GradescopeGrader:
             # Group answers
             tqdm.write(f"[{qid}]: Syncing groups on gradescope...")
             self.sync_groups_on_gradescope(qid, question, groups)
+            if only_group:
+                tqdm.write(
+                    f"[{qid}]: Only group set! This question will not sync its rubric or apply the rubric to each group."
+                )
+                return
             tqdm.write(f"[{qid}]: Syncing rubric items...")
             rubric = self.sync_rubric(qid, question, groups)
             # in here, add check to see if qid is equal to either name or sid q id so we do not group those.
