@@ -157,7 +157,7 @@ def render_latex(
             [
                 "inkscape",
                 "-D",
-                "-z", 
+                "-z",
                 f"--file={watermark_svg}",
                 f"--export-pdf={watermark_pdf}",
             ],
