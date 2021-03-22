@@ -130,6 +130,7 @@ def compile_all(
                 desc="Exams Generated",
                 unit="Exam",
             )
+        )
 
 
 def render_student_pdf(data):

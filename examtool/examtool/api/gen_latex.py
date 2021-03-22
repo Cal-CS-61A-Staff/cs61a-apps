@@ -128,6 +128,9 @@ def render_latex(
     return_out_path=False,
 ):
     include_watermark = exam.get("watermark") and "value" in exam["watermark"]
+    watermark_name = outname + "_watermark"
+    watermark_svg = watermark_name + ".svg"
+    watermark_pdf = watermark_name + ".pdf"
 
     latex = generate(exam, include_watermark=include_watermark)
     latex = re.sub(
@@ -138,29 +141,14 @@ def render_latex(
     if subs:
         for k, v in subs.items():
             latex = latex.replace(f"<{k.upper()}>", v)
+    if include_watermark:
+        latex = latex.replace("EXAMTOOL_WATERMARK_PDF_PATH", watermark_pdf)
     if not os.path.exists(path):
         Path(path).mkdir(parents=True, exist_ok=True)
     with open(os.path.join(path, outname + ".tex"), "w+") as f:
         f.write(latex)
-    # old = os.getcwd()
-
-    def compile():
-        subprocess.run(
-            [
-                "pdflatex",
-                "--shell-escape",
-                "-interaction=nonstopmode",
-                f"{outname}.tex",
-            ],
-            stdout=subprocess.DEVNULL if supress_output else sys.stdout,
-            stderr=subprocess.DEVNULL if supress_output else sys.stderr,
-            cwd=path,
-        )
 
     if include_watermark:
-        watermark_name = outname + "_watermark"
-        watermark_svg = watermark_name + ".svg"
-        watermark_pdf = watermark_name + ".pdf"
         with open(os.path.join(path, watermark_svg), "w+") as f:
             f.write(
                 create_watermark(
@@ -175,6 +163,19 @@ def render_latex(
                 "-z", 
                 f"--file={watermark_svg}",
                 f"--export-pdf={watermark_pdf}",
+            ],
+            stdout=subprocess.DEVNULL if supress_output else sys.stdout,
+            stderr=subprocess.DEVNULL if supress_output else sys.stderr,
+            cwd=path,
+        )
+
+    def compile():
+        subprocess.run(
+            [
+                "pdflatex",
+                "--shell-escape",
+                "-interaction=nonstopmode",
+                f"{outname}.tex",
             ],
             stdout=subprocess.DEVNULL if supress_output else sys.stdout,
             stderr=subprocess.DEVNULL if supress_output else sys.stderr,
