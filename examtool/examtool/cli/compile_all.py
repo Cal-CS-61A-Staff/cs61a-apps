@@ -105,8 +105,6 @@ def compile_all(
             else:
                 raise ValueError("Email does not exist in the roster!")
 
-    rosterlist = list(roster)
-
     def render_student_pdf(data):
         (
             email,
@@ -163,8 +161,8 @@ def compile_all(
     with ThreadPool(num_threads) as p:
         list(
             tqdm(
-                p.imap_unordered(render_student_pdf, rosterlist),
-                total=len(rosterlist),
+                p.imap_unordered(render_student_pdf, roster),
+                total=len(roster),
                 desc="Exams Generated",
                 unit="Exam",
             )
