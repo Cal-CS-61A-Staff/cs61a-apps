@@ -257,7 +257,7 @@ class GradescopeGrader:
                 traceback.print_exc(file=tqdm)
                 tqdm.write(str(e))
                 traceback.print_exc(file=self.log_file)
-                log_file.write(str(e))
+                self.log_file.write(str(e))
 
         qi = list(gs_outline.questions_iterator())
         with ThreadPool(self.simultaneous_jobs) as p:
