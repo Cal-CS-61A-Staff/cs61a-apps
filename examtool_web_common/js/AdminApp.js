@@ -46,7 +46,7 @@ export default function AdminApp() {
       <br />
       <Row>
         <Col>
-          <h1>Final Exam Admin Panel</h1>
+          <h1>Exam Admin Panel</h1>
         </Col>
       </Row>
       <Row>

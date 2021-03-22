@@ -14,6 +14,6 @@ dependencies:
     src: static
     dest: static
 
-  - repo: Cal-CS-61A-Staff/61a-code-static-resources
-    src: static/english.txt
+  - repo: Cal-CS-61A-Staff/berkeley-cs61a
+    src: src/proj/cats/data/common_words.txt
     dest: src/web-server/sanitized_words.txt

@@ -102,6 +102,15 @@ def list_exams(db):
     return db.collection("exams").document("all").get().to_dict()["exam-list"]
 
 
+def get_roster_exams(email, db):
+    return [
+        exam.id
+        for exam in db.collection("roster")
+        .where("all_students", "array_contains", email)
+        .get()
+    ]
+
+
 def index(request):
     try:
         if getenv("ENV") == "dev":
@@ -113,7 +122,11 @@ def index(request):
             return main_js
 
         if request.path.endswith("list_exams"):
-            return jsonify(list_exams(db))
+            email, is_admin = get_email(request)
+            all_exams = list_exams(db)
+            roster_exams = get_roster_exams(email, db)
+            valid = [exam for exam in all_exams if exam in roster_exams]
+            return jsonify(valid)
 
         if request.path.endswith("watermark.svg"):
             watermark = create_watermark(
