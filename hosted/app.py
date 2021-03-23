@@ -176,7 +176,7 @@ if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
 @only("buildserver")
 def create_pr_subdomain(app, pr_number, pr_host):
     if os.path.exists(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf"):
-        return dict(success=True)
+        os.remove(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf")
 
     nginx_config = Server(
         Location(
