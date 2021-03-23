@@ -20,6 +20,7 @@ module.exports = {
     initSqlJs: true,
     initData: true,
     VERSION: true,
+    Pace: true,
   },
   rules: {
     "import/no-unresolved": false,

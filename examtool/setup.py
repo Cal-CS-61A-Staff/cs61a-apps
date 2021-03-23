@@ -6,14 +6,16 @@ with open("README.md") as f:
 
 setup(
     name="examtool",
-    version="2.1.*",
+    version="2.2.*",
     author="Rahul Arya",
     author_email="rahularya@berkeley.edu",
     long_description=readme,
     long_description_content_type="text/markdown",
     licence="MIT",
-    packages=find_packages(include=["examtool.api", "examtool.cli"]),
-    package_data={"": ["**/*.tex"]},
+    packages=find_packages(
+        include=["examtool.api", "examtool.cli", "examtool.gui_files"]
+    ),
+    package_data={"": ["**/*.tex", "**/*.css"]},
     include_package_data=True,
     entry_points={"console_scripts": ["examtool=examtool.cli.__main__:cli"]},
     python_requires=">=3.6",
@@ -36,8 +38,11 @@ setup(
             "pypandoc",
             "sendgrid",
             "func-timeout",
-            "fullGSapi",
+            "fullGSapi>=1.3.7",
             "tqdm",
+            "numpy",
+            "opencv-python",
+            "pdfkit",
         ],
     },
 )

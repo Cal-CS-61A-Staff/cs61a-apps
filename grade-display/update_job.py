@@ -1,4 +1,4 @@
-# Fall 2020 Sequence of Actions
+# Spring 2021 Sequence of Actions
 
 import os, roster_export, okpy_export, sys
 import gs_export, sections_export, assemble
@@ -14,7 +14,7 @@ if not os.path.exists("data"):
     except FileExistsError as e:
         print("Data folder exists, false alarm!")
 
-sections = "fa20" in get_endpoint(course="cs61a")
+sections = "sp21" in get_endpoint(course="cs61a")
 
 with connect_db() as db:
     gscope: List[Tuple[str, str]] = db(
@@ -56,7 +56,7 @@ def update():
     print("=================================================")
     adj = list(acadh[0]) if acadh else []
     assemble.assemble(
-        gscope=gs_assignments, recovery=True, sections=sections, adjustments=adj
+        gscope=gs_assignments, recovery=False, sections=sections, adjustments=adj
     )
 
     print("=================================================")

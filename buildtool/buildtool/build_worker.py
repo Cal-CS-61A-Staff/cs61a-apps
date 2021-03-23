@@ -63,7 +63,9 @@ def worker(build_state: BuildState, index: int):
                     f"Target {todo} either has unbuilt dependencies, "
                     f"or does not have a cached dynamic dependency resolved"
                 )
-                deps_ready = not enqueue_deps(build_state, todo, deps)
+                deps_ready = not enqueue_deps(
+                    build_state, todo, deps, catch_failure=uses_dynamic_deps
+                )
                 if deps_ready:
                     log("Apparently it is missing an input cache in the impl")
                 else:
@@ -106,7 +108,7 @@ def worker(build_state: BuildState, index: int):
                                 f"so we are running the impl in the root directory to find out!"
                             )
                             cache_key = build(
-                                build_state, todo, deps, scratch_path=None
+                                build_state, todo, todo.deps, scratch_path=None
                             )
                             # now, if no exception has thrown, all the deps are available to the deps finder
                             alt_cache_key, deps, _ = get_deps(build_state, todo)

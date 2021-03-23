@@ -25,6 +25,12 @@ class AdminLayout extends React.Component {
               )}
             />
             <Route
+              path={`${match.path}/tickets`}
+              render={(props) => (
+                <AdminTicketsManager state={state} {...props} />
+              )}
+            />
+            <Route
               path={`${match.path}/appointments`}
               render={(props) => (
                 <AdminAppointmentsManager state={state} {...props} />

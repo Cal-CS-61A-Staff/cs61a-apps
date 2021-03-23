@@ -13,7 +13,7 @@ export default function LoadingButton({
   return (
     <Button
       variant={variant}
-      onClick={onClick}
+      onClick={() => onClick()}
       disabled={disabled}
       style={style}
       size={size}

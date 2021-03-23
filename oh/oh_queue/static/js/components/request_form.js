@@ -73,6 +73,7 @@ function RequestForm(props) {
   let magicWordInput = false;
   if (
     state.config &&
+    !party_enabled &&
     state.config.queue_magic_word_mode &&
     state.config.queue_magic_word_mode !== "none"
   ) {
@@ -233,7 +234,11 @@ function RequestForm(props) {
               id="description-box"
               className="description-box"
               rows="5"
-              placeholder='It would be helpful if you could describe your issue. For example, "I have a SyntaxError in my ___ function. I&apos;ve tried using ____ and ____."'
+              defaultValue={state.config.default_description}
+              placeholder={
+                state.config.default_description ||
+                'It would be helpful if you could describe your issue. For example, "I have a SyntaxError in my ___ function. I&apos;ve tried using ____ and ____."'
+              }
             />
             <button
               className="btn btn-lg btn-default"

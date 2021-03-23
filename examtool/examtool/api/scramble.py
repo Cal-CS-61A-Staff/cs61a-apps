@@ -67,7 +67,9 @@ def scramble(email, exam, *, keep_data=False):
     def scramble_question(question, substitutions, config):
         question_substitutions = select_substitutions(question)
         substitute(
-            question, [question_substitutions, *substitutions], ["html", "tex", "text"]
+            question,
+            [question_substitutions, *substitutions],
+            ["html", "tex", "text", "template"],
         )
         if isinstance(question["options"], list):
             if "scramble_options" in config:
@@ -107,6 +109,8 @@ def scramble(email, exam, *, keep_data=False):
         for substitutions in list_substitutions:
             merged = {**merged, **substitutions}
             for attr in attrs:
+                if attr not in target:
+                    continue
                 for k, v in substitutions.items():
                     target[attr] = target[attr].replace(k, v)
                     if k.title() != k:
@@ -153,9 +157,8 @@ def scramble(email, exam, *, keep_data=False):
     exam.pop("substitution_groups", None)
     exam.pop("substitutions_match", None)
 
-    exam["entropy"] = entropy = []
-    for _ in range(100):
-        entropy.append(random.randrange(1024))
+    if exam.get("watermark"):
+        exam["watermark"]["value"] = random.randrange(2 ** 20)
 
     return exam
 
@@ -165,9 +168,10 @@ def get_elements(group):
 
 
 def select_substitutions(element):
-    substitutions = select_regular(element["substitutions"])
+    substitutions = select_regular(element.get("substitutions", {}))
     substitutions.update(select_no_replace(element.get("substitutions_match", [])))
     substitutions.update(select_group(element.get("substitution_groups", [])))
+    substitutions.update(select_ranges(element.get("substitution_ranges", {})))
     return substitutions
 
 
@@ -203,6 +207,14 @@ def select_group(substitution_groups):
         assert len(k) == len(v)
         for k0, v0 in zip(k, v):
             out[k0] = v0
+    return out
+
+
+def select_ranges(substitution_ranges):
+    out = {}
+    # DEFINE RANGE
+    for k, [low, high] in sorted(substitution_ranges.items()):
+        out[k] = str(random.randrange(low, high))
     return out
 
 

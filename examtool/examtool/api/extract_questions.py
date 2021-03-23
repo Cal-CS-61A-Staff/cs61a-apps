@@ -9,9 +9,8 @@ def extract_questions(
     nest_all: bool = False,
 ):
     def merge_text(parent, child):
-        child["text"] = (
-            parent["name"] + "\n\n" + parent["text"] + "\n\n" + child["text"]
-        )
+        for attr in ["text", "html", "tex"]:
+            child[attr] = parent["name"] + "\n\n" + parent[attr] + "\n\n" + child[attr]
 
     def group_questions(group):
         out = _group_questions(group)

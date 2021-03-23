@@ -612,3 +612,7 @@ html {
 .settingsDialogForm tbody tr {
     border-top: white solid thin;
 }
+
+#doctest-timeout {
+    width: 80px;
+}

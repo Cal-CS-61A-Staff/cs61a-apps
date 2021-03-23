@@ -2,6 +2,9 @@
 
 Try the production version at https://code.cs61a.org!
 
+Course staff can add shortlinks for files to load in the editor here:
+https://code.cs61a.org/data/registry
+
 ## Web Editor
 In the releases, download the latest `web.zip` file, activate the pipenv, and run `app.py` to start a Flask server. Alternatively, run
 ```

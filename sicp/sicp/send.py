@@ -17,7 +17,12 @@ from common.rpc.mail import send_email
 @click.option(
     "--sender-user",
     default="cs61a",
-    help="The sender username (@eecs.berkeley.edu)",
+    help="The sender username",
+)
+@click.option(
+    "--sender-domain",
+    default="berkeley.edu",
+    help="The sender domain",
 )
 @click.option(
     "--target",
@@ -36,6 +41,7 @@ from common.rpc.mail import send_email
 def send(
     sender: str,
     sender_user: str,
+    sender_domain: str,
     target: str,
     subject: str,
     body: str,
@@ -52,8 +58,10 @@ def send(
                 "ascii"
             )
 
+    assert sender_domain.endswith("berkeley.edu")
+
     send_email(
-        sender=f"{sender} <{sender_user}@cs162.eecs.berkeley.edu>",
+        sender=f"{sender} <{sender_user}@{sender_domain}>",
         target=target,
         subject=subject,
         body=body,

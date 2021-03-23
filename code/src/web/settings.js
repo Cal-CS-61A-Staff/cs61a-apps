@@ -5,15 +5,24 @@ let settingsWatcherKey = null;
 
 const settingsKey = "settings";
 
+const defaultSettings = {
+  enableAutocomplete: false,
+  doctestTimeout: 5,
+};
+
 export function assignSettingsWatcherKey(key) {
   if (settingsWatcherKey) {
     exit(settingsWatcherKey);
   }
   settingsWatcherKey = key;
+  out(settingsWatcherKey, JSON.stringify(loadSettings()));
 }
 
 export function loadSettings() {
-  return JSON.parse(localStorage.getItem(settingsKey) || "{}");
+  return {
+    ...defaultSettings,
+    ...JSON.parse(localStorage.getItem(settingsKey) || "{}"),
+  };
 }
 
 function saveSettings(settings) {

@@ -72,6 +72,14 @@ export default class File extends React.Component {
     } else {
       this.editorRef.current.forceOpen();
     }
+    if (this.props.srcOrigin) {
+      window.addEventListener("message", (e) => {
+        if (e.origin === this.props.srcOrigin) {
+          this.handleEditorChange(e.data);
+        }
+      });
+      window.parent.postMessage({ requestData: true }, this.props.srcOrigin);
+    }
   }
 
   componentWillUnmount() {
@@ -141,6 +149,18 @@ export default class File extends React.Component {
       return;
     }
     let commandSent = false;
+    const duration = this.props.settings.doctestTimeout;
+    const timeoutTimer = setTimeout(() => {
+      send({
+        type: SHOW_ERROR_DIALOG,
+        title: "Doctests Failed",
+        message: `Timeout (tests did not complete after ${duration}s). You might have an infinite loop!`,
+      });
+      // eslint-disable-next-line no-use-before-define
+      killCallback();
+      // eslint-disable-next-line no-use-before-define
+      detachCallback();
+    }, duration * 1000);
     const [interactCallback, killCallback, detachCallback] = runCode(
       this.identifyLanguage()
     )(
@@ -154,6 +174,7 @@ export default class File extends React.Component {
         const doctestData = (0, eval)(rawData);
         this.setState({ doctestData });
         this.testRef.current.forceOpen();
+        clearInterval(timeoutTimer);
         killCallback();
       },
       (err) => {
@@ -164,6 +185,7 @@ export default class File extends React.Component {
             title: "Doctests Failed",
             message: err.trim(),
           });
+          clearInterval(timeoutTimer);
           killCallback();
           detachCallback();
           commandSent = true;
