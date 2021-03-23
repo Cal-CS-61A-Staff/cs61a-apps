@@ -175,6 +175,10 @@ if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
 @create_pr_subdomain.bind(app)
 @only("buildserver")
 def create_pr_subdomain(app, pr_number, pr_host):
+    target_domain = f"{pr_number}.{app}.pr.cs61a.org"
+    conf_path = f"{pr_confs}/{target_domain}.conf"
+    expected_cert_name = f"*.{app}.pr.cs61a.org"
+
     nginx_config = Server(
         Location(
             "/",
@@ -185,31 +189,31 @@ def create_pr_subdomain(app, pr_number, pr_host):
             send_timeout="1800",
             proxy_set_header={
                 "Host": pr_host,
-                "X-Forwarded-For-Host": f"{pr_number}.{app}.pr.cs61a.org",
+                "X-Forwarded-For-Host": target_domain,
             },
         ),
-        server_name=f"{pr_number}.{app}.pr.cs61a.org",
+        server_name=target_domain,
         listen="80",
     )
 
-    if not os.path.exists(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf"):
-        with open(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf", "w") as f:
+    if not os.path.exists(conf_path):
+        with open(conf_path, "w") as f:
             f.write(str(nginx_config))
         sh("nginx", "-s", "reload")
 
-    cert = proxy_cb.cert_else_false(f"*.{app}.pr.cs61a.org", force_exact=True)
+    cert = proxy_cb.cert_else_false(expected_cert_name, force_exact=True)
     for _ in range(2):
         if cert:
             break
-        proxy_cb.run_bot(domains=[f"*.{app}.pr.cs61a.org"], args=["certonly"])
-        cert = proxy_cb.cert_else_false(f"*.{app}.pr.cs61a.org", force_exact=True)
+        proxy_cb.run_bot(domains=[expected_cert_name], args=["certonly"])
+        cert = proxy_cb.cert_else_false(expected_cert_name, force_exact=True)
 
     if not cert:
-        error = f"Hosted Apps failed to sign a certificate for *.{app}.pr.cs61a.org!"
+        error = f"Hosted Apps failed to sign a certificate for {expected_cert_name}!"
         post_message(message=error, channel="infra")
         return dict(success=False, reason=error)
 
-    proxy_cb.attach_cert(cert, f"{pr_number}.{app}.pr.cs61a.org")
+    proxy_cb.attach_cert(cert, target_domain)
     return dict(success=True)
 
 
