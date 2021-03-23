@@ -175,9 +175,6 @@ if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
 @create_pr_subdomain.bind(app)
 @only("buildserver")
 def create_pr_subdomain(app, pr_number, pr_host):
-    if os.path.exists(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf"):
-        os.remove(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf")
-
     nginx_config = Server(
         Location(
             "/",
@@ -195,9 +192,10 @@ def create_pr_subdomain(app, pr_number, pr_host):
         listen="80",
     )
 
-    with open(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf", "w") as f:
-        f.write(str(nginx_config))
-    sh("nginx", "-s", "reload")
+    if not os.path.exists(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf"):
+        with open(f"{pr_confs}/{pr_number}.{app}.pr.cs61a.org.conf", "w") as f:
+            f.write(str(nginx_config))
+        sh("nginx", "-s", "reload")
 
     cert = proxy_cb.cert_else_false(f"*.{app}.pr.cs61a.org", force_exact=True)
     for _ in range(2):
