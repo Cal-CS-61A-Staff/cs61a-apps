@@ -61,16 +61,13 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
                 columns={"Total Score": f"{gscope[name]} (Raw)"}
             )
 
-    out = pd.merge(roster, grades, how="left", on="Email")
-    columns = [*grades.columns, "name"]
-
     if adjustments:
         print("Applying adjustments...")
         for url, sheet in adjustments:
             adj = web_csv(url, sheet)
             adj = adj.fillna(0)
-            out = pd.merge(out, adj, how="left", on="Email")
-            columns.extend(adj.columns[1:])
+            grades = pd.merge(grades, adj, how="left", on="Email")
+            # columns.extend(adj.columns[1:])
 
     # FA20/SP21 Tutorials
     if sections:
@@ -92,19 +89,21 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     if recovery:
         print("Calculating recovery points...")
         if "mt1" in gscope:
-            out["Midterm 1 (Recovery)"] = out.apply(
+            grades["Midterm 1 (Recovery)"] = grades.apply(
                 lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40),
                 axis=1,
             )
-            columns.append("Midterm 1 (Recovery)")
+            # columns.append("Midterm 1 (Recovery)")
 
         if "mt2" in gscope:
-            out["Midterm 2 (Recovery)"] = out.apply(
+            grades["Midterm 2 (Recovery)"] = grades.apply(
                 lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50),
                 axis=1,
             )
-            columns.append("Midterm 2 (Recovery)")
+            # columns.append("Midterm 2 (Recovery)")
 
+    out = pd.merge(roster, grades, how="left", on="Email")
+    columns = [*grades.columns, "name"]
     out = out.rename(columns={"SID_x": "SID"})
 
     # finalize
