@@ -33,7 +33,7 @@ def web_csv(url, sheet):
 
 # exam recovery calculations
 def attendance(row):
-    return row["Tutorial Attendance (Raw)"]  # special formula for FA20 restructure
+    return row["Tutorial Attendance (Raw)"]  # special formula for FA20/SP21 restructure
 
 
 #    return sum(row["Discussion {} (Total)".format(i)] for i in range(1, 13) if i != 8)
@@ -53,24 +53,6 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
     roster = csv(ROSTER).rename(columns={"sid": "SID", "email": "Email"})
     grades = csv(GRADES)
 
-    # Fall 2020 Tutorials
-    if sections:
-        tutorials = csv(TUTORIALS)
-        tutorials = tutorials.fillna(0)
-        grades = pd.merge(grades, tutorials, how="left", on="Email")
-
-        grades["Tutorial Attendance (Raw)"] = grades["Tutorial Attendance (Total)"]
-        # grades["Tutorial Attendance (Raw)"] = grades[
-        #     ["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]
-        # ].values.max(1)
-        grades = grades.drop(
-            [
-                "Tutorial Attendance (Total)",
-                #         "Tutorial Attendance CS Scholars (Total)",
-            ],
-            axis=1,
-        )
-
     if gscope:
         for name in gscope:
             scores = csv(f"data/{name}.csv")[["SID", "Total Score"]]
@@ -81,6 +63,31 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
 
     out = pd.merge(roster, grades, how="left", on="Email")
     columns = [*grades.columns, "name"]
+
+    if adjustments:
+        print("Applying adjustments...")
+        for url, sheet in adjustments:
+            adj = web_csv(url, sheet)
+            adj = adj.fillna(0)
+            out = pd.merge(out, adj, how="left", on="Email")
+            columns.extend(adj.columns[1:])
+
+    # FA20/SP21 Tutorials
+    if sections:
+        tutorials = csv(TUTORIALS)
+        tutorials = tutorials.fillna(0)
+        grades = pd.merge(grades, tutorials, how="left", on="Email")
+
+        grades["Tutorial Attendance (Raw)"] = grades[
+            ["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]
+        ].values.max(1)
+        grades = grades.drop(
+            [
+                "Tutorial Attendance (Total)",
+                "Tutorial Attendance CS Scholars (Total)",
+            ],
+            axis=1,
+        )
 
     if recovery:
         print("Calculating recovery points...")
@@ -99,13 +106,6 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
             columns.append("Midterm 2 (Recovery)")
 
     out = out.rename(columns={"SID_x": "SID"})
-
-    if adjustments:
-        print("Applying adjustments...")
-        adj = web_csv(*adjustments)
-        adj = adj.fillna(0)
-        out = pd.merge(out, adj, how="left", on="Email")
-        columns.extend(adj.columns[1:])
 
     # finalize
     out = out[columns]
