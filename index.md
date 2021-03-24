@@ -25,7 +25,7 @@ GitHub Repository <https://github.com/Cal-CS-61A-Staff/cs61a-apps>
 :maxdepth: 3
 :caption: Utilities
 
-common/README.md
+common/index
 ```
 
 ```{toctree}
@@ -33,8 +33,8 @@ common/README.md
 :maxdepth: 3
 :caption: Examtool
 
-examtool/README.md
-exam-write/README.md
+examtool/index
+exam-write/index
 ```
 
 ```{toctree}
@@ -42,18 +42,18 @@ exam-write/README.md
 :maxdepth: 3
 :caption: Apps
 
-auth/README.md
-buildserver/README.md
-Buildtool <buildtool/README.md>
-cats/README.md
-61A Code <code/README.md>
-grade-display/README.md
-hosted/README.md
-howamidoing/README.md
+auth/index
+buildserver/index
+Buildtool <buildtool/index>
+cats/index
+61A Code <code/index>
+docs/index
+grade-display/index
+hosted/index
+howamidoing/index
 
-oh/README.md
-oh/migrations/README.md
+oh/index
 
-Piazza OnCall<piazzaoncall/README.md>
-SICP <sicp/README.md>
+Piazza OnCall <piazzaoncall/index>
+SICP <sicp/index>
 ```

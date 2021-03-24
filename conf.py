@@ -91,4 +91,4 @@ intersphinx_mapping = {
 }
 
 # Change the order in which autodoc renders members of a file/class.
-# autodoc_member_order = "bysource"
+autodoc_member_order = "bysource"
