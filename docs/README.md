@@ -8,16 +8,22 @@ This app generates documentation for all 61A apps.
 2. Set up the Python environment using `python3 -m venv env` and
 `env/bin/pip install -r requirements.txt`, or simply `sicp venv`
 if you have `sicp` installed.
-3. Run the Sphinx autobuilder using `env/bin/sphinx-autobuild .. _build`
-4. Visit [http://localhost:8000](http://localhost:8000) to see the docs.
+3. Run the Sphinx autobuilder using
+`env/bin/sphinx-autobuild -b dirhtml .. _build`
+4. Visit http://localhost:8000 to see the docs.
+
+Alternatively, to compile all docs once, run
+`env/bin/sphinx-build -b dirhtml .. _build`. This will generate an output
+folder `_build` containing the compiled documentation. Useful for when you
+don't want to run the file watcher.
 
 ## Writing Documentation
 
-To write documentation for an app, we use
+To write documentation for an app, we use a combination of reStructuredText and
 [MyST](https://myst-parser.readthedocs.io/en/latest/). MyST allows us to write
 Sphinx documentation in a markdown equivalent of reStructuredText. The
-documentation for MyST should help you write documentation, but we'll cover
-some examples and tips below anyway.
+documentation for MyST should help you write the `index` and `README` files,
+but we'll cover some examples and tips below anyway.
 
 ### Text Editor Setup
 
