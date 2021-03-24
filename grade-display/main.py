@@ -12,6 +12,8 @@ from common.html import html, make_row
 from auth import authenticate, update_storage
 from datetime import datetime
 
+from update_job import update
+
 app = Flask(__name__)
 create_oauth_client(app, "grade-display-exports", return_response=update_storage)
 
@@ -153,8 +155,6 @@ def delete_adjustments(hashed):
 @job(app, "update_grades")
 @app.route("/update_grades")
 def run():
-    from update_job import update  # fresh import to ensure up-to-date data from db
-
     start = datetime.now()
     print(f"Grade update triggered at {str(start)}.", file=sys.stderr)
     update()

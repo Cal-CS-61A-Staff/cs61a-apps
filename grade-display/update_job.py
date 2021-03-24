@@ -8,26 +8,26 @@ from typing import List, Tuple
 from common.rpc.auth import get_endpoint
 from common.db import connect_db
 
-if not os.path.exists("data"):
-    try:
-        os.makedirs("data")
-    except FileExistsError as e:
-        print("Data folder exists, false alarm!")
-
-sections = "sp21" in get_endpoint(course="cs61a")
-
-with connect_db() as db:
-    gscope: List[Tuple[str, str]] = db(
-        "SELECT name, gs_code FROM gscope",
-        [],
-    ).fetchall()
-    adjustments: List[Tuple[str, str]] = db(
-        "SELECT url, sheet FROM adjustments",
-        [],
-    ).fetchall()
-
 
 def update():
+    if not os.path.exists("data"):
+        try:
+            os.makedirs("data")
+        except FileExistsError as e:
+            print("Data folder exists, false alarm!")
+
+    sections = "sp21" in get_endpoint(course="cs61a")
+
+    with connect_db() as db:
+        gscope: List[Tuple[str, str]] = db(
+            "SELECT name, gs_code FROM gscope",
+            [],
+        ).fetchall()
+        adjustments: List[Tuple[str, str]] = db(
+            "SELECT url, sheet FROM adjustments",
+            [],
+        ).fetchall()
+
     print("=================================================")
     roster_export.export()
 
