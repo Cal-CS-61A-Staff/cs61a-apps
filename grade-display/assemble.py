@@ -57,27 +57,31 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
         for name in gscope:
             scores = csv(f"data/{name}.csv")[["SID", "Total Score"]]
             scores = scores.fillna(0)
-            grades = pd.merge(grades, scores, how="left", on="SID").rename(
-                columns={"Total Score": f"{gscope[name]} (Raw)"}
+            grades = (
+                pd.merge(grades, scores, how="left", on="SID")
+                .rename(columns={"Total Score": f"{gscope[name]} (Raw)"})
+                .fillna(0)
             )
 
     if adjustments:
         print("Applying adjustments...")
         for url, sheet in adjustments:
             adj = web_csv(url, sheet)
-            adj = adj.fillna(0)
-            grades = pd.merge(grades, adj, how="left", on="Email")
-            # columns.extend(adj.columns[1:])
+            for col in adj.columns[1:]:
+                adj[col] = pd.to_numeric(adj[col])
+            adj = adj.replace("", np.nan).fillna(0)
+            grades = pd.merge(grades, adj, how="left", on="Email").fillna(0)
 
     # FA20/SP21 Tutorials
     if sections:
-        tutorials = csv(TUTORIALS)
-        tutorials = tutorials.fillna(0)
-        grades = pd.merge(grades, tutorials, how="left", on="Email")
+        print("Adding tutorial attendance...")
+        tutorials = csv(TUTORIALS).replace("", np.nan).fillna(0)
+        grades = pd.merge(grades, tutorials, how="left", on="Email").fillna(0)
 
         grades["Tutorial Attendance (Raw)"] = grades[
             ["Tutorial Attendance (Total)", "Tutorial Attendance CS Scholars (Total)"]
         ].values.max(1)
+
         grades = grades.drop(
             [
                 "Tutorial Attendance (Total)",
@@ -93,14 +97,12 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
                 lambda row: exam_recovery(row["Midterm 1 (Raw)"], attendance(row), 40),
                 axis=1,
             )
-            # columns.append("Midterm 1 (Recovery)")
 
         if "mt2" in gscope:
             grades["Midterm 2 (Recovery)"] = grades.apply(
                 lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50),
                 axis=1,
             )
-            # columns.append("Midterm 2 (Recovery)")
 
     out = pd.merge(roster, grades, how="left", on="Email")
     columns = [*grades.columns, "name"]
