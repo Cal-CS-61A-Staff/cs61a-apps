@@ -1,6 +1,7 @@
 from base64 import b64encode
 
 from ics import Calendar, Event
+import pytz
 
 from common.course_config import get_domain
 from common.rpc.mail import send_email
@@ -15,8 +16,8 @@ def send_appointment_reminder(signup: AppointmentSignup):
     c = Calendar()
     e = Event()
     e.name = f"{format_coursecode(get_course())} Appointment"
-    e.begin = appointment.start_time
-    e.end = appointment.start_time + appointment.duration
+    e.begin = pytz.timezone("America/Los_Angeles").localize(appointment.start_time)
+    e.end = e.begin + appointment.duration
     e.location = appointment.location.name
     c.events.add(e)
 
