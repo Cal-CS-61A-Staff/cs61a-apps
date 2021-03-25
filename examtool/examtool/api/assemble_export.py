@@ -86,8 +86,6 @@ def assemble_exam(
                 response,
                 dispatch,
             )
-            if question["id"] in response and question["id"] in student_question_lookup
-            else "STUDENT LEFT QUESTION BLANK"
             if question["id"] in student_question_lookup
             else "STUDENT DID NOT RECEIVE QUESTION"
         )

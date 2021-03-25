@@ -102,3 +102,4 @@ IGNORE_*
 # End of https://www.toptal.com/developers/gitignore/api/vscode
 
 .eslintcache
+/examtool/examtool/cli/DO_NOT_UPLOAD_MT2_DOCTESTS.py
