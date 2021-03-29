@@ -22,6 +22,8 @@ project = "cs61a-apps"
 copyright = "2021 CS 61A (Vanshaj Singhania)"
 author = "CS 61A (Vanshaj Singhania)"
 
+myst_substitutions = {"docs_in_charge": "Vanshaj"}
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -36,7 +38,10 @@ extensions = [
     "myst_parser",
 ]
 
-myst_enable_extensions = ["linkify"]
+myst_enable_extensions = [
+    "linkify",
+    "substitution",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -90,6 +95,8 @@ extlinks = {"repo": ("https://github.com/Cal-CS-61A-Staff/tree/master/%s", "repo
 # Link to parts of other software documentation, if needed.
 intersphinx_mapping = {
     "flask": ("https://flask.palletsprojects.com/en/1.1.x", None),
+    "flask_oauthlib": ("https://flask-oauthlib.readthedocs.io/en/latest", None),
+    "python": ("https://docs.python.org/3", None),
 }
 
 # Change the order in which autodoc renders members of a file/class.

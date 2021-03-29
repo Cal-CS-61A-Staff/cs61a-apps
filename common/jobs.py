@@ -4,6 +4,17 @@ from flask import Flask
 
 
 def job(app: Flask, endpoint):
+    """Adds a URL rule for a recurring job at ``/jobs/<endpoint>``.
+
+    :param app: the app the method belongs to
+    :type app: ~flask.Flask
+
+    :param endpoint: the endpoint to route to the method
+    :type endpoint: str
+
+    :return: a decorator
+    """
+
     def decorator(func):
         @wraps(func)
         def wrapped():

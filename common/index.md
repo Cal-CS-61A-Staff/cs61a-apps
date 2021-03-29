@@ -35,7 +35,7 @@ database.
 
 To develop on the production database, use `ENV=DEV_ON_PROD` and pass in
 `DATABASE_PW=password`, where `password` is the SQL password for the
-`buildserver` user.
+`buildserver` user. Ask a Head of Software if you need access to this.
 
 ```{note}
 Developing on production requires the Cloud SQL Proxy. Follow the instructions
@@ -50,12 +50,16 @@ in the root directory of the repository.
 
 ## Hash Utilities
 
+This file contains some utilities for hashing data.
+
 ```{eval-rst}
 .. automodule:: common.hash_utils
     :members:
 ```
 
 ## HTML Helpers
+
+This file contains some helpful HTML formatting tools for a standard frontend.
 
 ```{eval-rst}
 .. automodule:: common.html
@@ -64,12 +68,16 @@ in the root directory of the repository.
 
 ## Job Routing
 
+This file contains a decorator utility to add URL rules for recurring actions.
+
 ```{eval-rst}
 .. automodule:: common.jobs
     :members:
 ```
 
 ## OAuth Client
+
+This file contains some utilities for Okpy OAuth communication.
 
 ```{eval-rst}
 .. automodule:: common.oauth_client
@@ -78,6 +86,8 @@ in the root directory of the repository.
 
 ## Secrets
 
+This file contains some utilities to create/get secrets for an app.
+
 ```{eval-rst}
 .. automodule:: common.secrets
     :members:
@@ -85,12 +95,17 @@ in the root directory of the repository.
 
 ## Shell Utilities
 
+This file contains some utilities to communicate with a shell.
+
 ```{eval-rst}
 .. automodule:: common.shell_utils
     :members:
 ```
 
 ## `url_for`
+
+This file creates a new `url_for` method to improve upon the default
+{func}`~flask.url_for`.
 
 ```{eval-rst}
 .. automodule:: common.url_for
