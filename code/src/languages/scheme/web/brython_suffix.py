@@ -15,6 +15,7 @@ To visualize a list, call (draw <list>).
 To draw list visualizations automatically, call (autodraw).
 To view an environment diagram of your entire program, call (visualize).
 To launch an editor associated with your console, call (editor).
+To run a doctest, call `(expect <expr> <output>)`.
 """
 
 
