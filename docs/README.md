@@ -6,12 +6,16 @@ questions at any point during the process, please message {{ docs_in_charge }}!
 ## Setup
 
 1. Clone the repo and switch into the `docs` directory.
-2. Set up the Python environment using `python3 -m venv env` and
-`env/bin/pip install -r requirements.txt`, or simply `sicp venv`
-if you have `sicp` installed.
-3. Run the Sphinx autobuilder using
-`env/bin/sphinx-autobuild -b dirhtml .. _build`
-4. Visit http://localhost:8000 to see the docs.
+2. Create a new branch for your project using `git checkout -b docs/app-name`,
+   where `app-name` is the name of the app you're documenting (use hyphens if
+   the name is multiple words). If someone has already created this branch,
+   omit the `-b` flag.
+3. Set up the Python environment using `python3 -m venv env` and
+   `env/bin/pip install -r requirements.txt`, or simply `sicp venv`
+   if you have `sicp` installed.
+4. Run the Sphinx autobuilder using
+   `env/bin/sphinx-autobuild -b dirhtml .. _build`
+5. Visit http://localhost:8000 to see the docs.
 
 Alternatively, to compile all docs once, run
 `env/bin/sphinx-build -b dirhtml .. _build`. This will generate an output
