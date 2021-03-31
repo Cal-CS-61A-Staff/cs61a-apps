@@ -205,6 +205,7 @@ export default class File extends React.Component {
         detachCallback();
       }, duration * 1000);
       const doctestData = [];
+      const errors = [];
       const [, killCallback, detachCallback] = runCode(this.identifyLanguage())(
         `(define __run_all_doctests 1)\n${this.state.editorText}\n(display "${STOP_MARKER}")`,
         (out) => {
@@ -214,23 +215,25 @@ export default class File extends React.Component {
             const caseData = (0, eval)(`(${rawData})`);
             doctestData.push(caseData);
           } else if (out.startsWith(STOP_MARKER)) {
-            this.setState({ doctestData });
-            this.testRef.current.forceOpen();
+            if (errors.length === 0) {
+              this.setState({ doctestData });
+              this.testRef.current.forceOpen();
+            } else {
+              send({
+                type: SHOW_ERROR_DIALOG,
+                title: "Doctests Failed",
+                message: errors.join("\n"),
+              });
+            }
             clearInterval(timeoutTimer);
             killCallback();
+            detachCallback();
           }
         },
         (err) => {
           if (err.trim() !== "scm>") {
             // something went wrong in setup
-            send({
-              type: SHOW_ERROR_DIALOG,
-              title: "Doctests Failed",
-              message: err.trim(),
-            });
-            clearInterval(timeoutTimer);
-            killCallback();
-            detachCallback();
+            errors.push(err.trim());
           }
         },
         () => {}
@@ -499,7 +502,7 @@ export default class File extends React.Component {
         />
         <OKResults
           ref={this.testRef}
-          title="Doctest Results"
+          title={`${this.state.name} (Tests)`}
           onDebug={this.debugTest}
           data={this.state.doctestData}
         />

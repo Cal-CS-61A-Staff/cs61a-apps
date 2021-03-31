@@ -59,15 +59,16 @@ def create_language_apis(app):
         except Exception as e:
             return jsonify({"success": False, "error": repr(e)})
 
-    def scm_worker(code, queue):
-        try:
-            buff = Buffer(tokenize_lines(code.split("\n")))
-            exprs = []
-            while buff.current():
-                exprs.append(scheme_read(buff))
-            out = debug_eval(exprs)
-        except Exception as err:
-            print("ParseError:", err)
-            raise
 
-        queue.put(out)
+def scm_worker(code, queue):
+    try:
+        buff = Buffer(tokenize_lines(code.split("\n")))
+        exprs = []
+        while buff.current():
+            exprs.append(scheme_read(buff))
+        out = debug_eval(exprs)
+    except Exception as err:
+        print("ParseError:", err)
+        raise
+
+    queue.put(out)

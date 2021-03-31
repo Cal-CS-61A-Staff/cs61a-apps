@@ -17,7 +17,8 @@ export default async function receive(arg) {
     const ret = await $.post("./api/scm_debug", {
       code: arg.code,
     });
-    const parsed = JSON.parse(ret);
+    // eslint-disable-next-line no-eval
+    const parsed = (0, eval)(`(${ret})`);
     sendAndExit(arg.key, JSON.stringify(parsed));
   } else if (arg.type === FORMAT) {
     const ret = await $.post("./api/scm_format", { code: arg.code });
