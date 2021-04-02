@@ -616,3 +616,11 @@ html {
 #doctest-timeout {
     width: 80px;
 }
+
+.scheme-editor .ace_marker-layer .ace_bracket {
+    display: none;
+}
+
+.scheme-editor .ace_marker-layer .match_parens {
+    background: #00c12a !important; /* I hate CSS */
+}
