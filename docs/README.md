@@ -108,7 +108,7 @@ for inline Python documentation.
 To document a method in a Python file, format it like so:
 
 ```python
-def function(param1, param2 = 2):
+def function(param1: str, param2: int = 2):
     """Description of the function.
 
     Can span multiple lines or paragraphs, if needed!
@@ -127,7 +127,7 @@ Where `str` and `int` should be replaced with the actual type of the parameter.
 This will result in the following rendered documentation:
 
 ```{eval-rst}
-.. py:function:: function(param1, param2 = 2)
+.. py:function:: function(param1: str, param2: int = 2)
 
    Description of the function.
 
