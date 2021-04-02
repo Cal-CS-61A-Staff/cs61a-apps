@@ -124,6 +124,12 @@ def function(param1: str, param2: int = 2):
 ```
 
 Where `str` and `int` should be replaced with the actual type of the parameter.
+
+```{note}
+The type annotations go in two places: the function dignature, as well as the
+body of the docstring.
+```
+
 This will result in the following rendered documentation:
 
 ```{eval-rst}
