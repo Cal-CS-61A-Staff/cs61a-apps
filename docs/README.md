@@ -94,6 +94,9 @@ directory, and set it up like so:
 ```
 ````
 
+Where ``app_directory.module_name`` is the path to the file you're including,
+such as ``common.db``.
+
 Code segments like the one at the end of the example will auto-include the code
 documentation for the various components of the app.
 
