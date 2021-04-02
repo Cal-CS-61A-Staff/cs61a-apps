@@ -119,9 +119,6 @@ def transaction_db():
     method batches queries in a transaction, and only runs them once the
     context is abandoned.
 
-    :param retries: the number of times to try connecting to the database
-    :type retries: int
-
     :yields: a function with parameters ``(query: str, args: List[str] = [])``,
         where the ``query_str`` should use ``%s`` to represent sequential
         arguments in the ``args_list``

@@ -12,7 +12,8 @@ def job(app: Flask, endpoint):
     :param endpoint: the endpoint to route to the method
     :type endpoint: str
 
-    :return: a decorator
+    :return: a decorator which can be applied to a function to bind it to
+        ``/jobs/<endpoint>``
     """
 
     def decorator(func):

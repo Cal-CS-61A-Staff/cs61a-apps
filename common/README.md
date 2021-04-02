@@ -1,3 +1,3 @@
 # `common`
 
-This is a collection of utitilities used by multiple apps in our ecosystem.
+This is a collection of utilities used by multiple apps in our ecosystem.

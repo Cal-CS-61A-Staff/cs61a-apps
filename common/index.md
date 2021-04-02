@@ -61,6 +61,11 @@ This file contains some utilities for hashing data.
 
 This file contains some helpful HTML formatting tools for a standard frontend.
 
+```{caution}
+Do **not** use this library for student-facing apps, as it is vulnerable to XSS.
+Only use it for quick staff-only frontends.
+```
+
 ```{eval-rst}
 .. automodule:: common.html
     :members:

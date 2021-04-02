@@ -20,7 +20,9 @@ REDIRECT_KEY = "REDIRECT_KEY"
 def get_user():
     """Get some information on the currently logged in user.
 
-    :return: a dictionary representing user data
+    :return: a dictionary representing user data (see
+        `here <https://okpy.github.io/documentation/ok-api.html#users-view-a-specific-user>`_
+        for an example)
     """
     g.user_data = g.get("user_data") or current_app.remote.get("user")
     return g.user_data.data["data"]
