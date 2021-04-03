@@ -1,0 +1,5 @@
+furo==2020.12.30b24
+linkify-it-py==1.0.1
+myst-parser==0.13.3
+Sphinx==3.4.3
+sphinx-autobuild==2020.9.1
