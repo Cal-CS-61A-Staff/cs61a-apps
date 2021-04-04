@@ -64,9 +64,7 @@ export default class TestDetails extends React.Component {
             onClick={() => this.props.onDebug(this.props.data)}
           />
         </div>
-        <pre className="rawOKPyOutput">
-          {this.props.data.raw.slice(this.props.data.raw.indexOf("\n")).trim()}
-        </pre>
+        <pre className="rawOKPyOutput">{this.props.data.raw.trim()}</pre>
       </div>
     );
   }
