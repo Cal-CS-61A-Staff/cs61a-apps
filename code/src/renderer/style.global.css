@@ -621,6 +621,6 @@ html {
     display: none;
 }
 
-.scheme-editor .ace_marker-layer .match_parens {
-    background: #004ea2 !important; /* I hate CSS */
+.scheme-editor .ace_marker-layer .ace_selection.match_parens {
+    background: #004ea2;
 }
