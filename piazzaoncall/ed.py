@@ -1,27 +1,27 @@
-from common.rpc.auth import Network, perform_piazza_action
+from common.rpc.auth import Network, perform_ed_action
 
 
-class PiazzaNetwork(Network):
+class EdNetwork(Network):
     def __init__(self, course, is_staff, is_test):
-        super().__init__(course, is_staff, is_test, perform_piazza_action)
+        super().__init__(course, is_staff, is_test, perform_ed_action)
 
     def get_unresolved(self):
-        feed = self.get_feed(limit=999999, offset=0)["feed"]
+        feed = self.get_feed(limit=999999)["threads"]
         unresolved = unresolved_followups = 0
         for post in feed:
-            u = post.get("no_answer", 0)
-            uf = post.get("no_answer_followup", 0)
-            if not u and not uf:
+            u = post.get("is_answered", False)
+            uf = post.get("unresolved_count", 0)
+            if u and not uf:
                 continue
 
-            subject = post["subject"]
-            if "EC" in subject or "extra credit" in subject.lower():
+            title = post["title"]
+            if "EC" in title or "extra credit" in title.lower():
                 continue
             unresolved += u
             unresolved_followups += uf
         return unresolved, unresolved_followups
 
-    def iter_all_posts1(self, limit=None):  # new
+    def iter_all_posts(self, limit=None):  # new
         """Get all posts visible to the current user
         This grabs you current feed and ids of all posts from it; each post
         is then individually fetched. This method does not go against
@@ -34,8 +34,8 @@ class PiazzaNetwork(Network):
             can view
         :rtype: generator
         """
-        feed = self.get_feed(limit=999999, offset=0)
-        cids = [post["id"] for post in feed["feed"]]
+        feed = self.get_feed(limit=999999)
+        cids = [post["id"] for post in feed["threads"]]
         if limit:
             cids = cids[:limit]
         for cid in cids:
@@ -43,11 +43,11 @@ class PiazzaNetwork(Network):
 
     def list_unresolved(self):  # new
         """Returns a generator of all unresolved posts"""
-        feed = self.get_feed(limit=999999, offset=0)
-        post_snippets = feed.get("feed")
+        feed = self.get_feed(limit=999999)
+        post_snippets = feed.get("threads")
 
         for s in post_snippets:
-            if s.get("no_answer", False) or s.get("no_answer_followup", False):
+            if not s.get("is_answered", False) or s.get("unresolved_count", 0):
                 cid = s["id"]
                 yield self.get_post(cid=cid)
 
