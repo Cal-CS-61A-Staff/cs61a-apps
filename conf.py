@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath("."))
 # -- Project information -----------------------------------------------------
 
 project = "cs61a-apps"
-copyright = "2021 CS 61A (Vanshaj Singhania)"
-author = "CS 61A (Vanshaj Singhania)"
+copyright = "2021 CS 61A"
+author = "CS 61A"
 
 myst_substitutions = {"docs_in_charge": "Vanshaj"}
 
