@@ -24,6 +24,7 @@ APP_LOOKUP = {
     "seating": "seating",
     "links": "shortlinks",
     "go": "shortlinks",
+    "eecs": "shortlinks",
     # legacy prefixes
     "me100": "oh",
     "csenrolltest": "oh",
