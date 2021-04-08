@@ -115,10 +115,13 @@ export function sessionStartTimes(section: Section) {
 
 export function sectionInterval(section: Section): React.MixedElement {
   const isPT = moment.tz.guess() === TZ;
+  const startTime = nextSessionStartTime(section);
+  const endTime = startTime
+    .clone()
+    .add(section.endTime - section.startTime, "seconds");
   return (
     <>
-      {nextSessionStartTime(section).format("dddd h:mma")} &rarr;{" "}
-      {moment.unix(section.endTime).local().format("h:mma")}
+      {startTime.format("dddd h:mma")} &rarr; {endTime.format("h:mma")}
       {!isPT && <> ({moment().tz(moment.tz.guess()).format("z")})</>}
     </>
   );
