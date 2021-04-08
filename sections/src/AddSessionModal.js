@@ -1,12 +1,11 @@
 // @flow strict
 
-import moment from "moment";
-import { useMemo } from "react";
 import * as React from "react";
 import Button from "react-bootstrap/Button";
 import ListGroup from "react-bootstrap/ListGroup";
 import Modal from "react-bootstrap/Modal";
 import styled from "styled-components";
+import { sessionStartTimes } from "./models";
 import type { Section } from "./models";
 import useSectionAPI from "./useSectionAPI";
 
@@ -22,16 +21,7 @@ const FloatRightDiv = styled.div`
 
 export default function AddSessionModel({ section, show, onClose }: Props) {
   const startSession = useSectionAPI("start_session");
-
-  const sessionStartTimes = useMemo(() => {
-    let time = moment.unix(section.startTime);
-    const out = [];
-    while (time.isBefore(moment().subtract(3, "days"))) {
-      out.push(time);
-      time = time.clone().add(7, "days");
-    }
-    return out;
-  }, [section]);
+  const startTimes = sessionStartTimes(section);
 
   return (
     <Modal show={show} onHide={onClose}>
@@ -40,7 +30,7 @@ export default function AddSessionModel({ section, show, onClose }: Props) {
       </Modal.Header>
       <Modal.Body>
         <ListGroup variant="flush">
-          {sessionStartTimes.map((startTime) => (
+          {startTimes.map((startTime) => (
             <ListGroup.Item>
               {startTime.format("MMMM D")}{" "}
               <FloatRightDiv>

@@ -1,6 +1,6 @@
 // @flow strict
 import moment from "moment";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import Table from "react-bootstrap/Table";
@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import AddStudentModal from "./AddStudentModal";
 import AttendanceRow from "./AttendanceRow";
+import { nextSessionStartTime } from "./models";
 import type {
   AttendanceStatusType,
   Person,
@@ -42,14 +43,6 @@ export default function SectionAttendance({ section, session }: Props) {
     section.sessions.length > 0
       ? section.sessions[section.sessions.length - 1]
       : null;
-
-  const nextSessionStartTime = useMemo(() => {
-    const time = moment.unix(section.startTime);
-    while (time.isBefore(moment().subtract(3, "days"))) {
-      time.add(7, "days");
-    }
-    return time;
-  }, [section]);
 
   const notStartedSectionExists =
     mostRecentSession == null ||
@@ -92,7 +85,7 @@ export default function SectionAttendance({ section, session }: Props) {
           <CardHeader>
             <b>
               {(session == null
-                ? nextSessionStartTime
+                ? nextSessionStartTime(section)
                 : moment.unix(session?.startTime)
               ).format("MMMM D")}
               {session == null && " (not started)"}
@@ -104,7 +97,7 @@ export default function SectionAttendance({ section, session }: Props) {
                 onClick={() =>
                   startSession({
                     section_id: section.id,
-                    start_time: nextSessionStartTime.unix(),
+                    start_time: nextSessionStartTime(section).unix(),
                   })
                 }
               >
