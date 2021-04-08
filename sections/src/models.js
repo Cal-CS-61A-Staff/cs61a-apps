@@ -80,6 +80,8 @@ export type State = {
   config: CourseConfig,
 };
 
+export const TZ = "America/Los_Angeles";
+
 export function sectionTitle(section: ?Section): React.MixedElement {
   return section == null ? (
     <>Deleted Section</>
@@ -93,11 +95,29 @@ export function sectionTitle(section: ?Section): React.MixedElement {
   );
 }
 
+export function nextSessionStartTime(section: Section) {
+  const time = moment.unix(section.startTime).tz(TZ);
+  while (time.isBefore(moment())) {
+    time.add(7, "days");
+  }
+  return time.local();
+}
+
+export function sessionStartTimes(section: Section) {
+  let time = moment.unix(section.startTime).tz(TZ);
+  const out = [];
+  while (time.isBefore(moment().subtract(3, "days"))) {
+    out.push(time.clone().local());
+    time = time.clone().add(7, "days");
+  }
+  return out;
+}
+
 export function sectionInterval(section: Section): React.MixedElement {
-  const isPT = moment.tz.guess() === "America/Los_Angeles";
+  const isPT = moment.tz.guess() === TZ;
   return (
     <>
-      {moment.unix(section.startTime).local().format("dddd h:mma")} &rarr;{" "}
+      {nextSessionStartTime(section).format("dddd h:mma")} &rarr;{" "}
       {moment.unix(section.endTime).local().format("h:mma")}
       {!isPT && <> ({moment().tz(moment.tz.guess()).format("z")})</>}
     </>
