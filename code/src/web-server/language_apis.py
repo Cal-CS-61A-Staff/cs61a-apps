@@ -1,10 +1,17 @@
+from json import dumps
 from multiprocessing import Process, Queue
 
 import black
 import requests
 from flask import jsonify, request
 
-from IGNORE_scheme_debug import Buffer, debug_eval, scheme_read, tokenize_lines
+from IGNORE_scheme_debug import (
+    Buffer,
+    SchemeError,
+    debug_eval,
+    scheme_read,
+    tokenize_lines,
+)
 from formatter import scm_reformat
 
 
@@ -67,8 +74,10 @@ def scm_worker(code, queue):
         while buff.current():
             exprs.append(scheme_read(buff))
         out = debug_eval(exprs)
-    except Exception as err:
-        print("ParseError:", err)
+    except (SyntaxError, SchemeError) as err:
+        queue.put(dumps(dict(error=str(err))))
+    except:
+        queue.put(dumps(dict(error="An internal error occurred.")))
         raise
-
-    queue.put(out)
+    else:
+        queue.put(out)
