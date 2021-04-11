@@ -39,14 +39,9 @@ def exit(data):
     browser.self.exit.write(data)
 
 
-_turtle_screen_on = False
-
-
 def _tscheme_prep():
-    global _turtle_screen_on
-    if not _turtle_screen_on:
+    if turtle is None:
         init_turtle()
-        _turtle_screen_on = True
 
 
 def init_turtle():
@@ -67,7 +62,8 @@ def init_turtle():
         def on_action(self, log_line):
             print("TURTLE: " + json_repr(log_line), end="")
 
-    turtle.set_canvas(JSONCanvas(None, None))
+    turtle.set_canvas(JSONCanvas(1000, 1000))
+    turtle.mode("logo")
 
 
 sys.stdout.write = write
