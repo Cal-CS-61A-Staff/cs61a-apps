@@ -52,9 +52,11 @@ def _tscheme_prep():
 def init_turtle():
     global turtle
 
-    sys.path.append(sys.path[0] + "/static/python/overrides")
+    sys.path.insert(0, sys.path[0] + "/static/python/overrides")
     # noinspection PyUnresolvedReferences
     import abstract_turtle.turtle as t
+
+    sys.path[:] = sys.path[1:]
 
     turtle = sys.modules["turtle"] = t
 
