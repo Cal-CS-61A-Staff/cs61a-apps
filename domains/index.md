@@ -1,9 +1,16 @@
 ```{include} README.md
 ```
 
-## Code Segment 1
+## Main
 
 ```{eval-rst}
-.. automodule:: app_directory.module_name
+.. automodule:: domains.main
+    :members:
+```
+
+## Register New Domain
+
+```{eval-rst}
+.. automodule:: domains.register_new_domain
     :members:
 ```
