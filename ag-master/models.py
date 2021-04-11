@@ -9,6 +9,7 @@ from common.db import database_url
 
 
 def create_models(app: Flask):
+    """Creates database models."""
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 

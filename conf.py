@@ -86,6 +86,7 @@ autodoc_mock_imports = [
     "sqlalchemy",
     "flask",
     "flask_oauthlib",
+    "flask_sqlalchemy",
     "werkzeug",
 ]
 
