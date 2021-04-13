@@ -32,6 +32,7 @@ from fullGSapi.api.assignment_grader import (
     RubricItem,
     QuestionRubric,
 )
+import examtool.api.question_mapping
 import os
 import time
 from tqdm import tqdm
@@ -615,7 +616,7 @@ class GradescopeGrader:
                 )
 
         if question_page_mapping is None:
-            question_page_mapping = examtool.api.download.get_question_to_page_mapping(
+            question_page_mapping = examtool.api.question_mapping.get_question_to_page_mapping(
                 assembled_exam_template, num_threads=self.simultaneous_jobs
             )
             if len(question_page_mapping) != len(assembled_exam_template.questions):
@@ -623,7 +624,7 @@ class GradescopeGrader:
                     "Robust question page mapping resulted in a different number of questions than the exam had! Reverting to old method..."
                 )
                 question_page_mapping = (
-                    examtool.api.download.fallback_get_question_to_page_mapping(
+                    examtool.api.question_mapping.fallback_get_question_to_page_mapping(
                         assembled_exam_template, num_threads=self.simultaneous_jobs
                     )
                 )
