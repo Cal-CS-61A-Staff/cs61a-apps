@@ -1,0 +1,28 @@
+swagger: "2.0"
+info:
+  title: Autograder API
+  version: "1.0.0"
+host: autograder.cs61a.org
+paths:
+  /api/ok/v3/grade/batch:
+    post:
+      summary: Trigger grading for Okpy backup(s)
+      description: |
+        Receives a list of backups to grade, along with metadata and an access
+        token.
+      responses:
+        200:
+          description: An array of job IDs
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Job'
+definitions:
+  Job:
+    type: object
+    properties:
+      jobs:
+        type: array
+        items:
+          type: uuid
+          description: Job IDs

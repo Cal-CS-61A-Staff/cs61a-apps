@@ -9,3 +9,9 @@ There are 2 data models used by this app: `Assignment` and `Job`.
 .. automodule:: docs.ag_master.models
     :members:
 ```
+
+## API Model
+
+```{eval-rst}
+.. openapi:: openapi.yml
+```

@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
+    "sphinxcontrib.openapi",
     "myst_parser",
 ]
 
