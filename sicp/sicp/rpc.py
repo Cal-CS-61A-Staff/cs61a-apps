@@ -19,3 +19,4 @@ from common.rpc import sections
 from common.rpc import slack
 from common.rpc import ag_master
 from common.rpc import ag_worker
+from common.rpc import hinting
