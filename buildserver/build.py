@@ -117,7 +117,7 @@ def run_hugo_build():
 def run_sphinx_build():
     sh("python3", "-m", "venv", "env")
     sh("env/bin/pip", "install", "-r", "requirements.txt")
-    sh("env/bin/sphinx-build", "..", "_build")
+    sh("env/bin/sphinx-build", "-b", "dirhtml", "..", "_build")
     clean_all_except(["_build"])
     copytree("_build", ".", dirs_exist_ok=True)
     rmtree("_build")

@@ -140,6 +140,7 @@ class OKResults extends React.Component {
             <TestDetails
               active={this.state.active}
               data={this.state.selectedTest || selectedProblemData}
+              numTests={this.props.data.length}
               onDebug={this.props.onDebug}
             />,
             this.state.testDetails.getElement().get(0)

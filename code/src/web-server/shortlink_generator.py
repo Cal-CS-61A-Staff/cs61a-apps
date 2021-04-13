@@ -45,10 +45,10 @@ def attempt_generated_shortlink(path, app):
 
 
 def create_shortlink_generator(app):
-    if not app.debug:
+    try:
         with open("sanitized_words.txt") as f:
             words = f.read().split("\n")
-    else:
+    except FileNotFoundError:
         words = [f"word{i}" for i in range(1000)]
 
     def save_file_web(staff_only):
