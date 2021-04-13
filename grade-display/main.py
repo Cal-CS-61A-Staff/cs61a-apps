@@ -1,4 +1,4 @@
-import sys
+import sys, hashlib
 
 from flask import Flask, abort, request, redirect
 from typing import List, Tuple
@@ -12,6 +12,8 @@ from common.html import html, make_row
 from auth import authenticate, update_storage
 from datetime import datetime
 
+from update_job import update
+
 app = Flask(__name__)
 create_oauth_client(app, "grade-display-exports", return_response=update_storage)
 
@@ -23,7 +25,8 @@ with connect_db() as db:
 )"""
     )
     db(
-        """CREATE TABLE IF NOT EXISTS acadh (
+        """CREATE TABLE IF NOT EXISTS adjustments (
+    hashed text,
     url text,
     sheet text
 )"""
@@ -49,8 +52,8 @@ def config():
             "SELECT name, gs_code FROM gscope",
             [],
         ).fetchall()
-        acadh: List[Tuple[str, str]] = db(
-            "SELECT url, sheet FROM acadh",
+        adjustments: List[Tuple[str, str, str]] = db(
+            "SELECT hashed, url, sheet FROM adjustments",
             [],
         ).fetchall()
 
@@ -70,13 +73,13 @@ def config():
         + """
     </p>
     <p>
-        Set the Adjustments Spreadsheet URL:
+        Add an adjustments sheet:
         """
         + make_row(
             """<input name="url" placeholder="Full URL" />
             <input name="sheet" placeholder="Sheet Name" />
         """,
-            url_for("set_acadh"),
+            url_for("add_adjustments"),
             "Submit",
         )
         + """
@@ -87,8 +90,12 @@ def config():
             for name, gs_code in gscope
         )
         + "".join(
-            "<p>" + make_row(f"Adjustments: {url} ({sheet})", url_for("delete_acadh"))
-            for url, sheet in acadh
+            "<p>"
+            + make_row(
+                f"Adjustments: {url} ({sheet})",
+                url_for("delete_adjustments", hashed=hashed),
+            )
+            for hashed, url, sheet in adjustments
         )
     )
 
@@ -111,18 +118,18 @@ def create_assign():
     return redirect(url_for("config"))
 
 
-@app.route("/set_acadh", methods=["POST"])
-def set_acadh():
+@app.route("/add_adjustments", methods=["POST"])
+def add_adjustments():
     if not is_staff("cs61a"):
         return redirect(url_for("config"))
 
     url = request.form["url"]
     sheet = request.form["sheet"]
+    hashed = hashlib.sha512(url.encode("utf-8") + sheet.encode("utf-8")).hexdigest()
     with connect_db() as db:
-        db("DELETE FROM acadh")
         db(
-            "INSERT INTO acadh (url, sheet) VALUES (%s, %s)",
-            [url, sheet],
+            "INSERT INTO adjustments (hashed, url, sheet) VALUES (%s, %s, %s)",
+            [hashed, url, sheet],
         )
     return redirect(url_for("config"))
 
@@ -136,20 +143,18 @@ def delete_assign(name):
     return redirect(url_for("config"))
 
 
-@app.route("/delete_acadh", methods=["POST"])
-def delete_acadh():
+@app.route("/delete_adjustments/<hashed>", methods=["POST"])
+def delete_adjustments(hashed):
     if not is_staff("cs61a"):
         return redirect(url_for("config"))
     with connect_db() as db:
-        db("DELETE FROM acadh")
+        db("DELETE FROM adjustments WHERE hashed=%s", [hashed])
     return redirect(url_for("config"))
 
 
 @job(app, "update_grades")
 @app.route("/update_grades")
 def run():
-    from update_job import update  # fresh import to ensure up-to-date data from db
-
     start = datetime.now()
     print(f"Grade update triggered at {str(start)}.", file=sys.stderr)
     update()

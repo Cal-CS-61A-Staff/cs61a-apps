@@ -22,13 +22,23 @@ export default class TestDetails extends React.Component {
 
   render() {
     if (!this.props.data.rawName) {
+      if (!this.props.numTests) {
+        return (
+          <div
+            ref={this.divRef}
+            className="testDetails testDetailsHeader testDetailsCongrats"
+          >
+            <SuccessIcon none /> No tests found.
+          </div>
+        );
+      }
       return (
         <div
           ref={this.divRef}
           className="testDetails testDetailsHeader testDetailsCongrats"
         >
-          <SuccessIcon success={this.props.data.success} /> All tests passed!
-          Congratulations!
+          <SuccessIcon success={this.props.data.success} /> All{" "}
+          {this.props.numTests} tests passed! Congratulations!
         </div>
       );
     }
@@ -54,9 +64,7 @@ export default class TestDetails extends React.Component {
             onClick={() => this.props.onDebug(this.props.data)}
           />
         </div>
-        <pre className="rawOKPyOutput">
-          {this.props.data.raw.slice(this.props.data.raw.indexOf("\n")).trim()}
-        </pre>
+        <pre className="rawOKPyOutput">{this.props.data.raw.trim()}</pre>
       </div>
     );
   }

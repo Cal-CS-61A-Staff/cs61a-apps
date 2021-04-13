@@ -8,26 +8,26 @@ from typing import List, Tuple
 from common.rpc.auth import get_endpoint
 from common.db import connect_db
 
-if not os.path.exists("data"):
-    try:
-        os.makedirs("data")
-    except FileExistsError as e:
-        print("Data folder exists, false alarm!")
-
-sections = "sp21" in get_endpoint(course="cs61a")
-
-with connect_db() as db:
-    gscope: List[Tuple[str, str]] = db(
-        "SELECT name, gs_code FROM gscope",
-        [],
-    ).fetchall()
-    acadh: List[Tuple[str, str]] = db(
-        "SELECT url, sheet FROM acadh",
-        [],
-    ).fetchall()
-
 
 def update():
+    if not os.path.exists("data"):
+        try:
+            os.makedirs("data")
+        except FileExistsError as e:
+            print("Data folder exists, false alarm!")
+
+    sections = "sp21" in get_endpoint(course="cs61a")
+
+    with connect_db() as db:
+        gscope: List[Tuple[str, str]] = db(
+            "SELECT name, gs_code FROM gscope",
+            [],
+        ).fetchall()
+        adjustments: List[Tuple[str, str]] = db(
+            "SELECT url, sheet FROM adjustments",
+            [],
+        ).fetchall()
+
     print("=================================================")
     roster_export.export()
 
@@ -54,9 +54,8 @@ def update():
         sections_export.export()
 
     print("=================================================")
-    adj = list(acadh[0]) if acadh else []
     assemble.assemble(
-        gscope=gs_assignments, recovery=False, sections=sections, adjustments=adj
+        gscope=gs_assignments, recovery=True, sections=sections, adjustments=adjustments
     )
 
     print("=================================================")
