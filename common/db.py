@@ -75,6 +75,22 @@ engine = sqlalchemy.create_engine(
 
 @contextmanager
 def connect_db(*, retries=3):
+    """Create a context that uses a connection to the current database.
+
+    :param retries: the number of times to try connecting to the database
+    :type retries: int
+
+    :yields: a function with parameters ``(query: str, args: List[str] = [])``,
+        where the ``query_str`` should use ``%s`` to represent sequential
+        arguments in the ``args_list``
+
+    :example usage:
+    .. code-block:: python
+
+        with connect_db() as db:
+            db("INSERT INTO animals VALUES %s", ["cat"])
+            output = db("SELECT * FROM animals")
+    """
     for i in range(retries):
         try:
             conn = engine.connect()
@@ -97,6 +113,23 @@ def connect_db(*, retries=3):
 
 @contextmanager
 def transaction_db():
+    """Create a context that performs a transaction on current database.
+
+    The difference between this and :meth:`~common.db.connect_db` is that this
+    method batches queries in a transaction, and only runs them once the
+    context is abandoned.
+
+    :yields: a function with parameters ``(query: str, args: List[str] = [])``,
+        where the ``query_str`` should use ``%s`` to represent sequential
+        arguments in the ``args_list``
+
+    :example usage:
+    .. code-block:: python
+
+        with transaction_db() as db:
+            db("INSERT INTO animals VALUES %s", ["cat"])
+            output = db("SELECT * FROM animals")
+    """
     with engine.begin() as conn:
 
         def db(*args):

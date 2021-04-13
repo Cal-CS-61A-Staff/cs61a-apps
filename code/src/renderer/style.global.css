@@ -616,3 +616,11 @@ html {
 #doctest-timeout {
     width: 80px;
 }
+
+.scheme-editor .ace_marker-layer .ace_bracket {
+    display: none;
+}
+
+.scheme-editor .ace_marker-layer .ace_selection.match_parens {
+    background: #004ea2;
+}
