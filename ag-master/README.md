@@ -12,6 +12,12 @@ a 61A Infrastructure TA for guidance.
 2. Run `sicp venv` to create a virtual environment (`python3 -m venv env`) and
    install requirements (`env/bin/pip install -r requirements.txt`).
 3. Run `env/bin/python main.py` to start the Autograder server. You may need to
-   be logged into a `gcloud` account with access to the cs61a project in order
+   be logged into a `gcloud` account with access to the `cs61a` project in order
    to access cloud storage buckets, as local development is currently somewhat
    unsupported.
+
+## Recreating the Autograder
+
+You can create your own version of this autograder to autograde assignments
+submitted through Okpy. Should you choose to do so, you'll need to set up a
+server with some endpoints that Okpy can query. See API Model for more details.

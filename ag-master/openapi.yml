@@ -9,20 +9,95 @@ paths:
       summary: Trigger grading for Okpy backup(s)
       description: |
         Receives a list of backups to grade, along with metadata and an access
-        token.
+        token. Returns a list of Job IDs.
+      parameters:
+      - name: info
+        description: information about the grading job
+        in: body
+        schema:
+          $ref: '#/definitions/OkRequest'
+      responses:
+        404:
+          description: assignment not found
+        405:
+          description: more than 50 batches would be created
+        200:
+          description: successfully triggered jobs
+          schema:
+            type: object
+            properties:
+              jobs:
+                $ref: '#/definitions/Job'
+  /results:
+    post:
+      summary: Get results for multiple jobs
+      description: |
+        Receives a list of Job IDs. Queries and returns the status of each Job.
+      parameters:
+      - name: info
+        description: list of Job IDs
+        in: body
+        schema:
+          $ref: '#/definitions/Job'
       responses:
         200:
-          description: An array of job IDs
+          description: successfully returns the status of each Job
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Job'
+            $ref: '#/definitions/Statuses'
+  /results/{job_id}:
+    get:
+      summary: Get results for a single job
+      description: |
+        Receives a Job ID. Returns the status/results of the job.
+      parameters:
+      - name: job_id
+        in: path
+        description: the autograder's external Job ID
+        type: string
+        required: true
+      responses:
+        200:
+          description: the autograder result of the job if it has finished
+        202:
+          description: \"Nope!" if the job has not finished
 definitions:
-  Job:
+  OkRequest:
     type: object
     properties:
-      jobs:
+      subm_ids:
         type: array
         items:
-          type: uuid
-          description: Job IDs
+          type: string
+          description: Backup IDs
+      assignment:
+        type: string
+        description: assignment secret
+      access_token:
+        type: string
+        description: the token to communicate with Okpy
+  Job:
+    type: array
+    items:
+      type: string
+      description: Job IDs
+  Statuses:
+    type: object
+    properties:
+      id1:
+        type: object
+        properties:
+          status:
+            type: string
+            description: job status
+          result:
+            type: string
+            description: autograder result
+      id2:
+        type: object
+        properties:
+          status:
+            type: string
+            description: job status
+          result:
+            type: string
+            description: autograder result
