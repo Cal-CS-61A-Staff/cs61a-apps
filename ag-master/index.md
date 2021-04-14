@@ -22,10 +22,10 @@ and endpoints.
 
 ## Course Admin Endpoints
 
-The following RPC endpoints are available for setting up the autograder for an
-assignment:
-- {func}`~common.rpc.ag_master.upload_zip`
-- {func}`~common.rpc.ag_master.create_assignment`
+```{eval-rst}
+.. automodule:: docs.ag_master.admin
+    :members:
+```
 
 There is also a GUI available at autograder.cs61a.org for the following actions:
 - Viewing all of a course's assignments (`/<course>`)
@@ -57,6 +57,11 @@ There are a few endpoints created to communicate job requests and outputs
 between Okpy and the autograder. There is one RPC endpoint,
 {func}`~common.rpc.ag_master.trigger_jobs`, and a handful of REST endpoints.
 For the REST endpoints, see the next section.
+
+```{eval-rst}
+.. automodule:: docs.ag_master.okpy
+    :members:
+```
 
 ## API Model
 

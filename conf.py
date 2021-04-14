@@ -91,6 +91,7 @@ autodoc_mock_imports = [
     "werkzeug",
     "models",
     "utils",
+    "google",
 ]
 
 # Use the following structure to shorten URL targets.
