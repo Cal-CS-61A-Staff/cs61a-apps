@@ -80,7 +80,7 @@ export default class File extends React.Component {
     }
     if (this.props.srcOrigin) {
       window.addEventListener("message", (e) => {
-        if (e.origin === this.props.srcOrigin) {
+        if (e.origin === this.props.srcOrigin && typeof e.data === "string") {
           this.handleEditorChange(e.data);
         }
       });
