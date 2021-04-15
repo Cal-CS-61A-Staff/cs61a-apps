@@ -1,5 +1,6 @@
 import React from "react";
 import Editor from "./Editor";
+import Graphics from "./Graphics";
 import OKResults from "./OKResults";
 import Output from "./Output";
 import { send, sendNoInteract } from "../utils/communication.js";
@@ -26,6 +27,7 @@ const EDITOR_MARKER = "EDITOR: ";
 const EXEC_MARKER = "EXEC: ";
 const DOCTEST_MARKER = "DOCTEST: ";
 const STOP_MARKER = "STOP: ";
+const TURTLE_MARKER = "TURTLE: ";
 
 export default class File extends React.Component {
   constructor(props) {
@@ -43,6 +45,8 @@ export default class File extends React.Component {
 
       outputData: [],
       outputActive: false,
+
+      graphicsData: [],
 
       executedCode: [],
 
@@ -63,6 +67,7 @@ export default class File extends React.Component {
     this.outputRef = React.createRef();
     this.debugRef = React.createRef();
     this.testRef = React.createRef();
+    this.graphicsRef = React.createRef();
 
     this.props.onActivate(this.props.id);
   }
@@ -124,15 +129,19 @@ export default class File extends React.Component {
 
     const numTrunc = this.state.outputData.length;
 
-    this.setState((state) => ({
-      // eslint-disable-next-line react/no-access-state-in-setstate
-      executedCode: [],
-      interactCallback,
-      killCallback,
-      detachCallback,
-      outputData: state.outputData.slice(numTrunc),
-      outputActive: true,
-    }));
+    this.setState((state) => {
+      state.graphicsData.push(["clear"]);
+
+      return {
+        // eslint-disable-next-line react/no-access-state-in-setstate
+        executedCode: [],
+        interactCallback,
+        killCallback,
+        detachCallback,
+        outputData: state.outputData.slice(numTrunc),
+        outputActive: true,
+      };
+    });
 
     this.outputRef.current.forceOpen();
   };
@@ -379,6 +388,14 @@ export default class File extends React.Component {
       this.setState((state) => ({
         executedCode: state.executedCode.concat([code]),
       }));
+    } else if (text.startsWith(TURTLE_MARKER)) {
+      // eslint-disable-next-line no-eval
+      const data = (0, eval)(`(${text.substr(DEBUG_MARKER.length)})`);
+      this.setState(({ graphicsData }) => {
+        graphicsData.push(data);
+        return { graphicsData };
+      });
+      this.graphicsRef.current.forceOpen();
     } else {
       this.setState((state) => {
         const outputData = state.outputData.concat([
@@ -512,6 +529,11 @@ export default class File extends React.Component {
           title={`${this.state.name} (Tests)`}
           onDebug={this.debugTest}
           data={this.state.doctestData}
+        />
+        <Graphics
+          ref={this.graphicsRef}
+          title={`${this.state.name} (Graphics)`}
+          data={this.state.graphicsData}
         />
       </>
     );
