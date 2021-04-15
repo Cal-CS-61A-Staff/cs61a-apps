@@ -9,7 +9,7 @@ import {
   SHOW_SAVE_DIALOG,
   SHOW_SHARE_DIALOG,
 } from "../../common/communicationEnums.js";
-import { PYTHON, SCHEME, SQL } from "../../common/languages.js";
+import { LARK, PYTHON, SCHEME, SQL } from "../../common/languages.js";
 import {
   Debugger,
   debugPrefix,
@@ -440,7 +440,7 @@ export default class File extends React.Component {
   identifyLanguage = () => {
     const name = this.state.name.toLowerCase();
 
-    const candidates = [PYTHON, SCHEME, SQL];
+    const candidates = [PYTHON, SCHEME, SQL, LARK];
 
     for (const lang of candidates) {
       if (name.endsWith(extension(lang))) {
@@ -455,6 +455,11 @@ export default class File extends React.Component {
       return SQL;
     } else if (code.trim()[0] === "(" || code.split(";").length > 1) {
       return SCHEME;
+    } else if (
+      code.split(": ").length > 1 ||
+      code.split("%ignore").length > 1
+    ) {
+      return LARK;
     } else {
       return PYTHON;
     }
@@ -494,12 +499,14 @@ export default class File extends React.Component {
           onRestart={this.run}
           onInput={this.handleInput}
         />
-        <CurrDebugger
-          ref={this.debugRef}
-          title={`${this.state.name} (Debug)`}
-          data={this.state.debugData}
-          onUpdate={this.handleDebugUpdate}
-        />
+        {CurrDebugger && (
+          <CurrDebugger
+            ref={this.debugRef}
+            title={`${this.state.name} (Debug)`}
+            data={this.state.debugData}
+            onUpdate={this.handleDebugUpdate}
+          />
+        )}
         <OKResults
           ref={this.testRef}
           title={`${this.state.name} (Tests)`}

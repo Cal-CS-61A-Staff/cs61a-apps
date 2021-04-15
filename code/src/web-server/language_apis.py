@@ -4,6 +4,7 @@ from multiprocessing import Process, Queue
 import black
 import requests
 from flask import jsonify, request
+from lark import Lark, LarkError, Token, Tree
 
 from IGNORE_scheme_debug import (
     Buffer,
@@ -65,6 +66,42 @@ def create_language_apis(app):
             )
         except Exception as e:
             return jsonify({"success": False, "error": repr(e)})
+
+    @app.route("/api/lark_run", methods=["POST"])
+    def lark_run():
+        grammar = request.form["grammar"]
+        if "%import" in grammar:
+            return jsonify(dict(error="%import is not supported"))
+
+        grammar += """
+        %import common.NUMBER
+        """
+        text = request.form.get("text", None) or None
+        try:
+            parser = Lark(grammar, start="start")
+        except LarkError as e:
+            return jsonify(dict(error=str(e)))
+
+        if not text:
+            return jsonify(dict(success=True))
+
+        try:
+            parse_tree = parser.parse(text)
+        except LarkError as e:
+            return jsonify(dict(error=str(e)))
+
+        def export(node):
+            if isinstance(node, Tree):
+                return [
+                    node.data,
+                    [export(child) for child in node.children],
+                ]
+            elif isinstance(node, Token):
+                return [repr(node.value)]
+            else:
+                return [repr(node)]
+
+        return jsonify(success=True, parsed=export(parse_tree))
 
 
 def scm_worker(code, queue):
