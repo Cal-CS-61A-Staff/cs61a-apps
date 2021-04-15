@@ -39,6 +39,33 @@ def exit(data):
     browser.self.exit.write(data)
 
 
+def _tscheme_prep():
+    if turtle is None:
+        init_turtle()
+
+
+def init_turtle():
+    global turtle
+
+    sys.path.insert(0, sys.path[0] + "/static/python/overrides")
+    # noinspection PyUnresolvedReferences
+    import abstract_turtle.turtle as t
+
+    sys.path[:] = sys.path[1:]
+
+    turtle = sys.modules["turtle"] = t
+
+    # noinspection PyUnresolvedReferences
+    from abstract_turtle import LoggingCanvas
+
+    class JSONCanvas(LoggingCanvas):
+        def on_action(self, log_line):
+            print("TURTLE: " + json_repr(log_line), end="")
+
+    turtle.set_canvas(JSONCanvas(1000, 1000))
+    turtle.mode("logo")
+
+
 sys.stdout.write = write
 sys.stderr.write = err
 sys.stdout.__len__ = sys.stderr.__len__ = lambda: 0

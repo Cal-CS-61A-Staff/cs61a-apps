@@ -6,14 +6,12 @@ import "golden-layout/src/css/goldenlayout-dark-theme.css";
 
 let layout;
 const containers = {
-  // "substitution_tree": new Map(),
-  // "env_diagram": new Map(),
   output: [],
   editor: [],
   debugger: [],
   terminal: [],
   okResults: [],
-  // "turtle_graphics": new Map()
+  graphics: [],
 };
 
 let numContainersOpen = 0;

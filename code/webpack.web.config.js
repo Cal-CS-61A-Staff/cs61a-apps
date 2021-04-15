@@ -79,7 +79,7 @@ module.exports = (env) => ({
       ELECTRON: false,
       SCHEME_COMPILE: (env && env.SCHEME_COMPILE) || false,
       __static: JSON.stringify("/static"),
-      VERSION: '"2.4.3"',
+      VERSION: '"2.5.0"',
     }),
     new MonacoWebpackPlugin({
       output: "./static",

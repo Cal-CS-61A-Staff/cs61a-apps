@@ -175,8 +175,10 @@ def json_repr(elem):
             return "true"
         else:
             return "false"
-    elif isinstance(elem, int):
+    elif isinstance(elem, (int, float)):
         return '"' + repr(elem) + '"'
+    elif elem is None:
+        return "null"
     else:
         raise Exception("Unable to serialize object of type " + str(old_type(elem)))
 
