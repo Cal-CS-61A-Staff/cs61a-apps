@@ -1,3 +1,4 @@
+import re
 from json import dumps
 from multiprocessing import Process, Queue
 
@@ -70,12 +71,18 @@ def create_language_apis(app):
     @app.route("/api/lark_run", methods=["POST"])
     def lark_run():
         grammar = request.form["grammar"]
-        if "%import" in grammar:
-            return jsonify(dict(error="%import is not supported"))
+        import_regex = r"%import common\.([a-zA-Z]*)"
 
-        grammar += """
-        %import common.NUMBER
-        """
+        imports = [match.group(1) for match in re.finditer(import_regex, grammar)]
+        grammar = re.sub(r"%import common\.[a-zA-Z]*", "", grammar)
+
+        if "%import" in grammar:
+            return jsonify(dict(error="Arbitrary %imports are not supported"))
+
+        for terminal in imports:
+            grammar += f"""
+            %import common.{terminal}
+            """
         text = request.form.get("text", None) or None
         try:
             parser = Lark(grammar, start="start")
