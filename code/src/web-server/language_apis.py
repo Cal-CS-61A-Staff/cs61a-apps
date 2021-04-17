@@ -5,7 +5,7 @@ from multiprocessing import Process, Queue
 import black
 import requests
 from flask import jsonify, request
-from lark import Lark, LarkError, Token, Tree
+from lark import Lark, LarkError, Token, Tree, UnexpectedEOF
 
 from IGNORE_scheme_debug import (
     Buffer,
@@ -94,6 +94,13 @@ def create_language_apis(app):
 
         try:
             parse_tree = parser.parse(text)
+        except UnexpectedEOF as e:
+            return jsonify(
+                dict(
+                    error=str(e)
+                    + "[Hint: use the .begin and .end commands to input multiline strings]\n"
+                )
+            )
         except LarkError as e:
             return jsonify(dict(error=str(e)))
 
