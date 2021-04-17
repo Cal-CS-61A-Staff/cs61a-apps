@@ -60,7 +60,5 @@ export default function extractLarkTests(text) {
     throw Error(`${DOCTEST_START} block not terminated with ${DOCTEST_END}`);
   }
 
-  console.log(cases);
-
   return { grammar: grammar.join("\n"), cases };
 }
