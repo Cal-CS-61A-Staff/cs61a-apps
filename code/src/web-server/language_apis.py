@@ -83,13 +83,13 @@ def create_language_apis(app):
             grammar += f"""
             %import common.{terminal}
             """
-        text = request.form.get("text", None) or None
+        text = request.form.get("text", None)
         try:
             parser = Lark(grammar, start="start")
         except LarkError as e:
             return jsonify(dict(error=str(e)))
 
-        if not text:
+        if text is None:
             return jsonify(dict(success=True))
 
         try:
@@ -115,7 +115,9 @@ def create_language_apis(app):
             else:
                 return [repr(node)]
 
-        return jsonify(success=True, parsed=export(parse_tree))
+        return jsonify(
+            success=True, parsed=export(parse_tree), repr=parse_tree.pretty()
+        )
 
 
 def scm_worker(code, queue):

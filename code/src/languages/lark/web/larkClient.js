@@ -16,6 +16,7 @@ export default class LarkClient {
     this.blocked = false;
     this.multiline = false;
     this.multilineInput = [];
+    this.treeview = true;
   }
 
   start = async () => {
@@ -57,6 +58,9 @@ export default class LarkClient {
       } else if (line.trim() === ".begin") {
         this.multiline = true;
         this.multilineInput = [];
+      } else if (line.trim() === ".toggleviz") {
+        this.treeview = !this.treeview;
+        out(this.key, `Tree view ${this.treeview ? "enabled" : "disabled"}.\n`);
       } else {
         await this.parse(line.slice(0, line.length - 1));
       }
@@ -71,9 +75,13 @@ export default class LarkClient {
   };
 
   parse = async (text) => {
-    const { success, error, parsed } = await this.larkRun(text);
+    const { success, error, parsed, repr } = await this.larkRun(text);
     if (success) {
-      out(this.key, `DRAW: ${JSON.stringify(["Tree", parsed])}`);
+      if (this.treeview) {
+        out(this.key, `DRAW: ${JSON.stringify(["Tree", parsed])}`);
+      } else {
+        out(this.key, repr);
+      }
     } else {
       err(this.key, error);
     }
