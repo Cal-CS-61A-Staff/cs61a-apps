@@ -423,7 +423,6 @@ export default class File extends React.Component {
   };
 
   handleInput = (line) => {
-    this.state.interactCallback(line);
     this.setState((state) => {
       const outputData = state.outputData.concat([
         {
@@ -433,6 +432,7 @@ export default class File extends React.Component {
       ]);
       return { outputData };
     });
+    this.state.interactCallback(line);
   };
 
   handleEditorChange = (editorText) => {

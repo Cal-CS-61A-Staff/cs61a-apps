@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import $ from "jquery";
 
 import { registerProcess } from "../../../main/processes";
@@ -13,6 +14,8 @@ export default class LarkClient {
     this.grammar = grammar;
     this.inputQueue = [];
     this.blocked = false;
+    this.multiline = false;
+    this.multilineInput = [];
   }
 
   start = async () => {
@@ -27,7 +30,7 @@ export default class LarkClient {
         exit(this.key, "\n\nLark client stopped.");
       },
     });
-    const { error } = await this.parse();
+    const { error } = await this.larkRun();
     if (error) {
       err(this.key, error);
       exit(this.key, "\n\nLark client stopped.");
@@ -43,19 +46,40 @@ export default class LarkClient {
     this.blocked = true;
     while (this.inputQueue.length > 0) {
       const line = this.inputQueue.shift();
-      // eslint-disable-next-line no-await-in-loop
-      const { success, error, parsed } = await this.parse(line);
-      if (success) {
-        out(this.key, `DRAW: ${JSON.stringify(["Tree", parsed])}`);
+
+      if (this.multiline) {
+        if (line.trim() === ".end") {
+          await this.parse(this.multilineInput.join(""));
+          this.multiline = false;
+        } else {
+          this.multilineInput.push(line);
+        }
+      } else if (line.trim() === ".begin") {
+        this.multiline = true;
+        this.multilineInput = [];
       } else {
-        err(this.key, error);
+        await this.parse(line.slice(0, line.length - 1));
       }
-      err(this.key, this.PS1);
+
+      if (this.multiline) {
+        err(this.key, this.PS2);
+      } else {
+        err(this.key, this.PS1);
+      }
     }
     this.blocked = false;
   };
 
-  parse = (text) =>
+  parse = async (text) => {
+    const { success, error, parsed } = await this.larkRun(text);
+    if (success) {
+      out(this.key, `DRAW: ${JSON.stringify(["Tree", parsed])}`);
+    } else {
+      err(this.key, error);
+    }
+  };
+
+  larkRun = (text) =>
     $.post("/api/lark_run", {
       grammar: this.grammar,
       text,
