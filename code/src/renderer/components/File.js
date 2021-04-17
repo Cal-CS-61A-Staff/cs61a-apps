@@ -109,22 +109,6 @@ export default class File extends React.Component {
 
     const numTrunc = this.state.outputData.length;
 
-    this.setState((state) => {
-      state.graphicsData.push(["clear"]);
-
-      return {
-        // eslint-disable-next-line react/no-access-state-in-setstate
-        executedCode: [],
-        interactCallback,
-        killCallback,
-        detachCallback,
-        outputData: state.outputData.slice(numTrunc),
-        outputActive: true,
-      };
-    });
-
-    this.outputRef.current.forceOpen();
-
     if (ELECTRON && this.state.location) {
       [interactCallback, killCallback, detachCallback] = runFile(
         this.identifyLanguage()
@@ -144,6 +128,24 @@ export default class File extends React.Component {
         this.handleHalt
       );
     }
+
+    this.outputRef.current.forceOpen();
+
+    return new Promise((resolve) =>
+      this.setState((state) => {
+        state.graphicsData.push(["clear"]);
+
+        return {
+          // eslint-disable-next-line react/no-access-state-in-setstate
+          executedCode: [],
+          interactCallback,
+          killCallback,
+          detachCallback,
+          outputData: state.outputData.slice(numTrunc),
+          outputActive: true,
+        };
+      }, resolve)
+    );
   };
 
   test = async () => {
@@ -180,11 +182,18 @@ export default class File extends React.Component {
     );
   };
 
-  debugTest = (data) => {
-    this.debugExecutedCode(
-      null,
-      `${this.state.editorText}\n${data.code.join("\n")}`
-    );
+  debugTest = async (data) => {
+    if (this.identifyLanguage() === LARK) {
+      await this.run();
+      for (const testCase of data.code) {
+        this.handleInput(`${testCase}\n`);
+      }
+    } else {
+      this.debugExecutedCode(
+        null,
+        `${this.state.editorText}\n${data.code.join("\n")}`
+      );
+    }
   };
 
   debug = (data) => {

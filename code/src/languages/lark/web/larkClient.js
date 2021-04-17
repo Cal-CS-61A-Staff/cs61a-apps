@@ -81,7 +81,7 @@ export default class LarkClient {
         const result = {
           name: [caseName, input],
           rawName: `${caseName} > ${input}`,
-          code: [this.grammar, input],
+          code: [input],
         };
         const { success, error, repr } = await this.larkRun(input);
         if (success) {
