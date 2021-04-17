@@ -19,14 +19,14 @@ import {
   generateDebugTrace,
   runCode,
   runFile,
+  testCode,
 } from "../utils/dispatch.js";
 import { ERROR, INPUT, OUTPUT } from "../../common/outputTypes.js";
 
 const DEBUG_MARKER = "DEBUG: ";
 const EDITOR_MARKER = "EDITOR: ";
 const EXEC_MARKER = "EXEC: ";
-const DOCTEST_MARKER = "DOCTEST: ";
-const STOP_MARKER = "STOP: ";
+export const DOCTEST_MARKER = "DOCTEST: ";
 const TURTLE_MARKER = "TURTLE: ";
 
 export default class File extends React.Component {
@@ -107,6 +107,24 @@ export default class File extends React.Component {
     let killCallback;
     let detachCallback;
 
+    const numTrunc = this.state.outputData.length;
+
+    this.setState((state) => {
+      state.graphicsData.push(["clear"]);
+
+      return {
+        // eslint-disable-next-line react/no-access-state-in-setstate
+        executedCode: [],
+        interactCallback,
+        killCallback,
+        detachCallback,
+        outputData: state.outputData.slice(numTrunc),
+        outputActive: true,
+      };
+    });
+
+    this.outputRef.current.forceOpen();
+
     if (ELECTRON && this.state.location) {
       [interactCallback, killCallback, detachCallback] = runFile(
         this.identifyLanguage()
@@ -126,135 +144,40 @@ export default class File extends React.Component {
         this.handleHalt
       );
     }
-
-    const numTrunc = this.state.outputData.length;
-
-    this.setState((state) => {
-      state.graphicsData.push(["clear"]);
-
-      return {
-        // eslint-disable-next-line react/no-access-state-in-setstate
-        executedCode: [],
-        interactCallback,
-        killCallback,
-        detachCallback,
-        outputData: state.outputData.slice(numTrunc),
-        outputActive: true,
-      };
-    });
-
-    this.outputRef.current.forceOpen();
   };
 
   test = async () => {
     if (this.state.location) {
       await this.save();
     }
-    if (this.identifyLanguage() === PYTHON) {
-      let commandSent = false;
-      const duration = this.props.settings.doctestTimeout;
-      const timeoutTimer = setTimeout(() => {
-        send({
-          type: SHOW_ERROR_DIALOG,
-          title: "Doctests Failed",
-          message: `Timeout (tests did not complete after ${duration}s). You might have an infinite loop!`,
-        });
-        // eslint-disable-next-line no-use-before-define
-        killCallback();
-        // eslint-disable-next-line no-use-before-define
-        detachCallback();
-      }, duration * 1000);
-      const [interactCallback, killCallback, detachCallback] = runCode(
-        this.identifyLanguage()
-      )(
-        this.state.editorText,
-        (out) => {
-          if (!out.startsWith(DOCTEST_MARKER)) {
-            return;
-          }
-          const rawData = out.slice(DOCTEST_MARKER.length);
-          // eslint-disable-next-line no-eval
-          const doctestData = (0, eval)(rawData);
-          this.setState({ doctestData });
-          this.testRef.current.forceOpen();
-          clearInterval(timeoutTimer);
-          killCallback();
-        },
-        (err) => {
-          if (err.trim() !== ">>>") {
-            // something went wrong in setup
-            send({
-              type: SHOW_ERROR_DIALOG,
-              title: "Doctests Failed",
-              message: err.trim(),
-            });
-            clearInterval(timeoutTimer);
-            killCallback();
-            detachCallback();
-            commandSent = true;
-          }
-          if (!commandSent) {
-            commandSent = true;
-            interactCallback("__run_all_doctests()\n");
-          }
-        },
-        () => {}
-      );
-    } else if (this.identifyLanguage() === SCHEME) {
-      const duration = this.props.settings.doctestTimeout;
-      const timeoutTimer = setTimeout(() => {
-        send({
-          type: SHOW_ERROR_DIALOG,
-          title: "Doctests Failed",
-          message: `Timeout (tests did not complete after ${duration}s). You might have an infinite loop!`,
-        });
-        // eslint-disable-next-line no-use-before-define
-        killCallback();
-        // eslint-disable-next-line no-use-before-define
-        detachCallback();
-      }, duration * 1000);
-      const doctestData = [];
-      const errors = [];
-      const [, killCallback, detachCallback] = runCode(this.identifyLanguage())(
-        `(define __run_all_doctests 1)\n${this.state.editorText}\n(display "${STOP_MARKER}")`,
-        (out) => {
-          if (out.startsWith(DOCTEST_MARKER)) {
-            const rawData = out.slice(DOCTEST_MARKER.length);
-            // eslint-disable-next-line no-eval
-            const caseData = (0, eval)(`(${rawData})`);
-            doctestData.push(caseData);
-          } else if (out.startsWith(STOP_MARKER)) {
-            if (errors.length === 0) {
-              this.setState({ doctestData });
-              this.testRef.current.forceOpen();
-            } else {
-              send({
-                type: SHOW_ERROR_DIALOG,
-                title: "Doctests Failed",
-                message: errors.join("\n"),
-              });
-            }
-            clearInterval(timeoutTimer);
-            killCallback();
-            detachCallback();
-          }
-        },
-        (err) => {
-          if (err.trim() !== "scm>") {
-            // something went wrong in setup
-            errors.push(err.trim());
-          }
-        },
-        () => {}
-      );
-    } else {
+
+    const duration = this.props.settings.doctestTimeout;
+    const timeoutTimer = setTimeout(() => {
       send({
         type: SHOW_ERROR_DIALOG,
-        title: "Unable to Test",
-        message:
-          "Doctests are only implemented for Python and Scheme at the moment.",
+        title: "Doctests Failed",
+        message: `Timeout (tests did not complete after ${duration}s). You might have an infinite loop!`,
       });
-    }
+      // eslint-disable-next-line no-use-before-define
+      kill();
+    }, duration * 1000);
+
+    const kill = testCode(this.identifyLanguage())(
+      this.state.editorText,
+      (doctestData) => {
+        this.setState({ doctestData });
+        this.testRef.current.forceOpen();
+        clearInterval(timeoutTimer);
+      },
+      (message) => {
+        clearInterval(timeoutTimer);
+        send({
+          type: SHOW_ERROR_DIALOG,
+          title: "Doctests Failed",
+          message,
+        });
+      }
+    );
   };
 
   debugTest = (data) => {

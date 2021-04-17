@@ -1,4 +1,7 @@
 import { LARK, PYTHON, SCHEME, SQL } from "../../common/languages.js";
+import pyTest from "../../languages/python/utils/test";
+import scmTest from "../../languages/scheme/utils/test";
+import larkTest from "../../languages/lark/utils/test";
 import { runLarkCode } from "../../languages/lark/utils/run";
 import pyFormat from "../../languages/python/utils/format.js";
 import scmFormat from "../../languages/scheme/utils/format.js";
@@ -51,6 +54,15 @@ export function runFile(language) {
   const options = {
     [PYTHON]: runPyFile,
     [SCHEME]: runScmFile,
+  };
+  return options[language];
+}
+
+export function testCode(language) {
+  const options = {
+    [PYTHON]: pyTest,
+    [SCHEME]: scmTest,
+    [LARK]: larkTest,
   };
   return options[language];
 }
