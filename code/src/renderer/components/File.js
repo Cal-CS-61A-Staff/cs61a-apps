@@ -405,7 +405,6 @@ export default class File extends React.Component {
     } else if (code.trim()[0] === "(" || code.split(";").length > 1) {
       return SCHEME;
     } else if (
-      code.split(": ").length > 1 ||
       code.split("%ignore").length > 1 ||
       code.split("?start").length > 1
     ) {
