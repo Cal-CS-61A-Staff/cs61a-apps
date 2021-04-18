@@ -161,7 +161,7 @@ def start():
     sh("chown", "-R", username, f"/save/{username}")
     print("Home folder owner set.", file=sys.stderr)
 
-    sh("mkdir", "-P", "/save/.cache")
+    sh("mkdir", "-p", "/save/.cache")
     sh("chmod", "a+rw", "/save/.cache")
 
     if not get_server_pid(username):
