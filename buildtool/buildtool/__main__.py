@@ -108,7 +108,7 @@ def display_error(error: BuildException):
     default=os.getenv("BUILDTOOL_CACHE_DIRECTORY", ".cache"),
     help="The directory used to cache build outputs and intermediate layers. If a cloud storage bucket is passed "
     "in as gs://bucket-name, it will be used alongside an .aux_cache local directory as a source for cached outputs. "
-    "Override with the BUILDTOOL_CACHE_DIRECTORY environment variable",
+    "Override with the BUILDTOOL_CACHE_DIRECTORY environment variable.",
 )
 @click.option(
     "--flag",
