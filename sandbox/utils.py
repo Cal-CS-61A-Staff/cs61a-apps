@@ -91,7 +91,7 @@ class Block:
 
     def __init__(self, name, *sections, **options):
         self.name = name
-        self.sections = list(sections)
+        self.sections = sections
         self.options = options
 
         if "ret" in self.options:
