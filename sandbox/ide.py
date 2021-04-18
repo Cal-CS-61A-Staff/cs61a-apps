@@ -171,7 +171,6 @@ def start():
                 "bind-addr": f"127.0.0.1:{port}",
                 "auth": "password",
                 "password": passwd,
-                "home": f"https://{get_host()}",
             }
 
             with open(f"/save/{username}/.code-server.yaml", "w") as csc:
