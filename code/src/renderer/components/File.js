@@ -1,5 +1,6 @@
 import React from "react";
 import Editor from "./Editor";
+import Graphics from "./Graphics";
 import OKResults from "./OKResults";
 import Output from "./Output";
 import { send, sendNoInteract } from "../utils/communication.js";
@@ -9,7 +10,7 @@ import {
   SHOW_SAVE_DIALOG,
   SHOW_SHARE_DIALOG,
 } from "../../common/communicationEnums.js";
-import { PYTHON, SCHEME, SQL } from "../../common/languages.js";
+import { LARK, PYTHON, SCHEME, SQL } from "../../common/languages.js";
 import {
   Debugger,
   debugPrefix,
@@ -18,14 +19,15 @@ import {
   generateDebugTrace,
   runCode,
   runFile,
+  testCode,
 } from "../utils/dispatch.js";
 import { ERROR, INPUT, OUTPUT } from "../../common/outputTypes.js";
 
 const DEBUG_MARKER = "DEBUG: ";
 const EDITOR_MARKER = "EDITOR: ";
 const EXEC_MARKER = "EXEC: ";
-const DOCTEST_MARKER = "DOCTEST: ";
-const STOP_MARKER = "STOP: ";
+export const DOCTEST_MARKER = "DOCTEST: ";
+const TURTLE_MARKER = "TURTLE: ";
 
 export default class File extends React.Component {
   constructor(props) {
@@ -43,6 +45,8 @@ export default class File extends React.Component {
 
       outputData: [],
       outputActive: false,
+
+      graphicsData: [],
 
       executedCode: [],
 
@@ -63,6 +67,7 @@ export default class File extends React.Component {
     this.outputRef = React.createRef();
     this.debugRef = React.createRef();
     this.testRef = React.createRef();
+    this.graphicsRef = React.createRef();
 
     this.props.onActivate(this.props.id);
   }
@@ -75,7 +80,7 @@ export default class File extends React.Component {
     }
     if (this.props.srcOrigin) {
       window.addEventListener("message", (e) => {
-        if (e.origin === this.props.srcOrigin) {
+        if (e.origin === this.props.srcOrigin && typeof e.data === "string") {
           this.handleEditorChange(e.data);
         }
       });
@@ -102,6 +107,8 @@ export default class File extends React.Component {
     let killCallback;
     let detachCallback;
 
+    const numTrunc = this.state.outputData.length;
+
     if (ELECTRON && this.state.location) {
       [interactCallback, killCallback, detachCallback] = runFile(
         this.identifyLanguage()
@@ -122,137 +129,71 @@ export default class File extends React.Component {
       );
     }
 
-    const numTrunc = this.state.outputData.length;
-
-    this.setState((state) => ({
-      // eslint-disable-next-line react/no-access-state-in-setstate
-      executedCode: [],
-      interactCallback,
-      killCallback,
-      detachCallback,
-      outputData: state.outputData.slice(numTrunc),
-      outputActive: true,
-    }));
-
     this.outputRef.current.forceOpen();
+
+    return new Promise((resolve) =>
+      this.setState((state) => {
+        state.graphicsData.push(["clear"]);
+
+        return {
+          // eslint-disable-next-line react/no-access-state-in-setstate
+          executedCode: [],
+          interactCallback,
+          killCallback,
+          detachCallback,
+          outputData: state.outputData.slice(numTrunc),
+          outputActive: true,
+        };
+      }, resolve)
+    );
   };
 
   test = async () => {
     if (this.state.location) {
       await this.save();
     }
-    if (this.identifyLanguage() === PYTHON) {
-      let commandSent = false;
-      const duration = this.props.settings.doctestTimeout;
-      const timeoutTimer = setTimeout(() => {
-        send({
-          type: SHOW_ERROR_DIALOG,
-          title: "Doctests Failed",
-          message: `Timeout (tests did not complete after ${duration}s). You might have an infinite loop!`,
-        });
-        // eslint-disable-next-line no-use-before-define
-        killCallback();
-        // eslint-disable-next-line no-use-before-define
-        detachCallback();
-      }, duration * 1000);
-      const [interactCallback, killCallback, detachCallback] = runCode(
-        this.identifyLanguage()
-      )(
-        this.state.editorText,
-        (out) => {
-          if (!out.startsWith(DOCTEST_MARKER)) {
-            return;
-          }
-          const rawData = out.slice(DOCTEST_MARKER.length);
-          // eslint-disable-next-line no-eval
-          const doctestData = (0, eval)(rawData);
-          this.setState({ doctestData });
-          this.testRef.current.forceOpen();
-          clearInterval(timeoutTimer);
-          killCallback();
-        },
-        (err) => {
-          if (err.trim() !== ">>>") {
-            // something went wrong in setup
-            send({
-              type: SHOW_ERROR_DIALOG,
-              title: "Doctests Failed",
-              message: err.trim(),
-            });
-            clearInterval(timeoutTimer);
-            killCallback();
-            detachCallback();
-            commandSent = true;
-          }
-          if (!commandSent) {
-            commandSent = true;
-            interactCallback("__run_all_doctests()\n");
-          }
-        },
-        () => {}
-      );
-    } else if (this.identifyLanguage() === SCHEME) {
-      const duration = this.props.settings.doctestTimeout;
-      const timeoutTimer = setTimeout(() => {
-        send({
-          type: SHOW_ERROR_DIALOG,
-          title: "Doctests Failed",
-          message: `Timeout (tests did not complete after ${duration}s). You might have an infinite loop!`,
-        });
-        // eslint-disable-next-line no-use-before-define
-        killCallback();
-        // eslint-disable-next-line no-use-before-define
-        detachCallback();
-      }, duration * 1000);
-      const doctestData = [];
-      const errors = [];
-      const [, killCallback, detachCallback] = runCode(this.identifyLanguage())(
-        `(define __run_all_doctests 1)\n${this.state.editorText}\n(display "${STOP_MARKER}")`,
-        (out) => {
-          if (out.startsWith(DOCTEST_MARKER)) {
-            const rawData = out.slice(DOCTEST_MARKER.length);
-            // eslint-disable-next-line no-eval
-            const caseData = (0, eval)(`(${rawData})`);
-            doctestData.push(caseData);
-          } else if (out.startsWith(STOP_MARKER)) {
-            if (errors.length === 0) {
-              this.setState({ doctestData });
-              this.testRef.current.forceOpen();
-            } else {
-              send({
-                type: SHOW_ERROR_DIALOG,
-                title: "Doctests Failed",
-                message: errors.join("\n"),
-              });
-            }
-            clearInterval(timeoutTimer);
-            killCallback();
-            detachCallback();
-          }
-        },
-        (err) => {
-          if (err.trim() !== "scm>") {
-            // something went wrong in setup
-            errors.push(err.trim());
-          }
-        },
-        () => {}
-      );
-    } else {
+
+    const duration = this.props.settings.doctestTimeout;
+    const timeoutTimer = setTimeout(() => {
       send({
         type: SHOW_ERROR_DIALOG,
-        title: "Unable to Test",
-        message:
-          "Doctests are only implemented for Python and Scheme at the moment.",
+        title: "Doctests Failed",
+        message: `Timeout (tests did not complete after ${duration}s). You might have an infinite loop!`,
       });
-    }
+      // eslint-disable-next-line no-use-before-define
+      kill();
+    }, duration * 1000);
+
+    const kill = testCode(this.identifyLanguage())(
+      this.state.editorText,
+      (doctestData) => {
+        this.setState({ doctestData });
+        this.testRef.current.forceOpen();
+        clearInterval(timeoutTimer);
+      },
+      (message) => {
+        clearInterval(timeoutTimer);
+        send({
+          type: SHOW_ERROR_DIALOG,
+          title: "Doctests Failed",
+          message,
+        });
+      }
+    );
   };
 
-  debugTest = (data) => {
-    this.debugExecutedCode(
-      null,
-      `${this.state.editorText}\n${data.code.join("\n")}`
-    );
+  debugTest = async (data) => {
+    if (this.identifyLanguage() === LARK) {
+      await this.run();
+      for (const testCase of data.code) {
+        this.handleInput(`${testCase}\n`);
+      }
+    } else {
+      this.debugExecutedCode(
+        null,
+        `${this.state.editorText}\n${data.code.join("\n")}`
+      );
+    }
   };
 
   debug = (data) => {
@@ -379,6 +320,14 @@ export default class File extends React.Component {
       this.setState((state) => ({
         executedCode: state.executedCode.concat([code]),
       }));
+    } else if (text.startsWith(TURTLE_MARKER)) {
+      // eslint-disable-next-line no-eval
+      const data = (0, eval)(`(${text.substr(DEBUG_MARKER.length)})`);
+      this.setState(({ graphicsData }) => {
+        graphicsData.push(data);
+        return { graphicsData };
+      });
+      this.graphicsRef.current.forceOpen();
     } else {
       this.setState((state) => {
         const outputData = state.outputData.concat([
@@ -406,7 +355,6 @@ export default class File extends React.Component {
   };
 
   handleInput = (line) => {
-    this.state.interactCallback(line);
     this.setState((state) => {
       const outputData = state.outputData.concat([
         {
@@ -416,6 +364,7 @@ export default class File extends React.Component {
       ]);
       return { outputData };
     });
+    this.state.interactCallback(line);
   };
 
   handleEditorChange = (editorText) => {
@@ -440,7 +389,7 @@ export default class File extends React.Component {
   identifyLanguage = () => {
     const name = this.state.name.toLowerCase();
 
-    const candidates = [PYTHON, SCHEME, SQL];
+    const candidates = [PYTHON, SCHEME, SQL, LARK];
 
     for (const lang of candidates) {
       if (name.endsWith(extension(lang))) {
@@ -455,6 +404,11 @@ export default class File extends React.Component {
       return SQL;
     } else if (code.trim()[0] === "(" || code.split(";").length > 1) {
       return SCHEME;
+    } else if (
+      code.split("%ignore").length > 1 ||
+      code.split("?start").length > 1
+    ) {
+      return LARK;
     } else {
       return PYTHON;
     }
@@ -494,17 +448,24 @@ export default class File extends React.Component {
           onRestart={this.run}
           onInput={this.handleInput}
         />
-        <CurrDebugger
-          ref={this.debugRef}
-          title={`${this.state.name} (Debug)`}
-          data={this.state.debugData}
-          onUpdate={this.handleDebugUpdate}
-        />
+        {CurrDebugger && (
+          <CurrDebugger
+            ref={this.debugRef}
+            title={`${this.state.name} (Debug)`}
+            data={this.state.debugData}
+            onUpdate={this.handleDebugUpdate}
+          />
+        )}
         <OKResults
           ref={this.testRef}
           title={`${this.state.name} (Tests)`}
           onDebug={this.debugTest}
           data={this.state.doctestData}
+        />
+        <Graphics
+          ref={this.graphicsRef}
+          title={`${this.state.name} (Graphics)`}
+          data={this.state.graphicsData}
         />
       </>
     );
