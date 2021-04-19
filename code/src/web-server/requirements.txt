@@ -3,4 +3,5 @@ flask
 gunicorn
 braceexpand
 flask-cors
+lark-parser
 -r common/requirements.txt

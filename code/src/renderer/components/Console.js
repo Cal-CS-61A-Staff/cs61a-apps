@@ -74,7 +74,6 @@ export default class Console extends React.Component {
   };
 
   handleInput = (line) => {
-    this.state.interactCallback(line);
     this.setState((state) => {
       const outputData = state.outputData.concat([
         {
@@ -84,6 +83,7 @@ export default class Console extends React.Component {
       ]);
       return { outputData };
     });
+    this.state.interactCallback(line);
   };
 
   render() {

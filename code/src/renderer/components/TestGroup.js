@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React from "react";
 import SuccessIcon from "./SuccessIcon";
 import TestElem from "./TestElem";
@@ -13,9 +14,9 @@ export default class TestGroup extends React.Component {
     const expanded = this.props.name === this.props.selectedProblem;
 
     if (expanded) {
-      children = this.props.children.map((child) => (
+      children = this.props.children.map((child, i) => (
         <TestElem
-          key={child.rawName}
+          key={i}
           name={child.name.slice(1).join(" > ")}
           onClick={() => this.props.onTestClick(child)}
           highlight={child === this.props.selectedTest}
