@@ -4,18 +4,20 @@ import * as ReactDOM from "react-dom";
 
 import AceEditor from "react-ace";
 
-import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/ext-language_tools";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 
+import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-scheme";
 import "ace-builds/src-noconflict/mode-sql";
+import "ace-builds/src-noconflict/mode-cirru";
+
 import "ace-builds/src-noconflict/theme-merbivore_soft";
 
 import firebase from "firebase/app";
 import "firebase/database";
 import firepad from "firepad/dist/firepad.min";
-import { SCHEME } from "../../common/languages";
+import { LARK, SCHEME } from "../../common/languages";
 import { randomString } from "../../common/misc";
 import glWrap from "../utils/glWrap.js";
 
@@ -34,8 +36,6 @@ function Editor({
   const editorRef = useRef();
   const markers = [];
 
-  const [displayLanguage, setDisplayLanguage] = useState(language);
-
   useEffect(() => {
     glContainer.on("show", () => onActivate());
     editorRef.current.editor.focus();
@@ -43,10 +43,6 @@ function Editor({
     onActivate();
     glContainer.on("resize", () => editorRef.current.editor.resize());
   }, []);
-
-  useEffect(() => {
-    setDisplayLanguage(language);
-  }, [language]);
 
   // eslint-disable-next-line consistent-return
   useEffect(() => {
@@ -124,6 +120,8 @@ function Editor({
       });
     }
   }, [language]);
+
+  const displayLanguage = language === LARK ? "CIRRU" : language;
 
   return ReactDOM.createPortal(
     <AceEditor

@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as hljs from "highlight.js";
+import { LARK } from "../../common/languages";
 import {
   getCurrentCursorPosition,
   setCurrentCursorPosition,
@@ -55,7 +56,9 @@ export default class StdinElem extends React.Component {
     const node = this.inputRef.current;
     const cursorPos = getCurrentCursorPosition(node);
     this.inputRef.current.innerText = node.innerText;
-    hljs.highlightBlock(node);
+    if (this.props.lang !== LARK) {
+      hljs.highlightBlock(node);
+    }
     if (cursorPos !== -1) {
       setCurrentCursorPosition(node, cursorPos);
     }
