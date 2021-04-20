@@ -15,6 +15,13 @@ assets_env.register("style.css", "css/style.css", output="public/style.css")
 
 
 def glob_assets(pattern):
+    """Returns a list of path names matching pattern if possible.
+
+    :param param1: a pathname
+    :type param1: str
+
+    :return: a list of pathnames that match pattern
+    """
     cwd = os.getcwd()
     try:
         os.chdir(ASSETS_DIRECTORY)
