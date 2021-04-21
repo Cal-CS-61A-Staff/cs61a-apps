@@ -39,7 +39,7 @@ let Navbar = ({ state, mode }) => {
             className="navbar-brand"
             to={"/" + (mode === defaultMode ? "" : mode)}
           >
-            <strong>{window.courseName} |</strong>
+            <strong>{window.courseName} Go bears! |</strong>
             {" " + title}
           </Link>
         </div>
