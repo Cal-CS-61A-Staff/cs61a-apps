@@ -17,6 +17,7 @@ import "ace-builds/src-noconflict/theme-merbivore_soft";
 import firebase from "firebase/app";
 import "firebase/database";
 import firepad from "firepad/dist/firepad.min";
+import { useDelayed } from "../utils/hooks";
 import { LARK, SCHEME } from "../../common/languages";
 import { randomString } from "../../common/misc";
 import glWrap from "../utils/glWrap.js";
@@ -121,7 +122,8 @@ function Editor({
     }
   }, [language]);
 
-  const displayLanguage = language === LARK ? "CIRRU" : language;
+  // useDelayed() needed so ace can update the data for one render before updating the language
+  const displayLanguage = useDelayed(language === LARK ? "CIRRU" : language);
 
   return ReactDOM.createPortal(
     <AceEditor

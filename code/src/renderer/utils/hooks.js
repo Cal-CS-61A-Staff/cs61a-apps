@@ -43,3 +43,12 @@ export function useRequestAnimationFrame(callback) {
     };
   }, []);
 }
+
+/*
+    When v changes, return the old value, then trigger a re-render with the new value
+ */
+export function useDelayed(v) {
+  const [value, setValue] = useState(v);
+  useEffect(() => setValue(v), [v]);
+  return value;
+}
