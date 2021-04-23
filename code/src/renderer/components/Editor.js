@@ -4,10 +4,10 @@ import * as ReactDOM from "react-dom";
 
 import AceEditor from "react-ace";
 
-import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/ext-language_tools";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 
+import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-scheme";
 import "ace-builds/src-noconflict/mode-sql";
 import "ace-builds/src-noconflict/mode-cirru";
@@ -17,12 +17,12 @@ import "ace-builds/src-noconflict/theme-merbivore_soft";
 import firebase from "firebase/app";
 import "firebase/database";
 import firepad from "firepad/dist/firepad.min";
+import { useDelayed } from "../utils/hooks";
 import { LARK, SCHEME } from "../../common/languages";
 import { randomString } from "../../common/misc";
 import glWrap from "../utils/glWrap.js";
 
 import "firepad/dist/firepad.css";
-import { useDelayed } from "../utils/hooks";
 
 function Editor({
   glContainer,
