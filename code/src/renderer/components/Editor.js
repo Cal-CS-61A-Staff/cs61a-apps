@@ -4,10 +4,10 @@ import * as ReactDOM from "react-dom";
 
 import AceEditor from "react-ace";
 
+import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/ext-language_tools";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 
-import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-scheme";
 import "ace-builds/src-noconflict/mode-sql";
 import "ace-builds/src-noconflict/mode-cirru";
@@ -22,6 +22,7 @@ import { randomString } from "../../common/misc";
 import glWrap from "../utils/glWrap.js";
 
 import "firepad/dist/firepad.css";
+import { useDelayed } from "../utils/hooks";
 
 function Editor({
   glContainer,
@@ -121,7 +122,8 @@ function Editor({
     }
   }, [language]);
 
-  const displayLanguage = language === LARK ? "CIRRU" : language;
+  // useDelayed() needed so ace can update the data for one render before updating the language
+  const displayLanguage = useDelayed(language === LARK ? "CIRRU" : language);
 
   return ReactDOM.createPortal(
     <AceEditor
