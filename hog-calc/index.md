@@ -1,9 +1,29 @@
 ```{include} README.md
 ```
 
-## Code Segment 1
+## Main
+
+This file contains...
 
 ```{eval-rst}
-.. automodule:: app_directory.module_name
+.. automodule:: docs.hog_calc.main
+    :members:
+```
+
+## Process Input
+
+This file contains...
+
+```{eval-rst}
+.. automodule:: docs.hog_calc.process_input
+    :members:
+```
+
+## Runner
+
+This file contains...
+
+```{eval-rst}
+.. automodule:: docs.hog_calc.runner
     :members:
 ```
