@@ -1,3 +1,3 @@
 # `domains`
 
-A brief description of what the app is meant to do.
+This app registers and hosts a new domain automatically, adding the new domain to the hosted_apps table.
