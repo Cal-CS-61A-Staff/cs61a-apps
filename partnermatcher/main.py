@@ -11,15 +11,15 @@ WORDS_COL = "What are three words that describe your interests? "
 
 
 def get_words(row):
-    """Returns a list of stripped, lowercase words from the WORDS_COL column
-    of a student response row.
+    """Returns a list of stripped, lower case words from the ``WORDS_COL`` 
+    column of a student response row.
 
-    :param row: One-dimensional array containing a student's responses to
-    the partner matching questions.
-    :type row: panda.Series
+    :param row: One-dimensional array containing a student's responses to the 
+        partner matching questions.
+    :type row: ~pandas.Series
 
-    :return: List of stripped, lowercase words from the WORDS_COL column
-    of a student response row.
+    :return: a list of stripped, lower case words from the ``WORDS_COL`` column 
+        of a student response row.
     """
     return [
         word.strip().lower()
@@ -28,19 +28,20 @@ def get_words(row):
 
 
 def get_weight(row1, row2):
-    """Calculates and returns the partner matching weight between two students
-    based on their responses. The higher the weight, the more the partner
+    """Calculates and returns the partner matching weight between two students 
+    based on their responses. The higher the weight, the more the partner 
     matching algorithm will favor matching these two students together.
 
-    :param row1: One-dimensional array containing the first student's responses
-    to the partner matching questions.
-    :type row1: panda.Series
-    :param row2: One-dimensional array containing the second student's responses
-    to the partner matching questions.
-    :type row2: panda.Series
+    :param row1: One-dimensional array containing the first student's responses 
+        to the partner matching questions.
+    :type row1: ~pandas.Series
+    :param row2: One-dimensional array containing the second student's responses 
+        to the partner matching questions.
+    :type row2: ~pandas.Series
 
-    :return: an int representing the partner matching weight between the student
-    whose responses are in row1 and the students whose responses are in row2.
+    :return: an int representing the partner matching weight between the student 
+        whose responses are in row1 and the students whose responses are in 
+        row2.
     """
     score = 0
     if row1[TIMEZONE_COL] == row2[TIMEZONE_COL]:
@@ -57,6 +58,12 @@ def get_weight(row1, row2):
 
 
 def match():
+    """ Performs the partner matching algorithm. The algorithm calculates the 
+    weight between each pair of students using ``get_weight()``, forms a graph 
+    where the nodes are the students and the edge weights are the weights 
+    between each pair of students, and then calculates the maximum-weighted 
+    matching of the graph, writing the results out to a Google sheet.
+    """
     data = pd.read_csv("alt-matcher/joined_data.csv", dtype=str).fillna("")
     g = nx.Graph()
 
