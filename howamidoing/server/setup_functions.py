@@ -10,6 +10,8 @@ def set_default_config(db):
 
     :param db: A database query function yielded by :func:`common.db.connect_db`
     :type db: func
+
+    :return: None
     """
     with open("./public/config/config.js") as config:
         data = config.read()
@@ -30,6 +32,8 @@ def set_grades(data, course_code, db):
 
     :param db: A database query function yielded by :func:`common.db.connect_db`
     :type db: func
+
+    :return: None
     """
     reader = csv.reader(StringIO(data))
     header = next(reader)

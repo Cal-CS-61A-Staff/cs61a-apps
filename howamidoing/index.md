@@ -10,3 +10,11 @@ grade tracking.
 .. automodule:: howamidoing.server.setup_functions
     :members:
 ```
+
+## Main
+
+This file
+```{eval-rst}
+.. automodule:: howamidoing.server.main
+    :members:
+```
