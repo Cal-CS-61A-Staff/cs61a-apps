@@ -6,6 +6,18 @@ MAX_ROLLS = 10
 
 
 def make_strat_str(strat_0, strat_1):
+    """Takes in two separate strategies and converts them both into a string
+    separating each num_roll of dice by a newline.
+
+    :param strat_0: the first inputted strategy
+    :type param1: list of lists
+    :param param2: the second inputted strategy
+    :type param2: list of lists
+
+    :return: a string representing the number of dice rolls for each of the
+    possible score values for both strategies, with each number separated by
+    a newline
+    """
     out = []
     for strat in [strat_0, strat_1]:
         for i in range(GOAL_SCORE):
