@@ -9,6 +9,16 @@ from runner import GOAL_SCORE, MAX_ROLLS
 
 
 def validate_strat(received_strat):
+    """This function validates that the strategy inputted gives out a number of
+    rolls for each pair of score values that is within the acceptable range of
+    rolls. It then returns the strategy.
+
+    :param received_strat: the strategy that was submitted by a student
+    :type received_strat: dict
+
+    :return: a list of lists representing the number of dice that the
+    strategy would attempt to roll for each possible score situation.
+    """
     extracted_strat = []
     for i in range(GOAL_SCORE):
         extracted_strat.append([])
@@ -35,6 +45,21 @@ def validate_strat(received_strat):
 
 
 def record_strat(name, group, received_strat):
+    """This function takes in a submitted strategy and validates it, then
+    encodes it in JSON format along with the name, a hash of the strategy, and
+    the email of one of the users in the group, and stores it on the CS61A
+    database.
+
+    :param name: the name of the strategy provided
+    :type name: str
+    :param group: the group of students submitting the strategy
+    :type group: list
+    :param received_strat: the strategy that was submitted, which will be
+    evaluated and stored on the database
+    :type received_strat: dict
+
+    :return: the hash of the received strategy
+    """
     if not isinstance(name, str):
         abort(400, "Name is not a string!")
     name = base64.encodebytes(bytes(name, "utf-8"))
