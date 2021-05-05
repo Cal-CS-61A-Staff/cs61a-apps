@@ -57,9 +57,9 @@ def last_updated():
      for this course.
 
      Uses a database query function yielded by :func:`common.db.connect_db`
-     and the course code returned by :func:`common.course_config.get_course()`
+     and the course code returned by :func:`common.course_config.get_course`
 
-    :return: Timestamp or "Unknown" if any exceptions occur while fetching from the current database
+    :return: Timestamp or ``Unknown`` (string) if any exceptions occur while fetching from the current database
     """
     try:
         with connect_db() as db:

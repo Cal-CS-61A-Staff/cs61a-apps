@@ -13,8 +13,19 @@ grade tracking.
 
 ## Main
 
-This file
+This file creates all necessary apps and functions to display up-to-date course grades.
+
 ```{eval-rst}
 .. automodule:: howamidoing.server.main
     :members:
 ```
+
+## Example Usage
+
+
+
+### Viewing Student Grades
+
+### Uploading New Grades
+
+### Changing Configs
