@@ -1,14 +1,11 @@
 # Slack
 
-WIP
-A brief description of what the app is meant to do.
+Slackbot for the 61A staff Slack. Handles things like Piazza post links, PR links, go/ links, PR LGTMs, staff emojis, among other conveniences.
 
 ## Setup
 
-WIP
-Include some steps to tell people how to develop this app locally.
+All packages are detailed in requirements.txt. 
 
 ## Other Sections
 
-WIP
-Include details that could help people develop or use the app.
+WIP. Include details that could help people develop or use the app.
