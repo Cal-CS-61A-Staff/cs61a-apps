@@ -20,6 +20,8 @@ AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
 
 DEV = os.getenv("ENV") != "prod"
 
+IS_SPHINX = "sphinx" in sys.argv[0]
+
 
 with connect_db() as db:
     db(
@@ -45,7 +47,7 @@ with connect_db() as db:
        lastUpdated TIMESTAMP)"""
     )
 
-if DEV:
+if DEV and not IS_SPHINX:
     with connect_db() as db:
         with open("./public/config/dummy_grade_data.csv") as grades:
             set_grades(grades.read(), "cs61a", db)
