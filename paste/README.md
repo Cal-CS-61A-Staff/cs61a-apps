@@ -1,11 +1,3 @@
-# Paste
+# `paste`
 
-A brief description of what the app is meant to do.
-
-## Setup
-
-Include some steps to tell people how to develop this app locally.
-
-## Other Sections
-
-Include details that could help people develop or use the app.
+This app allows users to upload and share text through posts called "pastes" (similar to pastebin).
