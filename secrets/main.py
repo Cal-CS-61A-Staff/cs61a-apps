@@ -37,6 +37,14 @@ create_oauth_client(app, "61a-secrets", secret_key[0] if secret_key is not None 
 
 @validate_master_secret.bind(app)
 def validate_master_secret(master_secret):
+    """
+    Validates a master secret.
+
+    :param master_secret: secret to be validated
+    :type master_secret: str
+
+    :return: a tuple of the app and a bool for if that app is a staging app
+    """
     with connect_db() as db:
         public_app = db(
             "SELECT app FROM secrets WHERE public_value=%s AND name='MASTER'",
@@ -56,6 +64,14 @@ def validate_master_secret(master_secret):
 # intentional duplicate of the RPC decorator, since this calls
 # the local version of validate_master_secret, not the RPC wrapper
 def validates_master_secret(func):
+    """
+    Wraps a function to call a local version of validate_master_secret instead of the RPC wrapper.
+
+    :param func: function to be wrapped
+    :type func: function
+
+    :return: wrapped function that will call validate_master_secret
+    """
     @wraps(func)
     def wrapped(
         *,
@@ -78,6 +94,19 @@ def validates_master_secret(func):
 @get_secret_from_server.bind(app)
 @validates_master_secret
 def get_secret(app, is_staging, secret_name):
+    """
+    Gets a secret from secrets.
+
+    :param app: app to get secret for
+    :type app: str
+    
+    :param is_staging: whether app is a staging app
+    :type is_staging: bool
+    :param secret_name: name of secret
+    :type secret_name: str
+
+    :return: string of either the staging value or public value depending on if the app was a staging app.
+    """
     with connect_db() as db:
         public_value, staging_value = db(
             "SELECT public_value, staging_value FROM secrets WHERE app=%s AND name=%s",
@@ -92,6 +121,21 @@ def get_secret(app, is_staging, secret_name):
 @load_all_secrets.bind(app)
 @validates_master_secret
 def load_all_secrets(app, is_staging, created_app_name):
+    """
+    Loads all secrets for a particular app.
+
+    :param app: app loading the secrets
+    :type app: string
+
+    :param is_staging: whether app is a staging app
+    :type is_staging: bool
+
+    :param created_app_name: name of the app to get secrets for
+    :type created_app_name: str
+
+    :return: dict of name and public value for all secrets of created_app_name
+    
+    """
     if app != "buildserver" or is_staging:
         abort(403)  # only buildserver running in prod can view all secrets
     with connect_db() as db:
@@ -106,6 +150,21 @@ def load_all_secrets(app, is_staging, created_app_name):
 @create_master_secret.bind(app)
 @validates_master_secret
 def create_master_secret(app, is_staging, created_app_name):
+    """
+    Creates a master secret.
+
+    :param app: app creating the secret
+    :type app: str
+
+    :param is_staging: whether app is a staging app
+    :type is_staging: bool
+
+    :param created_app_name: app to create master secret for
+    :type created_app_name: str
+
+    :return: tuple of two randomly generated 64-character secrets.
+
+    """
     if app != "buildserver" or is_staging:
         abort(403)  # only buildserver running in prod can create new apps
     with connect_db() as db:
@@ -124,6 +183,12 @@ def create_master_secret(app, is_staging, created_app_name):
 
 
 def display_hash(secret: str):
+    """
+    Displays the first 8 characters of the md5 hash of a secret.
+
+    :param secret: secret to display
+    :type secret: str
+    """
     return hashlib.md5(secret.encode("utf-8")).hexdigest()[:8]
 
 
