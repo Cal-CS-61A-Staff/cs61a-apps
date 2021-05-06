@@ -3,7 +3,7 @@ import React, { useContext, useEffect } from "react";
 import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
 import Anchor from "./Anchor";
-import { getAuthParams, inAdminMode } from "./auth";
+import { getAuthParams, getLoginAsParams, inAdminMode } from "./auth";
 import ExamContext from "./ExamContext";
 import Points from "./Points";
 import post from "./post";
@@ -59,7 +59,7 @@ export default function Exam({ groups, publicGroup, watermark, ended }) {
   };
 
   useInterval(() => {
-    if (exam) {
+    if (exam && !getLoginAsParams().loginas) {
       synchronize(exam);
     }
   }, 30 * 1000);
