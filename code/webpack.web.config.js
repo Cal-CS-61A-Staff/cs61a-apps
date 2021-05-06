@@ -79,7 +79,7 @@ module.exports = (env) => ({
       ELECTRON: false,
       SCHEME_COMPILE: (env && env.SCHEME_COMPILE) || false,
       __static: JSON.stringify("/static"),
-      VERSION: '"2.6.1"',
+      VERSION: '"2.6.2"',
     }),
     new webpack.ProvidePlugin({
       $: "jquery",
