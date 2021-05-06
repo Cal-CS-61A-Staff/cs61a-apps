@@ -121,5 +121,5 @@ This file creates a new `url_for` method to improve upon the default
 :hidden:
 :maxdepth: 3
 
-rpc/README.md
+rpc/index
 ```

@@ -19,6 +19,13 @@ TZ = pytz.timezone("America/Los_Angeles")
 
 
 def create_admin_endpoints(app):
+    """Creates various RPC endpoints to manage assignment grading. See the
+    following:
+
+    - :func:`~common.rpc.ag_master.upload_zip`
+    - :func:`~common.rpc.ag_master.create_assignment`
+    """
+
     @upload_zip.bind(app)
     @admin_only
     def upload_zip_rpc(course, name, file):

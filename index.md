@@ -42,6 +42,7 @@ exam-write/index
 :maxdepth: 3
 :caption: Apps
 
+ag-master/index
 auth/index
 buildserver/index
 Buildtool <buildtool/index>
