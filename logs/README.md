@@ -1,11 +1,3 @@
-# Logs
+# `logs`
 
-A brief description of what the app is meant to do.
-
-## Setup
-
-Include some steps to tell people how to develop this app locally.
-
-## Other Sections
-
-Include details that could help people develop or use the app.
+This app is used to peek at the latest logs for any given app via <logs.cs61a.org>
