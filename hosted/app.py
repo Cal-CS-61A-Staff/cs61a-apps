@@ -42,8 +42,6 @@ if not os.path.exists("data"):
 if not os.path.exists("data/saves"):
     os.makedirs("data/saves")
 
-sh("chmod", "666", f"{os.getcwd()}/dna.sock")
-
 
 @list_apps.bind(app)
 @only("buildserver")
@@ -139,6 +137,15 @@ def container_log(name):
 
 
 def check_auth(func):
+    """Takes in a function, and returns a wrapper of that function.
+    The wrapper will request user authentication (as staff) if needed.
+    Otherwise, it will execute the function as normal.
+
+    :param func: function to wrap
+    :type param1: function
+
+    :return: wrapper function that requests authentication as needed
+    """
     @wraps(func)
     def wrapped(*args, **kwargs):
         if not (is_staff("cs61a") and is_admin(email=get_user()["email"])):
@@ -166,10 +173,6 @@ pr_confs = f"{os.getcwd()}/data/pr_proxy"
 
 if not os.path.exists(pr_confs):
     os.makedirs(pr_confs)
-
-if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
-    with open(f"/etc/nginx/conf.d/hosted_pr_proxy.conf", "w") as f:
-        f.write(f"include {pr_confs}/*.conf;")
 
 
 @create_pr_subdomain.bind(app)
@@ -218,4 +221,10 @@ def create_pr_subdomain(app, pr_number, pr_host):
 
 
 if __name__ == "__main__":
+    # these two blurbs were moved here to allow docs to compile
+    sh("chmod", "666", f"{os.getcwd()}/dna.sock")
+
+    if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
+        with open(f"/etc/nginx/conf.d/hosted_pr_proxy.conf", "w") as f:
+            f.write(f"include {pr_confs}/*.conf;")
     app.run(host="0.0.0.0")
