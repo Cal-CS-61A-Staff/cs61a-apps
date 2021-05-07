@@ -142,7 +142,7 @@ def check_auth(func):
     Otherwise, it will execute the function as normal.
 
     :param func: function to wrap
-    :type param1: function
+    :type func: function
 
     :return: wrapper function that requests authentication as needed
     """
