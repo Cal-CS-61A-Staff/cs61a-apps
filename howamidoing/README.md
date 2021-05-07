@@ -26,14 +26,14 @@ To develop, install the python dependencies in `server/requirements.txt`, run `y
 
 ## Uploading Grades
 A `grades.csv` file can be uploaded to the server to update grades for students.
-You can view an example [here](./public/config/dummy_grade_data.csv).
+You can view an example [here](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/howamidoing/public/config/dummy_grade_data.csv).
 `Name`, `Email`, `SID` fields are required (in that order), and the following
 fields correspond to grades for each assignment.
 
 
 ## Editing Configuration
 A `config.js` script can be uploaded to the server. You can view a sample
-config [here](./public/config/config.js). Here is some data that may be
+config [here](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/howamidoing/public/config/config.js). Here is some data that may be
 customized:
 
 | Object      | Description |

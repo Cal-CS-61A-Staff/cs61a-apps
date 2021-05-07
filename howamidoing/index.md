@@ -19,13 +19,3 @@ This file creates all necessary apps and functions to display up-to-date course 
 .. automodule:: howamidoing.server.main
     :members:
 ```
-
-## Example Usage
-
-
-
-### Viewing Student Grades
-
-### Uploading New Grades
-
-### Changing Configs
