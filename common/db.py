@@ -1,4 +1,5 @@
 import os
+import sys
 from contextlib import contextmanager
 from os import getenv
 from os.path import exists
@@ -11,6 +12,8 @@ from common.rpc.secrets import get_secret
 
 use_devdb = getenv("ENV", "DEV") in ("DEV", "TEST")
 use_prod_proxy = getenv("ENV") == "DEV_ON_PROD"
+
+is_sphinx = "sphinx" in sys.argv[0]
 
 if use_devdb:
     database_url = "sqlite:///" + os.path.join(
@@ -91,24 +94,29 @@ def connect_db(*, retries=3):
             db("INSERT INTO animals VALUES %s", ["cat"])
             output = db("SELECT * FROM animals")
     """
-    for i in range(retries):
-        try:
-            conn = engine.connect()
-            break
-        except:
-            sleep(3)
-            continue
+    if is_sphinx:
+        def no_op(*args, **kwargs):
+            return
+        yield no_op
     else:
-        raise
+        for i in range(retries):
+            try:
+                conn = engine.connect()
+                break
+            except:
+                sleep(3)
+                continue
+        else:
+            raise
 
-    with conn:
+        with conn:
 
-        def db(query: str, args: List[str] = []):
-            if use_devdb:
-                query = query.replace("%s", "?")
-            return conn.execute(query, args)
+            def db(query: str, args: List[str] = []):
+                if use_devdb:
+                    query = query.replace("%s", "?")
+                return conn.execute(query, args)
 
-        yield db
+            yield db
 
 
 @contextmanager
