@@ -70,6 +70,10 @@ def create_secret(service):
 
 
 def list_services():
+    """Returns the list of services from Google Cloud Run necessary to access app logs
+
+    :return: list of services
+    """
     return [
         service["metadata"]["name"]
         for service in loads(
