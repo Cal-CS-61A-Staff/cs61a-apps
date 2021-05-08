@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { typeset } from "MathJax";
 import { Col, Jumbotron, Row } from "react-bootstrap";
 import Anchor from "./Anchor";
@@ -13,8 +13,8 @@ import useInterval from "./useInterval";
 import { synchronize } from "./logger.js";
 import useStyleWatcher from "./useStyleWatcher";
 
-export function postRenderFormat() {
-  for (const link of document.getElementsByTagName("a")) {
+export function postRenderFormat(node) {
+  for (const link of node.getElementsByTagName("a")) {
     if (
       link.getAttribute("href") &&
       link.hostname !== window.location.hostname
@@ -22,34 +22,44 @@ export function postRenderFormat() {
       link.target = "_blank";
     }
   }
-  for (const table of document.getElementsByTagName("table")) {
+  for (const table of node.getElementsByTagName("table")) {
     table.classList.add("table", "table-bordered");
   }
-  for (const blockquote of document.getElementsByTagName("blockquote")) {
+  for (const blockquote of node.getElementsByTagName("blockquote")) {
     blockquote.classList.add("blockquote");
   }
-  typeset();
+  typeset([node]);
 }
 
 export default function Exam({ groups, publicGroup, watermark, ended }) {
   const { exam } = useContext(ExamContext);
 
-  useEffect(postRenderFormat, [groups, publicGroup]);
+  const examDivRef = useRef();
 
-  const examDivRef = useStyleWatcher(() => {
-    if (watermark) {
-      post("/log_event", {
-        exam,
-        event: "style_edited",
-        ...getAuthParams(),
-      });
-      alert(
-        "You must not edit the DOM during the exam. This is considered academic dishonesty." +
-          " This event has been logged. We will follow up with you after the exam regarding this" +
-          " event."
-      );
-    }
-  }, [watermark]);
+  useEffect(() => postRenderFormat(examDivRef.current), [
+    examDivRef.current,
+    groups,
+    publicGroup,
+  ]);
+
+  useStyleWatcher(
+    examDivRef,
+    () => {
+      if (watermark) {
+        post("/log_event", {
+          exam,
+          event: "style_edited",
+          ...getAuthParams(),
+        });
+        alert(
+          "You must not edit the DOM during the exam. This is considered academic dishonesty." +
+            " This event has been logged. We will follow up with you after the exam regarding this" +
+            " event."
+        );
+      }
+    },
+    [watermark]
+  );
 
   const stickyStyle = {
     position: "sticky",

@@ -36,6 +36,9 @@ class LineBuffer:
         line = self._pop()
         stripped = line.rstrip()
         while stripped.endswith("\\"):
+            if stripped.endswith(r"\\"):
+                line = stripped[:-1]
+                break
             line = stripped[:-1] + "\n" + self._pop()
             stripped = line.rstrip()
         return line
