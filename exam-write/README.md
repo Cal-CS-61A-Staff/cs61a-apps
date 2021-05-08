@@ -174,7 +174,7 @@ on the next line. For instance
 <more_content> \
 <even_more_content>
 ```
-This syntax can be used anywhere to include newlines in a single-line element.
+This syntax can be used anywhere to include newlines in a single-line element. To actually include a backslash at the end of a line, write `\\`.
 
 For short / long answer questions, you must provide exactly one input statement within that question.
 The `type` can be `SHORT_ANSWER`, `SHORT_CODE_ANSWER`, `LONG_ANSWER`, or `LONG_CODE_ANSWER`. `CODE`
