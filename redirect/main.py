@@ -19,6 +19,7 @@ def lookup(hostname):
     """Gets the URL to redirect to based on a hostname.
 
     :param hostname: redirect link to check
+    :type hostname: string
 
     :return: a string that represents the url to redirect to
     """
@@ -36,7 +37,8 @@ def catch_all(path):
     """Gets the URL to redirect to based on a path if it exists.
 
     :param path: path to return to, doesn't have to exist
-
+    :type path: string
+    
     :return: a string that represents the url to redirect to
     """
     hostname = request.headers["HOST"]

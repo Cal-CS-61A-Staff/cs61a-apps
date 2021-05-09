@@ -5,8 +5,8 @@
 
 This file contains all of the code for redirecting. It tries to retrieve
 from a set LOOKUP dictionary and if it doesn't exist tries to directly
-get a url from the inst.eecs website. 'lookup()' retrieves the redirect
-link and 'catch_all()' is how the code is lookup is called.
+get a url from the inst.eecs website. 'catch_all()' recieves a path and
+calls lookup() to get the link. 'lookup()' creates the redirect link.
 
 ```{eval-rst}
 .. automodule:: redirect.main
