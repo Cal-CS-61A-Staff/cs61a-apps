@@ -1,4 +1,8 @@
-import { PYTHON, SCHEME, SQL } from "../../common/languages.js";
+import { LARK, PYTHON, SCHEME, SQL } from "../../common/languages.js";
+import pyTest from "../../languages/python/utils/test";
+import scmTest from "../../languages/scheme/utils/test";
+import larkTest from "../../languages/lark/utils/test";
+import { runLarkCode } from "../../languages/lark/utils/run";
 import pyFormat from "../../languages/python/utils/format.js";
 import scmFormat from "../../languages/scheme/utils/format.js";
 import pyGenerateDebugTrace from "../../languages/python/utils/generateDebugTrace.js";
@@ -38,7 +42,12 @@ const interpreterPool = new ProcessPool(
 );
 
 export function runCode(language) {
-  return interpreterPool.pop(language);
+  switch (language) {
+    case LARK:
+      return runLarkCode;
+    default:
+      return interpreterPool.pop(language);
+  }
 }
 
 export function runFile(language) {
@@ -49,11 +58,19 @@ export function runFile(language) {
   return options[language];
 }
 
+export function testCode(language) {
+  const options = {
+    [PYTHON]: pyTest,
+    [SCHEME]: scmTest,
+    [LARK]: larkTest,
+  };
+  return options[language];
+}
+
 export function Debugger(language) {
   const options = {
     [PYTHON]: PythonTutorDebug,
     [SCHEME]: SchemeDebugger,
-    [SQL]: SchemeDebugger, // temp!
   };
   return options[language];
 }
@@ -68,9 +85,10 @@ export function debugPrefix(language) {
 
 export function extension(language) {
   const extensions = {
-    PYTHON: ".py",
-    SCHEME: ".scm",
-    SQL: ".sql",
+    [PYTHON]: ".py",
+    [SCHEME]: ".scm",
+    [SQL]: ".sql",
+    [LARK]: ".lark",
   };
   return extensions[language];
 }
