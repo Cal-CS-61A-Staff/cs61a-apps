@@ -179,7 +179,8 @@ This syntax can be used anywhere to include newlines in a single-line element. T
 For short / long answer questions, you must provide exactly one input statement within that question.
 The `type` can be `SHORT_ANSWER`, `SHORT_CODE_ANSWER`, `LONG_ANSWER`, or `LONG_CODE_ANSWER`. `CODE`
 means that the font will be monospaced and tab will work to indent text typed in a `LONG_CODE_ANSWER`.
-For short answer questions, the `content` can optionally be a Javascript regular expression that matches valid inputs, though invalid inputs can still be saved by the user. For long answer questions, the `content`
+For short answer questions, the `content` can optionally be a Javascript regular expression that matches valid 
+inputs, though invalid inputs can still be saved by the user. For long answer questions, the `content`
 can optionally be an integer representing the number of lines provided in the input field before the user
 has to start scrolling. This also affects the height of the box in the generated PDF in a similar way.
 
