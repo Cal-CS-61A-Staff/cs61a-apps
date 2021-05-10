@@ -95,8 +95,10 @@ def connect_db(*, retries=3):
             output = db("SELECT * FROM animals")
     """
     if is_sphinx:
+
         def no_op(*args, **kwargs):
             return
+
         yield no_op
     else:
         for i in range(retries):

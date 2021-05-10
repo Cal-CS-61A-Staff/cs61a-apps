@@ -224,6 +224,7 @@ def print_to_stderr(print_function):
 
     :return: a function that writes the input to sys.stderr using the desired print function
     """
+
     def print(*s):
         print_function(*s, file=sys.stderr)
 
