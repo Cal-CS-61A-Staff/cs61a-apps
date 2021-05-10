@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as hljs from "highlight.js";
+import { LARK } from "../../common/languages";
 import { INPUT, ERROR } from "../../common/outputTypes.js";
 
 export default class StdoutElem extends React.PureComponent {
@@ -13,7 +14,7 @@ export default class StdoutElem extends React.PureComponent {
   }
 
   postRender() {
-    if (this.props.type === INPUT) {
+    if (this.props.type === INPUT && this.props.lang !== LARK) {
       hljs.highlightBlock(this.spanRef.current);
     } else if (this.props.type === ERROR) {
       this.spanRef.current.style.color = "palegreen";
