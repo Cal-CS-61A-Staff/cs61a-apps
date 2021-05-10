@@ -36,11 +36,10 @@ export default function Exam({ groups, publicGroup, watermark, ended }) {
 
   const examDivRef = useRef();
 
-  useEffect(() => postRenderFormat(examDivRef.current), [
-    examDivRef.current,
-    groups,
-    publicGroup,
-  ]);
+  useEffect(
+    () => postRenderFormat(examDivRef.current),
+    [examDivRef.current, groups, publicGroup]
+  );
 
   useStyleWatcher(
     examDivRef,

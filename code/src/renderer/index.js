@@ -92,8 +92,8 @@ if ("serviceWorker" in navigator) {
 }
 
 if (SCHEME_COMPILE) {
-  const interpreter = require("./../languages/scheme/web/IGNORE_needed.py")
-    .default;
+  const interpreter =
+    require("./../languages/scheme/web/IGNORE_needed.py").default;
   send(
     { type: COMPILE_PY_FILE, code: interpreter, handler: PYTHON },
     (output) => {

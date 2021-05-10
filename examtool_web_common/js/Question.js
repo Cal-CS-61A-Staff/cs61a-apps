@@ -25,14 +25,15 @@ const validationError = (question, val) => {
     return null;
   }
 
+  const wrappedRegex = `^(${question.options})$`;
+
   try {
     if (question.options && val && typeof val === "string") {
-      const match = val.match(question.options);
-      if (!match || match[0].length !== val.length) {
+      const match = val.match(wrappedRegex);
+      if (!match) {
         return (
           <>
-            Input does not match regular expression{" "}
-            <code>{question.options}</code>
+            Input does not match regular expression <code>{wrappedRegex}</code>
           </>
         );
       }
@@ -41,7 +42,7 @@ const validationError = (question, val) => {
   } catch (e) {
     return (
       <>
-        Internal error: regular expression <code>{question.options}</code> is
+        Internal error: regular expression <code>{wrappedRegex}</code> is
         invalid
       </>
     );
