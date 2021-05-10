@@ -72,6 +72,7 @@ def validates_master_secret(func):
 
     :return: wrapped function that will call validate_master_secret
     """
+
     @wraps(func)
     def wrapped(
         *,
@@ -99,7 +100,7 @@ def get_secret(app, is_staging, secret_name):
 
     :param app: app to get secret for
     :type app: str
-    
+
     :param is_staging: whether app is a staging app
     :type is_staging: bool
     :param secret_name: name of secret
@@ -134,7 +135,7 @@ def load_all_secrets(app, is_staging, created_app_name):
     :type created_app_name: str
 
     :return: dict of name and public value for all secrets of created_app_name
-    
+
     """
     if app != "buildserver" or is_staging:
         abort(403)  # only buildserver running in prod can view all secrets
