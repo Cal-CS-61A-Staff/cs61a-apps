@@ -14,6 +14,7 @@ from common.url_for import url_for
 
 class AccessRestriction(Enum):
     """Enumeration of access restrictions: all (0), staff (1), student (2)."""
+
     ALL = 0
     STAFF = 1
     STUDENT = 2
