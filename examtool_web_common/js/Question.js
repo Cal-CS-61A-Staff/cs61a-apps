@@ -17,6 +17,38 @@ import { logAnswer } from "./logger";
 import Points from "./Points";
 import post from "./post";
 
+const validationError = (question, val) => {
+  if (
+    question.type !== "short_answer" &&
+    question.type !== "short_code_answer"
+  ) {
+    return null;
+  }
+
+  const wrappedRegex = `^(${question.options})$`;
+
+  try {
+    if (question.options && val && typeof val === "string") {
+      const match = val.match(wrappedRegex);
+      if (!match) {
+        return (
+          <>
+            Input does not match regular expression <code>{wrappedRegex}</code>
+          </>
+        );
+      }
+    }
+    return null;
+  } catch (e) {
+    return (
+      <>
+        Internal error: regular expression <code>{wrappedRegex}</code> is
+        invalid
+      </>
+    );
+  }
+};
+
 export default function Question({ question, number }) {
   const examContext = useContext(ExamContext);
 
@@ -32,7 +64,11 @@ export default function Question({ question, number }) {
     if (!examContext.locked) {
       actuallySetValue(val);
       logAnswer(examContext.exam, question.id, val);
-      if (val[0] && val !== question.template) {
+      if (
+        val[0] &&
+        val !== question.template &&
+        !validationError(question, val)
+      ) {
         examContext.recordSolved(question.id);
       } else {
         examContext.recordUnsolved(question.id);
@@ -41,11 +77,7 @@ export default function Question({ question, number }) {
   };
 
   useEffect(() => {
-    if (defaultValue[0] && defaultValue !== question.template) {
-      examContext.recordSolved(question.id);
-    } else {
-      examContext.recordUnsolved(question.id);
-    }
+    setValue(defaultValue);
   }, []);
 
   useEffect(() => {
@@ -112,27 +144,30 @@ export default function Question({ question, number }) {
         ))}
       </div>
     );
-  } else if (question.type === "short_answer") {
+  } else if (
+    question.type === "short_answer" ||
+    question.type === "short_code_answer"
+  ) {
+    const validationMessage = validationError(question, value);
     contents = (
       <InputGroup className="mb-3">
         <FormControl
+          isInvalid={!!validationMessage}
+          style={
+            question.type === "short_code_answer"
+              ? { fontFamily: "monospace" }
+              : null
+          }
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
           }}
         />
-      </InputGroup>
-    );
-  } else if (question.type === "short_code_answer") {
-    contents = (
-      <InputGroup className="mb-3">
-        <FormControl
-          style={{ fontFamily: "monospace" }}
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-          }}
-        />
+        {validationMessage && (
+          <Form.Control.Feedback type="invalid">
+            {validationMessage}
+          </Form.Control.Feedback>
+        )}
       </InputGroup>
     );
   } else if (question.type === "long_answer") {

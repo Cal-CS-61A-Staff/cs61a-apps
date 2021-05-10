@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
@@ -17,11 +17,14 @@ import "ace-builds/src-noconflict/theme-merbivore_soft";
 import firebase from "firebase/app";
 import "firebase/database";
 import firepad from "firepad/dist/firepad.min";
+import { useDelayed } from "../utils/hooks";
 import { LARK, SCHEME } from "../../common/languages";
 import { randomString } from "../../common/misc";
 import glWrap from "../utils/glWrap.js";
 
 import "firepad/dist/firepad.css";
+
+const PureAceEditor = React.memo(AceEditor);
 
 function Editor({
   glContainer,
@@ -121,26 +124,33 @@ function Editor({
     }
   }, [language]);
 
-  const displayLanguage = language === LARK ? "CIRRU" : language;
+  // useDelayed() needed so ace can update the data for one render before updating the language
+  const displayLanguage = useDelayed(language === LARK ? "CIRRU" : language);
+  const displayMarkers = useMemo(() => markers, [JSON.stringify(markers)]);
+
+  const options = useMemo(
+    () => ({
+      enableBasicAutocompletion: enableAutocomplete,
+      enableLiveAutocompletion: enableAutocomplete,
+    }),
+    [enableAutocomplete]
+  );
 
   return ReactDOM.createPortal(
-    <AceEditor
+    <PureAceEditor
       mode={displayLanguage.toLowerCase()}
       theme="merbivore_soft"
       ref={editorRef}
       value={code}
-      onChange={(newValue) => onChange(newValue)}
+      onChange={onChange}
       name="editor-component"
       className={language === SCHEME ? "scheme-editor" : "editor"}
       width="100%"
       height="100%"
       fontSize={14}
       readOnly={debugData && debugData.code !== text}
-      setOptions={{
-        enableBasicAutocompletion: enableAutocomplete,
-        enableLiveAutocompletion: enableAutocomplete,
-      }}
-      markers={markers}
+      setOptions={options}
+      markers={displayMarkers}
       onCursorChange={handleCursorChange}
     />,
     glContainer.getElement().get(0)

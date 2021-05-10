@@ -1,8 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
-export default function useStyleWatcher(callback, deps) {
-  const ref = useRef();
-
+export default function useStyleWatcher(ref, callback, deps) {
   useEffect(() => {
     if (!ref.current) {
       return () => null;
@@ -14,6 +12,4 @@ export default function useStyleWatcher(callback, deps) {
     });
     return () => observer.disconnect();
   }, [ref.current, ...deps]);
-
-  return ref;
 }
