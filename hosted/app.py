@@ -146,6 +146,7 @@ def check_auth(func):
 
     :return: wrapper function that requests authentication as needed
     """
+
     @wraps(func)
     def wrapped(*args, **kwargs):
         if not (is_staff("cs61a") and is_admin(email=get_user()["email"])):
