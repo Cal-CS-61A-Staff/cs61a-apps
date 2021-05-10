@@ -36,6 +36,9 @@ class LineBuffer:
         line = self._pop()
         stripped = line.rstrip()
         while stripped.endswith("\\"):
+            if stripped.endswith(r"\\"):
+                line = stripped[:-1]
+                break
             line = stripped[:-1] + "\n" + self._pop()
             stripped = line.rstrip()
         return line
@@ -197,9 +200,9 @@ def parse_input_lines(lines):
                 "Multiple INPUT directives found for a {}".format(directive)
             )
         if directive == "SHORT_ANSWER":
-            return "short_answer", None, None
+            return "short_answer", rest.strip(), None
         elif directive == "SHORT_CODE_ANSWER":
-            return "short_code_answer", None, None
+            return "short_code_answer", rest.strip(), None
         try:
             num_lines = int(rest or "10")
         except TypeError:
