@@ -167,8 +167,7 @@ function examRecover(examScore, participation, maxExamScore, cap = 20) {
 }
 
 export function participationProvided(scores) {
-  const {
-    "Participation Credits (for midterm recovery)": Participation,
-  } = scores;
+  const { "Participation Credits (for midterm recovery)": Participation } =
+    scores;
   return !Number.isNaN(Participation);
 }
