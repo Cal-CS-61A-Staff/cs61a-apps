@@ -86,9 +86,10 @@ export default class LarkClient {
         const { success, error, repr } = await this.larkRun(input);
         if (success) {
           result.success = repr.trim() === output.trim();
-          result.raw = (result.success
-            ? [...caseCode, output]
-            : [...caseCode, "Expected:", output, "Received:", repr]
+          result.raw = (
+            result.success
+              ? [...caseCode, output]
+              : [...caseCode, "Expected:", output, "Received:", repr]
           ).join("\n");
         } else {
           result.success = false;

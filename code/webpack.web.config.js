@@ -30,7 +30,8 @@ module.exports = (env) => ({
     },
   },
   module: {
-    noParse: /monaco-editor\/min\/vs\/loader\.js|jquery\.jsPlumb-1\.3\.10-all-min\.js/,
+    noParse:
+      /monaco-editor\/min\/vs\/loader\.js|jquery\.jsPlumb-1\.3\.10-all-min\.js/,
     rules: [
       {
         test: /.jsx?$/,
