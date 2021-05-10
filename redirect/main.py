@@ -38,7 +38,7 @@ def catch_all(path):
 
     :param path: path to return to, doesn't have to exist
     :type path: string
-    
+
     :return: a string that represents the url to redirect to
     """
     hostname = request.headers["HOST"]
