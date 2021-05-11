@@ -54,4 +54,3 @@ def download(exam, emails_to_download: [str] = None, debug: bool = False):
         }
 
     return json.loads(exam_json), template_questions, email_to_data_map, total
-

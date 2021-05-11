@@ -17,6 +17,7 @@ from examtool.api.render_html_export import render_html_exam
 
 from PyPDF2 import PdfFileReader
 
+
 def _get_question_to_page_mapping_renderer(data):
     filename = "qtpm_temp.pdf"
     question_num, assembled_exam, tmpdirname, pages_dict = data

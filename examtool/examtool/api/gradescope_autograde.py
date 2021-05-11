@@ -616,8 +616,10 @@ class GradescopeGrader:
                 )
 
         if question_page_mapping is None:
-            question_page_mapping = examtool.api.question_mapping.get_question_to_page_mapping(
-                assembled_exam_template, num_threads=self.simultaneous_jobs
+            question_page_mapping = (
+                examtool.api.question_mapping.get_question_to_page_mapping(
+                    assembled_exam_template, num_threads=self.simultaneous_jobs
+                )
             )
             if len(question_page_mapping) != len(assembled_exam_template.questions):
                 print(
