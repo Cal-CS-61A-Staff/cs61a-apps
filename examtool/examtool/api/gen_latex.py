@@ -123,6 +123,10 @@ def render_latex(exam, subs=None, *, do_twice=False):
         r"\\immediate\\write18{wget -N \2}\n\\includegraphics\1{\3}",
         latex,
     )
+    latex = latex.replace(
+        r"\def\labelenumi{\arabic{enumi}.}",
+        r"\def\labelenumii{\arabic{enumii}.}",
+    )
     if subs:
         for k, v in subs.items():
             latex = latex.replace(f"<{k.upper()}>", v)
