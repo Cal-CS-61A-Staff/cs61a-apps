@@ -68,7 +68,26 @@ def render_html_exam(assembled_exam: AssembledExam):
                         assert False, f"Unknown question type {type(question)}"
 
                 with pre(className="autogradeOutput"):
-                    user_out(question.autograde_output)
+                    escaped_ag_output = escape(question.autograde_output)
+                    escaped_ag_output = escaped_ag_output.replace(
+                        "SUCCESS", "<span class='success'>SUCCESS</span>"
+                    )
+                    escaped_ag_output = escaped_ag_output.replace(
+                        "FAILED", "<span class='failed'>FAILED</span>"
+                    )
+                    escaped_ag_output = escaped_ag_output.replace(
+                        "DID NOT EXECUTE",
+                        "<span class='didnotexecute'>DID NOT EXECUTE</span>",
+                    )
+                    escaped_ag_output = escaped_ag_output.replace(
+                        "Matches solution.",
+                        "<span class='success'>Matches solution.</span>",
+                    )
+                    escaped_ag_output = escaped_ag_output.replace(
+                        "May not match solution.",
+                        "<span class='didnotexecute'>May not match solution.</span>",
+                    )
+                    out(escaped_ag_output)
 
     def export(target):
         pdfkit.from_string(

@@ -49,6 +49,8 @@ def create_shortlink_handler(app):
             "shareRef": raw["share_ref"],
         }
 
+        return data
+
         return render_template("index.html", initData={"loadFile": data})
 
     @app.route("/<path>/raw")

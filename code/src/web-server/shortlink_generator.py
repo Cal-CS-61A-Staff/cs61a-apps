@@ -68,7 +68,7 @@ def create_shortlink_generator(app):
                 )
             db(
                 f"INSERT INTO {db_name} VALUES (%s, %s, %s, %s)",
-                [link, file_name, file_content, share_ref],
+                [link, file_name, file_content.encode("utf-8"), share_ref],
             )
         return "code.cs61a.org/" + link
 

@@ -52,6 +52,29 @@ def download(
     Exams are downloaded as PDFs into a target folder - specify `out` to redirect the folder.
     An `OUTLINE.pdf` is also generated for Gradescope, as is a `summary.csv` for analytics or autograding.
     """
+
+    def dispatch(email, question):
+        global data
+
+        if question["type"] in ["select_all", "multiple_choice"]:
+            return
+
+        question = question["id"]
+
+        for template_name, template in templates.items():
+            if question in template:
+                if data is None:
+                    with open(f"{exam}_doctests.json") as f:
+                        data = load(f)
+
+                def grade(responses):
+                    if email is None:
+                        return next(iter(data.values()))[template_name]
+
+                    return data[email][template_name]
+
+                return grade
+
     out = out or "out/export/" + exam
     pathlib.Path(out).mkdir(parents=True, exist_ok=True)
 
@@ -73,7 +96,7 @@ def download(
         exam,
         name_question,
         sid_question,
-        dispatch=dispatch,
+        # dispatch=dispatch,
         substitute_in_question_text=with_substitutions,
     )
 
@@ -102,26 +125,6 @@ def download(
 
 
 data = None
-
-
-def dispatch(email, question):
-    global data
-
-    question = question["id"]
-
-    for template_name, template in templates.items():
-        if question in template:
-            if data is None:
-                with open("doctests.json") as f:
-                    data = load(f)
-
-            def grade(responses):
-                if email is None:
-                    return next(iter(data.values()))[template_name]
-
-                return data[email][template_name]
-
-            return grade
 
 
 if __name__ == "__main__":

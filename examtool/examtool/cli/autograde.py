@@ -1,4 +1,5 @@
 import io
+import random
 import signal
 import sys
 from collections import defaultdict
@@ -6,6 +7,8 @@ from contextlib import redirect_stdout
 from dataclasses import dataclass, replace
 from json import dump, dumps, load, loads
 from multiprocessing.pool import ThreadPool
+from os import urandom
+from random import randint, randrange
 from textwrap import indent
 from typing import Optional
 
@@ -117,7 +120,7 @@ def run(code, globs, *, is_scm=False, is_stmt=False, only_err=False, timeout=2):
 
 
 @click.command()
-def autograde(fetch=False, num_threads=1):
+def autograde(fetch=True, num_threads=1):
     from examtool.cli.DO_NOT_UPLOAD_FINAL_DOCTESTS import doctests, templates
 
     EXAM = "cs61a-sp21-final-regular"
@@ -173,6 +176,40 @@ def autograde(fetch=False, num_threads=1):
                     if value.endswith(":"):
                         value = value[:-1]
 
+                    if key in [
+                        "IDDJWBBKBVOXJFDZOXJRXOYFNGVCQVTL",
+                        "WOWQBXUAFPBQTAGRPFRCNUWUDEULSLKA",
+                        "SNQWEXTNYLCEAVSZELXGDUIMVYZDYARJ",
+                        "IBADPNGWKULHOOELPHOQJDEVWXQTBEUG",
+                        "KDVKLPFWMRZEDYUMGNDDJAHKQGMKBRNX",
+                        "FIKHGOUTZCVWZCOPRDKRMWXTWTCYBFAV",
+                    ]:
+                        value = value.removeprefix("return ")
+
+                    if key in [
+                        "UUZALBQMQRZPFJRMTUNTQJQWXRBKWDDA",
+                        "DZIKGHCCBIHDFBICFLMMERHLUPXRVMGS",
+                        "FSICNXZFGZBIQQZTHIIQUKCANRKDUPEG",
+                    ]:
+                        value = value.removeprefix("if ")
+
+                    if key in ["RZWVONEHLKCURGTNXPAGCLSMLKIQAPSQ"]:
+                        value = value.removeprefix("for ")
+
+                    if key in ["RTSIKWOYCJMTDPEOAWYTZRSJEOZHNWHM"]:
+                        value = value.removeprefix("yield ")
+
+                    if key in ["IWMTWSLDZXWWQECONOGQDJDSSEXGRDYQ"]:
+                        value = value.removeprefix("for ")
+                        value = value.removeprefix("k ")
+                        value = value.removeprefix("in ")
+
+                    if key in ["WAIZFSEOLDEUNJUJTXNYXJFVZMVOYKSS"]:
+                        value = value.removeprefix("if ")
+                        value = value.removeprefix("(if ")
+
+                    value = value.strip()
+
                     for level in range(0, 12, 4):
                         data["_" * level + key] = indent(value, " " * level)
 
@@ -204,10 +241,10 @@ def autograde(fetch=False, num_threads=1):
                     status = run(soln, globs, is_stmt=True, only_err=True)
                     tests = [replace(test) for test in doctests[template_name]]
 
-                if status is None:
-                    for i, test in enumerate(tests):
-                        test.stmt = sub(test.stmt)
-                        test.out = sub(test.out)
+                for i, test in enumerate(tests):
+                    test.stmt = sub(test.stmt)
+                    test.out = sub(test.out)
+                    if status is None:
                         if is_scm:
                             result = results[i]
                         else:
@@ -220,7 +257,7 @@ def autograde(fetch=False, num_threads=1):
                             test.result = f"SUCCESS: Got {result}"
                         test.result = test.result.replace("\n", r"\n")
 
-                        # print(status, tests)
+                    # print(status, tests)
 
                 if is_scm:
                     content = soln + sub(doctests[template_name])
@@ -237,25 +274,29 @@ def autograde(fetch=False, num_threads=1):
 
                     content = (
                         soln
+                        + "\n\n"
                         + f"""
-    def placeholder(): pass
-    placeholder.__doc__ = '''
-    {cases}
+def placeholder(): 
+    pass
+
+placeholder.__doc__ = '''
+{cases}
                 '''
-                """
+                """.lstrip()
                     )
 
                 url = "temp"
 
-                # url = create_code_shortlink(
-                #     name=f"{template_name}.{'scm' if is_scm else 'py'}",
-                #     contents=content,
-                #     staff_only=True,
-                #     _impersonate="examtool",
-                #     timeout=5,
-                # )
+                random.seed(urandom(32))
 
-                # print(url)
+                url = create_code_shortlink(
+                    name=f"{template_name}.{'scm' if is_scm else 'py'}",
+                    link=str(randrange(10 ** 9)),
+                    contents=content,
+                    staff_only=True,
+                    # _impersonate="examtool",
+                    timeout=5,
+                )
 
                 ag = (
                     url
@@ -301,5 +342,5 @@ def autograde(fetch=False, num_threads=1):
                 grade_student(email)
 
     finally:
-        with open(f"doctests.json", "w+") as f:
+        with open(f"{EXAM}_doctests.json", "w+") as f:
             dump(out, f)

@@ -32,3 +32,15 @@ pre {
     page-break-inside: avoid;
     break-inside: avoid;
 }
+
+.success {
+    background-color: greenyellow;
+}
+
+.failed {
+    background-color: red;
+}
+
+.didnotexecute {
+    background-color: yellow;
+}

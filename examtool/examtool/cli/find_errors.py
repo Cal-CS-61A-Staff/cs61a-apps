@@ -1,4 +1,7 @@
 import json
+import os
+
+os.environ["ENV"] = "SERVER"
 
 from examtool.api.database import get_exam, get_roster
 from examtool.api.extract_questions import extract_questions
@@ -10,11 +13,12 @@ warnings.filterwarnings(
     "ignore", "Your application has authenticated using end user credentials"
 )
 
-
 db = firestore.Client()
 exams = [x.id for x in db.collection("exams").stream()]
 
 for exam in exams:
+    if "sp21" not in exam:
+        continue
     print("checking", exam)
     exam_json = json.dumps(get_exam(exam=exam))
     roster = get_roster(exam=exam)
@@ -38,15 +42,14 @@ for exam in exams:
             for i, option in enumerate(question["options"]):
                 option["index"] = i
 
-            s = lambda options: sorted(options, key=lambda q: q["text"])
+            # s = lambda options: sorted(options, key=lambda q: q["text"])
+            s = lambda options: [q["text"] for q in options]
 
-            for a, b in zip(
-                s(question["options"]),
-                s(student_question_lookup[question["id"]]["options"]),
+            if sorted(s(question["options"])) != sorted(
+                s(student_question_lookup[question["id"]]["options"])
             ):
-                if a["index"] != b.get("index", a["index"]):
-                    flagged.add(question["id"])
-                    continue
+                flagged.add(question["id"])
+                continue
 
     if flagged:
         print(exam, flagged)
