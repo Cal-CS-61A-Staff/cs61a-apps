@@ -9,7 +9,7 @@ from multiprocessing.pool import ThreadPool
 import click
 from tqdm import tqdm
 
-from examtool.cli.DO_NOT_UPLOAD_MT2_DOCTESTS import templates
+from examtool.cli.DO_NOT_UPLOAD_FINAL_DOCTESTS import templates
 from examtool.api.render_html_export import render_html_exam
 from examtool.api.render_pdf_export import render_pdf_exam
 from examtool.cli.utils import exam_name_option, hidden_output_folder_option

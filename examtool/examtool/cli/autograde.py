@@ -20,6 +20,9 @@ from examtool.api.utils import rel_path
 sys.path.append(rel_path("../../../"))
 from common.rpc.code import create_code_shortlink
 
+sys.path.append("scheme")
+import scheme
+
 
 @dataclass
 class Test:
@@ -47,9 +50,10 @@ def parse_doctests(s: str):
             if not case:
                 continue
 
-            assert not line.startswith("..."), "multiline not supported"
-            assert not case.out, "multiline not supported"
-            case.out = line
+            if line.startswith("..."):
+                case.stmt += "\n" + line[4:]
+            else:
+                case.out += "\n" + line
 
     if case:
         out.append(case)
@@ -66,7 +70,7 @@ def indent_fixer(value):
     return value
 
 
-def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
+def run(code, globs, *, is_scm=False, is_stmt=False, only_err=False, timeout=2):
     did_timeout = False
 
     def timeout_handler(*_):
@@ -79,17 +83,24 @@ def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
 
     f = io.StringIO()
     with redirect_stdout(f):
+        signal.alarm(timeout)
         try:
-            signal.alarm(timeout)
-            if not is_stmt:
-                try:
-                    ret = eval(code, globs)
+            if is_scm:
+                buffer = scheme.Buffer(scheme.tokenize_lines(code.split("\n")))
+                while buffer.current():
+                    ret = scheme.scheme_eval(scheme.scheme_read(buffer), globs)
                     if ret is not None:
-                        print(repr(ret))
-                except SyntaxError:
-                    is_stmt = True
-            if is_stmt:
-                exec(code, globs)
+                        print(ret)
+            else:
+                if not is_stmt:
+                    try:
+                        ret = eval(code, globs)
+                        if ret is not None:
+                            print(repr(ret))
+                    except SyntaxError:
+                        is_stmt = True
+                if is_stmt:
+                    exec(code, globs)
         except Exception as e:
             print(e)
             err = str(e)
@@ -107,9 +118,9 @@ def run(code, globs, *, is_stmt=False, only_err=False, timeout=2):
 
 @click.command()
 def autograde(fetch=False, num_threads=1):
-    from examtool.cli.DO_NOT_UPLOAD_MT2_DOCTESTS import doctests, templates
+    from examtool.cli.DO_NOT_UPLOAD_FINAL_DOCTESTS import doctests, templates
 
-    EXAM = "cs61a-sp21-mt2-regular"
+    EXAM = "cs61a-sp21-final-regular"
 
     with open(f"{EXAM}_submissions.json", "w" if fetch else "r") as f:
         if fetch:
@@ -126,7 +137,6 @@ def autograde(fetch=False, num_threads=1):
 
         def grade_student(email):
             submission = submissions.get(email, {})
-            data = submission.copy()
             exam_copy = loads(dumps(exam))
             questions = {
                 q["id"]: q
@@ -134,14 +144,16 @@ def autograde(fetch=False, num_threads=1):
             }
             out[email] = {}
 
-            subs = {}
-
-            def sub(s):
-                for k, v in subs.items():
-                    s = s.replace(k, v)
-                return s
-
             for template_name, template in templates.items():
+                subs = {}
+
+                def sub(s):
+                    for k, v in subs.items():
+                        s = s.replace(k, v)
+                    return s
+
+                data = {}
+
                 for key, value in submission.items():
                     if key not in questions:
                         continue
@@ -153,24 +165,13 @@ def autograde(fetch=False, num_threads=1):
 
                     value = indent_fixer(value)
 
-                    if key == "MTHIHANUNUJGFKADFIKMETSNZCIBAYSG":
-                        if value.startswith("return max(") and value.endswith(")"):
-                            value = value[len("return max(") : -1]
+                    value = value.strip()
 
-                    if key == "QBRFSLWKPHSQQRGRIVJSKCGRDCZKXFDD":
-                        if not value.endswith(":"):
-                            value += ":"
+                    if value.startswith("`") and value.endswith("`"):
+                        value = value[1:-1]
 
-                    if key == "CQOORRXLPBRHSHZQJNLJOYJIWDRCNBVY":
-                        if not value.startswith("def"):
-                            # add missing signature
-                            value = f"def separate(separator, lnk):\n{indent(value, ' ' * 4)}"
-                    elif key == "XJPBFIMVDTTPAEVWJJDGRVGWQXAEMLGH":
-                        if not value.startswith("def"):
-                            # add missing signature
-                            value = f"def word_finder(letter_tree, words_list):\n{indent(value, ' ' * 4)}"
-                    else:
-                        value = value.strip()
+                    if value.endswith(":"):
+                        value = value[:-1]
 
                     for level in range(0, 12, 4):
                         data["_" * level + key] = indent(value, " " * level)
@@ -178,47 +179,83 @@ def autograde(fetch=False, num_threads=1):
                 soln = sub(template.format_map(defaultdict(str, **data)))
                 globs = {}
 
-                status = run(soln, globs, is_stmt=True, only_err=True)
+                is_scm = isinstance(doctests[template_name], str)
 
-                tests = [replace(test) for test in doctests[template_name]]
+                if isinstance(doctests[template_name], str):
+                    # scm
+                    globs = scheme.create_global_frame()
+                    status = run(soln, globs, is_stmt=True, only_err=True, is_scm=True)
+                    globs.define("__run_all_doctests", True)
+                    test_raw = run(sub(doctests[template_name]), globs, is_scm=True)
+                    test_split = [
+                        eval(x)
+                        for x in test_raw.strip().split("DOCTEST: ")
+                        if x.strip()
+                    ]
+                    tests = [
+                        Test(
+                            stmt=x["code"][0],
+                            out=x["expected"].replace("\n", r"\n"),
+                        )
+                        for x in test_split
+                    ]
+                    results = [x["raw"].replace("\n", r"\n") for x in test_split]
+                else:
+                    status = run(soln, globs, is_stmt=True, only_err=True)
+                    tests = [replace(test) for test in doctests[template_name]]
 
                 if status is None:
-                    for test in tests:
+                    for i, test in enumerate(tests):
                         test.stmt = sub(test.stmt)
                         test.out = sub(test.out)
-                        result = run(test.stmt, globs).strip()
+                        if is_scm:
+                            result = results[i]
+                        else:
+                            result = run(test.stmt, globs).strip()
                         if result != test.out.strip():
-                            test.result = f"FAILED: Expected {test.out}, got {result}"
+                            test.result = (
+                                f"FAILED: Expected {test.out.strip()}, got {result}"
+                            )
                         else:
                             test.result = f"SUCCESS: Got {result}"
                         test.result = test.result.replace("\n", r"\n")
 
                         # print(status, tests)
 
-                cases = "\n".join(
-                    f"# Case {i}\n>>> {test.stmt}"
-                    + (f"\n{test.out}" if test.out else "")
-                    for i, test in enumerate(tests)
-                )
+                if is_scm:
+                    content = soln + sub(doctests[template_name])
+                else:
 
-                content = (
-                    soln
-                    + f"""
-def placeholder(): pass
-placeholder.__doc__ = '''
-{cases}
-            '''
-            """
-                )
+                    def render(i, test):
+                        stmt_lines = test.stmt.strip().split("\n")
+                        stmt_disp = "\n... ".join(stmt_lines)
+                        return f"# Case {i}\n>>> {stmt_disp}" + (
+                            f"\n{test.out.strip()}" if test.out else ""
+                        )
 
-                url = create_code_shortlink(
-                    name=f"{template_name}.py",
-                    contents=content,
-                    staff_only=True,
-                    _impersonate="examtool",
-                )
+                    cases = "\n".join(render(i, test) for i, test in enumerate(tests))
 
-                print(url)
+                    content = (
+                        soln
+                        + f"""
+    def placeholder(): pass
+    placeholder.__doc__ = '''
+    {cases}
+                '''
+                """
+                    )
+
+                url = "temp"
+
+                # url = create_code_shortlink(
+                #     name=f"{template_name}.{'scm' if is_scm else 'py'}",
+                #     contents=content,
+                #     staff_only=True,
+                #     _impersonate="examtool",
+                #     timeout=5,
+                # )
+
+                # print(url)
 
                 ag = (
                     url
@@ -226,8 +263,8 @@ placeholder.__doc__ = '''
                     + (status or "No issues")
                     + "\n"
                     + "\n".join(
-                        ">>>"
-                        + test.stmt
+                        ">>> "
+                        + "\n... ".join(test.stmt.split("\n"))
                         + "\n"
                         + (
                             test.result
@@ -238,10 +275,17 @@ placeholder.__doc__ = '''
                     )
                 )
 
+                # print(ag)
+
                 out[email][template_name] = ag
                 # input("continue?")
 
         roster = get_roster(exam=EXAM)
+
+        # grade_student("aagulnick@berkeley.edu")
+        # grade_student("ekandell@berkeley.edu")
+        # grade_student("joshlor@berkeley.edu")
+        # return
 
         if num_threads > 1:
             with ThreadPool(num_threads) as p:
