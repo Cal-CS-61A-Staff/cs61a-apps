@@ -110,14 +110,15 @@ class OKResults extends React.Component {
         rawName: this.state.selectedProblem,
         raw: [""],
         success: true,
+        code: [],
       };
       for (const elem of this.props.data) {
         if (elem.name[0] === this.state.selectedProblem) {
           selectedProblemData.raw.push(elem.raw);
           selectedProblemData.success =
             selectedProblemData.success && elem.success;
+          selectedProblemData.code.push(...elem.code);
         }
-        selectedProblemData.code = elem.code;
       }
       selectedProblemData.raw = selectedProblemData.raw.join(
         `\n${"-".repeat(69)}\n`
@@ -140,6 +141,7 @@ class OKResults extends React.Component {
             <TestDetails
               active={this.state.active}
               data={this.state.selectedTest || selectedProblemData}
+              numTests={this.props.data.length}
               onDebug={this.props.onDebug}
             />,
             this.state.testDetails.getElement().get(0)

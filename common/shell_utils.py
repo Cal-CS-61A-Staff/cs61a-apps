@@ -18,6 +18,40 @@ def sh(
     cwd=None,
     inherit_env=True,
 ):
+    """Run a command on the command-line and optionally return output.
+
+    :param args: a variable number of arguments representing the command to
+        pass into :class:`~subprocess.Popen` or :func:`~subprocess.run`
+    :type args: *str
+
+    :param env: environment variables to set up the command environment with
+    :type env: dict
+
+    :param capture_output: a flag to return output from the command; uses
+        :class:`~subprocess.Popen`
+    :type capture_output: bool
+
+    :param stream_output: a flag to stream output from the command; uses
+        :func:`~subprocess.run`
+    :type stream_output: bool
+
+    :param quiet: a flag to run the command quietly; suppressed printed output
+    :type quiet: bool
+
+    :param shell: a flag to run the command in a full shell environment
+    :type shell: bool
+
+    :param cwd: the working directory to run the command in; current directory
+        is used if omitted
+    :type cwd: str
+
+    :param inherit_env: a flag to include :obj:`os.environ` in the environment;
+        ``True`` by default
+    :type inherit_env: bool
+
+    .. warning::
+        Only one of ``capture_output`` and ``stream_output`` can be ``True``.
+    """
     assert not (
         capture_output and stream_output
     ), "Cannot both capture and stream output"
@@ -47,8 +81,8 @@ def sh(
                 returncode = out.poll()
                 if returncode is not None:
                     if returncode != 0:
-                        # This exception will not be passed to the RPC handler, so we need
-                        # to handle it ourselves
+                        # This exception will not be passed to the RPC handler,
+                        # so we need to handle it ourselves
                         raise subprocess.CalledProcessError(returncode, args, "", "")
                     else:
                         return ""

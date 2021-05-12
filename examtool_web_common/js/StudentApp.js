@@ -1,7 +1,7 @@
 /* eslint-disable no-shadow */
 import React, { useEffect, useState } from "react";
 import { Col, Container, Form, Navbar, Row } from "react-bootstrap";
-import { inAdminMode } from "./auth";
+import { getAuthParams, inAdminMode } from "./auth";
 import EndModal from "./EndModal";
 import ErrorBoundary from "./ErrorBoundary";
 import Exam from "./Exam";
@@ -62,10 +62,12 @@ export default function StudentApp() {
 
   useEffect(() => {
     const go = async () => {
-      setExamList(await (await post("list_exams")).json());
+      setExamList(await (await post("list_exams", getAuthParams())).json());
     };
-    go();
-  }, []);
+    if (username) {
+      go();
+    }
+  }, [username]);
 
   const handleExamSelect = (e) => {
     setSelectedExam(e.target.value);

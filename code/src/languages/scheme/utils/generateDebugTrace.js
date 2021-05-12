@@ -8,17 +8,23 @@ export default async function generateDebugTrace(
   setup_code = "",
   working_directory = ""
 ) {
-  return {
-    success: true,
-    data: JSON.parse(
-      await sendNoInteract({
-        handler: SCHEME,
-        type: GEN_SCM_TRACE,
-        setup_code,
-        code,
-        working_directory,
-      })
-    ),
-  };
-  // TODO: Include failure condition!
+  try {
+    return {
+      success: true,
+      data: JSON.parse(
+        await sendNoInteract({
+          handler: SCHEME,
+          type: GEN_SCM_TRACE,
+          setup_code,
+          code,
+          working_directory,
+        })
+      ),
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: e.toString(),
+    };
+  }
 }

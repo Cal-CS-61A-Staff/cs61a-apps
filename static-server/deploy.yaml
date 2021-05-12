@@ -6,6 +6,7 @@ first_party_domains:
   - loom.cs61a.org
   - react.cs61a.org
   - wiki.cs61a.org
+  - docs.cs61a.org
   - cs170.org
 permissions:
   - rpc

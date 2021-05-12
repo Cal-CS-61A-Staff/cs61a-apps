@@ -1,14 +1,13 @@
 /* eslint-disable no-nested-ternary,react/no-array-index-key */
 // @flow strict
 
-import moment from "moment-timezone";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import * as React from "react";
 import FormControl from "react-bootstrap/FormControl";
 import { Link } from "react-router-dom";
-import { sectionInterval } from "./models";
+import { nextSessionStartTime, sectionInterval } from "./models";
 import type { Section } from "./models";
 import StateContext from "./StateContext";
 import Tags from "./Tags";
@@ -48,19 +47,9 @@ function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
 }
 
 export default function EnrolledSectionCard({ section }: Props) {
-  const [startTime, endTime] = useMemo(() => {
-    const start = moment.unix(section.startTime);
-    const end = moment.unix(section.endTime);
-    const curr = moment();
-    while (end < curr) {
-      start.add(7, "days");
-      end.add(7, "days");
-    }
-    return [start, end];
-  }, [section]);
-
-  const prevText = `The session started ${endTime.fromNow()}`;
-  const nextText = `The next session takes place ${startTime.fromNow()}.`;
+  const nextText = `The next session takes place ${nextSessionStartTime(
+    section
+  ).fromNow()}.`;
 
   const state = useContext(StateContext);
 
@@ -150,7 +139,7 @@ export default function EnrolledSectionCard({ section }: Props) {
           <p>
             You have enrolled in{" "}
             {section.staff == null ? "a" : `${section.staff.name}'s`} tutorial!{" "}
-            {startTime.isAfter(moment()) ? nextText : prevText}
+            {nextText}
           </p>
         )}
         <p>

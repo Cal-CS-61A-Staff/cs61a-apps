@@ -18,19 +18,48 @@ REDIRECT_KEY = "REDIRECT_KEY"
 
 
 def get_user():
+    """Get some information on the currently logged in user.
+
+    :return: a dictionary representing user data (see
+        `here <https://okpy.github.io/documentation/ok-api.html#users-view-a-specific-user>`_
+        for an example)
+    """
     g.user_data = g.get("user_data") or current_app.remote.get("user")
     return g.user_data.data["data"]
 
 
 def is_logged_in():
+    """Get whether the current user is logged into the current session.
+
+    :return: ``True`` if the user is logged in, ``False`` otherwise
+    """
     return "access_token" in session
 
 
 def is_staff(course):
+    """Get whether the current user is enrolled as staff, instructor, or grader
+    for ``course``.
+
+    :param course: the course code to check
+    :type course: str
+
+    :return: ``True`` if the user is on staff, ``False`` otherwise
+    """
     return is_enrolled(course, roles=AUTHORIZED_ROLES)
 
 
 def is_enrolled(course, *, roles=None):
+    """Check whether the current user is enrolled as any of the ``roles`` for
+    ``course``.
+
+    :param course: the course code to check
+    :type course: str
+
+    :param roles: the roles to check for the user
+    :type roles: list-like
+
+    :return: ``True`` if the user is any of ``roles``, ``False`` otherwise
+    """
     try:
         endpoint = get_endpoint(course=course)
         for participation in get_user()["participations"]:
@@ -47,6 +76,12 @@ def is_enrolled(course, *, roles=None):
 
 
 def login():
+    """Store the current URL as the redirect target on success, then redirect
+    to the login endpoint for the current app.
+
+    :return: a :func:`~flask.redirect` to the login endpoint for the current
+      :class:`~flask.Flask` app.
+    """
     session[REDIRECT_KEY] = urlparse(request.url)._replace(netloc=get_host()).geturl()
     return redirect(url_for("login"))
 
@@ -58,6 +93,29 @@ def create_oauth_client(
     success_callback=None,
     return_response=None,
 ):
+    """Add Okpy OAuth for ``consumer_key`` to the current ``app``.
+
+    Specifically, adds an endpoint ``/oauth/login`` that redirects to the Okpy
+    login process, ``/oauth/authorized`` that receives the successful result
+    of authentication, ``/api/user`` that acts as a test endpoint, and a
+    :meth:`~flask_oauthlib.client.OAuthRemoteApp.tokengetter`.
+
+    :param app: the app to add OAuth endpoints to
+    :type app: ~flask.Flask
+
+    :param consumer_key: the OAuth client consumer key
+    :type consumer_key: str
+
+    :param secret_key: the OAuth client secret, inferred using
+        :func:`~common.rpc.secrets.get_secret` if omitted
+    :type secret_key: str
+
+    :param success_callback: an optional function to call upon login
+    :type success_callback: func
+
+    :param return_response: an optional function to send the OAuth response to
+    :type return_response: func
+    """
     oauth = OAuth(app)
 
     if os.getenv("ENV") == "prod":
@@ -89,7 +147,7 @@ def create_oauth_client(
     )
 
     def check_req(uri, headers, body):
-        """ Add access_token to the URL Request. """
+        """Add access_token to the URL Request."""
         if "access_token" not in uri and session.get("access_token"):
             params = {"access_token": session.get("access_token")[0]}
             url_parts = list(urllib.parse.urlparse(uri))

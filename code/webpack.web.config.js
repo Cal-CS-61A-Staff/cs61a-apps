@@ -30,7 +30,8 @@ module.exports = (env) => ({
     },
   },
   module: {
-    noParse: /monaco-editor\/min\/vs\/loader\.js|jquery\.jsPlumb-1\.3\.10-all-min\.js/,
+    noParse:
+      /monaco-editor\/min\/vs\/loader\.js|jquery\.jsPlumb-1\.3\.10-all-min\.js/,
     rules: [
       {
         test: /.jsx?$/,
@@ -79,11 +80,7 @@ module.exports = (env) => ({
       ELECTRON: false,
       SCHEME_COMPILE: (env && env.SCHEME_COMPILE) || false,
       __static: JSON.stringify("/static"),
-      VERSION: '"2.3.3"',
-    }),
-    new MonacoWebpackPlugin({
-      output: "./static",
-      languages: ["python", "scheme", "sql"],
+      VERSION: '"2.6.2"',
     }),
     new webpack.ProvidePlugin({
       $: "jquery",
