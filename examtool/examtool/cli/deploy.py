@@ -62,7 +62,7 @@ def deploy(exam, json, roster, start_time, enable_clarifications):
     set_exam(exam=exam, json=exam_content)
     roster = list(roster)
     if not verify_roster(roster=roster):
-        return
+        exit(1)
     roster = roster[1:]  # ditch headers
     set_roster(exam=exam, roster=roster)
 
