@@ -96,7 +96,7 @@ def download(
         exam,
         name_question,
         sid_question,
-        # dispatch=dispatch,
+        dispatch=dispatch,
         substitute_in_question_text=with_substitutions,
     )
 

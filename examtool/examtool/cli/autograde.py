@@ -123,7 +123,7 @@ def run(code, globs, *, is_scm=False, is_stmt=False, only_err=False, timeout=2):
 def autograde(fetch=True, num_threads=1):
     from examtool.cli.DO_NOT_UPLOAD_FINAL_DOCTESTS import doctests, templates
 
-    EXAM = "cs61a-sp21-final-regular"
+    EXAM = "cs61a-sp21-final-alt-3"
 
     with open(f"{EXAM}_submissions.json", "w" if fetch else "r") as f:
         if fetch:
@@ -294,7 +294,7 @@ placeholder.__doc__ = '''
                     link=str(randrange(10 ** 9)),
                     contents=content,
                     staff_only=True,
-                    # _impersonate="examtool",
+                    _impersonate="examtool",
                     timeout=5,
                 )
 
