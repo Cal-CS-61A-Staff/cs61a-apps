@@ -28,4 +28,4 @@ def substitutions(exam, email, show_all):
     for question in questions:
         substitutions = question_substitutions[question["id"]]
         if substitutions or show_all:
-            print(get_name(question), substitutions)
+            print(get_name(question), question["id"], substitutions)

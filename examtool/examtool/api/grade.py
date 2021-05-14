@@ -7,6 +7,7 @@ def grade(email, question, responses, dispatch=None):
         if dispatch(email, question):
             return dispatch(email, question)(responses)
     response = responses.get(question["id"])
+
     if "solution" not in question:
         return "Instant autograder unavailable."
 

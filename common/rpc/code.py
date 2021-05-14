@@ -1,6 +1,6 @@
 from common.rpc.utils import create_service, requires_master_secret
 
-service = create_service(__name__, "code")
+service = create_service(__name__, "code", providers=["http://127.0.0.1:5000"])
 
 
 @requires_master_secret

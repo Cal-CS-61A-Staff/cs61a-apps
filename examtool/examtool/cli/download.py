@@ -1,3 +1,6 @@
+from json import load
+
+import click
 import csv
 import os
 import pathlib
@@ -6,6 +9,7 @@ from multiprocessing.pool import ThreadPool
 import click
 from tqdm import tqdm
 
+from examtool.cli.DO_NOT_UPLOAD_FINAL_DOCTESTS import templates
 from examtool.api.render_html_export import render_html_exam
 from examtool.api.render_pdf_export import render_pdf_exam
 from examtool.cli.utils import exam_name_option, hidden_output_folder_option
@@ -48,6 +52,29 @@ def download(
     Exams are downloaded as PDFs into a target folder - specify `out` to redirect the folder.
     An `OUTLINE.pdf` is also generated for Gradescope, as is a `summary.csv` for analytics or autograding.
     """
+
+    def dispatch(email, question):
+        global data
+
+        if question["type"] in ["select_all", "multiple_choice"]:
+            return
+
+        question = question["id"]
+
+        for template_name, template in templates.items():
+            if question in template:
+                if data is None:
+                    with open(f"{exam}_doctests.json") as f:
+                        data = load(f)
+
+                def grade(responses):
+                    if email is None:
+                        return next(iter(data.values()))[template_name]
+
+                    return data[email][template_name]
+
+                return grade
+
     out = out or "out/export/" + exam
     pathlib.Path(out).mkdir(parents=True, exist_ok=True)
 
@@ -69,6 +96,7 @@ def download(
         exam,
         name_question,
         sid_question,
+        dispatch=dispatch,
         substitute_in_question_text=with_substitutions,
     )
 
@@ -94,6 +122,9 @@ def download(
                 unit="Exam",
             )
         )
+
+
+data = None
 
 
 if __name__ == "__main__":
