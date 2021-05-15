@@ -10,6 +10,15 @@ from oh_queue.models import AppointmentSignup
 
 
 def send_appointment_reminder(signup: AppointmentSignup):
+    """
+    Sends an appointment reminder in the form of an email to the user who signed up.
+    The email has a set title and subject. The body is filled in with information
+    specific to the appointment, but otherwise follows a template. The email is
+    sent to the User who just signed up for the appointment.
+
+    :param signup: The object associated with the OH appointment
+    :type signup: AppointmentSignup
+    """
     appointment = signup.appointment
     user = signup.user
 

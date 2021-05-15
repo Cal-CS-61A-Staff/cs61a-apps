@@ -16,6 +16,13 @@ oauth = OAuth()
 
 @auth.record
 def record_params(setup_state):
+    """
+    Records the parameters required for for the authentication according to a given
+    setup state.
+
+    :param setup_state: The setup state containing the app for authentication
+    :type setup_state: dict
+    """
     app = setup_state.app
     server_url = app.config.get("OK_SERVER_URL")
     auth.ok_auth = oauth.remote_app(
@@ -41,22 +48,57 @@ login_manager = LoginManager()
 
 @login_manager.user_loader
 def load_user(user_id):
+    """
+    Loads the user by querying the User database using the given User ID and
+    {meth}`common.get_course`.
+
+    :param user_id: The ID for the user being loaded
+    :type int:
+
+    :return: The User with the given ID and associated course OR None if no
+    match is found.
+    """
     return User.query.filter_by(id=user_id, course=get_course()).one_or_none()
 
 
 @login_manager.unauthorized_handler
 def unauthorized():
+    """
+    Handles an unauthorized access to the OH queue.
+
+    :return: A redirect to the login page.
+    """
     session["after_login"] = request.url
     return redirect(url_for("auth.login"))
 
 
 def authorize_user(user):
+    """
+    Logs the given user into the OH queue.
+
+    :param user: The User trying to log in
+    :type user: User
+
+    :return: A redirect to the index.
+    """
     login_user(user, remember=True)
     return redirect(url_for("index"))
 
 
 def user_from_email(name, email, is_staff):
-    """Get a User with the given email, or create one."""
+    """
+    Get a User with the given email, or create one.
+
+    :param name: The name of the User to be fetched
+    :type name: str
+    :param email: The email of the User to be fetched
+    :type email: str
+    :param is_staff: If the User to be fetched is staff or not
+    :type is_staff: bool
+
+    :return: The User with the given email if found in the User database, or a newly
+    created User with the given email if not.
+    """
     from common.course_config import get_course
 
     user = User.query.filter_by(email=email, course=get_course()).one_or_none()
@@ -73,12 +115,23 @@ def user_from_email(name, email, is_staff):
 
 @auth.route("/login/", strict_slashes=False)
 def login():
+    """
+    Authorizes the current user then redirects to the OH queue.
+
+    :return: A redirect to the index.
+    """
     callback = url_for(".authorized", _external=True)
     return auth.ok_auth.authorize(callback=callback)
 
 
 @auth.route("/assist/", strict_slashes=False)
 def try_login():
+    """
+    Authorizes the current user if the user has not been authenticated yet,
+    then redirects to the OH queue.
+
+    :return: A redirect to the index.
+    """
     if current_user.is_authenticated:
         return redirect(url_for("index"))
     callback = url_for(".authorized", _external=True)
@@ -87,6 +140,14 @@ def try_login():
 
 @auth.route("/login/authorized", strict_slashes=False)
 def authorized():
+    """
+    Authorizes the current user if possible by checking for any authentication
+    errors, including: OAuth, Invalid Ok Response, OAuthException, and
+    registration Status.
+
+    :return: A redirect to the appropriate link, which may be the OH queue or
+    some page indicating the error that occured.
+    """
     from common.course_config import get_endpoint
 
     message = request.args.get("error")
@@ -141,6 +202,11 @@ def authorized():
 
 @auth.route("/logout/", strict_slashes=False)
 def logout():
+    """
+    Logs the user out of the OH queue.
+
+    :return: A redirect to the index (just logged out).
+    """
     logout_user()
     session.pop("access_token", None)
     return redirect(url_for("index"))
@@ -148,6 +214,11 @@ def logout():
 
 @auth.route("/testing-login/", strict_slashes=False)
 def testing_login():
+    """
+    Tests a login. Throws a 404 error if not in debug mode.
+
+    :return: A rendered version of a simple login interface.
+    """
     if not auth.debug:
         abort(404)
     callback = url_for(".testing_authorized")
@@ -156,6 +227,11 @@ def testing_login():
 
 @auth.route("/testing-login/authorized", methods=["POST"], strict_slashes=False)
 def testing_authorized():
+    """
+    Tests an authorized login. Throws a 404 error if not in debug mode.
+
+    :return: A redirect to the index upon successful authentication.
+    """
     if not auth.debug:
         abort(404)
     form = request.form
@@ -165,5 +241,8 @@ def testing_authorized():
 
 
 def init_app(app):
+    """
+    Initializes the login manager.
+    """
     app.register_blueprint(auth)
     login_manager.init_app(app)
