@@ -3,7 +3,7 @@
 
 ## Main
 
-This file compares Hog strategies. 
+This file compares Hog strategies and outputs strategy win rates. 
 
 ```{eval-rst}
 .. automodule:: docs.hog_calc.main
