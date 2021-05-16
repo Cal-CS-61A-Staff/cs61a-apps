@@ -1,11 +1,8 @@
-# App Name
+# `hog-calc`
 
-A brief description of what the app is meant to do.
+This contains methods used to compare strategies for Hog. 
 
 ## Setup
 
-Include some steps to tell people how to develop this app locally.
-
-## Other Sections
-
-Include details that could help people develop or use the app.
+Install dependencies outlined in `requirements.txt`. Run `python main.py` to 
+start comparing strategies. 
