@@ -3,7 +3,7 @@
 
 ## Main
 
-This file contains...
+This file compares Hog strategies. 
 
 ```{eval-rst}
 .. automodule:: docs.hog_calc.main
@@ -12,7 +12,7 @@ This file contains...
 
 ## Process Input
 
-This file contains...
+This file contains methods for validating and recording Hog strategies.
 
 ```{eval-rst}
 .. automodule:: docs.hog_calc.process_input
@@ -21,7 +21,7 @@ This file contains...
 
 ## Runner
 
-This file contains...
+This file contains methods for matching and scoring two given Hog strategies.
 
 ```{eval-rst}
 .. automodule:: docs.hog_calc.runner
