@@ -1,11 +1,11 @@
-# Slack
+# App Name
 
-Slackbot for the 61A staff Slack. Handles things like Piazza post links, PR links, go/ links, PR LGTMs, staff emojis, among other conveniences.
+These files help integrate Slack functions.
 
 ## Setup
 
-All packages are detailed in requirements.txt. 
+There are many .py files each of which supports a different slack integration.
 
 ## Other Sections
 
-WIP. Include details that could help people develop or use the app.
+If wanting to add or modify a new integration, refer to an existing .py file or create a new one.

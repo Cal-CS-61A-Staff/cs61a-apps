@@ -17,6 +17,15 @@ class EmojiIntegration(Integration):
 
 
 def get_name(id, token):
+        """Will retrieve the name of interest based on corresponding id.
+
+    :param id: index of id for a name
+    :type id: int
+    :param token:
+    :type token: 
+
+    :return: Returned the name from the dictionary of cached names based on the id index value.
+    """
     if id in cached_names:
         return cached_names[id]
 

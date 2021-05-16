@@ -128,7 +128,7 @@ Description
 
 ## Staff
 
-Description
+File of staff members, for emoji reference.
 
 ```{eval-rst}
 .. automodule:: slack.staff
@@ -141,5 +141,9 @@ Description
 
 ```{eval-rst}
 .. automodule:: slack.utils
+## Code Segment 1
+
+```{eval-rst}
+.. automodule:: slack.emoji_integration.py
     :members:
 ```
