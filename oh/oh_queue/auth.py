@@ -15,7 +15,7 @@ oauth = OAuth()
 
 
 @auth.record
-def record_params(setup_state):
+def record_params(setup_state: dict):
     """
     Records the parameters required for for the authentication according to a given
     setup state.
@@ -243,6 +243,9 @@ def testing_authorized():
 def init_app(app):
     """
     Initializes the login manager.
+
+    :param app: Flask app instance.
+    :type app: Flask
     """
     app.register_blueprint(auth)
     login_manager.init_app(app)

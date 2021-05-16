@@ -16,7 +16,17 @@ from oh_queue.models import (
 
 
 def make_send(course):
+    """Create a send method for the given course.
+
+    :param course: the course to post a slack message to.
+    :type course: TODO
+    """
     def send(message):
+        """Send a slack message.
+        
+        :param message: the message to send
+        :type message: TODO
+        """
         post_slack_message(
             course=course, message=message, purpose="oh-queue", noreply=True
         )
@@ -25,6 +35,8 @@ def make_send(course):
 
 
 def worker(app):
+    """TODO
+    """
     with app.app_context():
         course_notif_states: List[
             CourseNotificationState

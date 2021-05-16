@@ -46,6 +46,13 @@ from common.url_for import url_for
 
 
 def user_json(user):
+    """Jsonifies the user and returns it.
+
+    :param user: User to jsonify
+    :type user: TODO
+
+    :return: JSON dictionary of user info
+    """
     return {
         "id": user.id,
         "email": user.email,
@@ -58,7 +65,15 @@ def user_json(user):
 
 
 def student_json(user):
-    """ Only send student information to staff. """
+    """Jsonify student user info if the current user is authorized.
+
+    This method will only send student information to staff 
+    and the student themselves. 
+
+    :param user: User to jsonify
+    :type user: TODO
+
+    :return: JSON dictionary of user info if authorized, else None"""
     can_see_details = current_user.is_authenticated and (
         current_user.is_staff or user.id == current_user.id
     )
@@ -68,6 +83,13 @@ def student_json(user):
 
 
 def message_json(message: ChatMessage):
+    """Jsonify a ChatMessage.
+
+    :param message: message to Jsonify
+    :type message: ChatMessage
+
+    :return: JSON dictionary of chat message.
+    """
     return {
         "user": user_json(message.user),
         "body": message.body,
@@ -76,6 +98,13 @@ def message_json(message: ChatMessage):
 
 
 def ticket_json(ticket):
+    """Jsonify a ticket.
+
+    :param ticket: ticket to Jsonify
+    :type ticket: TODO
+    
+    :return: JSON dictionary of ticket.
+    """
     group = ticket.group
     return {
         "id": ticket.id,
@@ -101,10 +130,24 @@ def ticket_json(ticket):
 
 
 def assignment_json(assignment):
+    """Jsonify an asignment.
+
+    :param assignment: assignment to Jsonify
+    :type assignment: TODO
+
+    :return: JSON dictionary of assignment
+    """
     return {"id": assignment.id, "name": assignment.name, "visible": assignment.visible}
 
 
 def location_json(location):
+    """Jsonify a location.
+
+    :param location: location to Jsonify
+    :type location: TODO
+
+    :return: JSON dictionary of location
+    """
     return {
         "id": location.id,
         "name": location.name,
@@ -115,6 +158,12 @@ def location_json(location):
 
 
 def get_online_location():
+    """Query the database for an online location, creating one if needed.
+   
+    TODO Verify
+
+    :return: the online location
+    """
     online_location = Location.query.filter_by(
         course=get_course(), name="Online"
     ).one_or_none()
@@ -141,6 +190,10 @@ def get_online_location():
 
 
 def config_json():
+    """Get all public configurations for the current course.
+
+    :return: JSON dictionary of public configurations for this course.
+    """
     config = {}
     for config_entry in ConfigEntry.query.filter_by(course=get_course()).all():
         if config_entry.public:
@@ -150,6 +203,13 @@ def config_json():
 
 
 def appointments_json(appointment: Appointment):
+    """Jsonify appointment.
+
+    :param appointment: the appointment to Jsonify
+    :type appointment: Appointment
+
+    :return: JSON dictionary of the appointment info.
+    """
     return {
         "id": appointment.id,
         "start_time": appointment.start_time.isoformat(),
@@ -165,6 +225,13 @@ def appointments_json(appointment: Appointment):
 
 
 def signup_json(signup: AppointmentSignup):
+    """Jsonify an appointment signup
+
+    :param signup: the appointment signup
+    :type signup: AppointmentSignup
+
+    :return: JSON dictionary of the appointment signup.
+    """
     return {
         "id": signup.id,
         "assignment_id": signup.assignment_id,
@@ -176,6 +243,13 @@ def signup_json(signup: AppointmentSignup):
 
 
 def group_json(group: Group):
+    """Jsonify a group
+
+    :param group: the group to jsonify
+    :type group: Group
+
+    :return: JSON dictionary of the group info.
+    """
     return {
         "id": group.id,
         "created": group.created.isoformat(),
@@ -197,6 +271,13 @@ def group_json(group: Group):
 
 
 def group_attendance_json(attendance: GroupAttendance):
+    """Jsonify group attendance
+
+    :param attendance: group attendance
+    :type attendance: GroupAttendance
+
+    :return: JSON dictionary of the attendance.
+    """
     return {
         "id": attendance.id,
         "group_id": attendance.group_id,
@@ -206,10 +287,24 @@ def group_attendance_json(attendance: GroupAttendance):
 
 
 def add_response(event, payload):
+    """Adds a response to flask's global response buffer.
+
+    :param event: event type
+    :type event: str
+    :param payload: response json
+    :type payload: dict
+    """
     g.response_buffer.append([event, payload])
 
 
 def emit_event(ticket, event_type):
+    """Emit an event for the given ticket and commit it to the database.
+
+    :param ticket: ticket
+    :type ticket: TODO
+    :param event_type: event type
+    :type event_type: TODO
+    """
     ticket_event = TicketEvent(
         event_type=event_type, ticket=ticket, user=current_user, course=get_course()
     )
@@ -219,6 +314,15 @@ def emit_event(ticket, event_type):
 
 
 def emit_appointment_event(appointment, event_type):
+    """Emit an appointment event. 
+
+    Does NOT yet log to the database. Implementation to come.
+
+    :param appointment: appointment
+    :type appointment: Appointment
+    :param event_type: event type
+    :type event_type: TODO
+    """
     # TODO: log to db
     add_response(
         "appointment_event",
