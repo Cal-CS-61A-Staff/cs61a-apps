@@ -84,7 +84,7 @@ Integration for other staff members to approve pull requests (lgtm).
 
 ## Piazza Integration
 
-Integration for Piazza post shortlinks (@postnumber).
+Integration for Piazza post shortlinks (@post).
 
 ```{eval-rst}
 .. automodule:: slack.piazza_integration
