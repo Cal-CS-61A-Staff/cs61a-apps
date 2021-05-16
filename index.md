@@ -49,6 +49,7 @@ cats/index
 61A Code <code/index>
 docs/index
 grade-display/index
+hog-calc/index
 hosted/index
 howamidoing/index
 
