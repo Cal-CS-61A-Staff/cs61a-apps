@@ -10,13 +10,11 @@ def make_strat_str(strat_0, strat_1):
     separating each num_roll of dice by a newline.
 
     :param strat_0: the first inputted strategy
-    :type param1: list of lists
-    :param param2: the second inputted strategy
-    :type param2: list of lists
+    :type strat_0: list
+    :param strat_1: the second inputted strategy
+    :type strat_1: list
 
-    :return: a string representing the number of dice rolls for each of the
-    possible score values for both strategies, with each number separated by
-    a newline
+    :return: a string with number of dice rolls per score value per strategy 
     """
     out = []
     for strat in [strat_0, strat_1]:
@@ -27,6 +25,17 @@ def make_strat_str(strat_0, strat_1):
 
 
 def match(strat_0, strat_1, *, use_contest=True):
+    """Plays a match between two strategies. 
+
+    :param strat_0: the first inputted strategy 
+    :type strat_0: list
+    :param strat_1: the second inputted strategy 
+    :type strat_1: list
+    :param use_contest: determines whether bacon or bacon_proj is used 
+    :type use_contest: bool
+
+    :return: the float result of a match between two strategies 
+    """
     p = subprocess.Popen(
         ["./bacon" if use_contest else "./bacon_proj"],
         stdin=subprocess.PIPE,
@@ -41,6 +50,18 @@ def match(strat_0, strat_1, *, use_contest=True):
 
 
 def score(strat_0, strat_1, *, use_contest=True):
+    """
+    Determine the score between a match between the two strategies. 
+
+    :param strat_0: the first inputted strategy 
+    :type strat_0: list
+    :param strat_1: the second inputted strategy 
+    :type strat_1: list
+    :param use_contest: determines whether bacon or bacon_proj is used 
+    :type use_contest: bool
+
+    :return: the average float score of a match between two strategies
+    """
     return (
         1
         + match(strat_0, strat_1, use_contest=use_contest)
