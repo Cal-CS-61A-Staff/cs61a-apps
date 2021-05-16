@@ -25,7 +25,7 @@ def make_strat_str(strat_0, strat_1):
 
 
 def match(strat_0, strat_1, *, use_contest=True):
-    """Plays a match between two strategies. 
+    """Plays a match between two strategies.
 
     :param strat_0: the first inputted strategy 
     :type strat_0: list
@@ -51,7 +51,7 @@ def match(strat_0, strat_1, *, use_contest=True):
 
 def score(strat_0, strat_1, *, use_contest=True):
     """
-    Determine the score between a match between the two strategies. 
+    Determine the score of a matchup between the two strategies.
 
     :param strat_0: the first inputted strategy 
     :type strat_0: list
@@ -60,7 +60,7 @@ def score(strat_0, strat_1, *, use_contest=True):
     :param use_contest: determines whether bacon or bacon_proj is used 
     :type use_contest: bool
 
-    :return: the average float score of a match between two strategies
+    :return: the float score of matching up two strategies
     """
     return (
         1

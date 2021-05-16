@@ -16,8 +16,7 @@ def validate_strat(received_strat):
     :param received_strat: the strategy that was submitted by a student
     :type received_strat: dict
 
-    :return: a list of lists representing the number of dice that the
-    strategy would attempt to roll for each possible score situation.
+    :return: list of lists with the strategy's number of rolls for given scores
     """
     extracted_strat = []
     for i in range(GOAL_SCORE):
