@@ -119,7 +119,7 @@ Manages Slack permissions for staff members, depending on their role (TA, Tutor,
 
 ## Slack Client
 
-Description
+Creates the Slack client.
 
 ```{eval-rst}
 .. automodule:: slack.slack_client
@@ -137,7 +137,7 @@ File of staff members, for emoji reference.
 
 ## Utils
 
-Description
+Contains utilities for the other files to use.
 
 ```{eval-rst}
 .. automodule:: slack.utils
