@@ -3,16 +3,16 @@
 
 ## API Client
 
-Description
+Description, WIP
 
 ```{eval-rst}
 .. automodule:: slack.api_client
     :members:
 ```
 
-## PR Link Integration
+## Apps PR Link Integration
 
-Description
+Integration for pull request shortlinks, specifically for 61a apps (apps/).
 
 ```{eval-rst}
 .. automodule:: slack.apps_prlink_integration
@@ -21,7 +21,7 @@ Description
 
 ## Build Integration
 
-Description
+Integration for creating builds.
 
 ```{eval-rst}
 .. automodule:: slack.build_integration
@@ -30,7 +30,7 @@ Description
 
 ## Config Client
 
-Description
+Description, WIP
 
 ```{eval-rst}
 .. automodule:: slack.config_client
@@ -39,7 +39,7 @@ Description
 
 ## Emoji Integration
 
-Description
+Integration for staff member emojis, seen when a staffer's name is mentioned in a message.
 
 ```{eval-rst}
 .. automodule:: slack.emoji_integration
@@ -48,7 +48,7 @@ Description
 
 ## Go Links Integration
 
-Description
+Integration for go.cs61a.org shortlinks (go/).
 
 ```{eval-rst}
 .. automodule:: slack.golink_integration
@@ -57,7 +57,7 @@ Description
 
 ## Integration
 
-Description
+Description, WIP
 
 ```{eval-rst}
 .. automodule:: slack.integration
@@ -66,7 +66,7 @@ Description
 
 ## Issue Integration
 
-Description
+Integration for Github issue shortlinks (is/).
 
 ```{eval-rst}
 .. automodule:: slack.issue_integration
@@ -75,7 +75,7 @@ Description
 
 ## LGTM Integration
 
-Description
+Integration for other staff members to approve pull requests (lgtm).
 
 ```{eval-rst}
 .. automodule:: slack.lgtm_integration
@@ -84,7 +84,7 @@ Description
 
 ## Piazza Integration
 
-Description
+Integration for Piazza post shortlinks (@postnumber).
 
 ```{eval-rst}
 .. automodule:: slack.piazza_integration
@@ -93,7 +93,7 @@ Description
 
 ## PR Link Integration
 
-Description
+Integration for pull request shortlinks (pr/).
 
 ```{eval-rst}
 .. automodule:: slack.prlink_integration
@@ -101,7 +101,7 @@ Description
 ```
 ## Promotions
 
-Description
+Description, WIP
 
 ```{eval-rst}
 .. automodule:: slack.promotions
@@ -110,7 +110,7 @@ Description
 
 ## Security
 
-Description
+Manages Slack permissions for staff members, depending on their role (TA, Tutor, AI).
 
 ```{eval-rst}
 .. automodule:: slack.security
