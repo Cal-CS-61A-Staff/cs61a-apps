@@ -133,7 +133,9 @@ def assemble_exam(
                 prompt=question_text,
                 autograde_output=autograde_output,
                 response=response.get(question["id"], "").replace("\t", " " * 4),
-                height=question.get("options") or 1,
+                height=question.get("options") or 1
+                if question["type"].startswith("long")
+                else 1,
             )
 
         questions.append(assembled_question)
