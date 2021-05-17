@@ -18,9 +18,14 @@ from examtool.api.gradescope_upload import APIClient
 @click.option(
     "--password", prompt=True, hide_input=True, help="Your Gradescope account password."
 )
+@click.option(
+    "--keep-grades/--overwrite-grades",
+    help="Whether reuploaded PDFs should keep the student's existing grades, or reset them.",
+    default=False,
+)
 @exam_name_option
 @hidden_target_folder_option
-def gradescope_upload(course, assignment, email, password, exam, target):
+def gradescope_upload(course, assignment, email, password, exam, target, keep_grades):
     """
     Upload exported exam PDFs to Gradescope.
     Gradescope assignment URLs look like
@@ -47,7 +52,11 @@ def gradescope_upload(course, assignment, email, password, exam, target):
         student_email = file_name[:-4]
         # print("Uploading:", file_name)
         client.upload_submission(
-            course, assignment, student_email, os.path.join(target, file_name)
+            course,
+            assignment,
+            student_email,
+            os.path.join(target, file_name),
+            replace=keep_grades,
         )
 
 
