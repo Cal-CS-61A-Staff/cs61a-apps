@@ -18,42 +18,42 @@
 
 ### Initialization
 ```{eval-rst}
-.. automodule:: oh.__init__
+.. automodule:: oh.oh_queue.__init__
     :members:
 ```
 
 ### Assets
 ```{eval-rst}
-.. automodule:: oh.assets
+.. automodule:: oh.oh_queue.assets
     :members:
 ```
 
 ### Authorization
 ```{eval-rst}
-.. automodule:: oh.auth
+.. automodule:: oh.oh_queue.auth
     :members:
 ```
 
 ### Models
 ```{eval-rst}
-.. automodule:: oh.models
+.. automodule:: oh.oh_queue.models
     :members:
 ```
 
 ### Reminders
 ```{eval-rst}
-.. automodule:: oh.reminders
+.. automodule:: oh.oh_queue.reminders
     :members:
 ```
 
 ### Slack
 ```{eval-rst}
-.. automodule:: oh.slack
+.. automodule:: oh.oh_queue.slack
     :members:
 ```
 
 ### Views
 ```{eval-rst}
-.. automodule:: oh.views
+.. automodule:: oh.oh_queue.views
     :members:
 ```

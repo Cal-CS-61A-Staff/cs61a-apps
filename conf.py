@@ -87,6 +87,16 @@ autodoc_mock_imports = [
     "flask",
     "flask_oauthlib",
     "werkzeug",
+    "flask_compress",
+    "alembic",
+    "names",
+    "flask_debugtoolbar",
+    "flask_migrate",
+    "flask_script",
+    "oh_queue",
+    "flask_login",
+    "ics",
+    "flask_sqlalchemy"
 ]
 
 # Use the following structure to shorten URL targets.
