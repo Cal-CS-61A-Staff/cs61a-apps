@@ -89,7 +89,7 @@ def create_ed_client(app):
     # noinspection PyUnusedLocal `staff` exists only for API backwards compatibility
     @ed_course_id.bind(app)
     @key_secure
-    def course_id(course, staff=False, test=False, is_test=False):
+    def course_id_ed(course, staff=False, test=False, is_test=False):
         is_test = test or is_test  # test exists for backwards compatibility only
         with connect_db() as db:
             if is_test:
