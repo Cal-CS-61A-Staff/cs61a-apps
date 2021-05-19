@@ -54,7 +54,7 @@ def create_ed_client(app):
 
     @perform_ed_action.bind(app)
     @key_secure
-    def perform_action(action, course, as_staff=False, is_test=None, kwargs=None):
+    def perform_action_ed(action, course, as_staff=False, is_test=None, kwargs=None):
         with connect_db() as db:
             if as_staff:
                 user, pw = db(
