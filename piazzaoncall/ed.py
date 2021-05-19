@@ -52,4 +52,4 @@ class EdNetwork(Network):
                 yield self.get_post(cid=cid)
 
 
-network = PiazzaNetwork("cs61a", True, False)
+network = EdNetwork("cs61a", True, False)

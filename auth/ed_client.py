@@ -52,27 +52,6 @@ def create_ed_client(app):
 
     app.help_info.add(ed_help)
 
-    # noinspection PyPep8Naming
-    @app.route("/ed/<action>", methods=["POST"])
-    def perform_action_DEPRECATED_DO_NOT_USE(action):
-        kwargs = dict(request.json)
-        del kwargs["client_name"]
-        is_test = kwargs.pop("test", False)
-        as_staff = kwargs.pop("staff")
-        secret = kwargs.pop("secret")
-        course = kwargs.pop("course", None)
-        kwargs.pop("test", None)
-        return jsonify(
-            perform_action(
-                secret=secret,
-                course=course,
-                action=action,
-                as_staff=as_staff,
-                is_test=is_test,
-                kwargs=kwargs,
-            )
-        )
-
     @perform_ed_action.bind(app)
     @key_secure
     def perform_action(action, course, as_staff=False, is_test=None, kwargs=None):
