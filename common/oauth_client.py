@@ -147,7 +147,7 @@ def create_oauth_client(
     )
 
     def check_req(uri, headers, body):
-        """ Add access_token to the URL Request. """
+        """Add access_token to the URL Request."""
         if "access_token" not in uri and session.get("access_token"):
             params = {"access_token": session.get("access_token")[0]}
             url_parts = list(urllib.parse.urlparse(uri))

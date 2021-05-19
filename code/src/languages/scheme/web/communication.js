@@ -19,7 +19,12 @@ export default async function receive(arg) {
     });
     // eslint-disable-next-line no-eval
     const parsed = (0, eval)(`(${ret})`);
-    sendAndExit(arg.key, JSON.stringify(parsed));
+    if (parsed.error) {
+      err(arg.key, parsed.error);
+      exit(arg.key);
+    } else {
+      sendAndExit(arg.key, JSON.stringify(parsed));
+    }
   } else if (arg.type === FORMAT) {
     const ret = await $.post("./api/scm_format", { code: arg.code });
     if (ret.success) {

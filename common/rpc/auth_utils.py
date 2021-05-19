@@ -40,7 +40,7 @@ class OKException(Exception):
 
 
 class OAuthException(OKException):
-    """ OAuth related exception """
+    """OAuth related exception"""
 
     def __init__(self, error="", error_description=""):
         super().__init__()
@@ -49,7 +49,7 @@ class OAuthException(OKException):
 
 
 def _pick_free_port(hostname=REDIRECT_HOST, port=0):
-    """ Try to bind a port. Default=0 selects a free port. """
+    """Try to bind a port. Default=0 selects a free port."""
     import socket
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,7 +109,7 @@ def _make_refresh_post(server, refresh_token):
 
 
 def _get_code(no_browser):
-    """ Make the requests to get OK access code """
+    """Make the requests to get OK access code"""
 
     host_name = REDIRECT_HOST
     try:
@@ -203,10 +203,10 @@ def _get_code(no_browser):
 
 
 class OAuthSession:
-    """ Represents OK OAuth state """
+    """Represents OK OAuth state"""
 
     def __init__(self, access_token="", refresh_token="", expires_at=-1, session=None):
-        """ Create OK OAuth state with given tokens, and expiration """
+        """Create OK OAuth state with given tokens, and expiration"""
         self.session = self.refresh_token = self.access_token = None
         self.expires_at = -1
         self.assignment = None
@@ -227,7 +227,7 @@ class OAuthSession:
             self.expires_at = expires_at
 
     def _dump(self):
-        """ Dump state to a Bacon session """
+        """Dump state to a Bacon session"""
         if self.session is not None:
             config = self.session.config()
             if self.access_token:
@@ -240,7 +240,7 @@ class OAuthSession:
                 config["ok_last_download_assignment"] = self.assignment
 
     def refresh(self):
-        """ Refreshes a token """
+        """Refreshes a token"""
         if not self.refresh_token:
             return False
         cur_time = int(time.time())
