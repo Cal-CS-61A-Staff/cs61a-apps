@@ -57,6 +57,8 @@ howamidoing/index
 
 oh/index
 
+shortlinks/index
+
 Piazza OnCall <piazzaoncall/index>
 SICP <sicp/index>
 ```
