@@ -95,9 +95,9 @@ export function sectionTitle(section: ?Section): React.MixedElement {
   );
 }
 
-export function nextSessionStartTime(section: Section) {
+export function nextSessionStartTime(section: Section, dayOffset: number = 0) {
   const time = moment.unix(section.startTime).tz(TZ);
-  while (time.isBefore(moment())) {
+  while (time.isBefore(moment().add(dayOffset, "days"))) {
     time.add(7, "days");
   }
   return time.local();

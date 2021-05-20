@@ -21,4 +21,6 @@ COPY . ./
 
 RUN pip install -r requirements.txt
 
+ENV BUILDTOOL_CACHE_DIRECTORY /save/.cache
+
 CMD python main.py

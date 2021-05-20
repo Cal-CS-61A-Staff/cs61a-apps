@@ -20,6 +20,8 @@ AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
 
 DEV = os.getenv("ENV") != "prod"
 
+IS_SPHINX = "sphinx" in sys.argv[0]
+
 
 with connect_db() as db:
     db(
@@ -45,7 +47,7 @@ with connect_db() as db:
        lastUpdated TIMESTAMP)"""
     )
 
-if DEV:
+if DEV and not IS_SPHINX:
     with connect_db() as db:
         with open("./public/config/dummy_grade_data.csv") as grades:
             set_grades(grades.read(), "cs61a", db)
@@ -53,6 +55,14 @@ if DEV:
 
 
 def last_updated():
+    """Finds the timestamp of when the current database was last updated
+     for this course.
+
+     Uses a database query function yielded by :func:`common.db.connect_db`
+     and the course code returned by :func:`common.course_config.get_course`
+
+    :return: Timestamp or ``Unknown`` (string) if any exceptions occur while fetching from the current database
+    """
     try:
         with connect_db() as db:
             return db(
@@ -208,6 +218,13 @@ def create_client(app):
 
 
 def print_to_stderr(print_function):
+    """Writes to sys.stderr using the desired print function.
+
+    :param print_function: a print function
+
+    :return: a function that writes the input to sys.stderr using the desired print function
+    """
+
     def print(*s):
         print_function(*s, file=sys.stderr)
 
