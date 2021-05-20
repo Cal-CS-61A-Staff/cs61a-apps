@@ -98,12 +98,12 @@ Partner Matcher
 -------------------------------------------------------
 - |Rahul|
 - |Vanshaj|
-- Documented by Matthew Guo (`@Funplings <https://github.com/Funplings`__)
+- Documented by Matthew Guo (`@Funplings <https://github.com/Funplings>`__)
 
 Paste
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Emma Yokota (`@emmayokota <https://github.com/emmayokota>`__)
 
 Piazza OnCall
 -------------------------------------------------------
