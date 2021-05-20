@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
+    "sphinxcontrib.openapi",
     "myst_parser",
 ]
 
@@ -86,7 +87,11 @@ autodoc_mock_imports = [
     "sqlalchemy",
     "flask",
     "flask_oauthlib",
+    "flask_sqlalchemy",
     "werkzeug",
+    "models",
+    "utils",
+    "google",
     "setup_functions",
     "process_input",
     "runner",

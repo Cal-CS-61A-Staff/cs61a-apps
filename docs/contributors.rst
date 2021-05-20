@@ -8,7 +8,7 @@ apps!
 Autograder
 -------------------------------------------------------
 - |Vanshaj|
-- Documented by |TBD|
+- Documented by |Vanshaj|
 
 61A Auth
 -------------------------------------------------------

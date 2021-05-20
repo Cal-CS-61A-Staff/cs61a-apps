@@ -10,6 +10,19 @@ from utils import SCORE_ENDPOINT, SUBM_ENDPOINT
 
 
 def job_transition(*, at: Union[str, List[str]], to: str):
+    """Decorates a function by making sure that the relevant job transitions
+    to a logically forward state when the function is called. This prevents
+    exploiting job statuses, as it prevents the function from running if the
+    job is in an invalid state.
+
+    :param at: the statuses the job must be in in order for the decorated
+        function to run
+    :type at: str, list[str]
+    :param to: the status the job will be set to once the decorated function
+        runs
+    :type to: str
+    """
+
     def decorator(func):
         @wraps(func)
         def handler(*, job_id, **kwargs):
@@ -34,6 +47,14 @@ def job_transition(*, at: Union[str, List[str]], to: str):
 
 
 def create_worker_endpoints(app):
+    """Creates various RPC endpoints to interface with the worker. See the
+    following:
+
+    - :func:`~common.rpc.ag_master.get_submission`
+    - :func:`~common.rpc.ag_master.handle_output`
+    - :func:`~common.rpc.ag_master.set_failure`
+    """
+
     @get_submission.bind(app)
     @job_transition(at="queued", to="started")
     def get_submission_rpc(job):
@@ -71,8 +92,14 @@ def create_worker_endpoints(app):
 
 
 def extract_scores(transcript):
-    """Return a list of (key, score) pairs from a transcript, raising
-    ValueErrors."""
+    """Extract scores of different types from a grading job's output, starting
+    from the bottom of the output
+
+    :param transcript: the grading output
+    :type transcript: str
+
+    :return: a list of (key, score) pairs
+    """
 
     score_lines = []
     found_score = False
@@ -96,6 +123,14 @@ def extract_scores(transcript):
 
 
 def parse_scores(output):
+    """Parse a grading job's output for scores or errors
+
+    :param output: the grading job's output
+    :type output: str
+
+    :return: a list of score dictionaries of the form
+        ``{score: float, kind: str, message: str}``
+    """
     all_scores = []
     try:
         scores = extract_scores(output)

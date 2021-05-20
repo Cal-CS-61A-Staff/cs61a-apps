@@ -1,4 +1,4 @@
-# EECS Grade Display Tool
+# Howamidoing
 
 Howamidoing is a tool that displays and forecasts grades for lower-div EECS 
 classes at UC Berkeley.
