@@ -2,7 +2,7 @@
 ```{include} README.md
 ```
 
-## App
+## Code Documentation
 
 This file contains the Python portion of the app.
 

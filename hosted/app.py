@@ -1,4 +1,4 @@
-import os
+import os, sys
 from dna import DNA
 from flask import Flask
 from functools import wraps
@@ -8,8 +8,6 @@ from common.rpc.hosted import (
     delete,
     list_apps,
     new,
-    run,
-    stop,
     service_log,
     container_log,
 )
@@ -30,17 +28,20 @@ CERTBOT_ARGS = [
     "180",
 ]
 
+is_sphinx = "sphinx" in sys.argv[0]
+
 app = Flask(__name__)
-dna = DNA(
-    "hosted",
-    cb_args=CERTBOT_ARGS,
-)
 
-if not os.path.exists("data"):
-    os.makedirs("data")
+if not is_sphinx:
+    dna = DNA(
+        "hosted",
+        cb_args=CERTBOT_ARGS,
+    )
 
-if not os.path.exists("data/saves"):
-    os.makedirs("data/saves")
+    if not os.path.exists("data/saves"):
+        os.makedirs("data/saves")
+
+    sh("chmod", "666", f"{os.getcwd()}/dna.sock")
 
 
 @list_apps.bind(app)
@@ -156,13 +157,14 @@ def check_auth(func):
     return wrapped
 
 
-create_oauth_client(app, "hosted-apps")
+if not is_sphinx:
+    create_oauth_client(app, "hosted-apps")
 
-dna_api = dna.create_api_client(precheck=check_auth)
-app.register_blueprint(dna_api, url_prefix="/dna")
+    dna_api = dna.create_api_client(precheck=check_auth)
+    app.register_blueprint(dna_api, url_prefix="/dna")
 
-dna_logs = dna.create_logs_client(precheck=check_auth)
-app.register_blueprint(dna_logs, url_prefix="/logs")
+    dna_logs = dna.create_logs_client(precheck=check_auth)
+    app.register_blueprint(dna_logs, url_prefix="/logs")
 
 # PR Proxy Setup
 from dna.utils import Certbot
@@ -172,8 +174,13 @@ from common.rpc.hosted import create_pr_subdomain
 proxy_cb = Certbot(CERTBOT_ARGS + ["-i", "nginx"])
 pr_confs = f"{os.getcwd()}/data/pr_proxy"
 
-if not os.path.exists(pr_confs):
-    os.makedirs(pr_confs)
+if not is_sphinx:
+    if not os.path.exists(pr_confs):
+        os.makedirs(pr_confs)
+
+    if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
+        with open(f"/etc/nginx/conf.d/hosted_pr_proxy.conf", "w") as f:
+            f.write(f"include {pr_confs}/*.conf;")
 
 
 @create_pr_subdomain.bind(app)
@@ -222,10 +229,4 @@ def create_pr_subdomain(app, pr_number, pr_host):
 
 
 if __name__ == "__main__":
-    # these two blurbs were moved here to allow docs to compile
-    sh("chmod", "666", f"{os.getcwd()}/dna.sock")
-
-    if not os.path.exists(f"/etc/nginx/conf.d/hosted_pr_proxy.conf"):
-        with open(f"/etc/nginx/conf.d/hosted_pr_proxy.conf", "w") as f:
-            f.write(f"include {pr_confs}/*.conf;")
     app.run(host="0.0.0.0")
