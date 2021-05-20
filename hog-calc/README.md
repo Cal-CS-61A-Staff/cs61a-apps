@@ -2,7 +2,7 @@
 
 This contains methods used to compare strategies for Hog. 
 
-## Setup
+## Running Locally
 
 Create a venv and install dependencies.
 
