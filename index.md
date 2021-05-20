@@ -55,8 +55,8 @@ cats/index
 61A Code <code/index>
 docs/index
 grade-display/index
-howamidoing/index
 hosted/index
+howamidoing/index
 
 oh/index
 
