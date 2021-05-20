@@ -76,7 +76,7 @@ Hog Contest
 Hosted Apps (DNA)
 -------------------------------------------------------
 - |Vanshaj|
-- Documented by |TBD|
+- Documented by Cyrus Bugwadia (`@cbugwadia32 <https://github.com/cbugwadia32>`__)
 
 Howamidoing
 -------------------------------------------------------
