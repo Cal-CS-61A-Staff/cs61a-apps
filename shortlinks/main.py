@@ -13,6 +13,8 @@ from common.url_for import url_for
 
 
 class AccessRestriction(Enum):
+    """Enumeration of access restrictions: all (0), staff (1), student (2)."""
+
     ALL = 0
     STAFF = 1
     STUDENT = 2
@@ -40,6 +42,15 @@ with connect_db() as db:
 
 
 def add_url_params(url, params_string):
+    """Takes in a URL and a string of parameters, and adds the parameters to the URL.
+
+    :param url: URL to add parameters to
+    :type url: str
+    :param params_string: string of parameters to add
+    :type params_string: str
+
+    :return: URL with parameters string added
+    """
     parse_result = list(urlparse.urlsplit(url))
     parse_result[3] = "&".join(filter(lambda s: s, [parse_result[3], params_string]))
     return urlparse.urlunsplit(tuple(parse_result))
@@ -55,6 +66,11 @@ create_oauth_client(app, "61a-shortlinks")
 
 
 def lookup(path):
+    """Looks up a path in the database.
+
+    :param path: path to look up
+    :return: result of lookup, or ``(None, None, None)`` upon failure.
+    """
     with connect_db() as db:
         target = db(
             "SELECT url, creator, secure FROM shortlinks WHERE shortlink=%s AND course=%s",
@@ -67,6 +83,12 @@ def lookup(path):
 
 
 def is_authorized(secure: AccessRestriction):
+    """Returns authorization status based on the given access restriction.
+
+    :param secure: access restriction
+    :type secure: AccessRestriction
+    :return: authorization status (``True`` or ``False``)
+    """
     if secure == AccessRestriction.ALL:
         return True
     elif secure == AccessRestriction.STAFF:

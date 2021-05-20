@@ -97,7 +97,11 @@ def connect_db(*, retries=3):
     if is_sphinx:
 
         def no_op(*args, **kwargs):
-            return
+            class NoOp:
+                fetchone = lambda *args: None
+                fetchall = lambda *args: None
+
+            return NoOp()
 
         yield no_op
     else:

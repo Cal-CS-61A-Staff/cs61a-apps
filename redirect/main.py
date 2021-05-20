@@ -16,6 +16,13 @@ LOOKUP = {
 
 
 def lookup(hostname):
+    """Gets the URL to redirect to based on a hostname.
+
+    :param hostname: redirect link to check
+    :type hostname: string
+
+    :return: a string that represents the url to redirect to
+    """
     if hostname in LOOKUP:
         return LOOKUP[hostname]
     prefix = hostname.split(".")[0]
@@ -27,6 +34,13 @@ def lookup(hostname):
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def catch_all(path):
+    """Gets the URL to redirect to based on a path if it exists.
+
+    :param path: path to return to, doesn't have to exist
+    :type path: string
+
+    :return: a string that represents the url to redirect to
+    """
     hostname = request.headers["HOST"]
     if path:
         return redirect(f"{lookup(hostname)}/{path}")
