@@ -87,7 +87,7 @@ Howamidoing
 Logs
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Emma Yokota (`@emmayokota <https://github.com/emmayokota>`__)
 
 Office Hours Queue
 -------------------------------------------------------
