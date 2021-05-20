@@ -1,6 +1,6 @@
-# App Name
+# website
 
-A brief description of what the app is meant to do.
+This hosts the website locally.
 
 ## Setup
 
