@@ -59,10 +59,13 @@ def create_shortlink_generator(app):
         )
         return save_file(file_name, file_content, share_ref, staff_only)
 
-    def save_file(file_name, file_content, share_ref, staff_only):
+    def save_file(file_name, file_content, share_ref, staff_only, link=None):
         db_name = "studentLinks" if staff_only else "staffLinks"
         with connect_db() as db:
-            link = "".join(random.sample(words, 1)[0].strip().title() for _ in range(3))
+            if not link:
+                link = "".join(
+                    random.sample(words, 1)[0].strip().title() for _ in range(3)
+                )
             db(
                 f"INSERT INTO {db_name} VALUES (%s, %s, %s, %s)",
                 [link, file_name, file_content, share_ref],
@@ -82,8 +85,10 @@ def create_shortlink_generator(app):
 
     @create_code_shortlink.bind(app)
     @only("examtool")
-    def create_code_shortlink_impl(name: str, contents: str, staff_only: bool = True):
-        return save_file(name, contents, None, staff_only)
+    def create_code_shortlink_impl(
+        name: str, contents: str, staff_only: bool = True, link: str = None
+    ):
+        return save_file(name, contents, None, staff_only, link)
 
 
 def setup_shortlink_generator():

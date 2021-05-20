@@ -120,8 +120,8 @@ def assemble_exam(
                 selected=(
                     [
                         option
-                        for option in available_options
-                        if option.text in selected_options
+                        for i, option in enumerate(available_options)
+                        if student_options[i] in selected_options
                     ]
                 ),
                 autograde_output=autograde_output,
@@ -133,7 +133,9 @@ def assemble_exam(
                 prompt=question_text,
                 autograde_output=autograde_output,
                 response=response.get(question["id"], "").replace("\t", " " * 4),
-                height=question.get("options") or 1,
+                height=question.get("options") or 1
+                if question["type"].startswith("long")
+                else 1,
             )
 
         questions.append(assembled_question)
