@@ -14,7 +14,7 @@ def make_strat_str(strat_0, strat_1):
     :param strat_1: the second inputted strategy
     :type strat_1: list
 
-    :return: a string with number of dice rolls per score value per strategy 
+    :return: a string with number of dice rolls per score value per strategy
     """
     out = []
     for strat in [strat_0, strat_1]:
@@ -27,14 +27,14 @@ def make_strat_str(strat_0, strat_1):
 def match(strat_0, strat_1, *, use_contest=True):
     """Plays a match between two strategies.
 
-    :param strat_0: the first inputted strategy 
+    :param strat_0: the first inputted strategy
     :type strat_0: list
-    :param strat_1: the second inputted strategy 
+    :param strat_1: the second inputted strategy
     :type strat_1: list
-    :param use_contest: determines whether bacon or bacon_proj is used 
+    :param use_contest: determines whether bacon or bacon_proj is used
     :type use_contest: bool
 
-    :return: the float result of a match between two strategies 
+    :return: the float result of a match between two strategies
     """
     p = subprocess.Popen(
         ["./bacon" if use_contest else "./bacon_proj"],
@@ -53,11 +53,11 @@ def score(strat_0, strat_1, *, use_contest=True):
     """
     Determine the score of a matchup between the two strategies.
 
-    :param strat_0: the first inputted strategy 
+    :param strat_0: the first inputted strategy
     :type strat_0: list
-    :param strat_1: the second inputted strategy 
+    :param strat_1: the second inputted strategy
     :type strat_1: list
-    :param use_contest: determines whether bacon or bacon_proj is used 
+    :param use_contest: determines whether bacon or bacon_proj is used
     :type use_contest: bool
 
     :return: the float score of matching up two strategies

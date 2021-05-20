@@ -66,7 +66,8 @@ Grade Display
 Hog Calculator
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Jamie Hong (`@curiousdragon <https://github.com/curiousdragon>`__)
+  and George Gikas (`@GCGikas <https://github.com/GCGikas>`__)
 
 Hog Contest
 -------------------------------------------------------
