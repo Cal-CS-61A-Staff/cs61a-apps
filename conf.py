@@ -87,6 +87,7 @@ autodoc_mock_imports = [
     "flask",
     "flask_oauthlib",
     "werkzeug",
+    "runner",
     "dna",
     "networkx",
     "pandas",
