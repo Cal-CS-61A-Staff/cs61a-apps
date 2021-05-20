@@ -20,6 +20,27 @@ class AccessRestriction(Enum):
     STUDENT = 2
 
 
+with connect_db() as db:
+    db(
+        """CREATE TABLE IF NOT EXISTS shortlinks (
+    shortlink varchar(512),
+    url varchar(512),
+    creator varchar(512),
+    secure int,
+    course varchar(128)
+)"""
+    )
+
+    db(
+        """CREATE TABLE IF NOT EXISTS sources (
+    url varchar(512),
+    sheet varchar(256),
+    secure int,
+    course varchar(128)
+)"""
+    )
+
+
 def add_url_params(url, params_string):
     """Takes in a URL and a string of parameters, and adds the parameters to the URL.
 
@@ -216,24 +237,4 @@ def refresh():
 
 
 if __name__ == "__main__":
-    # hacky workaround for documentation
-    with connect_db() as db:
-        db(
-            """CREATE TABLE IF NOT EXISTS shortlinks (
-        shortlink varchar(512),
-        url varchar(512),
-        creator varchar(512),
-        secure int,
-        course varchar(128)
-    )"""
-        )
-
-        db(
-            """CREATE TABLE IF NOT EXISTS sources (
-        url varchar(512),
-        sheet varchar(256),
-        secure int,
-        course varchar(128)
-    )"""
-        )
     app.run(debug=True)

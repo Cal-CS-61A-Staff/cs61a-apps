@@ -2,7 +2,7 @@
 ```{include} README.md
 ```
 
-## Main
+## Code Documentation
 
 ```{eval-rst}
 .. automodule:: shortlinks.main
