@@ -1,16 +1,9 @@
 ```{include} README.md
 ```
 
-## Main
+## Code Documentation
 
 ```{eval-rst}
 .. automodule:: domains.main
-    :members:
-```
-
-## Register New Domain
-
-```{eval-rst}
-.. automodule:: domains.register_new_domain
     :members:
 ```
