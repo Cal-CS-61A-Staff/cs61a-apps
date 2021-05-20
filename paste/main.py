@@ -73,7 +73,7 @@ def load_raw(name):
 
 
 def load(name, skip_auth=False):
-    """Loads the paste text for given user
+    """Loads the paste text for given name
 
     :param name: name associated with the paste text
     :type name: str
@@ -116,8 +116,8 @@ def paste_text(app, is_staging, data: str, name: str = None, is_private: bool = 
 
 
 def paste_worker(data: str, name: str = None, is_private: bool = False):
-    """Creates and saves a new entry in the pastes table representing the given paste data.
-    If name is not provided, generates a random character as name.
+    """Creates and saves a new entry in the pastes table representing the given
+    paste data. If name is not provided, generates a random string as name.
 
     :param data: the paste text
     :type data: str
