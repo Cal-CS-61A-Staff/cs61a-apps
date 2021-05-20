@@ -54,6 +54,7 @@ Buildtool <buildtool/index>
 cats/index
 61A Code <code/index>
 docs/index
+domains/index
 grade-display/index
 hosted/index
 howamidoing/index
