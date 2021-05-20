@@ -125,10 +125,9 @@ export async function removeFile(location) {
 
 export async function getAssignments() {
   try {
-    return (
-      await post("/api/list_assignments")
-    ).data.assignments.filter(({ name }) =>
-      ["hw", "lab", "proj", "challenge"].some((x) => name.includes(x))
+    return (await post("/api/list_assignments")).data.assignments.filter(
+      ({ name }) =>
+        ["hw", "lab", "proj", "challenge"].some((x) => name.includes(x))
     );
   } catch {
     return [];
