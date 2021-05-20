@@ -78,7 +78,7 @@ class Main:
                 message += str
                 continue
 
-            if not post.get("is_answered", False) or post.get("unresolved_count", 0):
+            if not post.get("is_answered", False) and post.get("unresolved_count", 0):
                 staff, priority = self.select_staff(post)
                 str = f"<!{staff}> please help <{self.url_starter}{post_id}|@{post_num}>\n"
                 if priority:

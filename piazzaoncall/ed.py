@@ -9,9 +9,9 @@ class EdNetwork(Network):
         feed = self.get_feed(limit=999999)["threads"]
         unresolved = unresolved_followups = 0
         for post in feed:
-            u = post.get("is_answered", False)
+            u = post.get("is_answered", True)
             uf = post.get("unresolved_count", 0)
-            if u and not uf:
+            if u or not uf:
                 continue
 
             title = post["title"]
@@ -47,7 +47,14 @@ class EdNetwork(Network):
         posts = feed.get("threads")
 
         for s in posts:
-            if not s.get("is_answered", False) or s.get("unresolved_count", 0):
+            if (
+                s.get("approved_status", "approved") != "rejected"
+                and (
+                    s.get("type", "question") != "post" or s.get("is_megathread", True)
+                )
+                and not s.get("is_answered", True)
+                and s.get("unresolved_count", 1)
+            ):
                 yield s
 
 
