@@ -8,33 +8,35 @@ If you are a current student or staff, you can visit
 
 ## Features
 **Students:**
- - Authentication with okpy
- - View grade breakdown per assignment
- - Grade planning: test possible scores and view minimum score needed on final
-    for specific grade boundaries
+- Authentication with okpy
+- View grade breakdown per assignment
+- Grade planning: test possible scores and view minimum score needed on final
+  for specific grade boundaries
 
 **Staff:**
- - View histogram
- - Export scores
- - Import grades from CSV
- - Edit configuration
+- View histogram
+- Export scores
+- Import grades from CSV
+- Edit configuration
 
 ## Setup
 
-To develop, install the python dependencies in `server/requirements.txt`, run `yarn`, then run `yarn dev`. `yarn dev` will concurrently run `python3 main.py` (backend) and `yarn start` (frontend).
-
+To develop, create a venv and install the python dependencies in
+`server/requirements.txt`, run `yarn`, then run `yarn dev`. `yarn dev` will
+concurrently run `python3 main.py` (backend) and `yarn start` (frontend).
 
 ## Uploading Grades
 A `grades.csv` file can be uploaded to the server to update grades for students.
-You can view an example [here](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/howamidoing/public/config/dummy_grade_data.csv).
+You can view an example
+[here](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/howamidoing/public/config/dummy_grade_data.csv).
 `Name`, `Email`, `SID` fields are required (in that order), and the following
 fields correspond to grades for each assignment.
 
 
 ## Editing Configuration
-A `config.js` script can be uploaded to the server. You can view a sample
-config [here](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/howamidoing/public/config/config.js). Here is some data that may be
-customized:
+A `config.js` script can be uploaded to the server. You can view a sample config
+[here](https://github.com/Cal-CS-61A-Staff/cs61a-apps/blob/master/howamidoing/public/config/config.js).
+Here is some data that may be customized:
 
 | Object      | Description |
 | ----------- | ----------- |

@@ -83,7 +83,8 @@ Howamidoing
 -------------------------------------------------------
 - |Rahul|
 - |Vanshaj|
-- Documented by |TBD|
+- Documented by Connie Shi (`@constanceshi <https://github.com/constanceshi>`__)
+  and Ben Cuan (`@64bitpandas <https://github.com/64bitpandas>`__)
 
 Logs
 -------------------------------------------------------
