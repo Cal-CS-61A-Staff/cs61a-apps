@@ -1,11 +1,9 @@
 # redirect
 
-This app is to set up different redirects on the 61a website.
+This utility sets up different redirects from the CS 61A website. To add new
+redirects, edit the lookup dictionary in `main.py`. At the end of a semester,
+edit `deploy.yaml` to include `<semester>.cs61a.org`. This target will
+automatically redirect to `inst.eecs.berkeley.edu/~cs61a/<semester>`.
 
-## Setup
-
-Simply pull from repo and make sure flask is installed.
-
-## Other Sections
-
-Can add new redirect links by simply adding to the lookup dictionary.
+This app has no local setup instructions, because it is not meant to be run
+locally.
