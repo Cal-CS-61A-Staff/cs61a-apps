@@ -35,21 +35,20 @@ class EdNetwork(Network):
         :rtype: generator
         """
         feed = self.get_feed(limit=999999)
-        cids = [post["id"] for post in feed["threads"]]
+        posts = feed["threads"]
         if limit:
-            cids = cids[:limit]
-        for cid in cids:
-            yield self.get_post(cid=cid)
+            posts = posts[:limit]
+        for post in posts:
+            yield post
 
     def list_unresolved(self):  # new
         """Returns a generator of all unresolved posts"""
         feed = self.get_feed(limit=999999)
-        post_snippets = feed.get("threads")
+        posts = feed.get("threads")
 
-        for s in post_snippets:
+        for s in posts:
             if not s.get("is_answered", False) or s.get("unresolved_count", 0):
-                cid = s["id"]
-                yield self.get_post(cid=cid)
+                yield s
 
 
 network = EdNetwork("cs61a", True, False)

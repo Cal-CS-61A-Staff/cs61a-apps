@@ -53,7 +53,7 @@ class Main:
         self.roncall = re.compile(r"oncall:\s*(\S+)")  # '\[oncall: .*\]'
 
         self.urgent_threshold = 3
-        self.url_starter = f"https://edstem.org/courses/{ed_course_id()}/discussion/"
+        self.url_starter = f"https://edstem.org/us/courses/{ed_course_id()}/discussion/"
 
     def send_message(self):
         """Sends a message for all unresolved posts or followups made after
