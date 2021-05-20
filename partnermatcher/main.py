@@ -7,7 +7,7 @@ EMAIL_COL = "Email Address"
 TIMEZONE_COL = "What is 8am PT (Berkeley Time) in your time?"
 SKILL_COL = "How skillful a programmer do you consider yourself to be at this time?"
 PNP_COL = "Are you taking CS 61A for a letter grade?"
-WORDS_COL = "What are three words that describe your interests? "
+WORDS_COL = "What are three words that describe your interests?"
 
 
 def get_words(row):
@@ -64,10 +64,10 @@ def match():
     between each pair of students, and then calculates the maximum-weighted
     matching of the graph, writing the results out to a Google sheet.
     """
-    data = pd.read_csv("alt-matcher/joined_data.csv", dtype=str).fillna("")
+    data = pd.read_csv("data.csv", dtype=str).fillna("")
     g = nx.Graph()
 
-    for i, row in data.iterrows():
+    for i, _ in data.iterrows():
         g.add_node(i)
 
     for i, row1 in data.iterrows():

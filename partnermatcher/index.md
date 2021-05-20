@@ -1,7 +1,7 @@
 ```{include} README.md
 ```
 
-## Main
+## Script Documentation
 This file performs the partner matching algorithm. `get_words()` and 
 `get_weight` are helper functions; `match()` is the main function which runs 
 the algorithm.
