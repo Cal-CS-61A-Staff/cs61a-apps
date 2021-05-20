@@ -29,7 +29,7 @@ common/index
 logs/index
 partnermatcher/index
 paste/index
-redirect/index
+secrets/index
 ```
 
 ```{toctree}
