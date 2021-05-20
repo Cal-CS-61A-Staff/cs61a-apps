@@ -31,14 +31,14 @@ with connect_db() as db:
     )
 
 
-def expand_semester(short_form: str):
+def expand_semester(short_form):
     """
     Takes in a semester name in condensed notation (eg. sp21, fa20, su18) and expands it into
     a full version (eg. Spring 2021, Fall 2020, Summer 2018).
 
     :param short_form: condensed notation for a semester
     :type short_form: str
-    
+
     :return: expanded notation for semester (str)
 
     """
@@ -50,10 +50,10 @@ def expand_semester(short_form: str):
 def semester_key(short_form):
     """
     Construct a key from the SHORT_FORM of the semester
-    
+
     :param short_form: condensed notation for a semester
     :type short_form: str
-    
+
     :return: double representing a key value for the semester SHORT_FORM
     """
     return int(short_form[2:]) + 0.2 * {"sp": 1, "su": 2, "fa": 3}[short_form[:2]]

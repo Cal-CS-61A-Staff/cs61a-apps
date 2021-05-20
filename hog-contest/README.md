@@ -1,8 +1,9 @@
-# hog-contest
-This tool is for the hog-contest.
+# Hog Contest
+
+This is the leaderboard for the Hog Contest.
 
 ## Setup
-To setup, install all dependencies in `requirements.txt`. 
-Run `python3 main.py` to run the app.
 
-## Other Sections
+Install the dependencies in `requirements.txt`. From the `berkeley-cs61a` repo,
+copy `src/proj/hog/hog_eval.cpp` into `./main.cpp`. Run `python3 main.py` to
+start the Flask app.

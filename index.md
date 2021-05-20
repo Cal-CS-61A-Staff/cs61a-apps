@@ -56,6 +56,7 @@ cats/index
 docs/index
 domains/index
 grade-display/index
+hog-contest/index
 hosted/index
 howamidoing/index
 

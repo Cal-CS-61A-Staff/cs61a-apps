@@ -4,14 +4,14 @@
 ## Main
 
 ```{eval-rst}
-.. automodule:: hog-contest.main
+.. automodule:: docs.hog_contest.main
     :members:
 ```
 
 ## Tournament
 
 ```{eval-rst}
-.. automodule:: hog-contest.tournament
+.. automodule:: docs.hog_contest.tournament
     :members:
 ```
 

@@ -98,6 +98,9 @@ autodoc_mock_imports = [
     "dna",
     "networkx",
     "pandas",
+    "tournament",
+    "logger",
+    "thread_utils",
 ]
 
 # Use the following structure to shorten URL targets.
