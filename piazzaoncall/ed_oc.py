@@ -8,9 +8,8 @@ import re
 from dateutil.parser import parse
 
 from common.db import connect_db
-from common.rpc.auth import piazza_course_id, read_spreadsheet
-from piazza import network
-from slack import send
+from common.rpc.auth import ed_course_id, read_spreadsheet, post_slack_message
+from ed import network
 
 STAFF = read_spreadsheet(
     url="https://docs.google.com/spreadsheets/d/1rhZEVryWVhMWiEyHZWMDhk_zgQ_4eg_RJevq2K3nVno/",
@@ -41,53 +40,56 @@ with connect_db() as db:
         db("INSERT INTO STATUS (last_sent) VALUES (0)")
 
 
+def send(message, course):
+    post_slack_message(course=course, message=message, purpose="ed-reminder")
+
+
 class Main:
     def __init__(self):
         with connect_db() as db:
             self.last_sent = datetime.datetime.fromtimestamp(
                 db("SELECT last_sent FROM status").fetchone()[0], TIMEZONE
             )
-        self.rhtml = re.compile(r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});")
         self.roncall = re.compile(r"oncall:\s*(\S+)")  # '\[oncall: .*\]'
 
         self.urgent_threshold = 3
-        self.url_starter = f"https://piazza.com/class/{piazza_course_id()}?cid="
+        self.url_starter = f"https://edstem.org/us/courses/{ed_course_id()}/discussion/"
 
     def send_message(self):
         """Sends a message for all unresolved posts or followups made after
         self.ignore_before. Uses weights column from input CSV to proportionally
         allocate staff members to questions"""
         message, high_priority = "", ""
-        # [network.get_post(cid=108)]
         for post in network.list_unresolved():
-            post_id = post.get("nr")
+            post_num = post.get("number")
+            post_id = post.get("id")
 
             assigned = self.oncall(post)
             if assigned == "ignore":
                 print(
-                    f"{datetime.datetime.today().date()}: @{post_id} is marked as ignore"
+                    f"{datetime.datetime.today().date()}: @{post_num} is marked as ignore"
                 )
                 continue
             elif assigned:
                 str = ""
                 for email in assigned:
                     str += f"<!{email}> "
-                str += f"your assigned post (<{self.url_starter}{post_id}|@{post_id}>) needs help!\n"
+                str += f"your assigned post (<{self.url_starter}{post_id}|@{post_num}>) needs help!\n"
                 message += str
                 continue
 
-            for p in self.select_staff(post):
-                # [[email, 61, True], [email2, 61_f1, False]]
-                str = f"<!{p[0]}> please help <{self.url_starter}{p[1]}|@{p[1]}>\n"
-                if p[2]:
+            if not post.get("is_answered", False) and post.get("unresolved_count", 0):
+                staff, priority = self.select_staff(post)
+                str = f"<!{staff}> please help <{self.url_starter}{post_id}|@{post_num}>\n"
+                if priority:
                     high_priority += str
                 else:
                     message += str
 
         if message:
             starter = (
-                "Good morning! Here are today's piazza assignments. You will receive a daily reminder "
-                "about your unresolved piazza posts. *If you do not know how to answer your post(s), "
+                "Good morning! Here are today's Ed assignments. You will receive a daily reminder "
+                "about your unresolved Ed posts. *If you do not know how to answer your post(s), "
                 "post in #general.*\n\n "
             )
             # print(starter + message)
@@ -101,15 +103,12 @@ class Main:
             send(starter + high_priority, course="cs61a")
 
     def oncall(self, post):
-        """Returns email of staff member on call if specified in body of instructor piazza post using syntax
+        """Returns email of staff member on call if specified in body of instructor Ed post using syntax
         oncall: <bConnected Username> (berkeley email without @berkeley.edu). oncall: IGNORE can be used to tell
-        the bot to exclude the post from"""
-        if not (
-            "instructor-question" in post.get("tags")
-            or "instructor-note" in post.get("tags")
-        ):
+        the bot to exclude the post from oncall."""
+        if post.get("user", {}).get("course_role", "student") not in ["admin"]:
             return None
-        text = re.sub(self.rhtml, "", post.get("history")[0].get("content"))
+        text = post.get("document")
         usernames = [u.lower() for u in re.findall(self.roncall, text)]
         if usernames:
             if "ignore" in usernames:
@@ -121,25 +120,11 @@ class Main:
     def select_staff(self, post):
         """Selects staff member(s) for the post. Randomly assigns a staff member to answer the post and any
         unresolved followups (one staff member for the post itself, one additional staff member for each unresolved
-        followup. Returns a list of lists each containing three elements:
+        followup. Returns a tuple two elements:
             1. Staff member email
-            2. post_id (Ex: 61, 61_f1)
-            3. Boolean indicating priority (True=urgent)
-        Urgent post @61 with with unresolved followup @61_f1 would return [[email, 61, True], [email2, 61_f1, False]]"""
-        ret_lst = []
-        post_id = str(post.get("nr"))
-        if post.get("no_answer", False):
-            ret_lst.append([self.pick_staff(post_id), post_id, self.is_urgent(post)])
-        id = 0
-        for child in post.get("children", []):
-            if not (child.get("type", "fail") == "followup"):
-                continue
-            id += 1
-            if not child.get("no_answer"):
-                continue
-            f_id = post_id + "_f" + str(id)
-            ret_lst.append([self.pick_staff(f_id), f_id, self.is_urgent(child)])
-        return ret_lst
+            2. Boolean indicating priority (True=urgent)
+        Urgent post @61 would return (email, True)"""
+        return self.pick_staff(post.get("id")), self.is_urgent(post)
 
     def pick_staff(self, post_id):
         """Given a post ID, assign a staff member and return staff member's email. Staff members selected from
@@ -157,15 +142,15 @@ class Main:
         if kind == "note":
             return False
         if kind == "question":
-            newest = parse(post.get("created", "2001-08-27T04:53:21Z")).date()
+            newest = parse(post.get("created_at", "2001-08-27T04:53:21Z")).date()
         elif kind == "followup":
-            children = post.get("children", [])
+            children = post.get("comments", [])
             if children:
                 newest = parse(
-                    children[-1].get("created", "2001-08-27T04:53:21Z")
+                    children[-1].get("created_at", "2001-08-27T04:53:21Z")
                 ).date()
             else:
-                newest = parse(post.get("created", "2001-08-27T04:53:21Z")).date()
+                newest = parse(post.get("created_at", "2001-08-27T04:53:21Z")).date()
         else:
             print("Unknown post type: " + post.get("type"))
             newest = parse("2001-08-27T04:53:21Z").date()
