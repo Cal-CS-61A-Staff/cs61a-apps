@@ -87,6 +87,9 @@ autodoc_mock_imports = [
     "flask",
     "flask_oauthlib",
     "werkzeug",
+    "dna",
+    "networkx",
+    "pandas",
 ]
 
 # Use the following structure to shorten URL targets.
@@ -97,6 +100,7 @@ intersphinx_mapping = {
     "flask": ("https://flask.palletsprojects.com/en/1.1.x", None),
     "flask_oauthlib": ("https://flask-oauthlib.readthedocs.io/en/latest", None),
     "python": ("https://docs.python.org/3", None),
+    "pandas": ("https://pandas.pydata.org/docs", None),
 }
 
 # Change the order in which autodoc renders members of a file/class.

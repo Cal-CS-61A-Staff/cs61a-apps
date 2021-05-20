@@ -1,1 +1,1 @@
-web: python oncall.py
+web: python ed_oc.py

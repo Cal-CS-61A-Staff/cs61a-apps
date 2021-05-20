@@ -76,7 +76,7 @@ Hog Contest
 Hosted Apps (DNA)
 -------------------------------------------------------
 - |Vanshaj|
-- Documented by |TBD|
+- Documented by Cyrus Bugwadia (`@cbugwadia32 <https://github.com/cbugwadia32>`__)
 
 Howamidoing
 -------------------------------------------------------
@@ -87,7 +87,7 @@ Howamidoing
 Logs
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Emma Yokota (`@emmayokota <https://github.com/emmayokota>`__)
 
 Office Hours Queue
 -------------------------------------------------------
@@ -97,17 +97,23 @@ Office Hours Queue
 Partner Matcher
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- |Vanshaj|
+- Documented by Matthew Guo (`@Funplings <https://github.com/Funplings>`__)
 
 Paste
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Emma Yokota (`@emmayokota <https://github.com/emmayokota>`__)
 
 Piazza OnCall
 -------------------------------------------------------
 - |Animesh|
 - Documented by |TBD|
+
+Redirect
+-------------------------------------------------------
+- |Rahul|
+- Documented by Sean Sananikone (`@Seans1337 <https://github.com/Seans1337>`__)
 
 Sandbox + IDE
 -------------------------------------------------------
@@ -129,7 +135,7 @@ Sections
 Shortlinks
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Cyrus Bugwadia (`@cbugwadia32 <https://github.com/cbugwadia32>`__)
 
 SICP
 -------------------------------------------------------

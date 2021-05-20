@@ -26,6 +26,9 @@ GitHub Repository <https://github.com/Cal-CS-61A-Staff/cs61a-apps>
 :caption: Utilities
 
 common/index
+logs/index
+partnermatcher/index
+paste/index
 secrets/index
 ```
 
@@ -54,6 +57,8 @@ hosted/index
 howamidoing/index
 
 oh/index
+
+shortlinks/index
 
 Piazza OnCall <piazzaoncall/index>
 SICP <sicp/index>
