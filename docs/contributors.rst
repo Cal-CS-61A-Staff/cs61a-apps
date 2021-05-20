@@ -51,7 +51,8 @@ Docs/Wiki
 Domains
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Lucy Wan (`@lucywan <https://github.com/lucywan>`__)
+  and Kenny Chi (`@kenny-chi <https://github.com/kenny-chi>`__)
 
 Examtool
 -------------------------------------------------------
