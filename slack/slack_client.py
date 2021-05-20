@@ -24,6 +24,7 @@ from group_integration import GroupIntegration
 from integration import combine_integrations
 from lgtm_integration import LGTMIntegration
 from piazza_integration import PiazzaIntegration
+from ed_integration import EdIntegration
 from prlink_integration import PRLinkIntegration
 from issue_integration import IssueIntegration
 from apps_prlink_integration import AppsPRLinkIntegration
@@ -155,6 +156,8 @@ def create_slack_client(app):
             integrations = []
             if "piazza" in active_services:
                 integrations.append(PiazzaIntegration)
+            elif "ed" in active_services:
+                integrations.append(EdIntegration)
             if "claps" in active_services:
                 integrations.append(ClapIntegration)
             if "emojify" in active_services:
