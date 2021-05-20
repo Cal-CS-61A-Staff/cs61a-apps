@@ -103,6 +103,15 @@ def view_course(course=None):
 
 
 def set_status(domain: str, status: Status):
+    """Updates the status for a domain name
+
+    :param domain: domain name
+    :type domain: str
+    :param status: new status of domain
+    :type status: Status
+
+    :return: None
+    """
     with connect_db() as db:
         db(
             "UPDATE hosted_apps SET status=(%s) WHERE domain=(%s)",
@@ -113,6 +122,19 @@ def set_status(domain: str, status: Status):
 @add_domain.bind(app)
 @validates_master_secret
 def add_domain(app, is_staging, course, domain):
+    """Adds domain to hosted_apps table and hosts new domain
+
+    :param app: "auth"
+    :type app: str
+    :param is_staging: whether app is staging or not
+    :type is_staging: boolean
+    :param course: course name
+    :type course: str
+    :param domain: domain name
+    :type domain: str
+
+    :return: None or Error
+    """
     try:
         if app != "auth":
             abort(401)

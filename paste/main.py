@@ -73,6 +73,16 @@ def load_raw(name):
 
 
 def load(name, skip_auth=False):
+    """Loads the paste text for given name
+
+    :param name: name associated with the paste text
+    :type name: str
+    :param skip_auth: a flag to skip the authentication for the user;
+        ``False`` by default
+    :type skip_auth: bool
+
+    :return: a string representing the paste text for this user
+    """
     out = None
     with connect_db() as db:
         data = db(
@@ -106,6 +116,19 @@ def paste_text(app, is_staging, data: str, name: str = None, is_private: bool = 
 
 
 def paste_worker(data: str, name: str = None, is_private: bool = False):
+    """Creates and saves a new entry in the pastes table representing the given
+    paste data. If name is not provided, generates a random string as name.
+
+    :param data: the paste text
+    :type data: str
+    :param name: name of the given user; ``None`` by default
+    :type name: str
+    :param is_private: a flag determining whether or not this data is private;
+        ``False`` by default
+    :type is_private: bool
+
+    :return: string representing the name
+    """
     if name is None:
         name = "".join(choice(ascii_lowercase) for _ in range(24))
     with connect_db() as db:

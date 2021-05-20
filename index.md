@@ -26,6 +26,11 @@ GitHub Repository <https://github.com/Cal-CS-61A-Staff/cs61a-apps>
 :caption: Utilities
 
 common/index
+hog-calc/index
+logs/index
+partnermatcher/index
+paste/index
+secrets/index
 ```
 
 ```{toctree}
@@ -42,17 +47,21 @@ exam-write/index
 :maxdepth: 3
 :caption: Apps
 
+ag-master/index
 auth/index
 buildserver/index
 Buildtool <buildtool/index>
 cats/index
 61A Code <code/index>
 docs/index
+domains/index
 grade-display/index
 hosted/index
 howamidoing/index
 
 oh/index
+
+shortlinks/index
 
 Piazza OnCall <piazzaoncall/index>
 SICP <sicp/index>
