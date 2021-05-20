@@ -26,8 +26,12 @@ class APIClient:
     def post(self, *args, **kwargs):
         return self.session.post(*args, **kwargs)
 
-    def upload_submission(self, course_id, assignment_id, student_email, filename):
+    def upload_submission(
+        self, course_id, assignment_id, student_email, filename, *, replace
+    ):
         url = GRADESCOPE_URL.format(course_id, assignment_id)
+        if replace:
+            url += "/replace_pdf"
         form_data = {"owner_email": student_email}
         files = {"pdf_attachment": open(filename, "rb")}
         request_headers = {"access-token": self.token}

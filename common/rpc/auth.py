@@ -103,6 +103,22 @@ def piazza_course_id(*, course: str, is_test: bool, test: bool):
 
 @cached()
 @auth_endpoint
+@service.route("/ed/perform_action")
+def perform_ed_action(
+    *, action: str, course: str, as_staff: bool, is_test: bool, kwargs: dict
+):
+    ...
+
+
+@cached()
+@auth_endpoint
+@service.route("/ed/course_id")
+def ed_course_id(*, course: str, is_test: bool, test: bool):
+    ...
+
+
+@cached()
+@auth_endpoint
 @service.route("/slack/workspace_name")
 def slack_workspace_name(*, course: str):
     ...
@@ -115,15 +131,16 @@ def post_slack_message(*, course: str, message: str, purpose: str):
     ...
 
 
-class PiazzaNetwork:
-    def __init__(self, course, is_staff, is_test):
+class Network:
+    def __init__(self, course, is_staff, is_test, actor):
         self.course = course
         self.is_staff = is_staff
         self.is_test = is_test
+        self.actor = actor
 
     def __getattr__(self, method):
         def bound_method(**kwargs):
-            return perform_piazza_action(
+            return self.actor(
                 action=method,
                 course=self.course,
                 as_staff=self.is_staff,
