@@ -125,7 +125,7 @@ Secrets
 -------------------------------------------------------
 - |Rahul|
 - |Vanshaj|
-- Documented by |TBD|
+- Documented by Roy Zhou (`@ren-zhou <https://github.com/ren-zhou>`__)
 
 Sections
 -------------------------------------------------------
