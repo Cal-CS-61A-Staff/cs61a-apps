@@ -7,7 +7,7 @@ class Ed:
     THREAD = BASE + "/threads/{cid}?view=1"
 
     def user_login(self, username, password):
-        resp = requests.get(
+        resp = requests.post(
             Ed.BASE + "/token", json=dict(login=username, password=password)
         )
         self.token = resp.json()["token"]
