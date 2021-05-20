@@ -1,4 +1,4 @@
-# redirect
+# `redirect`
 
 This utility sets up different redirects from the CS 61A website. To add new
 redirects, edit the lookup dictionary in `main.py`. At the end of a semester,
