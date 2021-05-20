@@ -110,6 +110,11 @@ Piazza OnCall
 - |Animesh|
 - Documented by |TBD|
 
+Redirect
+-------------------------------------------------------
+- |Rahul|
+- Documented by Sean Sananikone (`@Seans1337 <https://github.com/Seans1337>`__)
+
 Sandbox + IDE
 -------------------------------------------------------
 - |Vanshaj|
