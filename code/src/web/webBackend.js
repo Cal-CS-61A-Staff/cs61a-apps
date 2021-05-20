@@ -17,10 +17,11 @@ import {
   SHOW_SHARE_DIALOG,
   START_CONSOLE,
 } from "../common/communicationEnums.js";
-import { PYTHON, SCHEME, SQL } from "../common/languages.js";
+import { LARK, PYTHON, SCHEME, SQL } from "../common/languages.js";
 import python from "../languages/python/web/communication.js";
 import scheme from "../languages/scheme/web/communication.js";
 import sql from "../languages/sql/web/communication.js";
+import lark from "../languages/lark/web/communication.js";
 import { interactProcess, killProcess } from "../main/processes.js";
 import { assignSettingsWatcherKey } from "./settings";
 import showSettingsDialog from "./settingsDialog";
@@ -91,6 +92,8 @@ function receive(arg) {
     scheme(arg);
   } else if (arg.handler === SQL) {
     sql(arg);
+  } else if (arg.handler === LARK) {
+    lark(arg);
   } else {
     console.error(`Unknown handler: ${arg.handler}`);
   }

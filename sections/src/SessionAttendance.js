@@ -48,6 +48,9 @@ export default function SectionAttendance({ section, session }: Props) {
     mostRecentSession == null ||
     moment().isAfter(moment.unix(mostRecentSession.startTime).add(3, "days"));
 
+  // if the latest section recently occurred, it is still "latest", not the one in the future
+  const latestSectionStartTime = nextSessionStartTime(section, -3);
+
   if (session == null && !notStartedSectionExists) {
     return null;
   }
@@ -85,7 +88,7 @@ export default function SectionAttendance({ section, session }: Props) {
           <CardHeader>
             <b>
               {(session == null
-                ? nextSessionStartTime(section)
+                ? latestSectionStartTime
                 : moment.unix(session?.startTime)
               ).format("MMMM D")}
               {session == null && " (not started)"}
@@ -97,7 +100,7 @@ export default function SectionAttendance({ section, session }: Props) {
                 onClick={() =>
                   startSession({
                     section_id: section.id,
-                    start_time: nextSessionStartTime(section).unix(),
+                    start_time: latestSectionStartTime.unix(),
                   })
                 }
               >

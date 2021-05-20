@@ -175,8 +175,10 @@ def json_repr(elem):
             return "true"
         else:
             return "false"
-    elif isinstance(elem, int):
+    elif isinstance(elem, (int, float)):
         return '"' + repr(elem) + '"'
+    elif elem is None:
+        return "null"
     else:
         raise Exception("Unable to serialize object of type " + str(old_type(elem)))
 
@@ -712,9 +714,11 @@ def handleInput(line):
             err("... ")
             _status = "block"
         except SyntaxError as msg:
-            if str(msg) == "invalid syntax : triple string end not found" or str(
-                msg
-            ).startswith("Unbalanced bracket"):
+            if (
+                str(msg) == "invalid syntax : triple string end not found"
+                or str(msg).startswith("Unbalanced bracket")
+                or "unexpected EOF" in str(msg)
+            ):
                 err("... ")
                 _status = "3string"
             elif str(msg) == "eval() argument must be an expression":

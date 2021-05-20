@@ -1,7 +1,9 @@
 from flask import Flask
 
 from common.jobs import job
-from oncall import Main
+
+# from piazza_oc import Main
+from ed_oc import Main
 
 app = Flask(__name__)
 

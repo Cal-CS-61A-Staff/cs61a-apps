@@ -3,12 +3,8 @@ import Category from "./Category.js";
 import "./CommandOptions.css";
 
 export default function CommandOptions(props) {
-  const {
-    activeIndex,
-    setActiveIndex,
-    selectedOptions,
-    setSelectedOptions,
-  } = props;
+  const { activeIndex, setActiveIndex, selectedOptions, setSelectedOptions } =
+    props;
 
   const categories = props.options.map(
     // eslint-disable-next-line react/no-array-index-key
