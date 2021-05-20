@@ -28,6 +28,7 @@ GitHub Repository <https://github.com/Cal-CS-61A-Staff/cs61a-apps>
 common/index
 partnermatcher/index
 paste/index
+logs/index
 ```
 
 ```{toctree}
