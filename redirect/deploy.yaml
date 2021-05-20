@@ -11,6 +11,7 @@ first_party_domains:
   - ok-help.app.cs61a.org
   - staging.cs61a.org
   # domain redirects
+  - sp21.cs61a.org
   - fa20.cs61a.org
   - su20.cs61a.org
   - sp20.cs61a.org

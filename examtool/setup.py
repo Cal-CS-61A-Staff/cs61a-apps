@@ -18,7 +18,7 @@ setup(
     package_data={"": ["**/*.tex", "**/*.css"]},
     include_package_data=True,
     entry_points={"console_scripts": ["examtool=examtool.cli.__main__:cli"]},
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     install_requires=["cryptography"],
     extras_require={
         "admin": [

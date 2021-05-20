@@ -1,7 +1,10 @@
-from common.rpc.auth import PiazzaNetwork
+from common.rpc.auth import Network, perform_piazza_action
 
 
-class Network(PiazzaNetwork):
+class PiazzaNetwork(Network):
+    def __init__(self, course, is_staff, is_test):
+        super().__init__(course, is_staff, is_test, perform_piazza_action)
+
     def get_unresolved(self):
         feed = self.get_feed(limit=999999, offset=0)["feed"]
         unresolved = unresolved_followups = 0
@@ -49,4 +52,4 @@ class Network(PiazzaNetwork):
                 yield self.get_post(cid=cid)
 
 
-network = Network("cs61a", True, False)
+network = PiazzaNetwork("cs61a", True, False)

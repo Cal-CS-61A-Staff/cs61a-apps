@@ -76,7 +76,7 @@ Hog Contest
 Hosted Apps (DNA)
 -------------------------------------------------------
 - |Vanshaj|
-- Documented by |TBD|
+- Documented by Cyrus Bugwadia (`@cbugwadia32 <https://github.com/cbugwadia32>`__)
 
 Howamidoing
 -------------------------------------------------------
@@ -97,12 +97,13 @@ Office Hours Queue
 Partner Matcher
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- |Vanshaj|
+- Documented by Matthew Guo (`@Funplings <https://github.com/Funplings>`__)
 
 Paste
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Emma Yokota (`@emmayokota <https://github.com/emmayokota>`__)
 
 Piazza OnCall
 -------------------------------------------------------
