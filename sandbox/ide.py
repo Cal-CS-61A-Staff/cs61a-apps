@@ -161,6 +161,9 @@ def start():
     sh("chown", "-R", username, f"/save/{username}")
     print("Home folder owner set.", file=sys.stderr)
 
+    sh("mkdir", "-p", "/save/.cache")
+    sh("chmod", "a+rw", "/save/.cache")
+
     if not get_server_pid(username):
         print(f"Server for {username} is not running, starting...", file=sys.stderr)
         with db_lock("ide", username):
@@ -171,7 +174,6 @@ def start():
                 "bind-addr": f"127.0.0.1:{port}",
                 "auth": "password",
                 "password": passwd,
-                "home": f"https://{get_host()}",
             }
 
             with open(f"/save/{username}/.code-server.yaml", "w") as csc:

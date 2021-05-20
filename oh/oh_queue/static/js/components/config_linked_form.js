@@ -10,14 +10,14 @@ function ConfigLinked({ configKey, configKeys = [], config, render }) {
     setValues(configKeys.map((key) => config[key]));
   }, configKeys.map((key) => config[key]).concat([config[configKey]]));
 
-  const setters = configKeys.map((key, i) => (val) =>
-    console.log(val) ||
-    setValues((values) =>
-      values
-        .slice(0, i)
-        .concat([val])
-        .concat(values.slice(i + 1))
-    )
+  const setters = configKeys.map(
+    (key, i) => (val) =>
+      setValues((values) =>
+        values
+          .slice(0, i)
+          .concat([val])
+          .concat(values.slice(i + 1))
+      )
   );
   const handlers = setters.map((setter) => (e) => setter(e.target.value));
 

@@ -1,6 +1,7 @@
 {
   "services": {
     "piazza": "Automatically preview Piazza links posted in chat.",
+    "ed": "Automatically preview Ed links posted in chat.",
     "golinks": "Automatically reformat golinks posted in chat.",
     "emojify": "Include emoji of staff members when their names are mentioned.",
     "groups": "Automatically tag particular groups (e.g. @heads) when mentioned.",
