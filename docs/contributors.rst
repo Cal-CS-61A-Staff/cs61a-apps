@@ -73,7 +73,8 @@ Hog Calculator
 Hog Contest
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- Documented by Nikhita Anumukonda (`@nikhita8 <https://github.com/nikhita8>`__)
+  and Uma Unni (`@umaunni3 <https://github.com/umaunni3>`__)
 
 Hosted Apps (DNA)
 -------------------------------------------------------
