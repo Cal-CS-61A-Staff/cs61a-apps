@@ -26,6 +26,7 @@ GitHub Repository <https://github.com/Cal-CS-61A-Staff/cs61a-apps>
 :caption: Utilities
 
 common/index
+hog-calc/index
 logs/index
 partnermatcher/index
 paste/index
@@ -53,7 +54,6 @@ cats/index
 61A Code <code/index>
 docs/index
 grade-display/index
-hog-calc/index
 hosted/index
 howamidoing/index
 
