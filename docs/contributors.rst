@@ -97,7 +97,8 @@ Office Hours Queue
 Partner Matcher
 -------------------------------------------------------
 - |Rahul|
-- Documented by |TBD|
+- |Vanshaj|
+- Documented by Matthew Guo (`@Funplings <https://github.com/Funplings`__)
 
 Paste
 -------------------------------------------------------
