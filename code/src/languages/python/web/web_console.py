@@ -714,9 +714,11 @@ def handleInput(line):
             err("... ")
             _status = "block"
         except SyntaxError as msg:
-            if str(msg) == "invalid syntax : triple string end not found" or str(
-                msg
-            ).startswith("Unbalanced bracket"):
+            if (
+                str(msg) == "invalid syntax : triple string end not found"
+                or str(msg).startswith("Unbalanced bracket")
+                or "unexpected EOF" in str(msg)
+            ):
                 err("... ")
                 _status = "3string"
             elif str(msg) == "eval() argument must be an expression":

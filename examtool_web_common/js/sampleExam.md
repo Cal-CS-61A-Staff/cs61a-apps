@@ -18,9 +18,9 @@ What is your full name?
 
 # BEGIN QUESTION
 
-What is your student ID number?
+What is your student ID number? A regex restricts inputs to numerical responses only.
 
-# INPUT SHORT_CODE_ANSWER
+# INPUT SHORT_CODE_ANSWER [0-9]+
 
 # END QUESTION
 
