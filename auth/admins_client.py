@@ -30,10 +30,14 @@ def create_admins_client(app):
                 [course],
             ).fetchall()
         admin_names = [
-            make_row(
-                f'{name} (<a href="mailto:{email}">{email}</a>), added by {creator} ',
+            "<td>{}</td><td>{}</td><td>".format(
+                f'<a href="mailto:{email}">{email}</a>', creator
+            )
+            + make_row(
+                "",  # f'{name} (<a href="mailto:{email}">{email}</a>), added by {creator} ',
                 url_for("remove_admin", course=course, email=email),
             )
+            + "</td>"
             for email, name, course, creator in ret
         ]
         create_client = f"""
@@ -43,7 +47,21 @@ def create_admins_client(app):
                 <input type="submit">
             </form>
         """
-        return "<h3>Admins</h3>" + create_client + "<p>".join(admin_names)
+        return (
+            "<h3>Admins</h3>"
+            + create_client
+            + """
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Email</th>
+                        <th>Added By</th>
+                        <th>Remove</th>
+                    </tr>
+        """
+            + "".join("<tr>" + a + "</tr>" for a in admin_names)
+            + "</tbody></table>"
+        )
 
     app.help_info.add(client_data)
 

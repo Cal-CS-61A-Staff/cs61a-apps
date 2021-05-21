@@ -1,0 +1,51 @@
+<h2>Admin</h2>
+<h3>Courses</h3>
+Activate Auth for a new course (method only available to 61A admins):
+<form action="/api/add_course" method="post">
+    <input name="course" type="text" placeholder="course name">
+    <input name="endpoint" type="text" placeholder="OKPy endpoint">
+    <input type="submit">
+</form>
+<table>
+    <tbody>
+        <tr>
+            <th>Course</th>
+            <th>Endpoint</th>
+            <th>Remove</th>
+        </tr>
+    {% for course, endpoint, form in courses %}
+        <tr>
+            <td>{{course}}</td>
+            <td>{{endpoint}}</td>
+            <td>{{form | safe}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h3>Super-Clients</h3>
+<p>Warning - the API keys for these clients are extremely sensitive, as they
+can access <i>any</i> course's data. Only use them for 61A-hosted apps, and
+reset them whenever a head TA leaves course staff.</p>
+
+Create new super-client and obtain secret key:
+<form action="{{url_for('create_super_key')}}" method="post">
+    <input name="client_name" type="text" placeholder="client_name">
+    <input type="submit">
+</form>
+<table>
+    <tbody>
+        <tr>
+            <th>Client</th>
+            <th>Creator</th>
+            <th>Remove</th>
+        </tr>
+    {% for client, creator, form in super_clients %}
+        <tr>
+            <td>{{client}}</td>
+            <td>{{creator}}</td>
+            <td>{{form | safe}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

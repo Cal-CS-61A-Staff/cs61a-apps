@@ -2,7 +2,7 @@ import re
 import string
 from random import SystemRandom
 
-from flask import request, redirect, jsonify
+from flask import request, redirect, jsonify, render_template
 
 from common.db import connect_db
 from auth_utils import (
@@ -89,69 +89,45 @@ def create_management_client(app):
         return """
             <title>61A Auth</title>
             <link rel="icon" href="https://cs61a.org/assets/images/favicon.ico">
-            <h1> 61A Auth </h1>
+            <h1 class="mt-5"> 61A Auth </h1>
             Go to <a href="https://go.cs61a.org/auth-help">go/auth-help</a> to see detailed usage / deployment instructions.
         """
 
-    def add_course():
+    def superadmin():
         if not is_staff(MASTER_COURSE):
             return ""
-        with connect_db() as db:
-            courses = db("SELECT course, endpoint FROM courses").fetchall()
-        courses = [
-            make_row(
-                "{} ({}), at endpoint {}".format(prettify(course), course, endpoint),
-                url_for("remove_course", course=course),
-            )
-            for course, endpoint in courses
-        ]
 
-        return """
-            <h2>Admin</h2>
-            <h3>Courses</h3>
-            Activate Auth for a new course (method only available to 61A admins):
-            <form action="/api/add_course" method="post">
-                <input name="course" type="text" placeholder="course name">
-                <input name="endpoint" type="text" placeholder="OKPy endpoint">
-                <input type="submit">
-            </form>
-        """ + "<p>".join(
-            courses
-        )
-
-    def super_clients():
-        if not is_staff(MASTER_COURSE):
-            return ""
         with connect_db() as db:
-            ret = db(
-                "SELECT client_name, creator, unused FROM super_auth_keys"
+            courses = db(
+                "SELECT course, endpoint FROM courses ORDER BY course"
             ).fetchall()
-        super_client_names = [
-            make_row(
-                f'{client_name}, created by {creator} {"(unused)" if unused else ""} ',
-                url_for("revoke_super_key", client_name=client_name),
-            )
-            for client_name, creator, unused in ret
-        ]
-        return f"""
-            <h3>Super-Clients</h3>
-            <p>
-            Warning - the API keys for these clients are extremely sensitive, 
-            as they can access <i>any</i> course's data. Only use them for 61A-hosted apps, 
-            and reset them whenever a head TA leaves course staff.
-            </p>
-            Create new super-client and obtain secret key:
-            <form action="{url_for("create_super_key")}" method="post">
-                <input name="client_name" type="text" placeholder="client_name">
-                <input type="submit">
-            </form>
-        """ + "<p>".join(
-            super_client_names
+        with connect_db() as db:
+            super_clients = db(
+                "SELECT client_name, creator FROM super_auth_keys ORDER BY client_name"
+            ).fetchall()
+
+        return render_template(
+            "admin.html",
+            courses=[
+                (
+                    client,
+                    endpoint,
+                    make_row("", url_for("remove_course", course=client)),
+                )
+                for client, endpoint in courses
+            ],
+            super_clients=[
+                (
+                    name,
+                    creator,
+                    make_row("", url_for("revoke_super_key", client_name=name)),
+                )
+                for name, creator in super_clients
+            ],
         )
 
     app.general_info.add(general_help)
-    app.general_info.add(add_course)
-    app.general_info.add(super_clients)
+    app.general_info.add(superadmin)
 
     def course_config(course):
         with connect_db() as db:
@@ -183,7 +159,7 @@ def create_management_client(app):
                 endpoint, endpoint_id, course
             )
 
-    app.help_info.add(lambda course: "<h2>{}</h2>".format(prettify(course)))
+    app.help_info.add(lambda course: "<p></p><h2>{}</h2>".format(prettify(course)))
     app.help_info.add(course_config)
 
     @app.route("/")
