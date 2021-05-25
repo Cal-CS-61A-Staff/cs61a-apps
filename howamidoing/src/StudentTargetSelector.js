@@ -37,31 +37,36 @@ export default function StudentTargetSelector({ onSubmit, students, isAdmin }) {
       >
         Submit
       </button>
-      {isAdmin ? [
-      <a
-        className="btn btn-primary"
-        style={{ marginRight: "10px" }}
-        href="/edit"
-      >
-        Edit Config
-      </a>,
-      <a className="btn btn-success text-white"
-         style={{ marginRight: "10px" }}
-         href="/histogram"
-      >
-        {" "}
-        View Histogram{" "}
-      </a>,
-      <a
-        href="#"
-        onClick={handleExportModalClick}
-        style={{ marginRight: "10px" }}
-        className="btn btn-success text-white"
-      >
-        Export Scores
-      </a>,
-      <ExportModal ref={exportModalRef} />
-      ] : "" }
+      {isAdmin ? (
+        <>
+          <a
+            className="btn btn-primary"
+            style={{ marginRight: "10px" }}
+            href="/edit"
+          >
+            Edit Config
+          </a>
+          <a
+            className="btn btn-success text-white"
+            style={{ marginRight: "10px" }}
+            href="/histogram"
+          >
+            {" "}
+            View Histogram{" "}
+          </a>
+          <a
+            href="#"
+            onClick={handleExportModalClick}
+            style={{ marginRight: "10px" }}
+            className="btn btn-success text-white"
+          >
+            Export Scores
+          </a>
+          <ExportModal ref={exportModalRef} />
+        </>
+      ) : (
+        ""
+      )}
       <a
         className="btn btn-info"
         style={{ marginRight: "10px" }}

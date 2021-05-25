@@ -94,7 +94,7 @@ def create_client(app):
     @app.route("/histogram")
     def histogram():
         return render_template("index.html", courseCode=get_course())
-    
+
     @app.route("/requests")
     def regrade_requests():
         return render_template("index.html", courseCode=get_course())
@@ -115,47 +115,70 @@ def create_client(app):
             ).fetchone()
             print(data)
             return Response(data, mimetype="application/javascript")
-    
-    @app.route("/submitRegradeRequest", methods=['GET', 'POST'])
+
+    @app.route("/submitRegradeRequest", methods=["GET", "POST"])
     def submitRegradeRequest():
         if not is_logged_in():
             return dict(success=False)
-        if request.method == 'GET':
+        if request.method == "GET":
             return dict(success=False)
         email = request.form.get("email")
         assignment = request.form.get("assignment")
+
+        with connect_db() as db:
+            status = db(
+                "SELECT status FROM regrade_requests WHERE courseCode=%s AND email=%s AND assignment=%s",
+                [get_course(), email, assignment],
+            ).fetchone()
+            if status:
+                status = status[0]
+        if status and status not in ("needs followup"):
+            return dict(success=False)
+
         backup_id = request.form.get("backup_id")
         description = request.form.get("description")
         ta = request.form.get("ta")
         status = "requested"
         with connect_db() as db:
-            db("""INSERT INTO regrade_requests (
+            db(
+                """INSERT INTO regrade_requests (
                 courseCode, email, assignment, backup_id, description, assigned_to, status
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
-                [get_course(), email, assignment, backup_id, description, ta, status]
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                [get_course(), email, assignment, backup_id, description, ta, status],
             )
         return redirect("/")
-    
+
     @app.route("/getRegradeRequests")
     def getRegradeRequests():
         if not is_staff(get_course()):
             return dict(success=False)
         with connect_db() as db:
             if request.args.get("for", "me") == "all":
-                regrade_requests = db("SELECT email, assignment, backup_id, description, status FROM regrade_requests")
-            else:    
-                regrade_requests = db("SELECT email, assignment, backup_id, description, status FROM regrade_requests WHERE assigned_to=%s", [get_user()['email']])
+                regrade_requests = db(
+                    "SELECT email, assignment, backup_id, description, status FROM regrade_requests"
+                )
+            else:
+                regrade_requests = db(
+                    "SELECT email, assignment, backup_id, description, status FROM regrade_requests WHERE assigned_to=%s",
+                    [get_user()["email"]],
+                )
             data = [
-                dict(email=row[0], assignment=row[1], backup_id=row[2], description=row[3], status=row[4])
+                dict(
+                    email=row[0],
+                    assignment=row[1],
+                    backup_id=row[2],
+                    description=row[3],
+                    status=row[4],
+                )
                 for row in regrade_requests
             ]
             return jsonify(data)
-    
-    @app.route("/resolveRegradeRequest", methods=['GET', 'POST'])
+
+    @app.route("/resolveRegradeRequest", methods=["GET", "POST"])
     def resolveRegradeRequest():
         if not is_staff(get_course()):
             return dict(success=False)
-        if request.method == 'GET':
+        if request.method == "GET":
             return dict(success=False)
         email = request.form.get("email")
         assignment = request.form.get("assignment")
@@ -164,12 +187,28 @@ def create_client(app):
         reason = request.form.get("reason")
         email_preview = request.form.get("email_preview")
         with connect_db() as db:
-            db("""UPDATE regrade_requests SET 
+            db(
+                """UPDATE regrade_requests SET 
                 status=%s, resolution_reason=%s, emailed=%s
-                WHERE courseCode=%s AND email=%s AND assignment=%s AND backup_id=%s""", 
-                [resolution, reason, "yes", get_course(), email, assignment, backup_id]
+                WHERE courseCode=%s AND email=%s AND assignment=%s AND backup_id=%s""",
+                [resolution, reason, "yes", get_course(), email, assignment, backup_id],
             )
         return redirect("/")
+
+    @app.route("/canRegrade")
+    def canRequestRegrade():
+        if not is_logged_in():
+            return dict(canRegrade=False)
+        email = request.args.get("email", "")
+        assignment = request.args.get("name", "")
+        with connect_db() as db:
+            status = db(
+                "SELECT status FROM regrade_requests WHERE courseCode=%s AND email=%s AND assignment=%s",
+                [get_course(), email, assignment],
+            ).fetchone()
+            if status:
+                status = status[0]
+        return dict(canRegrade=(not status or status in ("needs followup")))
 
     @app.route("/query/")
     def query():
@@ -216,7 +255,11 @@ def create_client(app):
                         "SELECT header FROM headers WHERE courseCode=%s", [get_course()]
                     ).fetchone()
                     short_data = json.loads(short_data)
-                    if not (email == user["email"] or admin or short_data.get("TA", "") in ("", user["email"])):
+                    if not (
+                        email == user["email"]
+                        or admin
+                        or short_data.get("TA", "") in ("", user["email"])
+                    ):
                         return jsonify({"success": False, "retry": False})
                     data = json.loads(data)
                     header = json.loads(header)

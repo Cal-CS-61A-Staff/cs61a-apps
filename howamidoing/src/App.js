@@ -91,9 +91,17 @@ class App extends Component {
     const contents = !this.state.success ? (
       <LoginButton onClick={this.refresh} />
     ) : this.state.isStaff ? (
-      <StaffView onSubmit={this.reloadData} students={this.state.students} isAdmin={this.state.isAdmin} />
+      <StaffView
+        onSubmit={this.reloadData}
+        students={this.state.students}
+        isAdmin={this.state.isAdmin}
+      />
     ) : (
-      <StudentView {...this.state.data} email={this.state.email} ta={this.state.ta} />
+      <StudentView
+        {...this.state.data}
+        email={this.state.email}
+        ta={this.state.ta}
+      />
     );
 
     return (

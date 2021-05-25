@@ -37,8 +37,11 @@ window.ENABLE_PLANNING = ENABLE_PLANNING;
 window.EXPLANATION_IS_LINK = true;
 
 window.ENABLE_REGRADES = true;
-window.ACCEPT_MESSAGE = "We have accepted your request, and have updated your score on Okpy. The changes will be reflected on Howamidoing within 12 hours.";
+window.ACCEPT_MESSAGE =
+  "We have accepted your request, and have updated your score on Okpy. The changes will be reflected on Howamidoing within 12 hours.";
 window.REJECT_MESSAGE = "No changes were made to your grade.";
+window.NEEDS_FOLLOWUP_MESSAGE =
+  "We need a followup from you to reach a conclusion.";
 
 export function createAssignments() {
   return [

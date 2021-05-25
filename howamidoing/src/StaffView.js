@@ -16,13 +16,21 @@ export default function StaffView({ students, onSubmit, isAdmin }) {
     return <ConfigEditor />;
   }
   if (window.location.toString().includes("regrades")) {
-    return <RegradeRequests getAll={isAdmin && window.location.toString().includes("for=all")} />;
+    return (
+      <RegradeRequests
+        getAll={isAdmin && window.location.toString().includes("for=all")}
+      />
+    );
   }
   return (
     <div>
       <Row>
         <Col>
-          <StudentTargetSelector students={students} onSubmit={onSubmit} isAdmin={isAdmin} />
+          <StudentTargetSelector
+            students={students}
+            onSubmit={onSubmit}
+            isAdmin={isAdmin}
+          />
         </Col>
       </Row>
       <UploadTargets />
