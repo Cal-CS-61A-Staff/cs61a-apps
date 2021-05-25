@@ -17,6 +17,7 @@ class App extends Component {
     super(props);
     this.state = {
       isStaff: false,
+      isAdmin: false,
       email: null,
       name: null,
       SID: null,
@@ -39,10 +40,12 @@ class App extends Component {
       header,
       data,
       isStaff,
+      isAdmin,
       allStudents,
       email,
       name,
       SID,
+      ta,
       lastUpdated,
     } = await $.get("./query/", { target });
     if (!success && retry) {
@@ -51,9 +54,10 @@ class App extends Component {
 
     if (isStaff) {
       this.setState({
-        students: allStudents.map(({ Name, Email, SID }) => ({
+        students: allStudents.map(({ Name, Email, SID, TA }) => ({
           text: `${Name} - ${Email} (${SID})`,
           id: Email,
+          ta: TA,
         })),
       });
     }
@@ -63,9 +67,11 @@ class App extends Component {
       email,
       name,
       SID,
+      ta,
       lastUpdated,
       data: { header, data },
       isStaff,
+      isAdmin,
     });
   };
 
@@ -85,9 +91,9 @@ class App extends Component {
     const contents = !this.state.success ? (
       <LoginButton onClick={this.refresh} />
     ) : this.state.isStaff ? (
-      <StaffView onSubmit={this.reloadData} students={this.state.students} />
+      <StaffView onSubmit={this.reloadData} students={this.state.students} isAdmin={this.state.isAdmin} />
     ) : (
-      <StudentView {...this.state.data} />
+      <StudentView {...this.state.data} email={this.state.email} ta={this.state.ta} />
     );
 
     return (

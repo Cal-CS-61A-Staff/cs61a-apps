@@ -13,12 +13,14 @@ export default function GradeTable(props) {
       key={index}
       future={props.future}
       onFutureScoreChange={props.onFutureScoreChange}
+      email={props.email}
+      ta={props.ta}
     />
   ));
 
   const scoreHeader = props.future
-    ? "Expected / Maximum score eventually possible"
-    : "Current / Maximum score possible so far";
+    ? "Expected / Maximum Possible"
+    : "Current / Maximum Possible";
 
   return (
     <table className="table table-hover">
@@ -30,6 +32,10 @@ export default function GradeTable(props) {
           <th scope="col" style={{ width: "25%" }}>
             {scoreHeader}
           </th>
+          {window.ENABLE_REGRADES ? 
+          <th scope="col" style={{ width: "10%" }}>
+            Regrade
+          </th> : "" }
         </tr>
       </thead>
       <tbody>{rows}</tbody>

@@ -7,7 +7,7 @@ from common.db import connect_db, transaction_db
 from common.oauth_client import create_oauth_client, get_user, is_logged_in, is_staff
 from common.rpc.howamidoing import upload_grades as rpc_upload_grades
 from common.rpc.secrets import only
-from common.rpc.auth import validate_secret
+from common.rpc.auth import is_admin, validate_secret
 from setup_functions import set_default_config, set_grades
 
 from flask import Flask, redirect, request, jsonify, render_template, Response
@@ -46,6 +46,19 @@ with connect_db() as db:
        courseCode varchar(128),
        lastUpdated TIMESTAMP)"""
     )
+    db(
+        """CREATE TABLE IF NOT EXISTS regrade_requests (
+        courseCode varchar(128),
+        email varchar(128),
+        assignment varchar(128),
+        backup_id varchar(6),
+        description varchar(255),
+        status varchar(128),
+        assigned_to varchar(128),
+        resolution_reason varchar(255),
+        emailed varchar(128)
+        )"""
+    )
 
 if DEV and not IS_SPHINX:
     with connect_db() as db:
@@ -81,6 +94,10 @@ def create_client(app):
     @app.route("/histogram")
     def histogram():
         return render_template("index.html", courseCode=get_course())
+    
+    @app.route("/requests")
+    def regrade_requests():
+        return render_template("index.html", courseCode=get_course())
 
     @app.route("/redirect")
     def ohlord():
@@ -98,6 +115,61 @@ def create_client(app):
             ).fetchone()
             print(data)
             return Response(data, mimetype="application/javascript")
+    
+    @app.route("/submitRegradeRequest", methods=['GET', 'POST'])
+    def submitRegradeRequest():
+        if not is_logged_in():
+            return dict(success=False)
+        if request.method == 'GET':
+            return dict(success=False)
+        email = request.form.get("email")
+        assignment = request.form.get("assignment")
+        backup_id = request.form.get("backup_id")
+        description = request.form.get("description")
+        ta = request.form.get("ta")
+        status = "requested"
+        with connect_db() as db:
+            db("""INSERT INTO regrade_requests (
+                courseCode, email, assignment, backup_id, description, assigned_to, status
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
+                [get_course(), email, assignment, backup_id, description, ta, status]
+            )
+        return redirect("/")
+    
+    @app.route("/getRegradeRequests")
+    def getRegradeRequests():
+        if not is_staff(get_course()):
+            return dict(success=False)
+        with connect_db() as db:
+            if request.args.get("for", "me") == "all":
+                regrade_requests = db("SELECT email, assignment, backup_id, description, status FROM regrade_requests")
+            else:    
+                regrade_requests = db("SELECT email, assignment, backup_id, description, status FROM regrade_requests WHERE assigned_to=%s", [get_user()['email']])
+            data = [
+                dict(email=row[0], assignment=row[1], backup_id=row[2], description=row[3], status=row[4])
+                for row in regrade_requests
+            ]
+            return jsonify(data)
+    
+    @app.route("/resolveRegradeRequest", methods=['GET', 'POST'])
+    def resolveRegradeRequest():
+        if not is_staff(get_course()):
+            return dict(success=False)
+        if request.method == 'GET':
+            return dict(success=False)
+        email = request.form.get("email")
+        assignment = request.form.get("assignment")
+        backup_id = request.form.get("backup_id")
+        resolution = request.form.get("resolution").lower()
+        reason = request.form.get("reason")
+        email_preview = request.form.get("email_preview")
+        with connect_db() as db:
+            db("""UPDATE regrade_requests SET 
+                status=%s, resolution_reason=%s, emailed=%s
+                WHERE courseCode=%s AND email=%s AND assignment=%s AND backup_id=%s""", 
+                [resolution, reason, "yes", get_course(), email, assignment, backup_id]
+            )
+        return redirect("/")
 
     @app.route("/query/")
     def query():
@@ -106,8 +178,8 @@ def create_client(app):
                 user = get_user()
 
                 email = user["email"]
-
                 target = request.args.get("target", None)
+                admin = True if DEV else is_admin(course=get_course(), email=email)
 
                 if is_staff(get_course()):
                     if target:
@@ -121,11 +193,13 @@ def create_client(app):
                             ).fetchall()
                             for row in lookup:
                                 parsed = json.loads(row[0])
-                                all_students.append(parsed)
+                                if admin or parsed.get("TA", "") in ("", email):
+                                    all_students.append(parsed)
                         return jsonify(
                             {
                                 "success": True,
                                 "isStaff": True,
+                                "isAdmin": admin,
                                 "allStudents": all_students,
                                 "email": user["email"],
                                 "name": user["name"],
@@ -142,6 +216,8 @@ def create_client(app):
                         "SELECT header FROM headers WHERE courseCode=%s", [get_course()]
                     ).fetchone()
                     short_data = json.loads(short_data)
+                    if not (email == user["email"] or admin or short_data.get("TA", "") in ("", user["email"])):
+                        return jsonify({"success": False, "retry": False})
                     data = json.loads(data)
                     header = json.loads(header)
                     return jsonify(
@@ -152,6 +228,7 @@ def create_client(app):
                             "email": short_data["Email"],
                             "name": short_data["Name"],
                             "SID": short_data["SID"],
+                            "ta": short_data["TA"],
                             "lastUpdated": last_updated(),
                         }
                     )

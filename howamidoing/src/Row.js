@@ -2,6 +2,9 @@ import React from "react";
 import "./Row.css";
 import ScoreEntry from "./ScoreEntry.js";
 
+import $ from "jquery";
+import RegradeRequestModal from "./RegradeRequestModal.js";
+
 function formatScore(score, places = 2) {
   if (Number.isNaN(parseFloat(score))) {
     return score;
@@ -43,6 +46,12 @@ export default function Row(props) {
 
   const displayedScore = !props.noScore && score;
 
+  const regradeModalRef = React.createRef();
+
+  const handleRegradeModalClick = () => {
+    $(regradeModalRef.current).modal();
+  };
+
   return (
     <tr
       onClick={props.onClick}
@@ -72,6 +81,20 @@ export default function Row(props) {
           {maxScore}
         </div>
       </td>
+      {window.ENABLE_REGRADES ?
+      <td>
+        <div className="collapse show">
+          {props.regradeable ? <>
+            <a
+              href="#"
+              onClick={handleRegradeModalClick}
+              style={{ marginLeft: "10px" }}
+            >
+              request
+            </a>
+            <RegradeRequestModal ref={regradeModalRef} assignment={props.name} email={props.email} ta={props.ta} /></> : ""}
+        </div>
+      </td> : "" }
     </tr>
   );
 }
