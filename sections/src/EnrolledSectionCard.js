@@ -13,7 +13,6 @@ import StateContext from "./StateContext";
 import Tags from "./Tags";
 import useStateAPI from "./useStateAPI";
 import useAPI from "./useAPI";
-import useSectionAPI from "./useSectionAPI";
 
 type Props = {
   section: Section,
@@ -81,10 +80,9 @@ export default function EnrolledSectionCard({ section }: Props) {
 
   const [description, setDescription] = useState(section.description ?? "");
   const [callLink, setCallLink] = useState(section.callLink ?? "");
-  const [enrollmentCode, setEnrollmentCode] = useState("");
-  const [currentEnrollmentCode, setCurrentEnrollmentCode] = useState("");
+  const [enrollmentCode, setEnrollmentCode] = useState(""); // in the text field
+  const [currentEnrollmentCode, setCurrentEnrollmentCode] = useState(""); // in the db
 
-  console.log(JSON.stringify(section));
   return (
     <Card>
       <Card.Header>

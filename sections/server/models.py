@@ -56,6 +56,10 @@ class Section(db.Model):
     @tags.setter
     def tags(self, tags: List[str]):
         self.tag_string = ",".join(tags)
+    
+    @property
+    def needs_enrollment_code(self):
+        return self.enrollment_code not in ["", None]
 
     @property
     def json(self):
@@ -71,7 +75,7 @@ class Section(db.Model):
             "startTime": self.start_time,
             "endTime": self.end_time,
             "callLink": self.call_link,
-            "needsEnrollmentCode": bool(self.enrollment_code),
+            "needsEnrollmentCode": self.needs_enrollment_code,
             "tags": self.tags,
         }
 
