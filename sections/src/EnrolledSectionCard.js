@@ -1,17 +1,19 @@
 /* eslint-disable no-nested-ternary,react/no-array-index-key */
 // @flow strict
 
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import * as React from "react";
 import FormControl from "react-bootstrap/FormControl";
 import { Link } from "react-router-dom";
 import { nextSessionStartTime, sectionInterval } from "./models";
-import type { Section } from "./models";
+import type { Section, EnrollmentCode } from "./models";
 import StateContext from "./StateContext";
 import Tags from "./Tags";
-import useAPI from "./useStateAPI";
+import useStateAPI from "./useStateAPI";
+import useAPI from './useAPI';
+import useSectionAPI from "./useSectionAPI";
 
 type Props = {
   section: Section,
@@ -46,7 +48,7 @@ function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
   }
 }
 
-export default function EnrolledSectionCard({ section }: Props) {
+export default function EnrolledSectionCard({section}: Props) {
   const nextText = `The next session takes place ${nextSessionStartTime(
     section
   ).fromNow()}.`;
@@ -55,14 +57,31 @@ export default function EnrolledSectionCard({ section }: Props) {
 
   const isStaff = state.currentUser?.isStaff;
 
-  const abandonSection = useAPI("unassign_section");
-  const leaveSection = useAPI("leave_section");
-  const updateSectionDescription = useAPI("update_section_description");
-  const updateSectionCallLink = useAPI("update_section_call_link");
+  const abandonSection = useStateAPI("unassign_section");
+  const leaveSection = useStateAPI("leave_section");
+  const updateSectionDescription = useStateAPI("update_section_description");
+  const updateSectionCallLink = useStateAPI("update_section_call_link");
+  const updateSectionEnrollmentCode = useStateAPI("update_section_enrollment_code", () => getEnrollmentCode({section_id: section.id}));
+  const getEnrollmentCode =
+    useAPI("get_enrollment_code",
+      (code: EnrollmentCode) => {
+        setEnrollmentCode(code);
+        setCurrentEnrollmentCode(code);
+      }
+  );
+
+  useEffect(() => {
+    if (isStaff) {
+      getEnrollmentCode({section_id: section.id});
+    }
+  }, [])
 
   const [description, setDescription] = useState(section.description ?? "");
   const [callLink, setCallLink] = useState(section.callLink ?? "");
+  const [enrollmentCode, setEnrollmentCode] = useState("");
+  const [currentEnrollmentCode, setCurrentEnrollmentCode] = useState("");
 
+  console.log(JSON.stringify(section));
   return (
     <Card>
       <Card.Header>
@@ -130,6 +149,29 @@ export default function EnrolledSectionCard({ section }: Props) {
                   }
                 >
                   Save
+                </Button>
+              </Card.Text>
+            )}
+            <Card.Text>
+              <FormControl
+                placeholder="Enrollment Code (optional)"
+                value={enrollmentCode ?? ""}
+                onChange={(e) => setEnrollmentCode(e.target.value)}
+              />
+            </Card.Text>
+            {enrollmentCode !== currentEnrollmentCode && (
+              <Card.Text>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                      updateSectionEnrollmentCode({
+                        section_id: section.id,
+                        enrollment_code: enrollmentCode,
+                      })
+                    }
+                  }
+                >
+                  Submit
                 </Button>
               </Card.Text>
             )}

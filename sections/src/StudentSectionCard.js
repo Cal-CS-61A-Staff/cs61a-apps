@@ -1,9 +1,10 @@
 /* eslint-disable react/no-array-index-key */
 // @flow strict
 
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import * as React from "react";
 import Button from "react-bootstrap/Button";
+
 
 import Card from "react-bootstrap/Card";
 import ListGroup from "react-bootstrap/ListGroup";
@@ -13,6 +14,8 @@ import type { Section } from "./models";
 import StateContext from "./StateContext";
 import Tags from "./Tags";
 import useAPI from "./useStateAPI";
+
+import EnterEnrollmentCodeModal from "./EnterEnrollmentCodeModal";
 
 type Props = {
   section: Section,
@@ -28,6 +31,8 @@ export default function StudentSectionCard({
   const isStaff = currentUser?.isStaff;
   const teachingThisSection = currentUser?.email === section.staff?.email;
 
+  const [enrolling, setEnrolling] = useState(false);
+
   const joinSection = useAPI("join_section");
   const claimSection = useAPI("claim_section");
   const unassignSection = useAPI("unassign_section");
@@ -38,7 +43,21 @@ export default function StudentSectionCard({
 
   const title = sectionTitle(section);
 
+  const joinSectionWorkflow = () => {
+    if (section.needsEnrollmentCode) {
+      setEnrolling(true);
+    } else {
+      joinSection({ target_section_id: section.id })
+    }
+  }
+
+  const onEnrollmentCodeEntered = (enrollmentCode) => {
+      setEnrolling(false);
+      joinSection({ target_section_id: section.id, enrollment_code: enrollmentCode });
+  }
+
   return (
+    <>
     <Card
       border={enrolledInThisSection || teachingThisSection ? "primary" : null}
     >
@@ -82,7 +101,7 @@ export default function StudentSectionCard({
           <ListGroup.Item
             disabled={enrolledInThisSection}
             action={!enrolledInThisSection}
-            onClick={() => joinSection({ target_section_id: section.id })}
+            onClick={joinSectionWorkflow}
           >
             {enrolledInThisSection ? (
               <div>Switch to Section {slotText}</div>
@@ -96,5 +115,11 @@ export default function StudentSectionCard({
         ) : null}
       </ListGroup>
     </Card>
+    <EnterEnrollmentCodeModal
+      show={enrolling}
+      section={section}
+      onClose={onEnrollmentCodeEntered}
+    />
+  </>
   );
 }
