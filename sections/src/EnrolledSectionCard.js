@@ -12,7 +12,7 @@ import type { Section, EnrollmentCode } from "./models";
 import StateContext from "./StateContext";
 import Tags from "./Tags";
 import useStateAPI from "./useStateAPI";
-import useAPI from './useAPI';
+import useAPI from "./useAPI";
 import useSectionAPI from "./useSectionAPI";
 
 type Props = {
@@ -48,7 +48,7 @@ function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
   }
 }
 
-export default function EnrolledSectionCard({section}: Props) {
+export default function EnrolledSectionCard({ section }: Props) {
   const nextText = `The next session takes place ${nextSessionStartTime(
     section
   ).fromNow()}.`;
@@ -61,20 +61,23 @@ export default function EnrolledSectionCard({section}: Props) {
   const leaveSection = useStateAPI("leave_section");
   const updateSectionDescription = useStateAPI("update_section_description");
   const updateSectionCallLink = useStateAPI("update_section_call_link");
-  const updateSectionEnrollmentCode = useStateAPI("update_section_enrollment_code", () => getEnrollmentCode({section_id: section.id}));
-  const getEnrollmentCode =
-    useAPI("get_enrollment_code",
-      (code: EnrollmentCode) => {
-        setEnrollmentCode(code);
-        setCurrentEnrollmentCode(code);
-      }
+  const updateSectionEnrollmentCode = useStateAPI(
+    "update_section_enrollment_code",
+    () => getEnrollmentCode({ section_id: section.id })
+  );
+  const getEnrollmentCode = useAPI(
+    "get_enrollment_code",
+    (code: EnrollmentCode) => {
+      setEnrollmentCode(code);
+      setCurrentEnrollmentCode(code);
+    }
   );
 
   useEffect(() => {
     if (isStaff) {
-      getEnrollmentCode({section_id: section.id});
+      getEnrollmentCode({ section_id: section.id });
     }
-  }, [])
+  }, []);
 
   const [description, setDescription] = useState(section.description ?? "");
   const [callLink, setCallLink] = useState(section.callLink ?? "");
@@ -164,12 +167,11 @@ export default function EnrolledSectionCard({section}: Props) {
                 <Button
                   size="sm"
                   onClick={() => {
-                      updateSectionEnrollmentCode({
-                        section_id: section.id,
-                        enrollment_code: enrollmentCode,
-                      })
-                    }
-                  }
+                    updateSectionEnrollmentCode({
+                      section_id: section.id,
+                      enrollment_code: enrollmentCode,
+                    });
+                  }}
                 >
                   Submit
                 </Button>

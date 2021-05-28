@@ -6,7 +6,6 @@ import Modal from "react-bootstrap/Modal";
 import FormControl from "react-bootstrap/FormControl";
 import { useState } from "react";
 
-
 type Props = {
   show: Boolean,
   onClose: () => void,
@@ -21,9 +20,9 @@ export default function AddEnrollmentCodeModal({ show, onClose }: Props) {
         <Modal.Title>Enter Enrollment Code</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-      <FormControl
-        value={enrollmentCode ?? ""}
-        onChange={(e) => setEnrollmentCode(e.target.value)}
+        <FormControl
+          value={enrollmentCode ?? ""}
+          onChange={(e) => setEnrollmentCode(e.target.value)}
         />
       </Modal.Body>
       <Modal.Footer>
