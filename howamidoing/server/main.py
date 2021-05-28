@@ -160,7 +160,7 @@ def create_client(app):
                             "email": short_data["Email"],
                             "name": short_data["Name"],
                             "SID": short_data["SID"],
-                            "ta": short_data["TA"],
+                            "ta": short_data.get("TA", ""),
                             "lastUpdated": last_updated(),
                         }
                     )
