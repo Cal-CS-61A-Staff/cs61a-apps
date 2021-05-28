@@ -46,8 +46,6 @@ export default function buildExportURI() {
   const assignmentNames = Object.keys(assignments);
   const studentData = ["Name", "Email", "SID"];
 
-  const assignment = assignments["Raw Score"];
-  console.log("Assignment is ", assignment);
   const assignmentScores = data.map((student) => [
     ...studentData.map(
       (metadata) =>

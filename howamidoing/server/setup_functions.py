@@ -44,7 +44,7 @@ def set_grades(data, course_code, db):
 
     data = []
     for row in reader:
-        short_data = {x: row[header.index(x)] for x in ["Email", "SID", "Name"]}
+        short_data = {x: row[header.index(x)] for x in ["Email", "SID", "Name", "TA"]}
         data.append(
             [course_code, row[email_index], json.dumps(short_data), json.dumps(row)]
         )
