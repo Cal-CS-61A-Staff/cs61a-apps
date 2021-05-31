@@ -1,6 +1,6 @@
 # website
 
-This hosts the main website at the specified endpoint.
+This hosts the solutions website at the specified endpoint.
 
 ## Setup
 
@@ -10,7 +10,6 @@ Install the required dependencies using a virtual environment.
 $ python3 -m venv env
 $ env/bin/pip install -r requirements.txt
 ```
-
 
 ## Other Sections
 
