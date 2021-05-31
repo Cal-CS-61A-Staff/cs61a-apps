@@ -52,6 +52,11 @@ grade-display/index
 hosted/index
 howamidoing/index
 
+solutions/index
+website/index
+website-base/index
+
+
 oh/index
 
 Piazza OnCall <piazzaoncall/index>
