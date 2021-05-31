@@ -142,6 +142,8 @@ class StudentView extends Component {
           plannedTotals={plannedTotals}
           future={this.state.future}
           onFutureScoreChange={this.handleFutureScoreChange}
+          email={this.props.email}
+          ta={this.props.ta}
         />
       </>
     );

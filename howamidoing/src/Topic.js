@@ -58,6 +58,8 @@ export default class Topic extends Component {
             indent={this.props.indent + 1}
             collapsed={this.props.collapsed || this.state.collapsed}
             onChange={this.props.onFutureScoreChange}
+            email={this.props.email}
+            ta={this.props.ta}
           />
         );
       } else {
@@ -73,6 +75,8 @@ export default class Topic extends Component {
             collapsed={this.props.collapsed || this.state.collapsed}
             future={this.props.future}
             onFutureScoreChange={this.props.onFutureScoreChange}
+            email={this.props.email}
+            ta={this.props.ta}
           />
         );
       }

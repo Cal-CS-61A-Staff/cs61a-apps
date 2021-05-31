@@ -76,7 +76,6 @@ export default function AssignmentDetails({ onLogin }) {
 
   const currentAssignmentName = assignmentNames[assignmentIndex];
   const assignment = assignments[currentAssignmentName];
-  console.log("Assignment is ", assignment);
   const assignmentScores = useMemo(
     () =>
       data.map((student) =>
@@ -98,7 +97,6 @@ export default function AssignmentDetails({ onLogin }) {
     assignment.futureMaxScore && assignment.futureMaxScore !== Infinity
       ? _.range(rangeMin, rangeMax + 0.01, binSize).map(round)
       : defaultBins;
-  console.log("BINS ARE ", bins);
   useEffect(() => {
     setRangeMax(Math.min(rangeMax, bins[bins.length - 1]));
   }, [assignmentIndex]);
