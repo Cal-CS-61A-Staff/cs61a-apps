@@ -17,6 +17,12 @@ from utils import BUCKET
 
 
 def create_okpy_endpoints(app):
+    """Creates various RPC endpoints to interface with Okpy. See the
+    following:
+
+    - :func:`~common.rpc.ag_master.trigger_jobs`
+    """
+
     @app.route("/api/ok/v3/grade/batch", methods=["POST"])
     def okpy_batch_grade_impl():
         data = request.json

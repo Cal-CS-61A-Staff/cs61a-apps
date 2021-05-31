@@ -10,6 +10,15 @@ SCORE_ENDPOINT = "/api/v3/score/"
 
 
 def admin_only(func):
+    """Require a user to either be logged into the UI, or so pass in an
+    access token. Either way, the user must be an admin for the course they're
+    attempting to access.
+
+    :return: a function that takes in an ``access_token`` and a ``course``,
+        along with the parameters passed into the original ``func``, which is
+        called with all of the available arguments except ``access_token``
+    """
+
     @wraps(func)
     def wrapped(*args, access_token=None, course="cs61a", **kwargs):
         token_good = access_token and is_admin_token(
@@ -32,6 +41,14 @@ def admin_only(func):
 
 
 def super_admin_only(func):
+    """Does almost the same thing as :func:`~docs.ag_master.utils.admin_only`,
+    except the course must be ``cs61a``.
+
+    :return: a function that takes in an ``access_token`` and a ``course``,
+        along with the parameters passed into the original ``func``, which is
+        called without ``access_token`` or ``course``
+    """
+
     @wraps(func)
     @admin_only
     def wrapped(*args, course, **kwargs):

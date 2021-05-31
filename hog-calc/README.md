@@ -1,6 +1,6 @@
 # `hog-calc`
 
-This contains methods used to compare strategies for Hog.
+This contains methods used to compare strategies for Hog. 
 
 ## Running Locally
 

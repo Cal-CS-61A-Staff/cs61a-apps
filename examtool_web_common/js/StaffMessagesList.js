@@ -36,7 +36,7 @@ export default function StaffMessagesList({ selectedExam, staffData, send }) {
     }
   };
 
-  useEffect(postRenderFormat, [questionData]);
+  useEffect(() => postRenderFormat(document.body), [questionData]);
 
   const makeReplyBox = (id, compact) => (
     <StaffMessageReplyBox message={id} compact={compact} send={send} />

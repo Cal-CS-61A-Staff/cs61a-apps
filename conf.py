@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
+    "sphinxcontrib.openapi",
     "myst_parser",
 ]
 
@@ -86,7 +87,20 @@ autodoc_mock_imports = [
     "sqlalchemy",
     "flask",
     "flask_oauthlib",
+    "flask_sqlalchemy",
     "werkzeug",
+    "models",
+    "utils",
+    "google",
+    "setup_functions",
+    "process_input",
+    "runner",
+    "dna",
+    "networkx",
+    "pandas",
+    "tournament",
+    "logger",
+    "thread_utils",
 ]
 
 # Use the following structure to shorten URL targets.
@@ -97,6 +111,7 @@ intersphinx_mapping = {
     "flask": ("https://flask.palletsprojects.com/en/1.1.x", None),
     "flask_oauthlib": ("https://flask-oauthlib.readthedocs.io/en/latest", None),
     "python": ("https://docs.python.org/3", None),
+    "pandas": ("https://pandas.pydata.org/docs", None),
 }
 
 # Change the order in which autodoc renders members of a file/class.

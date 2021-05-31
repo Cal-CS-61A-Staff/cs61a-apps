@@ -7,7 +7,7 @@ from common.db import connect_db, transaction_db
 from common.oauth_client import create_oauth_client, get_user, is_logged_in, is_staff
 from common.rpc.howamidoing import upload_grades as rpc_upload_grades
 from common.rpc.secrets import only
-from common.rpc.auth import validate_secret
+from common.rpc.auth import is_admin, validate_secret
 from setup_functions import set_default_config, set_grades
 
 from flask import Flask, redirect, request, jsonify, render_template, Response
@@ -19,6 +19,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
 
 DEV = os.getenv("ENV") != "prod"
+
+IS_SPHINX = "sphinx" in sys.argv[0]
 
 
 with connect_db() as db:
@@ -45,7 +47,7 @@ with connect_db() as db:
        lastUpdated TIMESTAMP)"""
     )
 
-if DEV:
+if DEV and not IS_SPHINX:
     with connect_db() as db:
         with open("./public/config/dummy_grade_data.csv") as grades:
             set_grades(grades.read(), "cs61a", db)
@@ -53,6 +55,14 @@ if DEV:
 
 
 def last_updated():
+    """Finds the timestamp of when the current database was last updated
+     for this course.
+
+     Uses a database query function yielded by :func:`common.db.connect_db`
+     and the course code returned by :func:`common.course_config.get_course`
+
+    :return: Timestamp or ``Unknown`` (string) if any exceptions occur while fetching from the current database
+    """
     try:
         with connect_db() as db:
             return db(
@@ -96,8 +106,8 @@ def create_client(app):
                 user = get_user()
 
                 email = user["email"]
-
                 target = request.args.get("target", None)
+                admin = True if DEV else is_admin(course=get_course(), email=email)
 
                 if is_staff(get_course()):
                     if target:
@@ -111,11 +121,13 @@ def create_client(app):
                             ).fetchall()
                             for row in lookup:
                                 parsed = json.loads(row[0])
-                                all_students.append(parsed)
+                                if admin or parsed.get("TA", "") in ("", email):
+                                    all_students.append(parsed)
                         return jsonify(
                             {
                                 "success": True,
                                 "isStaff": True,
+                                "isAdmin": admin,
                                 "allStudents": all_students,
                                 "email": user["email"],
                                 "name": user["name"],
@@ -132,6 +144,12 @@ def create_client(app):
                         "SELECT header FROM headers WHERE courseCode=%s", [get_course()]
                     ).fetchone()
                     short_data = json.loads(short_data)
+                    if not (
+                        email == user["email"]
+                        or admin
+                        or short_data.get("TA", "") in ("", user["email"])
+                    ):
+                        return jsonify({"success": False, "retry": False})
                     data = json.loads(data)
                     header = json.loads(header)
                     return jsonify(
@@ -142,6 +160,7 @@ def create_client(app):
                             "email": short_data["Email"],
                             "name": short_data["Name"],
                             "SID": short_data["SID"],
+                            "ta": short_data.get("TA", ""),
                             "lastUpdated": last_updated(),
                         }
                     )
@@ -155,6 +174,8 @@ def create_client(app):
     @app.route("/allScores", methods=["POST"])
     def all_scores():
         if not is_staff(get_course()):
+            return jsonify({"success": False})
+        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
             return jsonify({"success": False})
         with connect_db() as db:
             [header] = db(
@@ -174,6 +195,8 @@ def create_client(app):
     def set_config():
         if not is_staff(get_course()):
             return jsonify({"success": False})
+        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
+            return jsonify({"success": False})
         data = request.form.get("data")
         with connect_db() as db:
             db("DELETE FROM configs WHERE courseCode=%s", [get_course()])
@@ -183,6 +206,8 @@ def create_client(app):
     @app.route("/setGrades", methods=["POST"])
     def set_grades_route():
         if not is_staff(get_course()):
+            return jsonify({"success": False})
+        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
             return jsonify({"success": False})
         data = request.form.get("data")
         with transaction_db() as db:
@@ -208,6 +233,13 @@ def create_client(app):
 
 
 def print_to_stderr(print_function):
+    """Writes to sys.stderr using the desired print function.
+
+    :param print_function: a print function
+
+    :return: a function that writes the input to sys.stderr using the desired print function
+    """
+
     def print(*s):
         print_function(*s, file=sys.stderr)
 

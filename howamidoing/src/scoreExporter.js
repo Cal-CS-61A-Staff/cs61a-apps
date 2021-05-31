@@ -44,12 +44,14 @@ export default function buildExportURI() {
   );
 
   const assignmentNames = Object.keys(assignments);
-  const studentData = ["Name", "Email", "SID"];
+  const studentData = ["Name", "Email", "SID", "TA"];
 
-  const assignment = assignments["Raw Score"];
-  console.log("Assignment is ", assignment);
   const assignmentScores = data.map((student) => [
-    ...studentData.map((metadata) => student[metadata] || 0),
+    ...studentData.map(
+      (metadata) =>
+        (metadata === "Name" ? `"${student[metadata]}"` : student[metadata]) ||
+        0
+    ),
     ...assignmentNames
       .map((assignmentName) => student[assignmentName] || 0)
       .map((x) => Number.parseFloat(x)),
