@@ -33,7 +33,7 @@ export default function StaffView({ students, onSubmit, isAdmin }) {
           />
         </Col>
       </Row>
-      <UploadTargets />
+      {isAdmin ? <UploadTargets /> : <br />}
     </div>
   );
 }

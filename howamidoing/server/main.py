@@ -271,7 +271,7 @@ def create_client(app):
                             "email": short_data["Email"],
                             "name": short_data["Name"],
                             "SID": short_data["SID"],
-                            "ta": short_data["TA"],
+                            "ta": short_data.get("TA", ""),
                             "lastUpdated": last_updated(),
                         }
                     )
@@ -285,6 +285,8 @@ def create_client(app):
     @app.route("/allScores", methods=["POST"])
     def all_scores():
         if not is_staff(get_course()):
+            return jsonify({"success": False})
+        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
             return jsonify({"success": False})
         with connect_db() as db:
             [header] = db(
@@ -304,6 +306,8 @@ def create_client(app):
     def set_config():
         if not is_staff(get_course()):
             return jsonify({"success": False})
+        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
+            return jsonify({"success": False})
         data = request.form.get("data")
         with connect_db() as db:
             db("DELETE FROM configs WHERE courseCode=%s", [get_course()])
@@ -313,6 +317,8 @@ def create_client(app):
     @app.route("/setGrades", methods=["POST"])
     def set_grades_route():
         if not is_staff(get_course()):
+            return jsonify({"success": False})
+        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
             return jsonify({"success": False})
         data = request.form.get("data")
         with transaction_db() as db:
