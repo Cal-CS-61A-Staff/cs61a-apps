@@ -13,7 +13,7 @@ type Props = {
   onClose: (code: EnrollmentCode) => void,
 };
 
-export default function AddEnrollmentCodeModal({ show, onClose }: Props) {
+export default function EnterEnrollmentCodeModal({ show, onClose }: Props) {
   const [enrollmentCode, setEnrollmentCode] = useState("");
 
   return (
