@@ -4,7 +4,7 @@ import $ from "jquery";
 
 import ExportModal from "./ExportModal.js";
 
-export default function StudentTargetSelector({ onSubmit, students }) {
+export default function StudentTargetSelector({ onSubmit, students, isAdmin }) {
   const [selected, setSelected] = useState(null);
 
   const exportModalRef = React.createRef();
@@ -37,26 +37,36 @@ export default function StudentTargetSelector({ onSubmit, students }) {
       >
         Submit
       </button>
-      <a
-        className="btn btn-primary"
-        style={{ marginRight: "10px" }}
-        href="/edit"
-      >
-        Edit Config
-      </a>
-      <a className="btn btn-success text-white" href="/histogram">
-        {" "}
-        View Histogram{" "}
-      </a>
-      <a
-        href="#"
-        onClick={handleExportModalClick}
-        style={{ marginLeft: "10px" }}
-        className="btn btn-success text-white"
-      >
-        Export Scores
-      </a>
-      <ExportModal ref={exportModalRef} />
+      {isAdmin ? (
+        <>
+          <a
+            className="btn btn-primary"
+            style={{ marginRight: "10px" }}
+            href="/edit"
+          >
+            Edit Config
+          </a>
+          <a
+            className="btn btn-success text-white"
+            style={{ marginRight: "10px" }}
+            href="/histogram"
+          >
+            {" "}
+            View Histogram{" "}
+          </a>
+          <a
+            href="#"
+            onClick={handleExportModalClick}
+            style={{ marginRight: "10px" }}
+            className="btn btn-success text-white"
+          >
+            Export Scores
+          </a>
+          <ExportModal ref={exportModalRef} />
+        </>
+      ) : (
+        ""
+      )}
     </form>
   );
 }
