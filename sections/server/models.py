@@ -56,7 +56,7 @@ class Section(db.Model):
     @tags.setter
     def tags(self, tags: List[str]):
         self.tag_string = ",".join(tags)
-    
+
     @property
     def needs_enrollment_code(self):
         return self.enrollment_code not in ["", None]
