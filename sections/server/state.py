@@ -146,8 +146,15 @@ def create_state_client(app: flask.Flask):
         return section.full_json
 
     @api
+    @staff_required
+    def get_enrollment_code(section_id: Union[int, str]):
+        section_id = int(section_id)
+        section: Section = Section.query.get(section_id)
+        return section.enrollment_code
+
+    @api
     @login_required
-    def join_section(target_section_id: str):
+    def join_section(target_section_id: str, enrollment_code: str = ""):
         if not get_config().can_students_change:
             raise Failure("Students cannot add themselves themselves to sections!")
         target_section_id = int(target_section_id)
@@ -155,6 +162,11 @@ def create_state_client(app: flask.Flask):
         target_section: Section = Section.query.get(target_section_id)
         if target_section.capacity <= len(target_section.students):
             raise Failure("Target tutorial section is already full.")
+        if (
+            target_section.needs_enrollment_code
+            and enrollment_code != target_section.enrollment_code
+        ):
+            raise Failure("Invalid enrollment code; cannot join section.")
         # remove them from *all* old_sections for now
         current_user.sections = [target_section]
         db.session.commit()
@@ -217,6 +229,15 @@ def create_state_client(app: flask.Flask):
         section_id = int(section_id)
         section = Section.query.get(section_id)
         section.call_link = call_link
+        db.session.commit()
+        return refresh_state()
+
+    @api
+    @staff_required
+    def update_section_enrollment_code(section_id: str, enrollment_code: str):
+        section_id = int(section_id)
+        section = Section.query.get(section_id)
+        section.enrollment_code = enrollment_code
         db.session.commit()
         return refresh_state()
 
