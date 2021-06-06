@@ -57,7 +57,7 @@ export default function MainPage(): React.Node {
         <Container>
           <Row>
             <Col>
-              <h1 className="display-4">CS 61A Tutorials</h1>
+              <h1 className="display-4">CS 61A Sections</h1>
               <p className="lead">
                 <ReactMarkdown>{state.config.message}</ReactMarkdown>
               </p>

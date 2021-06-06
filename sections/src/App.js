@@ -72,7 +72,7 @@ export default function App(): React.Node {
       <Navbar bg="info" variant="dark" expand="md">
         <Link to="/">
           <Navbar.Brand>
-            <b>CS 61A</b> Tutorials
+            <b>CS 61A</b> Sections
           </Navbar.Brand>
         </Link>
         <Navbar.Toggle aria-controls="navbar" />
@@ -86,7 +86,7 @@ export default function App(): React.Node {
                 History
               </Link>
             )}
-            <Nav.Link href="https://cs61a.org/tutors/" target="_blank" active>
+            <Nav.Link href="https://cs61a.org/TAs/" target="_blank" active>
               Staff
             </Nav.Link>
             <Nav.Link href="https://oh.cs61a.org/party" target="_blank" active>
