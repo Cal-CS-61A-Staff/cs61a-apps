@@ -204,7 +204,7 @@ def create_admins_client(app):
                 return False
 
         data = web_json(url=url, sheet=sheet, by_perm=True)
-        return set(admins + data.get(action, []))
+        return list(set(admins + data.get(action, [])))
 
 
 def web_json(url, sheet, by_perm=False):
