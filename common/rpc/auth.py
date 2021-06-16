@@ -4,7 +4,7 @@ from typing import List, Union
 from common.rpc.secrets import get_secret
 from common.rpc.utils import cached, create_service
 
-service = create_service(__name__, providers=["https://394.auth.pr.cs61a.org"])
+service = create_service(__name__)
 
 
 def auth_endpoint(func):
