@@ -65,7 +65,7 @@ def create_admins_client(app):
         ]  # there should only be 0-1 perms sheets
         add_perms_sheet = f"""
             Add granular permissions sheet (first column should be email, the rest should be permission names):
-            <form action="{url_for("add_granular_permissions", course=course)}" method="post">
+            <form action="{url_for("set_granular_spreadsheet", course=course)}" method="post">
                 <input name="url" placeholder="URL">
                 <input name="sheet" placeholder="Sheet Name">
                 <input type="submit">
