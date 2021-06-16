@@ -29,6 +29,12 @@ def is_admin(*, course: str, email: str, force_course: str = None):
 def list_admins(*, course: str):
     ...
 
+@cached()
+@auth_endpoint
+@service.route("/admins/user_can")
+def user_can(*, course: str, email: str, action: str):
+    ...
+
 
 @cached()
 @service.route("/domains/get_course")
