@@ -221,6 +221,8 @@ def refresh():
         for row in csvr[1:]:
             row = row + [""] * 5
             shortlink = row[headers.index("shortlink")]
+            if not shortlink.strip():
+                continue
             if shortlink in links:
                 return error(f"Duplicate shortlink `{shortlink}` found, aborting.")
             links.add(shortlink)

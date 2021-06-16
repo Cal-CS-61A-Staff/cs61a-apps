@@ -34,6 +34,7 @@ class Section(db.Model):
     end_time: int = db.Column(db.Integer)
     capacity: int = db.Column(db.Integer)
     call_link: str = db.Column(db.String(255), nullable=True)
+    enrollment_code: str = db.Column(db.String(255), nullable=True)
     staff_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     staff: "User" = db.relationship(
         "User", backref=db.backref("sections_taught", lazy="joined"), lazy="joined"
@@ -57,6 +58,10 @@ class Section(db.Model):
         self.tag_string = ",".join(tags)
 
     @property
+    def needs_enrollment_code(self):
+        return self.enrollment_code not in ["", None]
+
+    @property
     def json(self):
         return {
             "id": str(self.id),
@@ -70,6 +75,7 @@ class Section(db.Model):
             "startTime": self.start_time,
             "endTime": self.end_time,
             "callLink": self.call_link,
+            "needsEnrollmentCode": self.needs_enrollment_code,
             "tags": self.tags,
         }
 
