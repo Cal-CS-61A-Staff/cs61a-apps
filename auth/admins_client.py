@@ -54,8 +54,7 @@ def create_admins_client(app):
         """
         with connect_db() as db:
             ret = db(
-                "SELECT url, sheet FROM course_permissions WHERE course=(%s)",
-                [course]
+                "SELECT url, sheet FROM course_permissions WHERE course=(%s)", [course]
             ).fetchall()
         perms_sheet = [
             make_row(
@@ -63,7 +62,7 @@ def create_admins_client(app):
                 url_for("unset_granular_spreadsheet", course=course),
             )
             for url, sheet in ret
-        ] # there should only be 0-1 perms sheets
+        ]  # there should only be 0-1 perms sheets
         add_perms_sheet = f"""
             Add granular permissions sheet (first column should be email, the rest should be permission names):
             <form action="{url_for("add_granular_permissions", course=course)}" method="post">
@@ -72,7 +71,15 @@ def create_admins_client(app):
                 <input type="submit">
             </form>
         """
-        return "<h3>Admins</h3>" + add_admin + "<p>".join(admin_names) + "<br>" + "<h3>Granular Permissions</h3>" + add_perms_sheet + "<p>".join(perms_sheet)
+        return (
+            "<h3>Admins</h3>"
+            + add_admin
+            + "<p>".join(admin_names)
+            + "<br>"
+            + "<h3>Granular Permissions</h3>"
+            + add_perms_sheet
+            + "<p>".join(perms_sheet)
+        )
 
     app.help_info.add(admin_data)
 
@@ -124,12 +131,10 @@ def create_admins_client(app):
         url = request.form["url"]
         sheet = request.form["sheet"]
         with connect_db() as db:
-            db(
-                "DELETE FROM course_permissions WHERE course=(%s)", [course]
-            )
+            db("DELETE FROM course_permissions WHERE course=(%s)", [course])
             db(
                 "INSERT INTO course_permissions (course, url, sheet) VALUES (%s, %s, %s)",
-                [course, url, sheet]
+                [course, url, sheet],
             )
         return redirect(url_for("index"))
 
@@ -137,9 +142,7 @@ def create_admins_client(app):
     @course_oauth_secure()
     def unset_granular_spreadsheet(course):
         with connect_db() as db:
-            db(
-                "DELETE FROM course_permissions WHERE course=(%s)", [course]
-            )
+            db("DELETE FROM course_permissions WHERE course=(%s)", [course])
         return redirect(url_for("index"))
 
     @is_admin.bind(app)
@@ -174,14 +177,14 @@ def create_admins_client(app):
 
         with connect_db() as db:
             [url, sheet] = db(
-                "SELECT url, sheet FROM course_permissions WHERE course=(%s)",
-                [course]
+                "SELECT url, sheet FROM course_permissions WHERE course=(%s)", [course]
             ).fetchone()
             if not url:
                 return False
 
         data = web_json(url=url, sheet_name=sheet)
         return action in data[email]
+
 
 def web_json(url, sheet):
     resp = read_spreadsheet(url=url, sheet_name=sheet)
