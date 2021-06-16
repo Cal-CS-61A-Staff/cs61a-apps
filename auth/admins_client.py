@@ -2,7 +2,7 @@ from flask import redirect, request
 
 from auth_utils import course_oauth_secure, get_name, key_secure, get_email
 from common.db import connect_db
-from common.rpc.auth import is_admin, list_admins
+from common.rpc.auth import is_admin, list_admins, can_user, who_can, read_spreadsheet
 from common.url_for import url_for
 from common.html import error, make_row
 
@@ -17,13 +17,20 @@ def init_db():
                 creator varchar(128)
              )"""
         )
+        db(
+            """CREATE TABLE IF NOT EXISTS course_permissions (
+                course varchar(128),
+                url varchar(256),
+                sheet varchar(128)
+            )"""
+        )
 
 
 init_db()
 
 
 def create_admins_client(app):
-    def client_data(course):
+    def admin_data(course):
         with connect_db() as db:
             ret = db(
                 "SELECT email, name, course, creator FROM course_admins WHERE course=(%s)",
@@ -36,16 +43,43 @@ def create_admins_client(app):
             )
             for email, name, course, creator in ret
         ]
-        create_client = f"""
+        add_admin = f"""
             Add new course administrator:
             <form action="{url_for("add_admin", course=course)}" method="post">
                 <input name="email" type="email" placeholder="Email address">
                 <input type="submit">
             </form>
         """
-        return "<h3>Admins</h3>" + create_client + "<p>".join(admin_names)
+        with connect_db() as db:
+            ret = db(
+                "SELECT url, sheet FROM course_permissions WHERE course=(%s)", [course]
+            ).fetchall()
+        perms_sheet = [
+            make_row(
+                f'<a href="{url}">{sheet} ({url})</a>',
+                url_for("unset_granular_spreadsheet", course=course),
+            )
+            for url, sheet in ret
+        ]  # there should only be 0-1 perms sheets
+        add_perms_sheet = f"""
+            Add granular permissions sheet (first column should be email, the rest should be permission names):
+            <form action="{url_for("set_granular_spreadsheet", course=course)}" method="post">
+                <input name="url" placeholder="URL">
+                <input name="sheet" placeholder="Sheet Name">
+                <input type="submit">
+            </form>
+        """
+        return (
+            "<h3>Admins</h3>"
+            + add_admin
+            + "<p>".join(admin_names)
+            + "<br>"
+            + "<h3>Granular Permissions</h3>"
+            + add_perms_sheet
+            + "<p>".join(perms_sheet)
+        )
 
-    app.help_info.add(client_data)
+    app.help_info.add(admin_data)
 
     @app.route("/admins/<course>/add_admin", methods=["POST"])
     @course_oauth_secure()
@@ -89,6 +123,26 @@ def create_admins_client(app):
             )
         return redirect(url_for("index"))
 
+    @app.route("/admins/<course>/set_granular_spreadsheet", methods=["POST"])
+    @course_oauth_secure()
+    def set_granular_spreadsheet(course):
+        url = request.form["url"]
+        sheet = request.form["sheet"]
+        with connect_db() as db:
+            db("DELETE FROM course_permissions WHERE course=(%s)", [course])
+            db(
+                "INSERT INTO course_permissions (course, url, sheet) VALUES (%s, %s, %s)",
+                [course, url, sheet],
+            )
+        return redirect(url_for("index"))
+
+    @app.route("/admins/<course>/unset_granular_spreadsheet", methods=["POST"])
+    @course_oauth_secure()
+    def unset_granular_spreadsheet(course):
+        with connect_db() as db:
+            db("DELETE FROM course_permissions WHERE course=(%s)", [course])
+        return redirect(url_for("index"))
+
     @is_admin.bind(app)
     @key_secure
     def handle_is_admin(course, email, force_course=None):
@@ -112,3 +166,59 @@ def create_admins_client(app):
                     "SELECT email, name FROM course_admins WHERE course=(%s)", [course]
                 ).fetchall()
             ]
+
+    @can_user.bind(app)
+    @key_secure
+    def handle_can_user(course, email, action):
+        with connect_db() as db:
+            if bool(
+                db(
+                    "SELECT * FROM course_admins WHERE email=(%s) AND course=(%s)",
+                    [email, course],
+                ).fetchone()
+            ):
+                return True
+            [url, sheet] = db(
+                "SELECT url, sheet FROM course_permissions WHERE course=(%s)", [course]
+            ).fetchone()
+            if not url:
+                return False
+
+        data = web_json(url=url, sheet=sheet)
+        return action in data.get(email, [])
+
+    @who_can.bind(app)
+    @key_secure
+    def handle_who_can(course, action):
+        with connect_db() as db:
+            admins = [
+                admin[0]
+                for admin in db(
+                    "SELECT email FROM course_admins WHERE course=(%s)", [course]
+                ).fetchall()
+            ]
+            [url, sheet] = db(
+                "SELECT url, sheet FROM course_permissions WHERE course=(%s)", [course]
+            ).fetchone()
+            if not url:
+                return False
+
+        data = web_json(url=url, sheet=sheet, by_perm=True)
+        return list(set(admins + data.get(action, [])))
+
+
+def web_json(url, sheet, by_perm=False):
+    resp = read_spreadsheet(url=url, sheet_name=sheet)
+    data = {}
+    if by_perm:
+        for row in resp[1:]:
+            email, perms = row[0], row[1:]
+            for perm in perms:
+                if not perm in data:
+                    data[perm] = []
+                data[perm].append(email)
+        return data
+    for row in resp[1:]:
+        email, perms = row[0], row[1:]
+        data[email] = perms
+    return data
