@@ -4,7 +4,7 @@ from typing import List, Union
 from common.rpc.secrets import get_secret
 from common.rpc.utils import cached, create_service
 
-service = create_service(__name__)
+service = create_service(__name__, providers=["https://394.auth.pr.cs61a.org"])
 
 
 def auth_endpoint(func):
@@ -32,8 +32,15 @@ def list_admins(*, course: str):
 
 @cached()
 @auth_endpoint
-@service.route("/admins/user_can")
-def user_can(*, course: str, email: str, action: str):
+@service.route("/admins/can_user")
+def can_user(*, course: str, email: str, action: str):
+    ...
+
+
+@cached()
+@auth_endpoint
+@service.route("/admins/who_can")
+def who_can(*, course: str, action: str):
     ...
 
 

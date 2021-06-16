@@ -2,7 +2,7 @@ from flask import redirect, request
 
 from auth_utils import course_oauth_secure, get_name, key_secure, get_email
 from common.db import connect_db
-from common.rpc.auth import is_admin, list_admins, user_can, read_spreadsheet
+from common.rpc.auth import is_admin, list_admins, can_user, who_can, read_spreadsheet
 from common.url_for import url_for
 from common.html import error, make_row
 
@@ -167,9 +167,9 @@ def create_admins_client(app):
                 ).fetchall()
             ]
 
-    @user_can.bind(app)
+    @can_user.bind(app)
     @key_secure
-    def handle_user_can(course, email, action):
+    def handle_can_user(course, email, action):
         with connect_db() as db:
             if bool(
                 db(
@@ -185,12 +185,39 @@ def create_admins_client(app):
                 return False
 
         data = web_json(url=url, sheet=sheet)
-        return action in data[email]
+        return action in data.get(email, [])
+
+    @who_can.bind(app)
+    @key_secure
+    def handle_who_can(course, action):
+        with connect_db() as db:
+            admins = [
+                admin[0]
+                for admin in db(
+                    "SELECT email FROM course_admins WHERE course=(%s)", [course]
+                ).fetchall()
+            ]
+            [url, sheet] = db(
+                "SELECT url, sheet FROM course_permissions WHERE course=(%s)", [course]
+            ).fetchone()
+            if not url:
+                return False
+
+        data = web_json(url=url, sheet=sheet, by_perm=True)
+        return set(admins + data.get(action, []))
 
 
-def web_json(url, sheet):
+def web_json(url, sheet, by_perm=False):
     resp = read_spreadsheet(url=url, sheet_name=sheet)
     data = {}
+    if by_perm:
+        for row in resp[1:]:
+            email, perms = row[0], row[1:]
+            for perm in perms:
+                if not perm in data:
+                    data[perm] = []
+                data[perm].append(email)
+        return data
     for row in resp[1:]:
         email, perms = row[0], row[1:]
         data[email] = perms
