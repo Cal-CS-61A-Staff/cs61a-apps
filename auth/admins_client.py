@@ -186,7 +186,7 @@ def create_admins_client(app):
             if not url:
                 return False
 
-        data = web_json(url=url, sheet_name=sheet)
+        data = web_json(url=url, sheet=sheet)
         return action in data[email]
 
 
