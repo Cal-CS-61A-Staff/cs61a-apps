@@ -172,7 +172,7 @@ def create_admins_client(app):
     @user_can.bind(app)
     @key_secure
     def handle_user_can(course, email, action):
-        if is_admin(course, email):
+        if is_admin(course=course, email=email):
             return True
 
         with connect_db() as db:
