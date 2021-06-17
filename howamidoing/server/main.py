@@ -7,7 +7,7 @@ from common.db import connect_db, transaction_db
 from common.oauth_client import create_oauth_client, get_user, is_logged_in, is_staff
 from common.rpc.howamidoing import upload_grades as rpc_upload_grades
 from common.rpc.secrets import only
-from common.rpc.auth import is_admin, validate_secret
+from common.rpc.auth import is_admin, validate_secret, can_user
 from setup_functions import set_default_config, set_grades
 
 from flask import Flask, redirect, request, jsonify, render_template, Response
@@ -18,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
 
-DEV = os.getenv("ENV") != "prod"
+DEV = False  # os.getenv("ENV") != "prod"
 
 IS_SPHINX = "sphinx" in sys.argv[0]
 
@@ -84,6 +84,18 @@ def last_updated():
             ).fetchone()[0]
     except:
         return "Unknown"
+
+
+def has_access_to_all_grades():
+    return (
+        True
+        if DEV
+        else can_user(
+            course=get_course(),
+            email=get_user()["email"],
+            action="export_all_howamidoing_grades",
+        )
+    )
 
 
 def create_client(app):
@@ -153,7 +165,12 @@ def create_client(app):
         if not is_staff(get_course()):
             return dict(success=False)
         with connect_db() as db:
-            if request.args.get("for", "me") == "all":
+            can_access_all_regrades = can_user(
+                course=get_course(),
+                email=get_user()["email"],
+                action="access_all_regrades",
+            )
+            if can_access_all_regrades:
                 regrade_requests = db(
                     "SELECT email, assignment, backup_id, description, status FROM regrade_requests"
                 )
@@ -224,7 +241,8 @@ def create_client(app):
                     if target:
                         email = target
                     else:
-                        all_students = []
+                        show_all_students = has_access_to_all_grades()
+                        students = []
                         with connect_db() as db:
                             lookup = db(
                                 "SELECT shortData FROM students WHERE courseCode=%s",
@@ -232,14 +250,18 @@ def create_client(app):
                             ).fetchall()
                             for row in lookup:
                                 parsed = json.loads(row[0])
-                                if admin or parsed.get("TA", "") in ("", email):
-                                    all_students.append(parsed)
+                                if show_all_students or parsed.get("TA", "") in (
+                                    "",
+                                    email,
+                                ):
+                                    students.append(parsed)
                         return jsonify(
                             {
                                 "success": True,
                                 "isStaff": True,
                                 "isAdmin": admin,
-                                "allStudents": all_students,
+                                "canExportGrades": show_all_students,
+                                "allStudents": students,
                                 "email": user["email"],
                                 "name": user["name"],
                                 "lastUpdated": last_updated(),
@@ -286,7 +308,7 @@ def create_client(app):
     def all_scores():
         if not is_staff(get_course()):
             return jsonify({"success": False})
-        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
+        if not has_access_to_all_grades():
             return jsonify({"success": False})
         with connect_db() as db:
             [header] = db(
@@ -306,7 +328,11 @@ def create_client(app):
     def set_config():
         if not is_staff(get_course()):
             return jsonify({"success": False})
-        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
+        if not DEV and not can_user(
+            course=get_course(),
+            email=get_user()["email"],
+            action="configure_howamidoing",
+        ):
             return jsonify({"success": False})
         data = request.form.get("data")
         with connect_db() as db:
@@ -318,7 +344,11 @@ def create_client(app):
     def set_grades_route():
         if not is_staff(get_course()):
             return jsonify({"success": False})
-        if not DEV and not is_admin(course=get_course(), email=get_user()["email"]):
+        if not DEV and not can_user(
+            course=get_course(),
+            email=get_user()["email"],
+            action="configure_howamidoing",
+        ):
             return jsonify({"success": False})
         data = request.form.get("data")
         with transaction_db() as db:

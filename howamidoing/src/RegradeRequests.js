@@ -20,9 +20,6 @@ class RegradeRequests extends Component {
 
   reloadData = async (target) => {
     var location = "./getRegradeRequests";
-    if (this.props.getAll) {
-      location += "?for=all";
-    }
     var requests = await $.getJSON(location, { target });
     this.setState({ requests: requests });
   };

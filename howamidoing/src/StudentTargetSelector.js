@@ -4,7 +4,7 @@ import $ from "jquery";
 
 import ExportModal from "./ExportModal.js";
 
-export default function StudentTargetSelector({ onSubmit, students, isAdmin }) {
+export default function StudentTargetSelector({ onSubmit, students, isAdmin, canExportGrades }) {
   const [selected, setSelected] = useState(null);
 
   const exportModalRef = React.createRef();
@@ -38,7 +38,6 @@ export default function StudentTargetSelector({ onSubmit, students, isAdmin }) {
         Submit
       </button>
       {isAdmin ? (
-        <>
           <a
             className="btn btn-primary"
             style={{ marginRight: "10px" }}
@@ -46,6 +45,11 @@ export default function StudentTargetSelector({ onSubmit, students, isAdmin }) {
           >
             Edit Config
           </a>
+      ) : (
+        ""
+      )}
+      {canExportGrades ? (
+        <>
           <a
             className="btn btn-success text-white"
             style={{ marginRight: "10px" }}
