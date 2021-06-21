@@ -6,6 +6,7 @@ import * as React from "react";
 export type ID = string;
 export type Time = number;
 export type EnrollmentCode = string;
+export type SheetURL = string;
 
 export type Person = {
   id: ID,

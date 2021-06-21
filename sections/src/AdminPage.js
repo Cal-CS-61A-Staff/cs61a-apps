@@ -20,10 +20,14 @@ import StateContext from "./StateContext";
 import ToggleSwitch from "./ToggleSwitch";
 import useAPI from "./useStateAPI";
 
+import ImportSectionsModal from "./ImportSectionsModal";
+
 export default function AdminPage(): React.Node {
   const { config, currentUser } = useContext(StateContext);
 
   const [message, setMessage] = useState(config.message);
+
+  const [importing, setImporting] = useState(false);
 
   const updateConfig = useAPI("update_config");
   const exportAttendance = useAPI(
@@ -50,6 +54,14 @@ export default function AdminPage(): React.Node {
   const remindTutorsToSetupZoomLinks = useAPI(
     "remind_tutors_to_setup_zoom_links"
   );
+  const importSections = useAPI("import_sections")
+
+  const onSheetURLEntered = (sheetURL) => {
+    importSections({
+      sheet_url: sheetURL,
+    });
+    setImporting(false);
+  };
 
   if (!currentUser?.isStaff) {
     return <Redirect to="/" />;
@@ -157,11 +169,21 @@ export default function AdminPage(): React.Node {
                 >
                   Remind Tutors to Setup Zoom Links
                 </Button>{" "}
+                <Button
+                  variant="secondary"
+                  onClick={() => setImporting(true)}
+                >
+                  Import Sections
+                </Button>
               </p>
             </Tab>
           </Tabs>
         </Col>
       </Row>
+      <ImportSectionsModal
+        show={importing}
+        onClose={onSheetURLEntered}
+      />
     </Container>
   );
 }
