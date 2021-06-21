@@ -21,17 +21,17 @@ type Props = {
 function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
   const also = isStaff ? null : "also";
   if (items.length === 0) {
-    return "No one else has joined this tutorial yet.";
+    return "No one else has joined this section yet.";
   } else if (items.length === 1) {
     return (
       <>
-        {items[0]} has {also} joined this tutorial.
+        {items[0]} has {also} joined this section.
       </>
     );
   } else if (items.length === 2) {
     return (
       <>
-        {items[0]} and {items[1]} have {also} joined this tutorial.
+        {items[0]} and {items[1]} have {also} joined this section.
       </>
     );
   } else {
@@ -41,7 +41,7 @@ function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
         {allButLast.map((item, i) => (
           <span key={i}>{item}, </span>
         ))}
-        and {items[items.length - 1]} have {also} joined this tutorial.
+        and {items[items.length - 1]} have {also} joined this section.
       </>
     );
   }
@@ -180,7 +180,7 @@ export default function EnrolledSectionCard({ section }: Props) {
         {isStaff === false && (
           <p>
             You have enrolled in{" "}
-            {section.staff == null ? "a" : `${section.staff.name}'s`} tutorial!{" "}
+            {section.staff == null ? "a" : `${section.staff.name}'s`} section!{" "}
             {nextText}
           </p>
         )}
@@ -197,7 +197,7 @@ export default function EnrolledSectionCard({ section }: Props) {
             {isStaff ? (
               <Link to={`/section/${section.id}`}>
                 <Button variant="success" size="lg">
-                  Enter Tutorial
+                  Enter Section
                 </Button>
               </Link>
             ) : (
@@ -224,7 +224,7 @@ export default function EnrolledSectionCard({ section }: Props) {
                 : leaveSection({ section_id: section.id })
             }
           >
-            {isStaff ? "Abandon Tutorial" : "Leave Tutorial"}
+            {isStaff ? "Abandon Section" : "Leave Section"}
           </Button>
         )}
       </Card.Body>

@@ -281,17 +281,27 @@ def create_state_client(app: flask.Flask):
     @admin_required
     def import_sections(sheet_url):
         index = read_spreadsheet(course="cs61a", url=sheet_url, sheet_name="Index")
-        header = index[0][:4]
-        if header != ["Day", "Start Time", "End Time", "Sheet"]:
+        header = index[0][:7]
+        if header != [
+            "ID",
+            "Day",
+            "Start Time",
+            "End Time",
+            "Staff Name",
+            "Staff Email",
+            "Label",
+        ]:
             raise Failure("Invalid header for index sheet")
-        for day, start_time, end_time, sheet, *args in index[1:]:
-            sheet: List[List[Union[str, int]]] = read_spreadsheet(
-                course="cs61a", url=sheet_url, sheet_name=repr(sheet)
-            )
-            header = sheet[0]
-            name_col = header.index("Name")
-            email_col = header.index("Email")
-
+        for (
+            id,
+            day,
+            start_time,
+            end_time,
+            staff_name,
+            staff_email,
+            label,
+            *args,
+        ) in index[1:]:
             day = list(calendar.day_name).index(day)
 
             start_time = datetime.strptime(start_time, "%I:%M %p")
@@ -312,27 +322,44 @@ def create_state_client(app: flask.Flask):
             start_time = pst.localize(start_time).timestamp()
             end_time = pst.localize(end_time).timestamp()
 
-            for section in sheet[1:]:
-                tutor_name = section[name_col]
-                tutor_email = section[email_col]
-                if not tutor_name or not tutor_email:
-                    continue
-                tutor_user = User.query.filter_by(email=tutor_email).one_or_none()
-                if tutor_user is None:
-                    tutor_user = User(email=tutor_email, name=tutor_name, is_staff=True)
-                    db.session.add(tutor_user)
-                tutor_user.is_staff = True
+            staff_user = User.query.filter_by(email=staff_email).one_or_none()
+            if staff_user is None:
+                staff_user = User(email=staff_email, name=staff_name, is_staff=True)
+                db.session.add(staff_user)
+            staff_user.is_staff = True
 
-                capacity = sum(1 for col in header if "Student" in col)
+            sheet: List[List[Union[str, int]]] = read_spreadsheet(
+                course="cs61a", url=sheet_url, sheet_name=repr(id)
+            )
+            header = sheet[0]
+            name_col = header.index("Name")
+            email_col = header.index("Email")
 
-                db.session.add(
-                    Section(
-                        start_time=start_time,
-                        end_time=end_time,
-                        capacity=capacity,
-                        staff=tutor_user,
+            students = [
+                dict(name=student[name_col], email=student[email_col])
+                for student in sheet[1:]
+            ]
+            capacity = len(students)
+
+            section = Section(
+                start_time=start_time,
+                end_time=end_time,
+                capacity=capacity,
+                staff=staff_user,
+                tag_string=label,
+            )
+
+            db.session.add(section)
+
+            for student in students:
+                user = User.query.filter_by(email=student["email"])
+                if not user:
+                    user = User(
+                        email=student["email"], name=student["name"], is_staff=False
                     )
-                )
+                    db.session.add(user)
+                user.sections = [section]
+                user.is_staff = False
 
             db.session.commit()
 

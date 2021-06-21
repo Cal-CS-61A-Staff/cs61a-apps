@@ -6,6 +6,7 @@ import * as React from "react";
 export type ID = string;
 export type Time = number;
 export type EnrollmentCode = string;
+export type SheetURL = string;
 
 export type Person = {
   id: ID,
@@ -91,7 +92,7 @@ export function sectionTitle(section: ?Section): React.MixedElement {
       {section.staff == null
         ? "Unknown Tutor"
         : `${section.staff.name}'s section`}{" "}
-      (#{section.id})
+      ({section.tags.join(", ")})
     </>
   );
 }
