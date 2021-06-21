@@ -41,7 +41,7 @@ class RegradeRequests extends Component {
     const unresolvedRows = unresolved.map(
       (request) =>
         // eslint-disable-next-line react/no-array-index-key
-        new RegradeRequest({ request: request })
+        <RegradeRequest request={request} />
     );
 
     const resolved = this.state.requests.filter(
@@ -50,7 +50,7 @@ class RegradeRequests extends Component {
     const resolvedRows = resolved.map(
       (request) =>
         // eslint-disable-next-line react/no-array-index-key
-        new RegradeRequest({ request: request })
+        <RegradeRequest request={request} />
     );
 
     return (
