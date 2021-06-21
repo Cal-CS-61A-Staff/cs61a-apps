@@ -19,11 +19,11 @@ class RegradeRequest extends Component {
   };
 
   getStatus() {
-    if (props.request.status === "requested") {
+    if (this.props.request.status === "requested") {
       return <i className="fa fa-commenting-o"></i>;
-    } else if (props.request.status === "denied") {
+    } else if (this.props.request.status === "denied") {
       return <i className="fa fa-times text-danger"></i>;
-    } else if (props.request.status === "needs followup") {
+    } else if (this.props.request.status === "needs followup") {
       return <i className="fa fa-clock-o"></i>;
     } else {
       return <i className="fa fa-check text-success"></i>;
@@ -33,12 +33,14 @@ class RegradeRequest extends Component {
   render() {
     // eslint-disable-next-line react/no-array-index-key
     return (
-      <tr key={`${props.request.assignment}/${props.request.backup_id}`}>
+      <tr
+        key={`${this.props.request.assignment}/${this.props.request.backup_id}`}
+      >
         {this.cols.map((x) => (
           <td key={x}>
             {x.toLowerCase() === "status"
               ? this.getStatus()
-              : props.request[x.toLowerCase()]}
+              : this.props.request[x.toLowerCase()]}
           </td>
         ))}
         <td>
@@ -52,7 +54,7 @@ class RegradeRequest extends Component {
             </a>
             <RegradeHandlerModal
               ref={this.regradeModalRef}
-              request={props.request}
+              request={this.props.request}
             />
           </div>
         </td>
