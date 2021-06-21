@@ -31,6 +31,12 @@ with connect_db() as db:
     sheet text
 )"""
     )
+    db(
+        """CREATE TABLE IF NOT EXISTS config (
+    conf_key varchar(128),
+    conf_value varchar(128)
+)"""
+    )
 
 
 @app.route("/")
@@ -39,6 +45,12 @@ def index():
     if auth_result == "Authorized!":
         auth_result = html(auth_result)
     return auth_result
+
+
+def is_recovery_enabled():
+    with connect_db() as db:
+        val = db('SELECT conf_value FROM config WHERE conf_key="recovery"').fetchone()
+        return val and val[0] == "true"
 
 
 @app.route("/config")
@@ -82,9 +94,18 @@ def config():
             url_for("add_adjustments"),
             "Submit",
         )
-        + """
+        + f"""
     </p>
-    """
+    <p>
+        Recovery calculations are currently {"enabled" if is_recovery_enabled() else "disabled"}.
+        """
+        + make_row(
+            "",
+            url_for("toggle_recovery"),
+            "Disable" if is_recovery_enabled() else "Enable",
+        )
+        + """
+    </p> """
         + "".join(
             "<p>" + make_row(f"{name} ({gs_code})", url_for("delete_assign", name=name))
             for name, gs_code in gscope
@@ -152,12 +173,24 @@ def delete_adjustments(hashed):
     return redirect(url_for("config"))
 
 
+@app.route("/toggle_recovery", methods=["POST"])
+def toggle_recovery():
+    if not is_staff("cs61a"):
+        return redirect(url_for("config"))
+    with connect_db() as db:
+        was_enabled = is_recovery_enabled()
+        db('DELETE FROM config WHERE conf_key="recovery"')
+        if not was_enabled:
+            db('INSERT INTO config VALUES ("recovery", "true")')
+    return redirect(url_for("config"))
+
+
 @job(app, "update_grades")
 @app.route("/update_grades")
 def run():
     start = datetime.now()
     print(f"Grade update triggered at {str(start)}.", file=sys.stderr)
-    update()
+    update(recovery=is_recovery_enabled())
     end = datetime.now()
     print(f"Grade update completed at {str(end)}.", file=sys.stderr)
     return f"Done. Took {str((end - start).total_seconds())} seconds."

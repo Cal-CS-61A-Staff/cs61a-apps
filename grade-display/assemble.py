@@ -110,6 +110,7 @@ def assemble(gscope, recovery=False, sections=False, adjustments=[]):
 
     # finalize
     out = out[columns]
+    out["TA"] = ""
     out = out.replace("", np.nan)
 
     finalized = out.fillna(0)

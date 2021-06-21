@@ -9,7 +9,7 @@ from common.rpc.auth import get_endpoint
 from common.db import connect_db
 
 
-def update():
+def update(recovery=False):
     if not os.path.exists("data"):
         try:
             os.makedirs("data")
@@ -55,7 +55,10 @@ def update():
 
     print("=================================================")
     assemble.assemble(
-        gscope=gs_assignments, recovery=True, sections=sections, adjustments=adjustments
+        gscope=gs_assignments,
+        recovery=recovery,
+        sections=sections,
+        adjustments=adjustments,
     )
 
     print("=================================================")

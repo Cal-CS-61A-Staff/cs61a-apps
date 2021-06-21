@@ -18,6 +18,7 @@ class App extends Component {
     this.state = {
       isStaff: false,
       isAdmin: false,
+      canExportGrades: false,
       email: null,
       name: null,
       SID: null,
@@ -41,6 +42,7 @@ class App extends Component {
       data,
       isStaff,
       isAdmin,
+      canExportGrades,
       allStudents,
       email,
       name,
@@ -72,6 +74,7 @@ class App extends Component {
       data: { header, data },
       isStaff,
       isAdmin,
+      canExportGrades,
     });
   };
 
@@ -95,6 +98,7 @@ class App extends Component {
         onSubmit={this.reloadData}
         students={this.state.students}
         isAdmin={this.state.isAdmin}
+        canExportGrades={this.state.canExportGrades}
       />
     ) : (
       <StudentView
