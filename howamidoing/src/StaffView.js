@@ -8,7 +8,12 @@ import AssignmentDetails from "./AssignmentDetails.js";
 import ConfigEditor from "./ConfigEditor.js";
 import RegradeRequests from "./RegradeRequests.js";
 
-export default function StaffView({ students, onSubmit, isAdmin, canExportGrades }) {
+export default function StaffView({
+  students,
+  onSubmit,
+  isAdmin,
+  canExportGrades,
+}) {
   if (canExportGrades && window.location.toString().includes("histogram")) {
     return <AssignmentDetails assignment="Labs" onLogin={onSubmit} />;
   }
@@ -16,9 +21,7 @@ export default function StaffView({ students, onSubmit, isAdmin, canExportGrades
     return <ConfigEditor />;
   }
   if (window.location.toString().includes("regrades")) {
-    return (
-      <RegradeRequests />
-    );
+    return <RegradeRequests />;
   }
   return (
     <div>
