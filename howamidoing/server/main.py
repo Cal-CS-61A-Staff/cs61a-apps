@@ -7,6 +7,7 @@ from common.db import connect_db, transaction_db
 from common.oauth_client import create_oauth_client, get_user, is_logged_in, is_staff
 from common.rpc.howamidoing import upload_grades as rpc_upload_grades
 from common.rpc.secrets import only
+from common.rpc.mail import send_email
 from common.rpc.auth import is_admin, validate_secret, can_user
 from setup_functions import set_default_config, set_grades
 
@@ -202,6 +203,7 @@ def create_client(app):
         backup_id = request.form.get("backup_id")
         resolution = request.form.get("resolution").lower()
         reason = request.form.get("reason")
+        subject = f"Regrade Request for {assignment}"
         email_preview = request.form.get("email_preview")
         with connect_db() as db:
             db(
@@ -209,6 +211,13 @@ def create_client(app):
                 status=%s, resolution_reason=%s, emailed=%s
                 WHERE courseCode=%s AND email=%s AND assignment=%s AND backup_id=%s""",
                 [resolution, reason, "yes", get_course(), email, assignment, backup_id],
+            )
+            send_email(
+                sender=f"CS 61A <cs61a@berkeley.edu>",
+                target=email,
+                subject=subject,
+                body=email_preview,
+                _impersonate="mail",
             )
         return redirect("/")
 
