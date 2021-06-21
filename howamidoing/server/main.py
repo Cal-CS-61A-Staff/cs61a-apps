@@ -166,10 +166,14 @@ def create_client(app):
         if not is_staff(get_course()):
             return dict(success=False)
         with connect_db() as db:
-            can_access_all_regrades = True if DEV else can_user(
-                course=get_course(),
-                email=get_user()["email"],
-                action="access_all_regrades",
+            can_access_all_regrades = (
+                True
+                if DEV
+                else can_user(
+                    course=get_course(),
+                    email=get_user()["email"],
+                    action="access_all_regrades",
+                )
             )
             if can_access_all_regrades:
                 regrade_requests = db(
