@@ -21,17 +21,17 @@ type Props = {
 function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
   const also = isStaff ? null : "also";
   if (items.length === 0) {
-    return "No one else has joined this tutorial yet.";
+    return "No one else has joined this section yet.";
   } else if (items.length === 1) {
     return (
       <>
-        {items[0]} has {also} joined this tutorial.
+        {items[0]} has {also} joined this section.
       </>
     );
   } else if (items.length === 2) {
     return (
       <>
-        {items[0]} and {items[1]} have {also} joined this tutorial.
+        {items[0]} and {items[1]} have {also} joined this section.
       </>
     );
   } else {
@@ -41,7 +41,7 @@ function sentenceList(items: Array<React.MixedElement>, isStaff: ?boolean) {
         {allButLast.map((item, i) => (
           <span key={i}>{item}, </span>
         ))}
-        and {items[items.length - 1]} have {also} joined this tutorial.
+        and {items[items.length - 1]} have {also} joined this section.
       </>
     );
   }

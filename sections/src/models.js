@@ -92,7 +92,7 @@ export function sectionTitle(section: ?Section): React.MixedElement {
       {section.staff == null
         ? "Unknown Tutor"
         : `${section.staff.name}'s section`}{" "}
-      (#{section.id})
+      ({section.tags.join(", ")})
     </>
   );
 }
