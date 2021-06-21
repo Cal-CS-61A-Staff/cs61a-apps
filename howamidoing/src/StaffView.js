@@ -17,7 +17,7 @@ export default function StaffView({
   if (canExportGrades && window.location.toString().includes("histogram")) {
     return <AssignmentDetails assignment="Labs" onLogin={onSubmit} />;
   }
-  if (isAdmin && window.location.toString().endsWith("edit")) {
+  if (isAdmin && window.location.toString().includes("edit")) {
     return <ConfigEditor />;
   }
   if (window.location.toString().includes("regrades")) {

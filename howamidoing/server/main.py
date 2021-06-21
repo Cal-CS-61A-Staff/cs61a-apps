@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 AUTHORIZED_ROLES = ["staff", "instructor", "grader"]
 
-DEV = False  # os.getenv("ENV") != "prod"
+DEV = os.getenv("ENV") != "prod"
 
 IS_SPHINX = "sphinx" in sys.argv[0]
 
@@ -135,8 +135,8 @@ def create_client(app):
             return dict(success=False)
         if request.method == "GET":
             return dict(success=False)
-        email = request.form.get("email")
-        assignment = request.form.get("assignment")
+        email = request.get_json().get("email")
+        assignment = request.get_json().get("assignment")
 
         with connect_db() as db:
             status = db(
@@ -148,8 +148,8 @@ def create_client(app):
         if status and status not in ("needs followup"):
             return dict(success=False)
 
-        backup_id = request.form.get("backup_id")
-        description = request.form.get("description")
+        backup_id = request.get_json().get("backup_id")
+        description = request.get_json().get("description")
         ta = request.form.get("ta")
         status = "requested"
         with connect_db() as db:
@@ -159,14 +159,14 @@ def create_client(app):
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                 [get_course(), email, assignment, backup_id, description, ta, status],
             )
-        return render_template("index.html", courseCode=get_course())
+        return dict(success=True)
 
     @app.route("/getRegradeRequests")
     def getRegradeRequests():
         if not is_staff(get_course()):
             return dict(success=False)
         with connect_db() as db:
-            can_access_all_regrades = can_user(
+            can_access_all_regrades = True if DEV else can_user(
                 course=get_course(),
                 email=get_user()["email"],
                 action="access_all_regrades",
@@ -198,13 +198,13 @@ def create_client(app):
             return dict(success=False)
         if request.method == "GET":
             return dict(success=False)
-        email = request.form.get("email")
-        assignment = request.form.get("assignment")
-        backup_id = request.form.get("backup_id")
-        resolution = request.form.get("resolution").lower()
-        reason = request.form.get("reason")
+        email = request.get_json().get("email")
+        assignment = request.get_json().get("assignment")
+        backup_id = request.get_json().get("backup_id")
+        resolution = request.get_json().get("resolution").lower()
+        reason = request.get_json().get("reason")
         subject = f"Regrade Request for {assignment}"
-        email_preview = request.form.get("email_preview")
+        email_preview = request.get_json().get("email_preview")
         with connect_db() as db:
             db(
                 """UPDATE regrade_requests SET 
@@ -212,14 +212,15 @@ def create_client(app):
                 WHERE courseCode=%s AND email=%s AND assignment=%s AND backup_id=%s""",
                 [resolution, reason, "yes", get_course(), email, assignment, backup_id],
             )
-            send_email(
-                sender=f"CS 61A <cs61a@berkeley.edu>",
-                target=email,
-                subject=subject,
-                body=email_preview,
-                _impersonate="mail",
-            )
-        return render_template("index.html", courseCode=get_course())
+            if not DEV:
+                send_email(
+                    sender=f"CS 61A <cs61a@berkeley.edu>",
+                    target=email,
+                    subject=subject,
+                    body=email_preview,
+                    _impersonate="mail",
+                )
+        return dict(success=True)
 
     @app.route("/canRegrade")
     def canRequestRegrade():

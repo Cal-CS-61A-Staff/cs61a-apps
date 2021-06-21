@@ -23,6 +23,28 @@ export default React.forwardRef((props, ref) => {
       });
     };
 
+    onClickSubmit = () => {
+      const data = {
+        email: props.request.email,
+        assignment: props.request.assignment,
+        backup_id: props.request.backup_id,
+        resolution: this.state.resolution,
+        reason: this.state.reason,
+        email_preview: this.getEmailPreview(),
+      };
+
+      $.ajax({
+        url: "./resolveRegradeRequest",
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        success: ({ success }) => {
+          window.location.reload();
+        },
+      });
+    };
+
     getEmailPreview() {
       const two =
         this.state.resolution === "Granted"
@@ -64,93 +86,93 @@ export default React.forwardRef((props, ref) => {
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
-              <form action="./resolveRegradeRequest" method="post">
-                <div className="modal-body">
-                  <div style={{ width: "100%", overflowX: "auto" }}>
-                    <input
-                      type="hidden"
-                      readOnly
-                      className="form-control-plaintext"
-                      name="email"
-                      value={props.request.email}
+              <div className="modal-body">
+                <div style={{ width: "100%", overflowX: "auto" }}>
+                  <input
+                    type="hidden"
+                    readOnly
+                    className="form-control-plaintext"
+                    name="email"
+                    value={props.request.email}
+                  />
+                  <input
+                    type="hidden"
+                    readOnly
+                    className="form-control-plaintext"
+                    name="assignment"
+                    value={props.request.assignment}
+                  />
+                  <input
+                    type="hidden"
+                    readOnly
+                    className="form-control-plaintext"
+                    name="backup_id"
+                    value={props.request.backup_id}
+                  />
+                  <p>
+                    <a
+                      href={`https://okpy.org/admin/grading/${props.request.backup_id}`}
+                    >
+                      Okpy Backup
+                    </a>
+                  </p>
+                  <p>
+                    Description
+                    <br />
+                    {props.request.description}
+                  </p>
+                  <div className="form-group">
+                    <label htmlFor="resolution">Conclusion</label>
+                    <select
+                      className="form-control"
+                      name="resolution"
+                      onChange={this.onChangeSelect}
+                    >
+                      <option>Granted</option>
+                      <option>Needs Followup</option>
+                      <option>Denied</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="reason">Add a reason</label>
+                    <textarea
+                      className="form-control"
+                      name="reason"
+                      rows="3"
+                      onChange={this.onChangeReason}
                     />
-                    <input
-                      type="hidden"
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="email_preview">Email Preview</label>
+                    <textarea
+                      className="form-control"
                       readOnly
-                      className="form-control-plaintext"
-                      name="assignment"
-                      value={props.request.assignment}
+                      name="email_preview"
+                      rows="10"
+                      value={this.getEmailPreview()}
                     />
-                    <input
-                      type="hidden"
-                      readOnly
-                      className="form-control-plaintext"
-                      name="backup_id"
-                      value={props.request.backup_id}
-                    />
-                    <p>
-                      <a
-                        href={`https://okpy.org/admin/grading/${props.request.backup_id}`}
-                      >
-                        Okpy Backup
-                      </a>
-                    </p>
-                    <p>
-                      Description
-                      <br />
-                      {props.request.description}
-                    </p>
-                    <div className="form-group">
-                      <label htmlFor="resolution">Conclusion</label>
-                      <select
-                        className="form-control"
-                        name="resolution"
-                        onChange={this.onChangeSelect}
-                      >
-                        <option>Granted</option>
-                        <option>Needs Followup</option>
-                        <option>Denied</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="reason">Add a reason</label>
-                      <textarea
-                        className="form-control"
-                        name="reason"
-                        rows="3"
-                        onChange={this.onChangeReason}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="email_preview">Email Preview</label>
-                      <textarea
-                        className="form-control"
-                        readOnly
-                        name="email_preview"
-                        rows="10"
-                        value={this.getEmailPreview()}
-                      />
-                    </div>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button
-                    type="submit"
-                    className="btn btn-success text-white"
-                    style={{ marginLeft: "10px" }}
-                    id="resolveRequestButton"
-                  >
-                    Resolve Request
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    data-dismiss="modal"
-                  >
-                    Close
-                  </button>
-                </div>
-              </form>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="submit"
+                  className="btn btn-success text-white"
+                  style={{ marginLeft: "10px" }}
+                  id="resolveRequestButton"
+                  onClick={this.onClickSubmit}
+                  data-dismiss="modal"
+                >
+                  Resolve Request
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
