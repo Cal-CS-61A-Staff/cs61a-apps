@@ -180,7 +180,7 @@ export default function EnrolledSectionCard({ section }: Props) {
         {isStaff === false && (
           <p>
             You have enrolled in{" "}
-            {section.staff == null ? "a" : `${section.staff.name}'s`} tutorial!{" "}
+            {section.staff == null ? "a" : `${section.staff.name}'s`} section!{" "}
             {nextText}
           </p>
         )}
@@ -197,7 +197,7 @@ export default function EnrolledSectionCard({ section }: Props) {
             {isStaff ? (
               <Link to={`/section/${section.id}`}>
                 <Button variant="success" size="lg">
-                  Enter Tutorial
+                  Enter Section
                 </Button>
               </Link>
             ) : (
@@ -224,7 +224,7 @@ export default function EnrolledSectionCard({ section }: Props) {
                 : leaveSection({ section_id: section.id })
             }
           >
-            {isStaff ? "Abandon Tutorial" : "Leave Tutorial"}
+            {isStaff ? "Abandon Section" : "Leave Section"}
           </Button>
         )}
       </Card.Body>
