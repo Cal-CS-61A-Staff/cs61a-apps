@@ -32,6 +32,13 @@ export default function GradeTable(props) {
           <th scope="col" style={{ width: "25%" }}>
             {scoreHeader}
           </th>
+          {window.ENABLE_REGRADES ? (
+            <th scope="col" style={{ width: "10%" }}>
+              Regrade
+            </th>
+          ) : (
+            ""
+          )}
         </tr>
       </thead>
       <tbody>{rows}</tbody>
