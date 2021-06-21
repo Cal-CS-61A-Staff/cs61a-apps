@@ -38,20 +38,18 @@ class RegradeRequests extends Component {
     const unresolved = this.state.requests.filter(
       (request) => request.status === "requested"
     );
-    const unresolvedRows = unresolved.map(
-      (request) =>
-        // eslint-disable-next-line react/no-array-index-key
-        <RegradeRequest request={request} />
-    );
+    const unresolvedRows = unresolved.map((request) => (
+      // eslint-disable-next-line react/no-array-index-key
+      <RegradeRequest request={request} />
+    ));
 
     const resolved = this.state.requests.filter(
       (request) => request.status !== "requested"
     );
-    const resolvedRows = resolved.map(
-      (request) =>
-        // eslint-disable-next-line react/no-array-index-key
-        <RegradeRequest request={request} />
-    );
+    const resolvedRows = resolved.map((request) => (
+      // eslint-disable-next-line react/no-array-index-key
+      <RegradeRequest request={request} />
+    ));
 
     return (
       <table className="table table-hover">
