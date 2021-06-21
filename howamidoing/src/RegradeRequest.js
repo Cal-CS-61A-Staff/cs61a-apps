@@ -10,10 +10,6 @@ class RegradeRequest extends Component {
     this.regradeModalRef = React.createRef();
   }
 
-  componentDidMount() {
-    return this.reloadData();
-  }
-
   handleRegradeModalClick = () => {
     $(this.regradeModalRef.current).modal();
   };
