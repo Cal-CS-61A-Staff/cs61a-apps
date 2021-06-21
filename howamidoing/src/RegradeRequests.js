@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import $ from "jquery";
 
-import RegradeHandlerModal from "./RegradeHandlerModal.js";
+import RegradeRequest from "./RegradeRequest.js";
 
 class RegradeRequests extends Component {
   constructor(props) {
@@ -10,8 +10,6 @@ class RegradeRequests extends Component {
       requests: [],
     };
     this.cols = ["Email", "Assignment", "Status"];
-
-    this.regradeModalRef = React.createRef();
   }
 
   componentDidMount() {
@@ -22,10 +20,6 @@ class RegradeRequests extends Component {
     var location = "./getRegradeRequests";
     var requests = await $.getJSON(location, { target });
     this.setState({ requests: requests });
-  };
-
-  handleRegradeModalClick = () => {
-    $(this.regradeModalRef.current).modal();
   };
 
   getStatus(request) {
@@ -44,62 +38,20 @@ class RegradeRequests extends Component {
     const unresolved = this.state.requests.filter(
       (request) => request.status === "requested"
     );
-    const unresolvedRows = unresolved.map((request) => (
-      // eslint-disable-next-line react/no-array-index-key
-      <tr key={`${request.assignment}/${request.backup_id}`}>
-        {this.cols.map((x) => (
-          <td key={x}>
-            {x.toLowerCase() === "status"
-              ? this.getStatus(request)
-              : request[x.toLowerCase()]}
-          </td>
-        ))}
-        <td>
-          <div className="collapse show">
-            <a
-              href="#"
-              onClick={this.handleRegradeModalClick}
-              style={{ marginLeft: "10px" }}
-            >
-              <i className="fa fa-external-link"></i>
-            </a>
-            <RegradeHandlerModal ref={this.regradeModalRef} request={request} />
-          </div>
-        </td>
-      </tr>
-    ));
+    const unresolvedRows = unresolved.map(
+      (request) =>
+        // eslint-disable-next-line react/no-array-index-key
+        new RegradeRequest({ request: request })
+    );
 
     const resolved = this.state.requests.filter(
       (request) => request.status !== "requested"
     );
-    const resolvedRows = resolved.map((request) => (
-      // eslint-disable-next-line react/no-array-index-key
-      <tr key={`${request.assignment}/${request.backup_id}`}>
-        {this.cols.map((x) => (
-          <td key={x}>
-            {x.toLowerCase() === "status"
-              ? this.getStatus(request)
-              : request[x.toLowerCase()]}
-          </td>
-        ))}
-        <td>
-          <div className="collapse show">
-            <a
-              href="#"
-              onClick={this.handleRegradeModalClick}
-              style={{ marginLeft: "10px" }}
-            >
-              <i className="fa fa-external-link"></i>
-            </a>
-            <RegradeHandlerModal
-              ref={this.regradeModalRef}
-              request={request}
-              resolved={true}
-            />
-          </div>
-        </td>
-      </tr>
-    ));
+    const resolvedRows = resolved.map(
+      (request) =>
+        // eslint-disable-next-line react/no-array-index-key
+        new RegradeRequest({ request: request })
+    );
 
     return (
       <table className="table table-hover">
