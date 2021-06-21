@@ -108,7 +108,7 @@ def create_client(app):
     def histogram():
         return render_template("index.html", courseCode=get_course())
 
-    @app.route("/requests")
+    @app.route("/regrades")
     def regrade_requests():
         return render_template("index.html", courseCode=get_course())
 
@@ -159,7 +159,7 @@ def create_client(app):
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                 [get_course(), email, assignment, backup_id, description, ta, status],
             )
-        return redirect("/")
+        return render_template("index.html", courseCode=get_course())
 
     @app.route("/getRegradeRequests")
     def getRegradeRequests():
@@ -219,7 +219,7 @@ def create_client(app):
                 body=email_preview,
                 _impersonate="mail",
             )
-        return redirect("/")
+        return render_template("index.html", courseCode=get_course())
 
     @app.route("/canRegrade")
     def canRequestRegrade():
