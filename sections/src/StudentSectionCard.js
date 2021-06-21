@@ -100,14 +100,14 @@ export default function StudentSectionCard({
           <Card.Text>{section.description}</Card.Text>
         </Card.Body>
         <ListGroup variant="flush">
-          {section.students.map((student, i) => (
+          {/* {section.students.map((student, i) => (
             <ListGroup.Item
               key={i}
               active={student.email === currentUser?.email}
             >
               {enrolledInThisSection || isStaff ? student.name : "A student"}
             </ListGroup.Item>
-          ))}
+          ))} */}
           {hasSpace && !isStaff && config.canStudentsChange ? (
             <ListGroup.Item
               disabled={enrolledInThisSection}

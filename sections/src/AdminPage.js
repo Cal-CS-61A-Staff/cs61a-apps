@@ -54,7 +54,7 @@ export default function AdminPage(): React.Node {
   const remindTutorsToSetupZoomLinks = useAPI(
     "remind_tutors_to_setup_zoom_links"
   );
-  const importSections = useAPI("import_sections")
+  const importSections = useAPI("import_sections");
 
   const onSheetURLEntered = (sheetURL) => {
     importSections({
@@ -169,10 +169,7 @@ export default function AdminPage(): React.Node {
                 >
                   Remind Tutors to Setup Zoom Links
                 </Button>{" "}
-                <Button
-                  variant="secondary"
-                  onClick={() => setImporting(true)}
-                >
+                <Button variant="secondary" onClick={() => setImporting(true)}>
                   Import Sections
                 </Button>
               </p>
@@ -180,10 +177,7 @@ export default function AdminPage(): React.Node {
           </Tabs>
         </Col>
       </Row>
-      <ImportSectionsModal
-        show={importing}
-        onClose={onSheetURLEntered}
-      />
+      <ImportSectionsModal show={importing} onClose={onSheetURLEntered} />
     </Container>
   );
 }
