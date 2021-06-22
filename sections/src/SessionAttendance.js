@@ -46,10 +46,10 @@ export default function SectionAttendance({ section, session }: Props) {
 
   const notStartedSectionExists =
     mostRecentSession == null ||
-    moment().isAfter(moment.unix(mostRecentSession.startTime).add(3, "days"));
+    moment().isAfter(moment.unix(mostRecentSession.startTime).add(1.5, "days"));
 
   // if the latest section recently occurred, it is still "latest", not the one in the future
-  const latestSectionStartTime = nextSessionStartTime(section, -3);
+  const latestSectionStartTime = nextSessionStartTime(section, -1.5);
 
   if (session == null && !notStartedSectionExists) {
     return null;
