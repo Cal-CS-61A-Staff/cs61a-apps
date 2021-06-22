@@ -337,18 +337,19 @@ def create_state_client(app: flask.Flask):
             students = [student[email_col] for student in sheet[1:]]
             capacity = len(students) * 2
 
-            section = Section(
-                start_time=start_time,
-                end_time=end_time,
-                capacity=capacity,
-                staff=staff_user,
-                tag_string=label,
-            )
-
-            db.session.add(section)
+            section = Section.query.filter_by(id=id).one_or_none()
+            if not section:
+                section = Section(
+                    start_time=start_time,
+                    end_time=end_time,
+                    capacity=capacity,
+                    staff=staff_user,
+                    tag_string=label,
+                )
+                db.session.add(section)
 
             for student in students:
-                user = User.query.filter_by(email=student)
+                user = User.query.filter_by(email=student).one_or_none()
                 if not user:
                     user = User(email=student, name=student, is_staff=False)
                     db.session.add(user)
@@ -356,7 +357,6 @@ def create_state_client(app: flask.Flask):
                 user.is_staff = False
 
             db.session.commit()
-
         return refresh_state()
 
     @api

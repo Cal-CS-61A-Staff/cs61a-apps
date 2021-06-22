@@ -53,7 +53,7 @@ export default function SectionPage({ id }: Props): React.Node {
         <Row>
           <Col>
             <h1>
-              Tutorial #{section.id}
+              Section #{section.id}
               <Tags tags={section.tags} />
             </h1>
             <p className="lead">{sectionInterval(section)}</p>
