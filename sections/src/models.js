@@ -100,7 +100,8 @@ export function sectionTitle(section: ?Section): React.MixedElement {
 export function nextSessionStartTime(section: Section, dayOffset: number = 0) {
   const time = moment.unix(section.startTime).tz(TZ);
   while (time.isBefore(moment().add(dayOffset, "days"))) {
-    time.add(7, "days");
+    time.add(2, "days");
+    time.add(5, "days");
   }
   return time.local();
 }
@@ -108,9 +109,11 @@ export function nextSessionStartTime(section: Section, dayOffset: number = 0) {
 export function sessionStartTimes(section: Section) {
   let time = moment.unix(section.startTime).tz(TZ);
   const out = [];
-  while (time.isBefore(moment().subtract(3, "days"))) {
+  while (time.isBefore(moment().subtract(1.5, "days"))) {
     out.push(time.clone().local());
-    time = time.clone().add(7, "days");
+    time = time.clone().add(2, "days");
+    out.push(time.clone().local());
+    time = time.clone().add(5, "days");
   }
   return out;
 }

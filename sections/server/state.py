@@ -27,7 +27,7 @@ from models import (
     db,
 )
 
-FIRST_WEEK_START = datetime(year=2021, month=1, day=25).timestamp()
+FIRST_WEEK_START = datetime(year=2021, month=6, day=20).timestamp()
 
 
 class Failure(Exception):
@@ -439,7 +439,9 @@ def create_state_client(app: flask.Flask):
                         else len(
                             set(
                                 (attendance.session.start_time - FIRST_WEEK_START)
-                                // (60 * 60 * 24 * 7)
+                                // (60 * 60 * 24 * 2)
+                                # in summer, sections occur once every 2 days
+                                # todo: make this less hacky
                                 for attendance in user.attendances
                                 if attendance.session.start_time >= FIRST_WEEK_START
                                 and attendance.status == AttendanceStatus.present
