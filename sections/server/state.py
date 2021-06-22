@@ -329,17 +329,13 @@ def create_state_client(app: flask.Flask):
             staff_user.is_staff = True
 
             sheet: List[List[Union[str, int]]] = read_spreadsheet(
-                course="cs61a", url=sheet_url, sheet_name=repr(id)
+                course="cs61a", url=sheet_url, sheet_name=str(id)
             )
             header = sheet[0]
-            name_col = header.index("Name")
             email_col = header.index("Email")
 
-            students = [
-                dict(name=student[name_col], email=student[email_col])
-                for student in sheet[1:]
-            ]
-            capacity = len(students)
+            students = [student[email_col] for student in sheet[1:]]
+            capacity = len(students) * 2
 
             section = Section(
                 start_time=start_time,
@@ -352,11 +348,9 @@ def create_state_client(app: flask.Flask):
             db.session.add(section)
 
             for student in students:
-                user = User.query.filter_by(email=student["email"])
+                user = User.query.filter_by(email=student)
                 if not user:
-                    user = User(
-                        email=student["email"], name=student["name"], is_staff=False
-                    )
+                    user = User(email=student, name=student, is_staff=False)
                     db.session.add(user)
                 user.sections = [section]
                 user.is_staff = False
