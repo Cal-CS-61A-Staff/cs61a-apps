@@ -49,10 +49,10 @@ class Row extends Component {
       className += " pointable";
     }
 
-    let displayData = props.customDisplay && props.customDisplay(props);
-    let displayName =
+    const displayData = props.customDisplay && props.customDisplay(props);
+    const displayName =
       displayData && displayData.name ? displayData.name : props.name;
-    let description = displayData && displayData.description;
+    const description = displayData && displayData.description;
 
     const score =
       // 0 is a valid score
