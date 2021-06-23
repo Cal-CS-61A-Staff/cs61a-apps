@@ -126,7 +126,9 @@ export function sectionInterval(section: Section): React.MixedElement {
     .add(section.endTime - section.startTime, "seconds");
   return (
     <>
-      {startTime.format("dddd h:mma")} &rarr; {endTime.format("h:mma")}
+      {startTime.format("dddd")}/
+      {startTime.clone().add(48, "hours").format("dddd")}{" "}
+      {startTime.format("h:mma")} &rarr; {endTime.format("h:mma")}
       {!isPT && <> ({moment().tz(moment.tz.guess()).format("z")})</>}
     </>
   );
