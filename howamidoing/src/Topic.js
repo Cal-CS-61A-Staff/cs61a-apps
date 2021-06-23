@@ -61,6 +61,7 @@ export default class Topic extends Component {
             regradeable={true}
             email={this.props.email}
             ta={this.props.ta}
+            customDisplay={elem.customDisplay}
           />
         );
       } else {
@@ -103,6 +104,7 @@ export default class Topic extends Component {
           childrenCollapsed={this.state.collapsed}
           collapsed={this.props.collapsed}
           onChange={this.props.onFutureScoreChange}
+          customDisplay={this.props.schema.customDisplay}
         />
         {rows}
       </>

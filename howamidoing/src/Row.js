@@ -49,8 +49,15 @@ class Row extends Component {
       className += " pointable";
     }
 
+    let displayData = props.customDisplay && props.customDisplay(props);
+    let displayName = displayData && displayData.name ? displayData.name : props.name;
+    let description = displayData && displayData.description;
+
     const score =
-      Number.isNaN(props.score) || props.future || props.booleanValued ? (
+      // 0 is a valid score
+      displayData && displayData.score !== undefined ? (
+        String(displayData.score)
+      ) : Number.isNaN(props.score) || props.future || props.booleanValued ? (
         <ScoreEntry
           name={props.name}
           value={props.plannedScore}
@@ -99,7 +106,17 @@ class Row extends Component {
             false
           )}
 
-          <div className="collapse show">{props.name}</div>
+          <div className="collapse show d-inline-block" style={{ whiteSpace: "pre-wrap" }}>
+            {displayName}
+            {!props.childrenCollapsed ? (
+              <>
+                <br />
+                {description}
+              </>
+            ) : (
+              false
+            )}
+          </div>
         </td>
         <td>
           <div className="collapse show">
