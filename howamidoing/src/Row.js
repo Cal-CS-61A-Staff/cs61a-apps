@@ -50,7 +50,8 @@ class Row extends Component {
     }
 
     let displayData = props.customDisplay && props.customDisplay(props);
-    let displayName = displayData && displayData.name ? displayData.name : props.name;
+    let displayName =
+      displayData && displayData.name ? displayData.name : props.name;
     let description = displayData && displayData.description;
 
     const score =
@@ -106,7 +107,10 @@ class Row extends Component {
             false
           )}
 
-          <div className="collapse show d-inline-block" style={{ whiteSpace: "pre-wrap" }}>
+          <div
+            className="collapse show d-inline-block"
+            style={{ whiteSpace: "pre-wrap" }}
+          >
             {displayName}
             {!props.childrenCollapsed ? (
               <>
