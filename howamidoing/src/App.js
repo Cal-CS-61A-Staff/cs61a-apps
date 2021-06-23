@@ -24,6 +24,7 @@ class App extends Component {
       SID: null,
       students: [],
       success: false,
+      firstLoad: true,
       data: null,
       lastUpdated: "Unknown",
     };
@@ -75,6 +76,7 @@ class App extends Component {
       isStaff,
       isAdmin,
       canExportGrades,
+      firstLoad: false,
     });
   };
 
@@ -91,7 +93,9 @@ class App extends Component {
   };
 
   render() {
-    const contents = !this.state.success ? (
+    const contents = this.state.firstLoad ? (
+      <p>Loading...</p>
+    ) : !this.state.success ? (
       <LoginButton onClick={this.refresh} />
     ) : this.state.isStaff ? (
       <StaffView
