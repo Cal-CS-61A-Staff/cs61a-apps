@@ -110,6 +110,11 @@ class StudentView extends Component {
       this.state.future
     );
 
+    const rawData = {
+      header: this.props.header,
+      data: this.props.data,
+    };
+
     const warning = window.WARNING && (
       // eslint-disable-next-line react/no-danger
       <div
@@ -138,6 +143,7 @@ class StudentView extends Component {
         <GradeTable
           schema={ASSIGNMENTS}
           data={totals}
+          rawData={rawData}
           planned={this.state.plannedScores}
           plannedTotals={plannedTotals}
           future={this.state.future}
