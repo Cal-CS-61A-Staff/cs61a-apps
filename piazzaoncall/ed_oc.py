@@ -12,8 +12,8 @@ from common.rpc.auth import ed_course_id, read_spreadsheet, post_slack_message
 from ed import network
 
 STAFF = read_spreadsheet(
-    url="https://docs.google.com/spreadsheets/d/1rhZEVryWVhMWiEyHZWMDhk_zgQ_4eg_RJevq2K3nVno/",
-    sheet_name="piazza-bot",
+    url="https://docs.google.com/spreadsheets/d/1LjmNRvwe0S3aOXcVhThtdbjZIAbeL8VwrOR9Ym6CBqk/",
+    sheet_name="ed-bot",
 )
 headers = STAFF[0]
 STAFF = STAFF[1:]
