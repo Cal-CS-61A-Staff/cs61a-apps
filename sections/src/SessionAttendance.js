@@ -112,7 +112,7 @@ export default function SectionAttendance({ section, session }: Props) {
                 size="sm"
                 onClick={() => setAdding(true)}
               >
-                Add Student
+                Add Students
               </Button>
             )}
           </CardHeader>
@@ -148,10 +148,10 @@ export default function SectionAttendance({ section, session }: Props) {
       {session != null && (
         <AddStudentModal
           show={adding}
-          onAdd={(student) =>
+          onAdd={(students) =>
             setAttendance({
               session_id: session.id,
-              student,
+              students,
               status: ("present": AttendanceStatusType),
             })
           }
