@@ -133,7 +133,7 @@ export default function SectionAttendance({ section, session }: Props) {
                         if (session != null)
                           setAttendance({
                             session_id: session.id,
-                            student: student.email,
+                            students: student.email,
                             status,
                           });
                       }}
