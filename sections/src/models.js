@@ -101,7 +101,9 @@ export function nextSessionStartTime(section: Section, dayOffset: number = 0) {
   const time = moment.unix(section.startTime).tz(TZ);
   while (time.isBefore(moment().add(dayOffset, "days"))) {
     time.add(2, "days");
-    time.add(5, "days");
+    if (time.isBefore(moment().add(dayOffset, "days"))) {
+      time.add(5, "days");
+    }
   }
   return time.local();
 }

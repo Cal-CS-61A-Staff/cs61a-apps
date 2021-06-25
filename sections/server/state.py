@@ -255,16 +255,17 @@ def create_state_client(app: flask.Flask):
 
     @api
     @staff_required
-    def set_attendance(session_id: str, student: str, status: Optional[str]):
+    def set_attendance(session_id: str, students: str, status: Optional[str]):
         session_id = int(session_id)
         session = Session.query.get(session_id)
         status = AttendanceStatus[status]
-        student = User.query.filter_by(email=student).one()
-        Attendance.query.filter_by(session_id=session_id, student=student).delete()
-        if status is not None:
-            db.session.add(
-                Attendance(status=status, session_id=session_id, student=student)
-            )
+        for student in students.split(","):
+            student = User.query.filter_by(email=student.strip()).one_or_none()
+            Attendance.query.filter_by(session_id=session_id, student=student).delete()
+            if student is not None and status is not None:
+                db.session.add(
+                    Attendance(status=status, session_id=session_id, student=student)
+                )
         db.session.commit()
         return fetch_section(section_id=session.section_id)
 
