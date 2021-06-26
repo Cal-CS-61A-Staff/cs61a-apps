@@ -41,7 +41,7 @@ export default function SectionRoster({ section }: Props) {
 
   const copyEmailsToClipboard = () => {
     const studentEmails = section.students
-      .map((student) => student.email)
+      .map((student) => `${student.name} <${student.email}>`)
       .join(", ");
     navigator.clipboard.writeText(studentEmails);
   };
