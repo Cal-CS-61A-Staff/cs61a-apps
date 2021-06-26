@@ -46,7 +46,7 @@ export default class Topic extends Component {
           <Row
             name={elem.name}
             score={this.props.data[elem.name]}
-            rawData={this.props.rawData}
+            rawScores={this.props.rawScores}
             plannedScore={this.props.planned[elem.name]}
             placeholder={this.props.plannedTotals[elem.name]}
             hidden={elem.hidden}
@@ -70,7 +70,7 @@ export default class Topic extends Component {
           <Topic
             schema={elem}
             data={this.props.data}
-            rawData={this.props.rawData}
+            rawScores={this.props.rawScores}
             planned={this.props.planned}
             plannedTotals={this.props.plannedTotals}
             readOnly={readOnly}
@@ -95,7 +95,7 @@ export default class Topic extends Component {
         <Row
           name={this.props.schema.name}
           score={this.props.data[this.props.schema.name]}
-          rawData={this.props.rawData}
+          rawScores={this.props.rawScores}
           plannedScore={this.props.planned[this.props.schema.name]}
           placeholder={this.props.plannedTotals[this.props.schema.name]}
           readOnly={this.props.readOnly}
