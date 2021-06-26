@@ -39,11 +39,12 @@ export default function SectionRoster({ section }: Props) {
     return <Redirect to="/" />;
   }
 
-  
   const copyEmailsToClipboard = () => {
-    const studentEmails = section.students.map(student => student.email).join(", ")
+    const studentEmails = section.students
+      .map((student) => student.email)
+      .join(", ");
     navigator.clipboard.writeText(studentEmails);
-  }
+  };
 
   return (
     <>
