@@ -39,6 +39,12 @@ export default function SectionRoster({ section }: Props) {
     return <Redirect to="/" />;
   }
 
+  
+  const copyEmailsToClipboard = () => {
+    const studentEmails = section.students.map(student => student.email).join(", ")
+    navigator.clipboard.writeText(studentEmails);
+  }
+
   return (
     <>
       <FlexLayout>
@@ -63,6 +69,21 @@ export default function SectionRoster({ section }: Props) {
             </Card>
           </CardHolder>
         )}
+        <CardHolder>
+          <Card>
+            <Card.Body>
+              <Card.Title>Copy Roster</Card.Title>
+              <Card.Text>Gets student emails.</Card.Text>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={copyEmailsToClipboard}
+              >
+                Copy Roster
+              </Button>
+            </Card.Body>
+          </Card>
+        </CardHolder>
         {section.students.map((student) => (
           <CardHolder key={student.email}>
             <Card>
