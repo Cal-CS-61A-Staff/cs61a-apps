@@ -50,10 +50,13 @@ class StudentView extends Component {
       }
     }
 
-    if(typeof rawScores.Metadata === "string" && rawScores.Metadata[0] === "{") {
+    if (
+      typeof rawScores.Metadata === "string" &&
+      rawScores.Metadata[0] === "{"
+    ) {
       try {
         rawScores.Metadata = JSON.parse(rawScores.Metadata);
-      } catch(err) {
+      } catch (err) {
         console.error(err);
       }
     }
