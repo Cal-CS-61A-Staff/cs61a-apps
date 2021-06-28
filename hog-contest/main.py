@@ -130,7 +130,7 @@ def test():
 @ratelimited(timedelta(minutes=1))
 def submit_strategy():
     curr_time = datetime.now().astimezone(timezone("US/Pacific"))
-    end_time = datetime(2021, 2, 23, 23, 59, 0, tzinfo=timezone("US/Pacific"))
+    end_time = datetime(2021, 7, 8, 23, 59, 0, tzinfo=timezone("US/Pacific"))
     if curr_time > end_time:
         abort(423, "The competition has ended.")
     try:
