@@ -86,7 +86,7 @@ def assemble(gscope, recovery=False, adjustments=[]):
                 lambda row: exam_recovery(row["Midterm 2 (Raw)"], attendance(row), 50),
                 axis=1,
             )
-        
+
         if "mt" in gscope:
             grades["Midterm (Recovery)"] = grades.apply(
                 lambda row: exam_recovery(row["Midterm (Raw)"], attendance(row), 55),
