@@ -7,7 +7,7 @@ export default function GradeTable(props) {
     <Topic
       schema={elem}
       data={props.data}
-      rawScores={props.rawScores}
+      metadata={props.metadata}
       planned={props.planned}
       plannedTotals={props.plannedTotals}
       indent={0}

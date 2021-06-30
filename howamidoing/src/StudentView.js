@@ -39,31 +39,26 @@ class StudentView extends Component {
   constructor(props) {
     super(props);
 
-    const rawScores = {};
+    let metadata = null;
     const scores = {};
     initialize(props.header, props.data);
 
     for (let i = 0; i !== props.header.length; ++i) {
-      rawScores[props.header[i]] = props.data[i];
+      if (props.header[i] === "_metadata") {
+        try {
+          metadata = JSON.parse(props.data[i]);
+        } catch (err) {
+          console.error(err);
+        }
+      }
       if (LOOKUP[props.header[i]]) {
         scores[props.header[i]] = props.data[i];
       }
     }
 
-    if (
-      typeof rawScores.Metadata === "string" &&
-      rawScores.Metadata[0] === "{"
-    ) {
-      try {
-        rawScores.Metadata = JSON.parse(rawScores.Metadata);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
     this.state = {
       scores,
-      rawScores,
+      metadata,
       plannedScores: extend(scores, LOOKUP),
       future: false,
     };
@@ -152,7 +147,7 @@ class StudentView extends Component {
         <GradeTable
           schema={ASSIGNMENTS}
           data={totals}
-          rawScores={this.state.rawScores}
+          metadata={this.state.metadata}
           planned={this.state.plannedScores}
           plannedTotals={plannedTotals}
           future={this.state.future}
