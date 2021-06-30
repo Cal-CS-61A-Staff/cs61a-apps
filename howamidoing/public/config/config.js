@@ -37,6 +37,11 @@ window.ENABLE_PLANNING = ENABLE_PLANNING;
 window.EXPLANATION_IS_LINK = true;
 
 window.ENABLE_REGRADES = true;
+window.DISABLE_REGRADES_FOR = [
+  "Midterm 1 (Total)",
+  "Midterm 2 (Total)",
+  "Total Discussion Attendance (for midterm recovery)",
+];
 window.ACCEPT_MESSAGE =
   "We have accepted your request, and have updated your score on Okpy. The changes will be reflected on Howamidoing within 12 hours.";
 window.REJECT_MESSAGE = "No changes were made to your grade.";
