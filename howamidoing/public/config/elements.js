@@ -29,7 +29,8 @@ export function Topic(
   name,
   children,
   cappedScore = Infinity,
-  customCalculator
+  customCalculator,
+  customDisplay
 ) {
   let future = true;
   const maxChildScores = [];
@@ -80,18 +81,20 @@ export function Topic(
     maxScore,
     futureMaxScore,
     customCalculator,
+    customDisplay,
     future,
     uncapped,
   };
 }
 
-export function Assignment(name, maxScore) {
+export function Assignment(name, maxScore, customDisplay) {
   return {
     isTopic: false,
     name,
     maxScore,
     futureMaxScore: maxScore,
     future: !header.includes(name),
+    customDisplay,
   };
 }
 

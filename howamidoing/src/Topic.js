@@ -46,6 +46,7 @@ export default class Topic extends Component {
           <Row
             name={elem.name}
             score={this.props.data[elem.name]}
+            metadata={this.props.metadata}
             plannedScore={this.props.planned[elem.name]}
             placeholder={this.props.plannedTotals[elem.name]}
             hidden={elem.hidden}
@@ -61,6 +62,7 @@ export default class Topic extends Component {
             regradeable={true}
             email={this.props.email}
             ta={this.props.ta}
+            customDisplay={elem.customDisplay}
           />
         );
       } else {
@@ -68,6 +70,7 @@ export default class Topic extends Component {
           <Topic
             schema={elem}
             data={this.props.data}
+            metadata={this.props.metadata}
             planned={this.props.planned}
             plannedTotals={this.props.plannedTotals}
             readOnly={readOnly}
@@ -92,6 +95,7 @@ export default class Topic extends Component {
         <Row
           name={this.props.schema.name}
           score={this.props.data[this.props.schema.name]}
+          metadata={this.props.metadata}
           plannedScore={this.props.planned[this.props.schema.name]}
           placeholder={this.props.plannedTotals[this.props.schema.name]}
           readOnly={this.props.readOnly}
@@ -103,6 +107,7 @@ export default class Topic extends Component {
           childrenCollapsed={this.state.collapsed}
           collapsed={this.props.collapsed}
           onChange={this.props.onFutureScoreChange}
+          customDisplay={this.props.schema.customDisplay}
         />
         {rows}
       </>
