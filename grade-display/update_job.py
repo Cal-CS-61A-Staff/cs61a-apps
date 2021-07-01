@@ -16,8 +16,6 @@ def update(recovery=False):
         except FileExistsError as e:
             print("Data folder exists, false alarm!")
 
-    sections = "sp21" in get_endpoint(course="cs61a")
-
     with connect_db() as db:
         gscope: List[Tuple[str, str]] = db(
             "SELECT name, gs_code FROM gscope",
@@ -49,15 +47,13 @@ def update(recovery=False):
                 f"Gradescope export for '{name} ({gs_code})' failed.", file=sys.stderr
             )
 
-    if sections:
-        print("=================================================")
-        sections_export.export()
+    print("=================================================")
+    sections_export.export()
 
     print("=================================================")
     assemble.assemble(
         gscope=gs_assignments,
         recovery=recovery,
-        sections=sections,
         adjustments=adjustments,
     )
 

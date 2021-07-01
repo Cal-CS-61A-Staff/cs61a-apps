@@ -23,8 +23,16 @@ class Row extends Component {
   checkRegradeable = async (target) => {
     if (this.props.regradeable) {
       const location = `./canRegrade?name=${this.props.name}&email=${this.props.email}`;
-      const { canRegrade } = await $.getJSON(location, { target });
-      console.log(`can regrade ${this.props.name}? ${canRegrade}`);
+      let { canRegrade } = await $.getJSON(location, { target });
+      if (
+        window.DISABLE_REGRADES_FOR &&
+        window.DISABLE_REGRADES_FOR.includes(this.props.name)
+      ) {
+        canRegrade = false;
+      }
+      if (this.props.future) {
+        canRegrade = false;
+      }
       this.setState({
         regradeable: canRegrade,
       });

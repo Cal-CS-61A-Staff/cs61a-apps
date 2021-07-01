@@ -24,11 +24,11 @@ export default function AddStudentModal({ show, onAdd, onClose }: Props) {
   return (
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Add Student</Modal.Title>
+        <Modal.Title>Add Student(s)</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <FormControl
-          placeholder="Student Email Address"
+          placeholder="Student(s) Email Address (comma-separated)"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -38,7 +38,7 @@ export default function AddStudentModal({ show, onAdd, onClose }: Props) {
           Close
         </Button>
         <Button variant="primary" onClick={() => onAdd(email).then(onClose)}>
-          Add Student
+          Add Student(s)
         </Button>
       </Modal.Footer>
     </Modal>

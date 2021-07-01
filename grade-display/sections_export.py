@@ -3,14 +3,14 @@ from common.rpc.sections import rpc_export_attendance
 
 
 def export():
-    print("Getting tutorial attendance...")
+    print("Getting section attendance...")
 
     raw = rpc_export_attendance(full=False)["custom"]["attendances"]
     c = csv.reader(raw)
 
-    print("Saving tutorial attendance...")
-    with open("data/tutorials.csv", "w") as f:
-        f.write("Email,Tutorial Attendance (Total)\n")
+    print("Saving section attendance...")
+    with open("data/sections.csv", "w") as f:
+        f.write("Email,Section Attendance (Total)\n")
         f.write(raw)
     print("Done.")
 
