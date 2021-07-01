@@ -50,8 +50,7 @@ class StudentView extends Component {
         } catch (err) {
           console.error(err);
         }
-      }
-      if (LOOKUP[props.header[i]]) {
+      } else if (LOOKUP[props.header[i]]) {
         scores[props.header[i]] = props.data[i];
       }
     }
