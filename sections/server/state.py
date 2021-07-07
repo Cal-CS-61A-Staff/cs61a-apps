@@ -440,7 +440,7 @@ def create_state_client(app: flask.Flask):
                         else len(
                             set(
                                 (attendance.session.start_time - FIRST_WEEK_START)
-                                // (60 * 60 * 24 * 2)
+                                // (60 * 60 * 24 * 1.5)
                                 # in summer, sections occur once every 2 days
                                 # todo: make this less hacky
                                 for attendance in user.attendances
