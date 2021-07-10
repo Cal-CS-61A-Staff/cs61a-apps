@@ -74,7 +74,7 @@ def assemble(gscope, recovery=False, adjustments=[]):
     grades = pd.merge(grades, sections, how="left", on="Email").fillna(0)
 
     # in su21, grant everyone points for discussion 0
-    grades['Discussion 0'] = 1.0
+    grades["Discussion 0"] = 1.0
 
     if recovery:
         print("Calculating recovery points...")
