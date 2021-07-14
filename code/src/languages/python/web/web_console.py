@@ -248,10 +248,8 @@ def branches(tree):
     return tree[1:] if isinstance(tree, list) else tree.branches
 
 
-def print_tree(t, indent=0):
-    print("  " * indent + str(label(t)))
-    for b in branches(t):
-        print_tree(b, indent + 1)
+def print_tree(tree):
+    print(tree)
 
 
 def draw(lst):
@@ -345,7 +343,15 @@ def input(prompt=""):
 
 
 class TreeList(list):
-    pass
+    def __str__(self):
+        return "\n".join(self.indented())
+
+    def indented(self):
+        lines = []
+        for b in branches(self):
+            for line in b.indented():
+                lines.append("  " + line)
+        return [str(label(self))] + lines
 
 
 old_type = type
@@ -654,6 +660,7 @@ editor_ns = {
     "is_leaf": is_leaf,
     "label": label,
     "branches": branches,
+    "print_tree": print_tree,
     "test": run_doctests,
     "__run_all_doctests": run_all_doctests,
 }
