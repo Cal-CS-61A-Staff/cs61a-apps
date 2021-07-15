@@ -218,7 +218,7 @@ def is_tree_internal(elem):
 
 
 def is_tree(elem):
-    if isinstance(tree, list) or len(elem) < 1:
+    if not isinstance(elem, list) or len(elem) < 1:
         return False
     for branch in branches(elem):
         if not is_tree(branch):
