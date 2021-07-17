@@ -1,6 +1,6 @@
 // @flow strict
 
-import React from "react";
+import React, {useState} from "react";
 import Button from "react-bootstrap/Button";
 import { AttendanceStatus } from "./models";
 import type { AttendanceStatusType } from "./models";
@@ -18,6 +18,7 @@ const buttonColorMap = {
 };
 
 export default function AttendanceRow({ editable, status, onClick }: Props) {
+  const [currentStatus, setStatus] = useState(status);
   return (
     <>
       {Object.entries(AttendanceStatus).map(([statusOption, text]) => (
@@ -25,13 +26,17 @@ export default function AttendanceRow({ editable, status, onClick }: Props) {
           <Button
             size="sm"
             variant={
-              status === statusOption
+              statusOption === currentStatus
                 ? buttonColorMap[statusOption]
                 : `outline-${buttonColorMap[statusOption]}`
             }
             disabled={!editable && status !== statusOption}
-            onClick={() =>
-              onClick && onClick(((statusOption: any): AttendanceStatusType))
+            onClick={() => {
+              setStatus(statusOption);
+              return onClick && onClick(((statusOption: any): AttendanceStatusType));
+            }
+              
+
             }
           >
             {text}

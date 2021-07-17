@@ -15,6 +15,7 @@ import type { ID, PersonDetails } from "./models";
 import { sectionTitle } from "./models";
 import StateContext from "./StateContext";
 import useAPI from "./useAPI";
+import useSectionAPI from "./useSectionAPI";
 
 type Props = {
   userID?: ID,
@@ -25,12 +26,13 @@ export default function HistoryPage({ userID }: Props): React.Node {
   const [loadedUser, setLoadedUser] = useState<?PersonDetails>(null);
 
   const fetchUser = useAPI("fetch_user", setLoadedUser);
+  const setAttendance = useSectionAPI("set_attendance");
 
   useEffect(() => {
     if (userID != null) {
       fetchUser({ user_id: userID });
     }
-  }, [userID, fetchUser]);
+  }, [userID, fetchUser, setAttendance]);
 
   if (
     (userID == null) === (currentUser?.isStaff === true) ||
@@ -64,25 +66,41 @@ export default function HistoryPage({ userID }: Props): React.Node {
               </tr>
             </thead>
             <tbody>
-              {user.attendanceHistory.map(({ section, session, status }, i) => (
-                <tr key={i} className="text-center">
-                  <td className="align-middle">
-                    <b>{moment.unix(session.startTime).format("MMMM D")}</b>
-                  </td>
-                  <td className="align-middle">
-                    {section != null && currentUser.isStaff ? (
-                      <Link to={`/section/${section.id}`}>
-                        {sectionTitle(section)}
-                      </Link>
-                    ) : (
-                      sectionTitle(section)
-                    )}
-                  </td>
-                  <td>
-                    <AttendanceRow editable={false} status={status} />
-                  </td>
-                </tr>
-              ))}
+              {user.attendanceHistory.map(({ section, session, status }, i) => {
+                return (
+                  <tr key={i} className="text-center">
+                    <td className="align-middle">
+                      <b>{moment.unix(session.startTime).format("MMMM D")}</b>
+                    </td>
+                    <td className="align-middle">
+                      {section != null && currentUser.isStaff ? (
+                        <Link to={`/section/${section.id}`}>
+                          {sectionTitle(section)}
+                        </Link>
+                      ) : (
+                        sectionTitle(section)
+                      )}
+                    </td>
+                    <td>
+                      <AttendanceRow
+                        editable={
+                          currentUser.isStaff &&
+                          section.staff.email === currentUser.email
+                        }
+                        status={status}
+                        onClick={(stat) => {
+                          if (session != null)
+                            setAttendance({
+                              session_id: session.id,
+                              students: user.email,
+                              status: stat,
+                            });
+                        }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </Table>
         </Col>
