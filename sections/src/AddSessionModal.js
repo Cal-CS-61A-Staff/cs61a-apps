@@ -31,7 +31,7 @@ export default function AddSessionModel({ section, show, onClose }: Props) {
       <Modal.Body>
         <ListGroup variant="flush">
           {startTimes.map((startTime) => (
-            <ListGroup.Item>
+            <ListGroup.Item key={`${startTime}-${section.id}`}>
               {startTime.format("MMMM D")}{" "}
               <FloatRightDiv>
                 <Button
