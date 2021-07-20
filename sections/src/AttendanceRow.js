@@ -1,14 +1,16 @@
 // @flow strict
 
-import React, {useState} from "react";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import { AttendanceStatus } from "./models";
 import type { AttendanceStatusType } from "./models";
+import useSectionAPI from "./useSectionAPI";
 
 type Props = {
   editable: boolean,
   status: ?AttendanceStatusType,
-  onClick?: (AttendanceStatusType) => void,
+  sessionId: string,
+  email: String,
 };
 
 const buttonColorMap = {
@@ -17,8 +19,14 @@ const buttonColorMap = {
   absent: "danger",
 };
 
-export default function AttendanceRow({ editable, status, onClick }: Props) {
+export default function AttendanceRow({
+  editable,
+  status,
+  sessionId,
+  email,
+}: Props) {
   const [currentStatus, setStatus] = useState(status);
+  const setAttendance = useSectionAPI("set_attendance");
   return (
     <>
       {Object.entries(AttendanceStatus).map(([statusOption, text]) => (
@@ -32,12 +40,18 @@ export default function AttendanceRow({ editable, status, onClick }: Props) {
             }
             disabled={!editable && status !== statusOption}
             onClick={() => {
-              setStatus(statusOption);
-              return onClick && onClick(((statusOption: any): AttendanceStatusType));
-            }
-              
-
-            }
+              if (sessionId != null && email != null) {
+                const settingAttendance = async () => {
+                  await setAttendance({
+                    session_id: sessionId,
+                    students: email,
+                    status: statusOption,
+                  });
+                  setStatus(statusOption);
+                };
+                settingAttendance();
+              }
+            }}
           >
             {text}
           </Button>{" "}

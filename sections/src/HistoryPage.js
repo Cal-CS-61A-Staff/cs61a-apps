@@ -15,7 +15,6 @@ import type { ID, PersonDetails } from "./models";
 import { sectionTitle } from "./models";
 import StateContext from "./StateContext";
 import useAPI from "./useAPI";
-import useSectionAPI from "./useSectionAPI";
 
 type Props = {
   userID?: ID,
@@ -26,13 +25,12 @@ export default function HistoryPage({ userID }: Props): React.Node {
   const [loadedUser, setLoadedUser] = useState<?PersonDetails>(null);
 
   const fetchUser = useAPI("fetch_user", setLoadedUser);
-  const setAttendance = useSectionAPI("set_attendance");
 
   useEffect(() => {
     if (userID != null) {
       fetchUser({ user_id: userID });
     }
-  }, [userID, fetchUser, setAttendance]);
+  }, [userID, fetchUser]);
 
   if (
     (userID == null) === (currentUser?.isStaff === true) ||
@@ -88,14 +86,8 @@ export default function HistoryPage({ userID }: Props): React.Node {
                           section.staff.email === currentUser.email
                         }
                         status={status}
-                        onClick={(stat) => {
-                          if (session != null)
-                            setAttendance({
-                              session_id: session.id,
-                              students: user.email,
-                              status: stat,
-                            });
-                        }}
+                        sessionId={session.id}
+                        email={user.email}
                       />
                     </td>
                   </tr>
