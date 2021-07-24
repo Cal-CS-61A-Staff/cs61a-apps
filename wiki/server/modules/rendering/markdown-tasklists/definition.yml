@@ -1,0 +1,8 @@
+key: markdownTasklists
+title: Task Lists
+description: Parse task lists to checkboxes
+author: requarks.io
+icon: mdi-format-list-checks
+enabledDefault: true
+dependsOn: markdownCore
+props: {}

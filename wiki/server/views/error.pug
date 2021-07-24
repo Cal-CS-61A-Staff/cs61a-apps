@@ -1,0 +1,12 @@
+extends master.pug
+
+block body
+  #root.is-fullscreen
+    .app-error
+      a(href='/')
+        img(src='/_assets/svg/logo-wikijs.svg')
+      strong Oops, something went wrong...
+      span= message
+            
+      if error.stack
+        pre: code #{error.stack}

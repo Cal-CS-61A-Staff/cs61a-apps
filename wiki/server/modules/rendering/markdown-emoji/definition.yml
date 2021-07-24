@@ -1,0 +1,8 @@
+key: markdownEmoji
+title: Emoji
+description: Convert tags to emojis
+author: requarks.io
+icon: mdi-sticker-emoji
+enabledDefault: true
+dependsOn: markdownCore
+props: {}

@@ -1,0 +1,37 @@
+key: s3
+title: Amazon S3
+description: Amazon S3 is a cloud computing web service offered by Amazon Web Services which provides object storage.
+author: andrewsim
+logo: https://static.requarks.io/logo/aws-s3.svg
+website: https://aws.amazon.com/s3/
+isAvailable: true
+supportedModes:
+  - push
+defaultMode: push
+schedule: false
+props:
+  region:
+    type: String
+    title: Region
+    hint: The AWS datacenter region where the bucket will be created.
+    order: 1
+  bucket:
+    type: String
+    title: Unique bucket name
+    hint: The unique bucket name to create (e.g. wiki-johndoe).
+    order: 2
+  accessKeyId:
+    type: String
+    title: Access Key ID
+    hint: The Access Key.
+    order: 3
+  secretAccessKey:
+    type: String
+    title: Secret Access Key
+    hint: The Secret Access Key for the Access Key ID you created above.
+    sensitive: true
+    order: 4
+actions:
+  - handler: exportAll
+    label: Export All
+    hint: Output all content from the DB to S3, overwriting any existing data. If you enabled S3 after content was created or you temporarily disabled it, you'll want to execute this action to add the missing content.

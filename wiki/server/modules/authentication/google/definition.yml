@@ -1,0 +1,24 @@
+key: google
+title: Google
+description: Google specializes in Internet-related services and products, which include online advertising technologies, search engine, cloud computing, software, and hardware.
+author: requarks.io
+logo: https://static.requarks.io/logo/google.svg
+color: red darken-1
+website: https://console.developers.google.com/
+isAvailable: true
+useForm: false
+scopes:
+  - profile
+  - email
+  - openid
+props:
+  clientId:
+    type: String
+    title: Client ID
+    hint: Application Client ID
+    order: 1
+  clientSecret:
+    type: String
+    title: Client Secret
+    hint: Application Client Secret
+    order: 2
