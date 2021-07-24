@@ -1,2 +1,12 @@
 build_type: none
 deploy_type: docker
+dependencies:
+  - repo: Cal-CS-61A-Staff/wikijs
+    src: assets
+    dest: assets
+  - repo: Cal-CS-61A-Staff/wikijs
+    src: server
+    dest: server
+  - repo: Cal-CS-61A-Staff/wikijs
+    src: package.json
+    dest: package.json
