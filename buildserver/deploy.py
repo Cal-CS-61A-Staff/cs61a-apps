@@ -59,7 +59,9 @@ def gen_env_variables(app: App, pr_number: int):
             username=app.name,
             password=db_pw,
             database=database,
-            query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
+            query={"unix_socket": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)}
+            if app.name != "wiki"
+            else {"socketPath": "{}/{}".format("/cloudsql", DB_INSTANCE_NAME)},
         ).__to_string__(hide_password=False)
     else:
         database_url = None
