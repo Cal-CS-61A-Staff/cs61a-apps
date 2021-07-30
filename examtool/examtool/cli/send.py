@@ -19,6 +19,12 @@ from examtool.cli.utils import hidden_target_folder_option, exam_name_option, pr
     show_default=True,
 )
 @click.option(
+    "--body",
+    default=None,
+    help="A file to the body of the email you want sent. You can specify the course by adding `{course}` and the exam name by adding `{exam}`.",
+    type=click.File("r"),
+)
+@click.option(
     "--filename",
     default="Encrypted {course} Exam.pdf",
     help="The PDF filename to use.",
@@ -30,7 +36,7 @@ from examtool.cli.utils import hidden_target_folder_option, exam_name_option, pr
     default=False,
     help="Use the 61A Mailtool, instead of sendgrid",
 )
-def send(exam, target, email, subject, filename, mailtool=False):
+def send(exam, target, email, subject, body, filename, mailtool=False):
     """
     Email an encrypted PDF to all students taking an exam. Specify `email` to email only a particular student.
     """
@@ -41,19 +47,24 @@ def send(exam, target, email, subject, filename, mailtool=False):
 
     filename = filename.format(course=course)
     subject = subject.format(course=course)
-    body = (
-        "Hello!\n\n"
-        "You have an upcoming exam taking place on exam.cs61a.org. "
-        "You should complete your exam on that website.\n\n"
-        "Course: {course}\n"
-        "Exam: {exam}\n\n"
-        "However, if you encounter technical difficulties and are unable to do so, "
-        "we have attached an encrypted PDF containing the same exam. "
-        "You can then email your exam solutions to course staff before the deadline "
-        "rather than submitting using exam.cs61a.org. "
-        "To unlock the PDF, use the password that is revealed on Piazza when the exam starts.\n\n"
-        "Good luck, and remember to have fun!"
-    ).format(course=course, exam=exam)
+    if body is None:
+        body = (
+            "Hello!\n\n"
+            "You have an upcoming exam taking place on exam.cs61a.org. "
+            "You should complete your exam on that website.\n\n"
+            "Course: {course}\n"
+            "Exam: {exam}\n\n"
+            "However, if you encounter technical difficulties and are unable to do so, "
+            "we have attached an encrypted PDF containing the same exam. "
+            "You can then email your exam solutions to course staff before the deadline "
+            "rather than submitting using exam.cs61a.org. "
+            "To unlock the PDF, use the password that is revealed on Piazza when the exam starts.\n\n"
+            "Good luck, and remember to have fun!"
+        )
+    else:
+        body = body.read()
+
+    body = body.format(course=course, exam=exam)
 
     roster = []
     if email:
