@@ -1,4 +1,3 @@
-from buildtool import load, callback, find
 from os.path import basename
 
 rules = load("rules.py")
@@ -10,6 +9,6 @@ for src in find("*.c"):
     all_rules.append(rules.declare(name=name, src=src, out=f"../build/{name}.out"))
 
 callback(
-    name="all",
+    name="all_examples",
     deps=all_rules,
 )

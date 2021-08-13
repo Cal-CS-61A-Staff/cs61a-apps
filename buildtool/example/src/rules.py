@@ -1,5 +1,3 @@
-from buildtool import callback
-
 ENV = dict(PATH=["@//env/bin/", "/bin"])
 
 

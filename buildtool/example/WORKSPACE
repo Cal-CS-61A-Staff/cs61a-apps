@@ -1,6 +1,3 @@
-from buildtool import config, callback
-
-
 def declare_gcc_symlink():
     def impl(ctx):
         target = ctx.input(sh=f"which gcc").strip()

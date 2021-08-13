@@ -152,9 +152,12 @@ def cli(
         flags = {flag[0].lower(): loads(flag[1]) for flag in flags}
 
         if not skip_setup:
-            setup_rule_lookup = load_rules(
+            setup_rule_lookup, macros = load_rules(
                 flags, workspace=True, skip_version_check=skip_version_check
             )
+
+            if macros:
+                raise BuildException("Macros are not supported in setup rules.")
 
             setup_targets = [
                 target[5:] for target in targets if target.startswith("setup:")
@@ -176,7 +179,7 @@ def cli(
                 quiet,
             )
 
-        target_rule_lookup = load_rules(flags, skip_version_check=skip_version_check)
+        target_rule_lookup, macros = load_rules(flags, skip_version_check=skip_version_check)
         target_rule_lookup.verify()
 
         all_files = get_repo_files()
@@ -230,7 +233,7 @@ def cli(
                         target_rule_lookup=target_rule_lookup,
                         source_files=source_files,
                         cache_directory=cache_directory,
-                        repo_root=repo_root,
+                        macros=macros,
                     ),
                     [target for target in targets if not target.startswith("setup:")],
                     num_threads,
