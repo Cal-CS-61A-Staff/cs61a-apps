@@ -1,17 +1,17 @@
 import os
 import traceback
-from typing import Callable, Dict, List, Optional, Set
+from typing import Callable, Dict, List, Optional, Sequence, Set
 
 from colorama import Style
 
 from cache import make_cache_load, make_cache_store
-from common.hash_utils import HashState
 from context import Env
 from execution import ExecutionContext
 from fs_utils import hash_file
 from monitoring import create_status_monitor, log
 from state import Rule, TargetLookup
 from utils import BuildException, CacheMiss, MissingDependency
+from common.hash_utils import HashState
 
 
 class WorkspaceExecutionContext(ExecutionContext):
