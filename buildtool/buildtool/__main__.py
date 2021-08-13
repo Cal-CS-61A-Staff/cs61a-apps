@@ -7,16 +7,16 @@ from shutil import rmtree
 from typing import List, Tuple
 
 import click
-from cache import STATS
 from colorama import Fore, Style
 
 from build_coordinator import run_build
 from build_worker import TIMINGS as BUILD_TIMINGS
+from cache import STATS
 from common.cli_utils import pretty_print
+from fs_utils import find_root, get_repo_files
+from loader import TIMINGS as LOAD_TIMINGS, config, load_rules
 from monitoring import enable_logging, enable_profiling
 from state import BuildState
-from fs_utils import find_root, get_repo_files
-from loader import config, load_rules, TIMINGS as LOAD_TIMINGS
 from utils import BuildException
 from workspace_setup import initialize_workspace
 

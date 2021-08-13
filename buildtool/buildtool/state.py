@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from queue import Queue
 from threading import Lock
-from typing import Dict, List, Optional, Sequence, Set, Callable
+from typing import Callable, Dict, List, Optional, Sequence, Set
 
 from context import Context
 from monitoring import StatusMonitor

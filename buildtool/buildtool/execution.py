@@ -4,18 +4,18 @@ import os
 import traceback
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Callable, Collection, Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional
 
 from colorama import Style
 
 from cache import make_cache_store
+from common.hash_utils import HashState
 from common.shell_utils import sh as run_shell
 from context import Env, MemorizeContext
 from fs_utils import copy_helper, hash_file
 from monitoring import log
 from state import BuildState, Rule
 from utils import BuildException, MissingDependency
-from common.hash_utils import HashState
 
 
 class ExecutionContext(MemorizeContext):

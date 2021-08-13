@@ -16,8 +16,6 @@ from providers import (
     DepSet,
     DepsProvider,
     GlobDepSet,
-    IterableDepSet,
-    LazyDepSet,
     OutputProvider,
     TransitiveDepsProvider,
     TransitiveOutputProvider,

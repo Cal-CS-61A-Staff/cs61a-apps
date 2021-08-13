@@ -5,9 +5,8 @@ from pathlib import Path
 from shutil import SameFileError, copyfile, copytree
 from typing import List
 
-from utils import BuildException
-
 from common.shell_utils import sh
+from utils import BuildException
 
 
 def find_root():

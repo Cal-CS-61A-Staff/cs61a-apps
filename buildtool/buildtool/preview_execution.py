@@ -1,13 +1,12 @@
-import os
-from typing import Callable, Union, Dict
+from typing import Callable, Dict
 
 from cache import make_cache_load
+from common.hash_utils import HashState
 from context import Env, MemorizeContext
 from fs_utils import hash_file
 from monitoring import log
 from state import BuildState, Rule
-from utils import BuildException, CacheMiss, MissingDependency
-from common.hash_utils import HashState
+from utils import CacheMiss, MissingDependency
 
 
 class PreviewContext(MemorizeContext):

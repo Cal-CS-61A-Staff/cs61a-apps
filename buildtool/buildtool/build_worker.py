@@ -7,8 +7,9 @@ from queue import Empty, Queue
 from shutil import rmtree
 from subprocess import CalledProcessError
 
-from cache import make_cache_load, make_cache_store
 from colorama import Style
+
+from cache import make_cache_load, make_cache_store
 from execution import build
 from monitoring import log
 from preview_execution import get_deps
