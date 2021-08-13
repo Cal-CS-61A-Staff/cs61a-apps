@@ -185,7 +185,6 @@ def build(
                     f"Working Directory: {scratch_path}/{ctx.cwd}\n",
                     e.stdout.decode("utf-8"),
                     e.stderr.decode("utf-8"),
-                    traceback.format_exc(),
                 ]
             )
         )
