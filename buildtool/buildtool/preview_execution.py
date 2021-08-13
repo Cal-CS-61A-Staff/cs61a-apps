@@ -32,7 +32,7 @@ def make_dep_fetcher(build_state: BuildState):
         try:
             rule = None
             if input_path not in build_state.source_files:
-                rule = build_state.target_rule_lookup.lookup(build_state, input_path)
+                rule = build_state.target_rule_lookup.try_lookup(input_path)
                 # this input may be stale / unbuilt
                 # if so, do not read it, but instead throw MissingDependency
                 if rule not in build_state.ready:

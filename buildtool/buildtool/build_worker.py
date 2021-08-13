@@ -252,7 +252,7 @@ def worker(build_state: BuildState, index: int):
             TIMINGS[str(todo)] += run_time
         except Exception as e:
             if isinstance(e, BuildException):
-                suffix = f"\n{Style.RESET_ALL}"
+                suffix = f"\n{Style.RESET_ALL}" + traceback.format_exc()
             else:
                 suffix = f"\n{Style.RESET_ALL}" + traceback.format_exc()
             build_state.status_monitor.stop()

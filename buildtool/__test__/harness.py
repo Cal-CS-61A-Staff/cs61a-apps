@@ -270,6 +270,10 @@ class Environment:
         contents = self._update_contents(file)
         self.log(f'UPDATING FILE {file.path} with contents: "{contents}"')
 
+    def delete_file(self, file: File):
+        os.remove(self._buildpath(file.path))
+        self.log(f"DELETING FILE {file.path}")
+
     def declare_rule(self, *actions) -> Rule:
         letter = chr(ord("A") + self.rule_cnt)
         self.rule_cnt += 1
