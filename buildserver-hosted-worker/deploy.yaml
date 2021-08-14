@@ -1,8 +1,5 @@
 build_type: none
-deploy_type: docker
-cpus: 4
-memory_limit: 8G
-concurrency: 1
-tasks:
-  - name: rebuilder
-    schedule: "0 * * * *"
+deploy_type: hosted
+permissions:
+  - storage
+  - rpc
