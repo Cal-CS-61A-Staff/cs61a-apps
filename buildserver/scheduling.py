@@ -32,6 +32,8 @@ There will be some number of rows with status = success or failure, at most one 
 at most one with status = queued, and some number with status = pushed. 
 """
 
+TARGETS_BUILT_ON_WORKER = ["website-base"]
+
 
 def enqueue_builds(
     targets: List[str],
@@ -91,10 +93,18 @@ def enqueue_builds(
         # sanity check that there are no duplicate apps
         assert len(queued) == len({app for app, _ in queued})
         for app, packed_ref in queued:
-            conflicts = db(
-                "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND status='building'",
-                [app, pr_number],
-            ).fetchall()
+            if app in TARGETS_BUILT_ON_WORKER:
+                # we can only build one target on the worker at a time, even if it will deploy to a different service
+                conflicts = db(
+                    "SELECT * FROM builds WHERE app=%s AND status='building'",
+                    [app, pr_number],
+                ).fetchall()
+            else:
+                conflicts = db(
+                    "SELECT * FROM builds WHERE app=%s AND pr_number=%s AND status='building'",
+                    [app, pr_number],
+                ).fetchall()
+
             if conflicts:
                 # cannot build app, because someone else is currently building
                 continue
