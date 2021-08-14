@@ -11,6 +11,7 @@ from app_config import App
 from build import build, clone_commit
 from common.db import connect_db
 from common.rpc.buildserver import clear_queue
+from common.rpc.buildserver_hosted_worker import build_worker_build
 from common.shell_utils import redirect_descriptor
 from dependency_loader import load_dependencies
 from deploy import deploy_commit
@@ -21,7 +22,7 @@ from github_utils import (
     pack,
     unpack,
 )
-from scheduling import enqueue_builds, report_build_status
+from scheduling import TARGETS_BUILT_ON_WORKER, enqueue_builds, report_build_status
 from service_management import get_pr_subdomains, update_service_routes
 from target_determinator import determine_targets
 
@@ -49,9 +50,12 @@ def land_app_worker(
     sha: str,
     repo: Repository,
 ):
-    load_dependencies(app, sha, repo)
-    build(app)
-    deploy_commit(app, pr_number)
+    if app.name in TARGETS_BUILT_ON_WORKER:
+        build_worker_build(sha=sha, pr_number=pr_number, timeout=20 * 60)
+    else:
+        load_dependencies(app, sha, repo)
+        build(app)
+        deploy_commit(app, pr_number)
 
 
 def delete_app(app: App, pr_number: int):
