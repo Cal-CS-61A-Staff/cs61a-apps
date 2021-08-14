@@ -43,5 +43,16 @@ def test_simple(snapshot):
         env.annotate("So both RuleA and RuleB will need to be rerun")
         env.build(rule2)
 
-        # update rule2 steps
+        env.annotate(
+            "Update RuleB to have a different shell command, so it needs to be rerun"
+        )
+        env.annotate("But RuleA doesn't need to rerun since it's unchanged")
         rule2.steps = [AddDep(rule1.output), Sh(inputs=[rule1.output])]
+        env.build(rule2)
+
+        env.annotate(
+            "Now we modify f1 and the output f2, so both rules have to be rerun"
+        )
+        env.update_file(f1)
+        sh1.update_result([f1])
+        env.build(rule2)
