@@ -18,7 +18,15 @@ def test_modifying_dynamic_deps(snapshot):
         )
         env.build(rule)
 
+        env.annotate(
+            "Even though this rule has an Input(), we can still rebuild it entirely from caches"
+        )
+        env.build(rule)
+
         env.annotate("We now modify f2 so we also depend on a new file f3")
+        env.annotate(
+            "Now we have to rerun the dependency detection, since it's possible that something has changed"
+        )
         f3 = env.new_file()
         env.update_file(f2)
         input_action.update_result([f1, f2, f3], [AddDep(f2), AddDep(f3)])
