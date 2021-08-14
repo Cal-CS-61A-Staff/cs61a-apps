@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import os
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
@@ -7,7 +8,6 @@ from dataclasses import dataclass, field
 from os import mkdir
 from subprocess import CalledProcessError
 from typing import Dict, List, Optional, Sequence, Tuple, TypeVar, Union
-from state import Rule
 
 from common.shell_utils import sh, tmp_directory
 
@@ -323,12 +323,22 @@ class Environment:
         self.log(f"COMPLETED BUILDING rule {rule.name}\n")
         self.is_annotating = True
 
+    def get_logs(self):
+        with open(self.LOG_PATH) as f:
+            return f.read()
+
 
 @contextmanager
-def create_test_env(name: str):
-    with tmp_directory(clean=True) as tmp:
-        env = Environment(name, tmp)
-        try:
-            yield env
-        finally:
-            ...
+def create_test_env(name, snapshot_dir):
+    try:
+        with tmp_directory(clean=True) as tmp:
+            env = Environment(name, tmp)
+            try:
+                yield env
+            finally:
+                logs = env.get_logs()
+
+    finally:
+        snapshot_path = os.path.join(snapshot_dir, name + ".snapshot")
+        with open(snapshot_path, "w") as f:
+            f.write(logs)

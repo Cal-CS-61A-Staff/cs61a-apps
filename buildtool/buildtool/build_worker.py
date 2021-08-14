@@ -182,7 +182,7 @@ def worker(build_state: BuildState, index: int):
             if not isinstance(e, BuildException):
                 suffix = f"\n{Style.RESET_ALL}" + traceback.format_exc()
             else:
-                suffix = ""
+                suffix = "" + traceback.format_exc()
             build_state.status_monitor.stop()
             build_state.failure = BuildException(
                 f"Error while executing rule {todo}: " + str(e) + suffix
