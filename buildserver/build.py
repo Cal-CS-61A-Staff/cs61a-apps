@@ -97,7 +97,7 @@ def run_61a_website_build():
             env=env,
             capture_output=True,
         )
-        print(out.decode("utf-8"))
+        print(out.decode("utf-8", "replace"))
 
     build("all")
     sh("cp", "-aT", "published", "released")
