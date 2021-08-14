@@ -1,11 +1,8 @@
-import os
-from os.path import dirname
-
 from harness import AddDep, Environment, Sh, create_test_env
 
 
-def test_simple():
-    with create_test_env("test_simple", dirname(__file__)) as env:
+def test_simple(snapshot):
+    with create_test_env(snapshot) as env:
         env: Environment
 
         env.annotate("We have a source file f1")

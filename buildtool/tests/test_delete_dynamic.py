@@ -1,10 +1,8 @@
-from os.path import dirname
-
 from harness import AddDep, Environment, Input, Sh, create_test_env
 
 
-def test_deleting_dynamic_deps():
-    with create_test_env("test_deleting_dynamic_deps", dirname(__file__)) as env:
+def test_deleting_dynamic_deps(snapshot):
+    with create_test_env(snapshot) as env:
         env: Environment
 
         env.annotate("Create two files: f1 and f2")
@@ -27,7 +25,7 @@ def test_deleting_dynamic_deps():
         shell_action.update_result([f1])
 
         env.annotate(
-            "Now, when we build the rule, the cached input will try to look up f2, but will fail."
+            "Now, when we build the rule, the cached input will try to look up f2, but will fail to do so."
         )
         env.annotate(
             "However, this error should be caught and ignored, because dynamic deps are not guaranteed to be correct"

@@ -1,10 +1,8 @@
-from os.path import dirname
-
 from harness import AddDep, Environment, Input, Sh, create_test_env
 
 
-def test_modifying_dynamic_deps():
-    with create_test_env("test_modifying_dynamic_deps", dirname(__file__)) as env:
+def test_modifying_dynamic_deps(snapshot):
+    with create_test_env(snapshot) as env:
         env: Environment
 
         env.annotate("Create two files: f1 and f2. ")

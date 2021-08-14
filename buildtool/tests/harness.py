@@ -201,7 +201,7 @@ class Environment:
 
     current_rule: Optional[Rule]
 
-    def __init__(self, name: str, working_dir: str):
+    def __init__(self, working_dir: str):
         self.working_dir = working_dir
 
         self.file_versions = {}
@@ -218,7 +218,7 @@ class Environment:
         mkdir(self.BUILD_DIRECTORY)
         sh("git", "init", cwd=self.BUILD_DIRECTORY)
         self._write_file("WORKSPACE")
-        self.log(f"STARTING TEST: {name}")
+        self.log(f"STARTING TEST")
 
     def _buildpath(self, path: str):
         return f"{self.BUILD_DIRECTORY}/{path}"
@@ -329,16 +329,12 @@ class Environment:
 
 
 @contextmanager
-def create_test_env(name, snapshot_dir):
-    try:
-        with tmp_directory(clean=True) as tmp:
-            env = Environment(name, tmp)
-            try:
-                yield env
-            finally:
-                logs = env.get_logs()
+def create_test_env(snapshot):
+    with tmp_directory(clean=True) as tmp:
+        env = Environment(tmp)
+        try:
+            yield env
+        finally:
+            logs = env.get_logs()
 
-    finally:
-        snapshot_path = os.path.join(snapshot_dir, name + ".snapshot")
-        with open(snapshot_path, "w") as f:
-            f.write(logs)
+    assert logs == snapshot

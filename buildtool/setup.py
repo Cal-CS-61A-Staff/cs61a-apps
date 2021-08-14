@@ -33,5 +33,6 @@ setup(
         "tqdm",
         "google-cloud-storage",
         "packaging",
+        "syrupy",
     ],
 )
