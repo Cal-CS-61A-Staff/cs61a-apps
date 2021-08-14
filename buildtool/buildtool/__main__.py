@@ -179,7 +179,9 @@ def cli(
                 quiet,
             )
 
-        target_rule_lookup, macros = load_rules(flags, skip_version_check=skip_version_check)
+        target_rule_lookup, macros = load_rules(
+            flags, skip_version_check=skip_version_check
+        )
         target_rule_lookup.verify()
 
         all_files = get_repo_files()
