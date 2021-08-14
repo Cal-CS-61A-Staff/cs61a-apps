@@ -9,6 +9,14 @@ from typing import Callable, Dict, List, Optional, Sequence, Set
 
 from context import Context
 from monitoring import StatusMonitor
+from providers import (
+    AbstractProvider,
+    DepsProvider,
+    IterableDepSet,
+    OutputProvider,
+    TransitiveDepsProvider,
+    TransitiveOutputProvider,
+)
 from utils import BuildException
 
 
@@ -18,7 +26,7 @@ class BuildState:
     cache_directory: str
     target_rule_lookup: TargetLookup
     source_files: SourceFileLookup
-    repo_root: str
+    macros: Dict[str, Callable]
 
     # logging
     status_monitor: StatusMonitor = None
@@ -34,9 +42,14 @@ class BuildState:
 @dataclass
 class SourceFileLookup:
     tracked_files: Set[str]
+    cached_contains: Dict[str, bool] = field(default_factory=dict)
 
     def __contains__(self, dep):
-        return os.path.relpath(os.path.realpath(dep), os.curdir) in self.tracked_files
+        if dep not in self.cached_contains:
+            self.cached_contains[dep] = (dep in self.tracked_files) or (
+                os.path.relpath(os.path.realpath(dep), os.curdir) in self.tracked_files
+            )
+        return self.cached_contains[dep]
 
 
 @dataclass
@@ -93,16 +106,16 @@ class TargetLookup:
 class Rule:
     name: Optional[str]
     location: str
-    deps: Sequence[str]
     impl: Callable[[Context], None]
     outputs: Sequence[str]
 
     # advanced config
     do_not_symlink: bool
+    do_not_cache: bool
 
-    runtime_dependents: Set[Rule] = field(default_factory=set)
-    pending_rule_dependencies: Set[Rule] = field(default_factory=set)
-    provided_value: object = None
+    runtime_dependents: Set[Rule] = field(default_factory=set, repr=False)
+    pending_rule_dependencies: Set[Rule] = field(default_factory=set, repr=False)
+    _provided_value: Dict[AbstractProvider, object] = None
 
     def __hash__(self):
         return hash(id(self))
@@ -114,3 +127,56 @@ class Rule:
             return self.outputs[0]
         else:
             return f"<anonymous rule from {self.location}/BUILD>"
+
+    @property
+    def provided_value(self):
+        return self._provided_value
+
+    def set_provided_value(
+        self,
+        value: Optional[List[AbstractProvider]],
+        build_state: Optional[BuildState],
+        deps: List[str],
+        deferred_deps: List[str],
+        outputs: List[str],
+    ):
+        if value is not None and (
+            not isinstance(value, list)
+            or not all(isinstance(x, AbstractProvider) for x in value)
+        ):
+            raise BuildException(
+                f"Build rules can only return a list of Providers (or None), received {value}"
+            )
+
+        self._provided_value = {
+            DepsProvider: IterableDepSet(*deps),
+            OutputProvider: IterableDepSet(*outputs),
+            **(
+                {
+                    TransitiveDepsProvider: IterableDepSet(
+                        *deps,
+                        *(
+                            dep
+                            if dep in build_state.source_files
+                            else build_state.target_rule_lookup.lookup(
+                                build_state, dep
+                            ).provided_value[TransitiveDepsProvider]
+                            for dep in (deps + deferred_deps)
+                        ),
+                    ),
+                    TransitiveOutputProvider: IterableDepSet(
+                        *outputs,
+                        *(
+                            build_state.target_rule_lookup.lookup(
+                                build_state, dep
+                            ).provided_value[TransitiveOutputProvider]
+                            for dep in (deps + deferred_deps)
+                            if dep not in build_state.source_files
+                        ),
+                    ),
+                }
+                if build_state is not None
+                else {}
+            ),
+            **{type(x): x.value for x in value or {}},
+        }

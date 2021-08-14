@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Collection
+from typing import Optional
 
 from state import BuildState, Rule
 from monitoring import log
@@ -8,7 +9,7 @@ from monitoring import log
 
 def enqueue_deps(
     build_state: BuildState,
-    rule: Rule,
+    rule: Optional[Rule],
     candidate_deps: Collection[str],
     *,
     catch_failure: bool = False,
@@ -40,8 +41,11 @@ def enqueue_deps(
                     build_state.status_monitor.move(total=1)
                 else:
                     log(f"Waiting on already queued dependency {runtime_dep}")
-                # register task in the already queued / executing dependency
-                # so when it finishes we may be triggered
-                runtime_dep.runtime_dependents.add(rule)
-                rule.pending_rule_dependencies.add(runtime_dep)
+                if rule:
+                    # register task in the already queued / executing dependency
+                    # so when it finishes we may be triggered
+                    # if rule is None, these are deferred dependencies, so no need to register anything
+                    log(f"Registering {rule} to wait on {runtime_dep}")
+                    runtime_dep.runtime_dependents.add(rule)
+                    rule.pending_rule_dependencies.add(runtime_dep)
     return waiting_for_deps

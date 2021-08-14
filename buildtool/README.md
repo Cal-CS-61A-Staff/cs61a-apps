@@ -17,8 +17,6 @@ We have placed a `BUILD` file in the `src/` directory. We will declare a rule ca
 
 ```python
 # src/BUILD
-from buildtool import callback
-
 def impl(ctx):
     ctx.sh("mkdir -p ../build")
     ctx.sh("gcc main.c -c -o ../build/a.out")
@@ -52,8 +50,6 @@ Now imagine that we have a second source file `another.c` in `src/`, and want to
 This can be done as follows:
 ```python
 # src/BUILD
-from buildtool import callback
-
 def declare(*, name: str, src: str, out: str):
     def impl(ctx):
         ctx.sh("mkdir -p ../build")
@@ -87,8 +83,6 @@ In larger repos, it may make sense to move these generic rules into a separate f
 We move `declare` into `rules.py`, so
 ```python
 # src/rules.py
-from buildtool import callback
-
 def declare(*, name: str, src: str, out: str):
     def impl(ctx):
         ctx.sh("mkdir -p ../build")
@@ -104,8 +98,6 @@ def declare(*, name: str, src: str, out: str):
 To import it from `rules.py`, we can use the `load()` function, as follows:
 ```python
 # src/BUILD
-from buildtool import load
-
 rules = load("rules.py")
 
 rules.declare(name="main", src="main.c", out="../build/a.out")
@@ -120,8 +112,6 @@ In addition to depending on other files, rules can depend on other rules. Unlike
 For instance, we may wish to have a build target to build both `main` and `another` together. This can be done as follows:
 ```python
 # src/BUILD
-from buildtool import load, callback
-
 rules = load("rules.py")
 
 rules.declare(name="main", src="main.c", out="../build/a.out")
@@ -139,8 +129,6 @@ Now, running `bt all` will build both `a.out` and `b.out`.
 If `name` is passed to `callback()`, it will return `:<name>`. This lets us avoid repeating rule names, as follows:
 ```python
 # src/BUILD
-from buildtool import load, callback
-
 rules = load("rules.py")
 
 callback(
@@ -157,7 +145,6 @@ However, it is good practice to avoid "nesting" rules in this fashion.
 Rather than writing a separate rule for each `.c` file in `src/`, we may wish to automatically declare rules to build them. This can be done using the `find()` function, which lets us glob for files, as follows:
 ```python
 # src/BUILD
-from buildtool import load, callback, find
 from os.path import basename
 
 rules = load("rules.py")
@@ -184,8 +171,6 @@ We see that `find()` has returned a path relative to the project root, which can
 We can use this method to modify `rules.py` as follows:
 ```python
 # src/rules.py
-from buildtool import callback
-
 def declare(*, name: str, src: str, out: str):
     def impl(ctx):
         ctx.sh("mkdir -p ../build")
@@ -205,7 +190,7 @@ Sometimes, we do not know all the dependencies of a rule in advance. For instanc
 ```
 main.c:2:10: fatal error: 'another.c' file not found
 ```
-becaues only explicitly stated dependencies are available when running a build.
+because only explicitly stated dependencies are available when running a build.
 
 One solution would be to update `declare()` to take in a list of dependencies and manually specify that `main.c` depends on `another.c`. Alternatively, we can add a dependency dynamically when running the build.
 
@@ -217,8 +202,6 @@ main.o: main.c another.c
 This is in a format acceptable for Makefiles, but we need to process it to extract the raw file names. We can do so by modifying `rules.py` as follows:
 ```python
 # src/rules.py
-from buildtool import callback
-
 def declare(*, name: str, src: str, out: str):
     def impl(ctx):
         ctx.sh("mkdir -p ../build")
@@ -243,8 +226,6 @@ We now are able to build a simple project. When managing large projects, it is u
 In a `WORKSPACE` file, there is a new import available from `buildtool`: the `config`. A simple `WORKSPACE` file may look like this:
 ```python
 # WORKSPACE
-from buildtool import config
-
 config.register_default_build_rule(":all")
 config.register_output_directory("build")
 config.require_buildtool_version("0.1.25")
@@ -259,8 +240,6 @@ For instance, imagine that `gcc` is not present in the `/usr/bin/` directory, bu
 We modify our `WORKSPACE` file as follows:
 ```python
 # WORKSPACE
-from buildtool import config, callback
-
 def declare_gcc_symlink():
     def impl(ctx):
         target = ctx.input(sh=f"which gcc").strip()
@@ -292,8 +271,6 @@ To run the `gcc` setup rule separately, run `bt setup:gcc`. Unlike build rules, 
 Next, we will modify `rules.py` to use `//env/bin/gcc`, instead of `/usr/bin/gcc`. Rather than hardcoding this new path into `ctx.sh`, we will modify the `PATH` used by `ctx.sh()` to look in `//env/bin` and then `/bin`, but not `/usr/bin`. This can be done as follows:
 ```python
 # src/rules.py
-from buildtool import callback
-
 ENV = dict(PATH=["@//env/bin/", "/bin"])
 
 def declare(*, name: str, src: str, out: str):

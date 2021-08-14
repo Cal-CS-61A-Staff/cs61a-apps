@@ -5,9 +5,8 @@ from pathlib import Path
 from shutil import SameFileError, copyfile, copytree
 from typing import List
 
-from utils import BuildException
-
 from common.shell_utils import sh
+from utils import BuildException
 
 
 def find_root():
@@ -41,38 +40,52 @@ def get_repo_files() -> List[str]:
     ]
 
 
-def normalize_path(repo_root, build_root, path):
+@lru_cache(None)
+def normalize_path(build_root, path):
+    path = str(path)
     suffix = "/" if path.endswith("/") else ""
     if path.startswith("//"):
-        path = Path(repo_root).joinpath(path[2:])
+        path = os.path.normpath(path[2:])
     else:
-        path = Path(repo_root).joinpath(build_root, path)
-    path = Path(os.path.abspath(path))
-    repo_root = Path(os.path.abspath(repo_root))
-    if repo_root != path and repo_root not in path.parents:
+        path = os.path.normpath(os.path.join(build_root, path))
+    if ".." in path or path.startswith("/"):
         raise BuildException(
             f"Target `{path}` is not in the root directory of the repo."
         )
-    return str(path.relative_to(repo_root)) + suffix
+    return path + suffix
 
 
 def copy_helper(*, src_root, dest_root, src_names, dest_names=None, symlink=False):
     if not dest_names:
         dest_names = src_names
     assert len(src_names) == len(dest_names)
+    srcs = []
+    dests = []
     for src_name, dest_name in zip(src_names, dest_names):
         src = Path(src_root).joinpath(src_name)
         dest = Path(dest_root).joinpath(dest_name)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        if os.path.dirname(dest):
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
         try:
             if symlink:
-                Path(dest).symlink_to(src)
+                Path(dest).symlink_to(os.path.abspath(src))
+                srcs.append(src_name)
+                dests.append(dest_name)
             elif src_name.endswith("/"):
                 copytree(src=src, dst=dest, dirs_exist_ok=True)
+                for acc, dir in zip([srcs, dests], [src, dest]):
+                    acc.extend(
+                        os.path.join(path, filename)
+                        for path, subdirs, files in os.walk(dir)
+                        for filename in files
+                    )
             else:
                 copyfile(src, dest)
+                srcs.append(src_name)
+                dests.append(dest_name)
         except SameFileError:
             pass
+    return srcs, dests
 
 
 def hash_file(path):

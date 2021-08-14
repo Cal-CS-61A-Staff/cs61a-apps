@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
 import time
 import traceback
 from dataclasses import dataclass, field
@@ -10,9 +9,18 @@ from importlib.metadata import version
 from typing import Callable, Dict, List, Optional, Sequence, Set, Union
 
 from colorama import Style
-
-from fs_utils import find_root, get_repo_files, normalize_path
 from packaging.version import parse
+
+from fs_utils import get_repo_files, normalize_path
+from providers import (
+    DepSet,
+    DepsProvider,
+    GlobDepSet,
+    OutputProvider,
+    TransitiveDepsProvider,
+    TransitiveOutputProvider,
+    provider,
+)
 from state import Rule, TargetLookup
 from utils import BuildException
 
@@ -63,7 +71,7 @@ class Config:
 
     def register_output_directory(self, path: str):
         self._check_active()
-        self.output_directories.append(normalize_path(os.curdir, os.curdir, path))
+        self.output_directories.append(normalize_path(os.curdir, path))
 
     def require_buildtool_version(self, min_version: str):
         if self.skip_version_check:
@@ -80,15 +88,16 @@ config = Config()
 
 
 def make_callback(
-    repo_root: str,
     build_root: Optional[str],
     src_files: Set[str],
-    # output parameter
+    # output parameters
     target_rule_lookup: TargetLookup,
+    macros: Dict[str, Callable],
 ):
     make_callback.build_root = build_root
     make_callback.find_cache = {}
     make_callback.target_rule_lookup = target_rule_lookup
+    make_callback.macros = macros
 
     def fail(target):
         raise BuildException(
@@ -114,6 +123,7 @@ def make_callback(
         impl: Callable = lambda _: None,
         out: Union[str, Sequence[str]] = (),
         do_not_symlink: bool = False,
+        do_not_cache: bool = False,
     ):
         build_root = make_callback.build_root
 
@@ -125,18 +135,17 @@ def make_callback(
         if isinstance(out, str):
             out = [out]
 
+        def wrapped_impl(ctx):
+            ctx.add_deps(deps)
+            return impl(ctx)
+
         rule = Rule(
             name=name,
             location=build_root,
-            deps=[
-                dep
-                if dep.startswith(":")
-                else normalize_path(repo_root, build_root, dep)
-                for dep in deps
-            ],
-            impl=impl,
-            outputs=[normalize_path(repo_root, build_root, output) for output in out],
+            impl=wrapped_impl,
+            outputs=[normalize_path(build_root, output) for output in out],
             do_not_symlink=do_not_symlink,
+            do_not_cache=do_not_cache,
         )
         for output in rule.outputs:
             add_target_rule(output, rule)
@@ -149,16 +158,6 @@ def make_callback(
     def find(path, *, unsafe_ignore_extension=False):
         build_root = make_callback.build_root
 
-        target = normalize_path(repo_root, build_root, path)
-
-        if target in make_callback.find_cache:
-            return make_callback.find_cache[target]
-
-        if build_root is None:
-            raise BuildException(
-                "Rules files can only define functions, not invoke find()"
-            )
-
         if not unsafe_ignore_extension:
             ext = path.split(".")[-1]
             if "/" in ext:
@@ -166,21 +165,28 @@ def make_callback(
                     "Cannot find() files without specifying an extension"
                 )
 
-        out = [
-            os.path.relpath(path, repo_root)
-            for path in glob(
-                normalize_path(repo_root, build_root, path),
-                recursive=True,
+        if build_root is None and not path.startswith("//"):
+            raise BuildException(
+                "find() cannot be invoked outside a BUILD file except using a repo-relative path."
             )
-        ]
 
-        make_callback.find_cache[target] = out = [
-            "//" + path
-            for path in out
-            if os.path.relpath(os.path.realpath(path), repo_root) in src_files
-        ]
+        target = normalize_path(build_root, path)
 
-        return sorted(out)
+        if target in make_callback.find_cache:
+            return make_callback.find_cache[target]
+
+        def gen():
+            return sorted(
+                os.path.relpath(f, os.curdir)
+                for f in glob(
+                    target,
+                    recursive=True,
+                )
+                if os.path.relpath(os.path.realpath(f), os.curdir) in src_files
+            )
+
+        out = make_callback.find_cache[target] = GlobDepSet(gen)
+        return out
 
     def resolve(path):
         build_root = make_callback.build_root
@@ -188,12 +194,27 @@ def make_callback(
         if build_root is None:
             raise BuildException(
                 "Rules files can only define functions, not invoke resolve(). "
-                "If you are in an impl() function, use ctx.resolve() instead."
+                "If you are in an impl() function, use ctx.relative() instead."
             )
 
-        return "//" + normalize_path(repo_root, build_root, path)
+        return "//" + normalize_path(build_root, path)
 
-    return callback, find, resolve
+    def macro(func):
+        macros = make_callback.macros
+        name = func.__name__
+        if name in macros:
+            raise BuildException(f"A macro is already defined with name {name}")
+        macros[name] = func
+
+    def make_depset(*args):
+        return GlobDepSet(
+            lambda build_root=make_callback.build_root: (
+                dep if isinstance(dep, DepSet) else normalize_path(build_root, dep)
+                for dep in (arg() if callable(arg) else arg for arg in args)
+            )
+        )
+
+    return callback, find, resolve, macro, make_depset
 
 
 class Struct:
@@ -208,11 +229,11 @@ class Struct:
             return getattr(super(), item)
 
 
-def make_load_rules(repo_root: str, rules_root: str):
+def make_load_rules(rules_root: str):
     make_load_rules.rules_root = os.path.dirname(rules_root)
 
     def load_rules(path):
-        path = normalize_path(repo_root, make_load_rules.rules_root, path)
+        path = normalize_path(make_load_rules.rules_root, path)
         if not path.endswith(".py"):
             raise BuildException(f"Cannot import from a non .py file: {path}")
 
@@ -222,16 +243,16 @@ def make_load_rules(repo_root: str, rules_root: str):
         start_time_stack.append(time.time())
 
         old_rules_root = make_load_rules.rules_root
-        __builtins__["load"] = make_load_rules(repo_root, path)
+        __builtins__["load"] = make_load_rules(path)
+
         # We hide the callback here, since you should not be running the
         # callback (or anything else!) in an import, but just providing defs
         frame = {"__builtins__": __builtins__}
-        reset_mock_imports(frame, ["load"])
         cached_root = make_callback.build_root
         make_callback.build_root = None
         with open(path) as f:
             try:
-                exec(f.read(), frame)
+                exec(compile(f.read(), path, "exec"), frame)
             except Exception:
                 raise BuildException(
                     f"Error while processing rules file {path}:\n"
@@ -250,14 +271,6 @@ def make_load_rules(repo_root: str, rules_root: str):
     return load_rules
 
 
-def reset_mock_imports(frame, targets):
-    exec(
-        "import buildtool; "
-        + " ".join(f"buildtool.{target} = {target};" for target in targets),
-        frame,
-    )
-
-
 def load_rules(
     flags: Dict[str, object],
     *,
@@ -265,7 +278,6 @@ def load_rules(
     workspace: bool = False,
 ):
     flags = Struct(flags, default=True)
-    repo_root = find_root()
     src_files = get_repo_files()
     build_files = (
         ["WORKSPACE"]
@@ -273,9 +285,12 @@ def load_rules(
         else [file for file in src_files if file.split("/")[-1] == "BUILD"]
     )
     target_rule_lookup = TargetLookup()
-    sys.path.insert(0, repo_root)
-    callback, find, resolve = make_callback(
-        repo_root, None, set(src_files), target_rule_lookup
+    macros = {}
+    callback, find, resolve, macro, make_depset = make_callback(
+        None,
+        set(src_files),
+        target_rule_lookup,
+        macros,
     )
     config.skip_version_check = skip_version_check
     for build_file in build_files:
@@ -283,29 +298,33 @@ def load_rules(
 
         with open(build_file) as f:
             frame = {}
-            load = make_load_rules(repo_root, build_file)
+            load = make_load_rules(build_file)
 
-            __builtins__["callback"] = callback
+            __builtins__["callback"] = __builtins__["rule"] = callback
             __builtins__["find"] = find
             __builtins__["resolve"] = resolve
             __builtins__["load"] = load
             __builtins__["flags"] = flags
+            __builtins__["macro"] = macro
+            __builtins__["provider"] = provider
+            __builtins__["depset"] = make_depset
+            __builtins__["DepsProvider"] = DepsProvider
+            __builtins__["OutputProvider"] = OutputProvider
+            __builtins__["TransitiveDepsProvider"] = TransitiveDepsProvider
+            __builtins__["TransitiveOutputProvider"] = TransitiveOutputProvider
 
             frame = {
                 **frame,
                 "__builtins__": __builtins__,
             }
 
-            reset_mock_imports(frame, ["callback", "find", "load", "flags", "resolve"])
-
             if workspace:
                 __builtins__["config"] = config
                 config.active = True
-                reset_mock_imports(frame, ["config"])
 
             start_time_stack.append(time.time())
             try:
-                exec(f.read(), frame)
+                exec(compile(f.read(), build_file, "exec"), frame)
                 config.active = False
             except Exception:
                 raise BuildException(
@@ -317,4 +336,4 @@ def load_rules(
 
         make_callback.build_root = None
 
-    return target_rule_lookup
+    return target_rule_lookup, macros

@@ -1,13 +1,10 @@
 import hashlib
 import os
-import traceback
 from os.path import dirname
 from pathlib import Path
-from typing import Iterator
+from typing import List
 
 from fs_utils import copy_helper, hash_file
-from google.cloud.exceptions import NotFound
-from google.cloud.storage import Blob
 from state import Rule
 from utils import BuildException, CacheMiss
 
@@ -25,14 +22,16 @@ def get_bucket(cache_directory: str):
         return client.bucket(cache_directory[len(CLOUD_BUCKET_PREFIX) :])
 
 
-def make_cache_fetcher(cache_directory: str, *, is_aux=False):
+def make_cache_load(cache_directory: str, *, is_aux=False):
     bucket = get_bucket(cache_directory)
     delta = 1 if not is_aux else 0
 
-    def cache_fetcher(state: str, target: str) -> str:
+    def cache_load_string(state: str, target: str) -> str:
+        from google.cloud.exceptions import NotFound
+
         if bucket:
             try:
-                out = aux_fetcher(state, target)
+                out = aux_load_string(state, target)
                 STATS["hits"] += delta
                 return out
             except CacheMiss:
@@ -45,7 +44,7 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
                     raise CacheMiss
                 else:
                     # cache it on disk
-                    aux_memorize(state, target, out)
+                    aux_store_string(state, target, out)
                     return out
         else:
             dest = Path(cache_directory).joinpath(state).joinpath(target)
@@ -58,18 +57,21 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
                 STATS["misses"] += delta
                 raise CacheMiss
 
-    def cache_loader(cache_key: str, rule: Rule, dest_root: str) -> bool:
+    def cache_load_files(cache_key: str, rule: Rule, dest_root: str) -> List[str]:
         cache_location, cache_paths = get_cache_output_paths(
             cache_directory, rule, cache_key
         )
+        out = []
         if bucket:
+            from google.cloud.exceptions import NotFound
+
             del cache_location
-            if not aux_loader(cache_key, rule, dest_root):
+            if not aux_load_files(cache_key, rule, dest_root):
                 try:
-                    cache_fetcher(cache_key, ".touch")
+                    cache_load_string(cache_key, ".touch")
                 except CacheMiss:
                     STATS["misses"] += delta
-                    return False
+                    raise
                 for src_name, cache_path in zip(rule.outputs, cache_paths):
                     cache_path = str(Path(cache_key).joinpath(cache_path))
                     os.makedirs(dest_root, exist_ok=True)
@@ -78,35 +80,36 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
                             os.makedirs(
                                 Path(dest_root).joinpath(src_name), exist_ok=True
                             )
-                            blobs: Iterator[Blob] = list(
-                                bucket.list_blobs(prefix=cache_path)
-                            )
+                            blobs = list(bucket.list_blobs(prefix=cache_path))
                             for blob in blobs:
+                                filename = blob.name[len(cache_path) + 1 :]
                                 target = str(
                                     Path(dest_root)
                                     .joinpath(src_name)
-                                    .joinpath(blob.name[len(cache_path) + 1 :])
+                                    .joinpath(filename)
                                 )
                                 os.makedirs(dirname(target), exist_ok=True)
                                 blob.download_to_filename(target)
                                 STATS["hits"] += delta
+                                out.append(os.path.join(src_name, filename))
                         else:
-                            target = str(Path(dest_root).joinpath(src_name))
+                            target = os.path.join(dest_root, src_name)
                             os.makedirs(dirname(target), exist_ok=True)
                             bucket.blob(cache_path).download_to_filename(target)
+                            out.append(target)
                             STATS["hits"] += delta
                     except NotFound:
                         STATS["misses"] += delta
-                        return False
+                        raise CacheMiss
                 # now that we have fetched, let's cache it on disk
-                aux_save(cache_key, rule, dest_root)
-            return True
+                aux_store_files(cache_key, rule, dest_root)
+            return out
         else:
             if not os.path.exists(cache_location):
                 STATS["misses"] += delta
-                return False
+                raise CacheMiss
             try:
-                copy_helper(
+                _, out = copy_helper(
                     src_root=cache_location,
                     src_names=cache_paths,
                     dest_root=dest_root,
@@ -118,22 +121,22 @@ def make_cache_fetcher(cache_directory: str, *, is_aux=False):
                     "Cache corrupted. This should never happen unless you modified the cache "
                     "directory manually! If so, delete the cache directory and try again."
                 )
-            return True
+            return out
 
-    return cache_fetcher, cache_loader
+    return cache_load_string, cache_load_files
 
 
-def make_cache_memorize(cache_directory: str, *, is_aux=False):
+def make_cache_store(cache_directory: str, *, is_aux=False):
     bucket = get_bucket(cache_directory)
     delta = 1 if not is_aux else 0
 
-    def memorize(state: str, target: str, data: str):
+    def cache_store_string(state: str, target: str, data: str):
         if bucket:
             try:
-                prev_saved = aux_fetcher(state, target)
+                prev_saved = aux_load_string(state, target)
             except CacheMiss:
                 prev_saved = None
-            aux_memorize(state, target, data)
+            aux_store_string(state, target, data)
             if prev_saved != data:
                 STATS["inserts"] += delta
                 bucket.blob(str(Path(state).joinpath(target))).upload_from_string(data)
@@ -143,12 +146,14 @@ def make_cache_memorize(cache_directory: str, *, is_aux=False):
             STATS["inserts"] += delta
             cache_target.write_text(data)
 
-    def save(cache_key: str, rule: Rule, output_root: str):
+    def cache_store_files(cache_key: str, rule: Rule, output_root: str) -> List[str]:
         cache_location, cache_paths = get_cache_output_paths(
             cache_directory, rule, cache_key
         )
 
-        memorize(cache_key, ".touch", "")
+        cache_store_string(cache_key, ".touch", "")
+
+        out = []
 
         if bucket:
             del cache_location  # just to be safe
@@ -182,6 +187,7 @@ def make_cache_memorize(cache_directory: str, *, is_aux=False):
                                         .joinpath(target)
                                     )
                                 ).upload_from_filename(str(src_loc))
+                            out.append(os.path.join(src_name, target))
                 else:
                     #                 output_root -> src_name
                     # <cache_base> -> cache_key -> cache_path
@@ -199,19 +205,21 @@ def make_cache_memorize(cache_directory: str, *, is_aux=False):
                         ).upload_from_filename(
                             str(Path(output_root).joinpath(src_name)),
                         )
+                    out.append(os.path.join(src_name, target))
 
-            aux_save(cache_key, rule, output_root)
+            aux_store_files(cache_key, rule, output_root)
 
         else:
             STATS["inserts"] += delta
-            copy_helper(
+            out, _ = copy_helper(
                 src_root=output_root,
                 src_names=rule.outputs,
                 dest_root=cache_location,
                 dest_names=cache_paths,
             )
+        return out
 
-    return memorize, save
+    return cache_store_string, cache_store_files
 
 
 def get_cache_output_paths(cache_directory: str, rule: Rule, cache_key: str):
@@ -226,5 +234,5 @@ def get_cache_output_paths(cache_directory: str, rule: Rule, cache_key: str):
     return cache_location, keys
 
 
-aux_fetcher, aux_loader = make_cache_fetcher(AUX_CACHE, is_aux=True)
-aux_memorize, aux_save = make_cache_memorize(AUX_CACHE, is_aux=True)
+aux_load_string, aux_load_files = make_cache_load(AUX_CACHE, is_aux=True)
+aux_store_string, aux_store_files = make_cache_store(AUX_CACHE, is_aux=True)

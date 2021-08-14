@@ -4,40 +4,42 @@ import os
 import traceback
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Callable, Collection, Optional, Sequence
+from typing import Callable, Dict, List, Optional
 
 from colorama import Style
 
-from cache import make_cache_memorize
+from cache import make_cache_store
+from common.hash_utils import HashState
 from common.shell_utils import sh as run_shell
 from context import Env, MemorizeContext
 from fs_utils import copy_helper, hash_file
 from monitoring import log
 from state import BuildState, Rule
 from utils import BuildException, MissingDependency
-from common.hash_utils import HashState
 
 
 class ExecutionContext(MemorizeContext):
     def __init__(
         self,
-        repo_root: str,
+        base: str,
         cwd: str,
+        macros: Dict[str, Callable],
         hashstate: HashState,
-        load_deps: Callable[[Sequence[str]], None],
+        dep_fetcher: Callable[[str], Rule],
         memorize: Callable[[str, str, str], None],
     ):
-        super().__init__(repo_root, cwd, hashstate)
-        self.load_deps = load_deps
+        super().__init__(cwd, macros, hashstate, dep_fetcher)
+        self.base = base
         self.memorize = memorize
         self.sh_queue = []
-        os.makedirs(self.cwd, exist_ok=True)
+        self.out_of_date_deps = []
+        os.makedirs(os.path.join(self.base, self.cwd), exist_ok=True)
 
     def normalize_single(self, path: str):
         if path.startswith("@//"):
             return os.path.abspath(os.path.join(os.curdir, path[3:]))
         elif path.startswith("//"):
-            return os.path.abspath(os.path.join(self.repo_root, path[2:]))
+            return os.path.abspath(os.path.join(self.base, path[2:]))
         else:
             return path
 
@@ -64,7 +66,7 @@ class ExecutionContext(MemorizeContext):
             run_shell(
                 cmd,
                 shell=True,
-                cwd=cwd,
+                cwd=os.path.join(self.base, cwd),
                 quiet=True,
                 capture_output=True,
                 inherit_env=False,
@@ -72,106 +74,105 @@ class ExecutionContext(MemorizeContext):
             )
         self.sh_queue = []
 
-    def add_deps(self, deps: Sequence[str]):
-        super().add_deps(deps)
-        self.run_shell_queue()
-        self.load_deps(
-            [dep if dep.startswith(":") else self.absolute(dep) for dep in deps]
-        )
+    def add_dep(self, dep: str, *, load_provided=False, defer=False):
+        defer = super().add_dep(dep, load_provided=load_provided, defer=defer)
+        if not defer:
+            dep = self._resolve(dep)
+            try:
+                self.dep_fetcher(dep)
+            except MissingDependency:
+                self.out_of_date_deps.append(dep)
 
-    def input(
-        self, *, file: Optional[str] = None, sh: Optional[str] = None, env: Env = None
-    ):
+    def input(self, sh: Optional[str] = None, *, env: Env = None):
         # we want the state *before* running the action
         state = self.hashstate.state()
-        super().input(file=file, sh=sh, env=env)
+        super().input(sh, env=env)
+        if self.out_of_date_deps:
+            raise MissingDependency(*self.out_of_date_deps)
         self.run_shell_queue()
-        if file is not None:
-            self.load_deps([self.absolute(file)])
-            with open(self.absolute(file), "r") as f:
-                return f.read()
-        else:
-            log("RUNNING", sh)
-            out = run_shell(
-                sh,
-                shell=True,
-                cwd=self.cwd,
-                capture_output=True,
-                quiet=True,
-                inherit_env=False,
-                env=self.normalize(env),
-            ).decode("utf-8")
-            self.memorize(state, HashState().record(sh, env).state(), out)
-            return out
+        log("RUNNING", sh)
+        out = run_shell(
+            sh,
+            shell=True,
+            cwd=os.path.join(self.base, self.cwd),
+            capture_output=True,
+            quiet=True,
+            inherit_env=False,
+            env=self.normalize(env),
+        ).decode("utf-8")
+        self.memorize(state, HashState().record(sh, env).state(), out)
+        return out
 
 
 def build(
     build_state: BuildState,
     rule: Rule,
-    deps: Collection[str],
     *,
+    precomputed_deps: Optional[List[str]] = None,
     scratch_path: Optional[Path],
+    skip_cache_key: bool,
 ):
     """
     All the dependencies that can be determined from caches have been
     obtained. Now we need to run. Either we will successfully finish everything,
     or we will get a missing dependency and have to requeue
     """
-    cache_memorize, _ = make_cache_memorize(build_state.cache_directory)
+    cache_store_string, _ = make_cache_store(build_state.cache_directory)
 
     in_sandbox = scratch_path is not None
 
     loaded_deps = set()
 
-    def load_deps(deps):
-        deps = set(deps) - loaded_deps
-        # check that these deps are built! Since they have not been checked by the PreviewExecution.
-        missing_deps = []
-        for dep in deps:
-            if dep not in build_state.source_files:
-                dep_rule = build_state.target_rule_lookup.lookup(build_state, dep)
-                if dep_rule not in build_state.ready:
-                    missing_deps.append(dep)
-        if missing_deps:
-            raise MissingDependency(*missing_deps)
-        loaded_deps.update(deps)
-        if in_sandbox:
-            log(f"Loading dependencies {deps} into sandbox")
-            copy_helper(
-                src_root=build_state.repo_root,
-                dest_root=scratch_path,
-                src_names=[dep for dep in deps if not dep.startswith(":")],
-                symlink=not rule.do_not_symlink,
-            )
+    def dep_fetcher(dep, *, initial_load=False):
+        if dep not in loaded_deps and in_sandbox:
+            if not initial_load:
+                raise BuildException(
+                    f"New dep {dep} found when rerunning rule, it's likely not deterministic!"
+                )
+            if not dep.startswith(":"):
+                log(f"Loading dependency {dep} into sandbox")
+                copy_helper(
+                    src_root=os.curdir,
+                    dest_root=scratch_path,
+                    src_names=[dep],
+                    symlink=not rule.do_not_symlink,
+                )
 
-    load_deps(deps)
+        # check that these deps are built! Since they may not have been checked by the PreviewExecution.
+        dep_rule = None
+        if dep not in build_state.source_files:
+            dep_rule = build_state.target_rule_lookup.lookup(build_state, dep)
+            if dep_rule not in build_state.ready:
+                raise MissingDependency(dep)
+
+        loaded_deps.add(dep)
+
+        return dep_rule
+
+    if precomputed_deps:
+        assert in_sandbox
+        for dep in precomputed_deps:
+            dep_fetcher(dep, initial_load=True)
+
     hashstate = HashState()
 
     ctx = ExecutionContext(
-        scratch_path if in_sandbox else build_state.repo_root,
-        scratch_path.joinpath(rule.location)
-        if in_sandbox
-        else Path(build_state.repo_root).joinpath(rule.location),
+        scratch_path if in_sandbox else os.curdir,
+        rule.location,
+        build_state.macros,
         hashstate,
-        load_deps,
-        cache_memorize,
+        dep_fetcher,
+        cache_store_string,
     )
 
-    for dep in rule.deps:
-        dep_rule = build_state.target_rule_lookup.try_lookup(dep)
-        if dep.startswith(":"):
-            setattr(ctx.deps, dep[1:], dep_rule.provided_value)
-        else:
-            hashstate.update(dep.encode("utf-8"))
-            hashstate.update(hash_file(dep))
-        if dep not in build_state.source_files:
-            ctx.deps[dep] = dep_rule.provided_value
-
     try:
-        rule.provided_value = rule.impl(ctx)
-        for out in rule.outputs:
-            # needed so that if we ask for another output, we don't panic if it's not in the cache
-            hashstate.record(out)
+        if not skip_cache_key:
+            for out in rule.outputs:
+                # needed so that if we ask for another output, we don't panic if it's not in the cache
+                hashstate.record(out)
+        provided_value = rule.impl(ctx)
+        if ctx.out_of_date_deps:
+            raise MissingDependency(*ctx.out_of_date_deps)
         if in_sandbox:
             ctx.run_shell_queue()
     except CalledProcessError as e:
@@ -181,10 +182,9 @@ def build(
                     str(e) + "\n",
                     Style.RESET_ALL,
                     f"Location: {scratch_path}\n",
-                    f"Working Directory: {ctx.cwd}\n",
+                    f"Working Directory: {scratch_path}/{ctx.cwd}\n",
                     e.stdout.decode("utf-8"),
                     e.stderr.decode("utf-8"),
-                    traceback.format_exc(),
                 ]
             )
         )
@@ -194,18 +194,20 @@ def build(
             copy_helper(
                 src_root=scratch_path,
                 src_names=rule.outputs,
-                dest_root=build_state.repo_root,
+                dest_root=os.curdir,
             )
         except FileNotFoundError as e:
             raise BuildException(
                 f"Output file {e.filename} from rule {rule} was not generated."
             )
 
-    for input_path in ctx.inputs:
-        if input_path.startswith(":"):
-            # don't hash rule deps
-            continue
-        hashstate.update(input_path.encode("utf-8"))
-        hashstate.update(hash_file(input_path))
+    if not skip_cache_key:
+        for input_path in ctx.inputs:
+            if input_path.startswith(":"):
+                # don't hash rule deps
+                continue
+            hashstate.update(input_path.encode("utf-8"))
+            hashstate.update(hash_file(input_path))
+    hashstate.record("done")
 
-    return hashstate.state()
+    return provided_value, hashstate.state() if not skip_cache_key else None

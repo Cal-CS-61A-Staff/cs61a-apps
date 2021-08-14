@@ -40,7 +40,7 @@ class StatusMonitor:
 def create_status_monitor(num_threads: int, quiet: bool):
     status = ["IDLE"] * num_threads
 
-    bar = tqdm(total=0, disable=quiet)
+    bar = tqdm(total=0, disable=quiet, miniters=10)
     lock = Lock()
     pos = 0
     tot = 0
@@ -59,7 +59,6 @@ def create_status_monitor(num_threads: int, quiet: bool):
             if total is not None:
                 tot += total
                 bar.total = tot
-                bar.refresh()
         bar.set_description(str((pos, tot)))
 
     def stop():
