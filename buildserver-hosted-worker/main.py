@@ -7,9 +7,7 @@ from flask import Flask
 
 from common.rpc.buildserver_hosted_worker import build_worker_build
 from common.rpc.secrets import get_secret, only
-from common.shell_utils import clean_all_except, sh
-
-DO_NOT_BUILD = "DO NOT BUILD"
+from common.shell_utils import sh
 
 app = Flask(__name__)
 if __name__ == "__main__":
