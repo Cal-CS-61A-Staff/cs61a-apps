@@ -18,7 +18,7 @@
   UPDATING FILE f1.txt with contents: "V1 (f1.txt)"
   DELETING FILE f2.txt
   
-  # Now, when we build the rule, the cached input will try to look up f2, but will fail.
+  # Now, when we build the rule, the cached input will try to look up f2, but will fail to do so.
   # However, this error should be caught and ignored, because dynamic deps are not guaranteed to be correct
   BUILDING rule RuleA
   RUNNING run.py --mode=INPUT --id=0 in working directory
