@@ -51,7 +51,12 @@ def land_app_worker(
     repo: Repository,
 ):
     if app.name in TARGETS_BUILT_ON_WORKER:
-        build_worker_build(sha=sha, pr_number=pr_number, timeout=20 * 60)
+        success, logs = build_worker_build(
+            sha=sha, pr_number=pr_number, timeout=20 * 60
+        )
+        print(logs)
+        if not success:
+            raise Exception("Build failed")
     else:
         load_dependencies(app, sha, repo)
         build(app)
