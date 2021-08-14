@@ -33,6 +33,20 @@
   RUNNING run.py --mode=SH --id=1 in scratch directory with files ['RuleA.output']
   COMPLETED BUILDING rule RuleB
   
+  # Update RuleB to have a different shell command, so it needs to be rerun
+  # But RuleA doesn't need to rerun since it's unchanged
+  BUILDING rule RuleB
+  RUNNING run.py --mode=SH --id=2 in scratch directory with files ['RuleA.output']
+  COMPLETED BUILDING rule RuleB
+  
+  # Now we modify f1 and the output f2, so both rules have to be rerun
+  UPDATING FILE f1.txt with contents: "V3 (f1.txt)"
+  
+  BUILDING rule RuleB
+  RUNNING run.py --mode=SH --id=0 in scratch directory with files ['f1.txt']
+  RUNNING run.py --mode=SH --id=2 in scratch directory with files ['RuleA.output']
+  COMPLETED BUILDING rule RuleB
+  
   
   '
 ---
