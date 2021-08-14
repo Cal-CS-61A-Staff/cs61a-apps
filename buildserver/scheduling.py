@@ -97,7 +97,7 @@ def enqueue_builds(
                 # we can only build one target on the worker at a time, even if it will deploy to a different service
                 conflicts = db(
                     "SELECT * FROM builds WHERE app=%s AND status='building'",
-                    [app, pr_number],
+                    [app],
                 ).fetchall()
             else:
                 conflicts = db(
