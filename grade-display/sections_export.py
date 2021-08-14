@@ -26,6 +26,9 @@ def export():
                 continue
             for i in range(len(starts)):
                 start = starts[i]
+                if start == datetime(year=2021, month=7, day=15, hour=0).timestamp():
+                    starts[i] = start + timedelta(days=7).total_seconds()
+                    continue
                 end = start + timedelta(hours=47).total_seconds()
                 attended = any(
                     [

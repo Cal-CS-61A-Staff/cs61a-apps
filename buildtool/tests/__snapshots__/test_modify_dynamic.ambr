@@ -1,0 +1,34 @@
+# name: test_modifying_dynamic_deps
+  '
+  STARTING TEST
+  
+  # Create two files: f1 and f2. 
+  # We explicitly depend on f1, but rely on an Input() to depend on f2 based on f1
+  CREATING FILE f1.txt with contents: "V0 (f1.txt)"
+  CREATING FILE f2.txt with contents: "V0 (f2.txt)"
+  CREATING rule RuleA
+  
+  BUILDING rule RuleA
+  RUNNING run.py --mode=INPUT --id=0 in working directory
+  RUNNING run.py --mode=INPUT --id=0 in scratch directory with files ['f1.txt', 'f2.txt']
+  RUNNING run.py --mode=SH --id=1 in scratch directory with files ['f1.txt', 'f2.txt']
+  COMPLETED BUILDING rule RuleA
+  
+  # Even though this rule has an Input(), we can still rebuild it entirely from caches
+  BUILDING rule RuleA
+  COMPLETED BUILDING rule RuleA
+  
+  # We now modify f2 so we also depend on a new file f3
+  # Now we have to rerun the dependency detection, since it's possible that something has changed
+  CREATING FILE f3.txt with contents: "V0 (f3.txt)"
+  UPDATING FILE f2.txt with contents: "V1 (f2.txt)"
+  
+  BUILDING rule RuleA
+  RUNNING run.py --mode=INPUT --id=0 in working directory
+  RUNNING run.py --mode=INPUT --id=0 in scratch directory with files ['f1.txt', 'f2.txt', 'f3.txt']
+  RUNNING run.py --mode=SH --id=1 in scratch directory with files ['f1.txt', 'f2.txt', 'f3.txt']
+  COMPLETED BUILDING rule RuleA
+  
+  
+  '
+---

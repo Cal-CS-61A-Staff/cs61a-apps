@@ -36,10 +36,10 @@ def make_dep_fetcher(build_state: BuildState):
     def dep_fetcher(input_path, *, get_hash=False) -> Union[str, bytes]:
         try:
             if input_path not in build_state.source_files:
-                rule = build_state.target_rule_lookup.lookup(build_state, input_path)
-                # this input may be stale / unbuilt
+                rule = build_state.target_rule_lookup.try_lookup(input_path)
+                # this input may be stale / unbuilt / no longer exists
                 # if so, do not read it, but instead throw MissingDependency
-                if rule not in build_state.ready:
+                if rule is None or rule not in build_state.ready:
                     raise MissingDependency(input_path)
                 # so it's already ready for use!
 

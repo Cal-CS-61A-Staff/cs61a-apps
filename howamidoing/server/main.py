@@ -177,12 +177,13 @@ def create_client(app):
             )
             if can_access_all_regrades:
                 regrade_requests = db(
-                    "SELECT email, assignment, backup_id, description, status FROM regrade_requests"
+                    "SELECT email, assignment, backup_id, description, status FROM regrade_requests WHERE courseCode=%s",
+                    [get_course()],
                 )
             else:
                 regrade_requests = db(
-                    "SELECT email, assignment, backup_id, description, status FROM regrade_requests WHERE assigned_to=%s",
-                    [get_user()["email"]],
+                    "SELECT email, assignment, backup_id, description, status FROM regrade_requests WHERE courseCode=%s AND assigned_to=%s",
+                    [get_course(), get_user()["email"]],
                 )
             data = [
                 dict(

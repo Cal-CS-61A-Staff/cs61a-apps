@@ -1,0 +1,31 @@
+# name: test_deleting_dynamic_deps
+  '
+  STARTING TEST
+  
+  # Create two files: f1 and f2
+  # Initially, f1 will dynamically depend on f2
+  CREATING FILE f1.txt with contents: "V0 (f1.txt)"
+  CREATING FILE f2.txt with contents: "V0 (f2.txt)"
+  CREATING rule RuleA
+  
+  BUILDING rule RuleA
+  RUNNING run.py --mode=INPUT --id=0 in working directory
+  RUNNING run.py --mode=INPUT --id=0 in scratch directory with files ['f1.txt', 'f2.txt']
+  RUNNING run.py --mode=SH --id=1 in scratch directory with files ['f1.txt', 'f2.txt']
+  COMPLETED BUILDING rule RuleA
+  
+  # We then modify f1 so it no longer depends on f2, and also delete f2 altogether
+  UPDATING FILE f1.txt with contents: "V1 (f1.txt)"
+  DELETING FILE f2.txt
+  
+  # Now, when we build the rule, the cached input will try to look up f2, but will fail to do so.
+  # However, this error should be caught and ignored, because dynamic deps are not guaranteed to be correct
+  BUILDING rule RuleA
+  RUNNING run.py --mode=INPUT --id=0 in working directory
+  RUNNING run.py --mode=INPUT --id=0 in scratch directory with files ['f1.txt']
+  RUNNING run.py --mode=SH --id=1 in scratch directory with files ['f1.txt']
+  COMPLETED BUILDING rule RuleA
+  
+  
+  '
+---

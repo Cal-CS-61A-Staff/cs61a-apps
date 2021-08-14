@@ -1,0 +1,52 @@
+# name: test_simple
+  '
+  STARTING TEST
+  
+  # We have a source file f1
+  # RuleA produces some output f2 from f1
+  CREATING FILE f1.txt with contents: "V0 (f1.txt)"
+  CREATING rule RuleA
+  
+  # RuleB produces some further output f3 from f2
+  CREATING rule RuleB
+  
+  # Building RuleB requires f2 to be built from f1, then f3 to be built from f2
+  BUILDING rule RuleB
+  RUNNING run.py --mode=SH --id=0 in scratch directory with files ['f1.txt']
+  RUNNING run.py --mode=SH --id=1 in scratch directory with files ['RuleA.output']
+  COMPLETED BUILDING rule RuleB
+  
+  # We update file f1, but without affecting th output f2.
+  UPDATING FILE f1.txt with contents: "V1 (f1.txt)"
+  
+  # So we just need to rerun RuleA, and then can pull the output of RuleB from cache
+  BUILDING rule RuleB
+  RUNNING run.py --mode=SH --id=0 in scratch directory with files ['f1.txt']
+  COMPLETED BUILDING rule RuleB
+  
+  # However, this time we modify f1 in such a way that the output f2 is also modified.
+  UPDATING FILE f1.txt with contents: "V2 (f1.txt)"
+  
+  # So both RuleA and RuleB will need to be rerun
+  BUILDING rule RuleB
+  RUNNING run.py --mode=SH --id=0 in scratch directory with files ['f1.txt']
+  RUNNING run.py --mode=SH --id=1 in scratch directory with files ['RuleA.output']
+  COMPLETED BUILDING rule RuleB
+  
+  # Update RuleB to have a different shell command, so it needs to be rerun
+  # But RuleA doesn't need to rerun since it's unchanged
+  BUILDING rule RuleB
+  RUNNING run.py --mode=SH --id=2 in scratch directory with files ['RuleA.output']
+  COMPLETED BUILDING rule RuleB
+  
+  # Now we modify f1 and the output f2, so both rules have to be rerun
+  UPDATING FILE f1.txt with contents: "V3 (f1.txt)"
+  
+  BUILDING rule RuleB
+  RUNNING run.py --mode=SH --id=0 in scratch directory with files ['f1.txt']
+  RUNNING run.py --mode=SH --id=2 in scratch directory with files ['RuleA.output']
+  COMPLETED BUILDING rule RuleB
+  
+  
+  '
+---

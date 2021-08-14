@@ -33,7 +33,7 @@ def web_csv(url, sheet):
 
 # exam recovery calculations
 def attendance(row):
-    return row["Section Attendance (Total)"]
+    return sum(row[f"Discussion {i}"] for i in range(15) if f"Discussion {i}" in row)
 
 
 def exam_recovery(your_exam_score, attendance, max_exam_score, cap=10):
@@ -93,6 +93,7 @@ def assemble(gscope, recovery=False, adjustments=[]):
         if "mt" in gscope:
             grades["Midterm (Recovery)"] = grades.apply(
                 lambda row: exam_recovery(row["Midterm (Raw)"], attendance(row), 55),
+                axis=1,
             )
 
     out = pd.merge(roster, grades, how="left", on="Email")
