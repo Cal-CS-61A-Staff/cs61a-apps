@@ -90,7 +90,7 @@ def initialize_workspace(
                     None,
                     ctx.inputs,
                     ctx.deferred_inputs,
-                    todo.outputs,
+                    [],  # todo: implement output providers for setup rules
                 )
                 if ctx.out_of_date_deps:
                     raise MissingDependency(*ctx.out_of_date_deps)

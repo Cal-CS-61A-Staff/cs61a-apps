@@ -162,7 +162,6 @@ class Rule:
                                 build_state, dep
                             ).provided_value[TransitiveDepsProvider]
                             for dep in (deps + deferred_deps)
-                            if dep not in build_state.source_files
                         ),
                     ),
                     TransitiveOutputProvider: IterableDepSet(

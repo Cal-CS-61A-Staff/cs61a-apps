@@ -44,7 +44,9 @@ class DepSet:
     def __init__(self, *args: Union[DepSet, str]):
         object.__setattr__(self, "children", list(args))
         if any(
-            ".cache" in arg or ".scratch" in arg for arg in args if isinstance(arg, str)
+            ".cache" in arg or ".scratch" in arg or arg.endswith("/")
+            for arg in args
+            if isinstance(arg, str)
         ):
             raise BuildException("?", args)
 
