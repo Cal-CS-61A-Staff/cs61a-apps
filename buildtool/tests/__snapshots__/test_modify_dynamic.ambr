@@ -19,6 +19,7 @@
   COMPLETED BUILDING rule RuleA
   
   # We now modify f2 so we also depend on a new file f3
+  # Now we have to rerun the dependency detection, since it's possible that something has changed
   CREATING FILE f3.txt with contents: "V0 (f3.txt)"
   UPDATING FILE f2.txt with contents: "V1 (f2.txt)"
   
