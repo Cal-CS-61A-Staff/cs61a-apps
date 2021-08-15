@@ -34,9 +34,9 @@ def get_user():
     else:
         data = current_app.remote.get("user")
 
-    # only cache if the access token is found
-    if key:
-        USER_CACHE[key] = data
+        # only cache if the access token is found
+        if key:
+            USER_CACHE[key] = data
 
     return data.data["data"]
 
