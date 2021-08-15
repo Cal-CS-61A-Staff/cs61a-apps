@@ -30,7 +30,7 @@ import examtool.api.assemble_export
 )
 @click.option(
     "--via-html/--direct-pdf",
-    default=False,
+    default=True,
     help="Use an HTML-based PDF exporter or export directly to PDF.",
 )
 @click.option(
