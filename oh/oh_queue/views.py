@@ -1359,13 +1359,6 @@ def assign_appointment(data):
     ):
         return socket_error("Appointment is at full capacity")
 
-    course_email = ConfigEntry.query.filter_by(
-        key="weekly_appointment_limit", 
-        course=get_course()).one_or_none().value
-    
-    if course_email is None:
-        course_email = "cs61a@berkeley.edu"
-
     signup = AppointmentSignup(
         appointment_id=data["appointment_id"],
         user_id=user_id,
@@ -1379,7 +1372,7 @@ def assign_appointment(data):
     db.session.add(signup)
     db.session.commit()
 
-    send_appointment_reminder(signup, course_email)
+    send_appointment_reminder(signup)
 
     emit_appointment_event(appointment, "student_assigned")
 

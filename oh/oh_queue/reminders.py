@@ -6,10 +6,10 @@ import pytz
 from common.course_config import get_domain
 from common.rpc.mail import send_email
 from common.course_config import format_coursecode, get_course
-from oh_queue.models import AppointmentSignup
+from oh_queue.models import AppointmentSignup, ConfigEntry
 
 
-def send_appointment_reminder(signup: AppointmentSignup, course_email: str):
+def send_appointment_reminder(signup: AppointmentSignup):
     appointment = signup.appointment
     user = signup.user
 
@@ -24,6 +24,13 @@ def send_appointment_reminder(signup: AppointmentSignup, course_email: str):
     helper_msg = (
         f"It will be led by {appointment.helper.name}.\n" if appointment.helper else ""
     )
+
+    course_email = ConfigEntry.query.filter_by(
+        key="weekly_appointment_limit", 
+        course=get_course()).one_or_none().value
+    
+    if course_email is None:
+        course_email = "cs61a@berkeley.edu"
 
     send_email(
         sender=f"OH Queue <{course_email}>",
