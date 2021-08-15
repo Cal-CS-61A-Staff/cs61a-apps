@@ -1,9 +1,11 @@
 import os
 import urllib.parse
+from datetime import timedelta
 
 import flask
 import requests
-from flask import current_app, g, session, request, redirect, abort, jsonify
+from cachetools import TTLCache
+from flask import current_app, session, request, redirect, abort, jsonify
 from flask_oauthlib.client import OAuth
 from werkzeug import security
 from urllib.parse import urlparse
@@ -16,6 +18,8 @@ AUTHORIZED_ROLES = ("staff", "instructor", "grader")
 
 REDIRECT_KEY = "REDIRECT_KEY"
 
+USER_CACHE = TTLCache(1000, timedelta(minutes=30).total_seconds())
+
 
 def get_user():
     """Get some information on the currently logged in user.
@@ -24,8 +28,17 @@ def get_user():
         `here <https://okpy.github.io/documentation/ok-api.html#users-view-a-specific-user>`_
         for an example)
     """
-    g.user_data = g.get("user_data") or current_app.remote.get("user")
-    return g.user_data.data["data"]
+    key = session.get("access_token")
+    if key in USER_CACHE:
+        data = USER_CACHE[key]
+    else:
+        data = current_app.remote.get("user")
+
+        # only cache if the access token is found
+        if key:
+            USER_CACHE[key] = data
+
+    return data.data["data"]
 
 
 def is_logged_in():
