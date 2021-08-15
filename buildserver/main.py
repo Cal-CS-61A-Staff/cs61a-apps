@@ -173,15 +173,14 @@ def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
 
 @clear_queue.bind(app)
 @only("buildserver", allow_staging=True)
-def clear_queue(repo: str, pr_number: int):
+def clear_queue(repo: str):
     g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
     repo = g.get_repo(repo)
-    pr = repo.get_pull(pr_number) if pr_number else None
     land_commit(
-        pr.head.sha if pr else repo.get_branch(repo.default_branch).commit.sha,
+        repo.get_branch(repo.default_branch).commit.sha,
         repo,
         g.get_repo(GITHUB_REPO),
-        pr,
+        None,
         [],
         dequeue_only=True,
     )
