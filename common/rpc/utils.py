@@ -1,6 +1,7 @@
 import json
 import traceback
 from functools import wraps
+from sys import stderr
 from time import sleep
 from typing import List
 from urllib.error import HTTPError
@@ -150,8 +151,8 @@ def create_service(app: str, override=None, providers=None):
                         except PermissionError as e:
                             return "", 401
                         except Exception as e:
-                            traceback.print_exc()
-                            print(str(e))
+                            traceback.print_exc(file=stderr)
+                            print(str(e), file=stderr)
                             return "", 500
 
                     app.add_url_rule(path, func.__name__, handler, methods=["POST"])
