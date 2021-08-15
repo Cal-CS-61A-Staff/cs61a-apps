@@ -55,6 +55,19 @@ function AdminConfigManager({ state: { config } }) {
                 />
               </td>
             </tr>
+            <tr>
+              <td>
+                <p>
+                  When an email is sent from the course, what should the email be? (berkeley.edu email)
+                </p>
+              </td>
+              <td className="col-md-3">
+                <ConfigLinkedText
+                  config={config}
+                  configKey="course_email"
+                />
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

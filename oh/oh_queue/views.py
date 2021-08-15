@@ -471,6 +471,14 @@ def init_config():
             course=get_course(),
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="course_email",
+            value="cs61a@berkeley.edu",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 
@@ -1351,6 +1359,13 @@ def assign_appointment(data):
     ):
         return socket_error("Appointment is at full capacity")
 
+    course_email = ConfigEntry.query.filter_by(
+        key="weekly_appointment_limit", 
+        course=get_course()).one_or_none().value
+    
+    if course_email is None:
+        course_email = "cs61a@berkeley.edu"
+
     signup = AppointmentSignup(
         appointment_id=data["appointment_id"],
         user_id=user_id,
@@ -1360,10 +1375,11 @@ def assign_appointment(data):
         attendance_status=old_attendance,
         course=get_course(),
     )
+
     db.session.add(signup)
     db.session.commit()
 
-    send_appointment_reminder(signup)
+    send_appointment_reminder(signup, course_email)
 
     emit_appointment_event(appointment, "student_assigned")
 
