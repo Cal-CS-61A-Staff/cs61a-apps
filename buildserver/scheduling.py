@@ -87,11 +87,8 @@ def enqueue_builds(
         # Then, we dequeue any target that is now ready to be built
         can_build_list = []
         queued = db(
-            "SELECT app, packed_ref FROM builds WHERE pr_number=%s AND status='queued'",
-            [pr_number],
+            "SELECT app, packed_ref FROM builds WHERE status='queued'",
         ).fetchall()
-        # sanity check that there are no duplicate apps
-        assert len(queued) == len({app for app, _ in queued})
         for app, packed_ref in queued:
             if app in TARGETS_BUILT_ON_WORKER:
                 # we can only build one target on the worker at a time, even if it will deploy to a different service
