@@ -17,12 +17,12 @@ from common.rpc.buildserver import (
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
 from conf import GITHUB_REPO
-from github_utils import BuildStatus, pack, set_pr_comment
+from github_utils import BuildStatus, get_github, pack, set_pr_comment
 from rebuilder import create_rebuilder
 from scheduling import report_build_status
 from service_management import delete_unused_services
 from target_determinator import determine_targets
-from worker import land_commit
+from worker import dequeue_and_build, land_commit
 
 DO_NOT_BUILD = "DO NOT BUILD"
 
@@ -173,17 +173,8 @@ def handle_trigger_build_sync(app, is_staging, pr_number, target_app=None):
 
 @clear_queue.bind(app)
 @only("buildserver", allow_staging=True)
-def clear_queue(repo: str):
-    g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
-    repo = g.get_repo(repo)
-    land_commit(
-        repo.get_branch(repo.default_branch).commit.sha,
-        repo,
-        g.get_repo(GITHUB_REPO),
-        None,
-        [],
-        dequeue_only=True,
-    )
+def clear_queue():
+    dequeue_and_build(get_github().get_repo(GITHUB_REPO))
 
 
 @app.route("/delete_unused_services", methods=["POST"])

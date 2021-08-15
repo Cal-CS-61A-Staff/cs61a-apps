@@ -21,10 +21,17 @@ from external_build import run_highcpu_build
 from external_repo_utils import update_config
 from github_utils import (
     BuildStatus,
+    get_github,
     pack,
+    repo_name_from_packed_ref,
     unpack,
 )
-from scheduling import TARGETS_BUILT_ON_WORKER, enqueue_builds, report_build_status
+from scheduling import (
+    TARGETS_BUILT_ON_WORKER,
+    dequeue_builds,
+    enqueue_builds,
+    report_build_status,
+)
 from service_management import get_pr_subdomains, update_service_routes
 from target_determinator import determine_targets
 
@@ -56,8 +63,7 @@ def land_app_worker(
         if repo.full_name != app.config.get("repo", repo.full_name):
             # the worker does not do dependency resolution, so we must
             # give it the hash for the correct repo
-            g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
-            app_repo = g.get_repo(app.config["repo"])
+            app_repo = get_github().get_repo(app.config["repo"])
             worker_sha = app_repo.get_branch(app_repo.default_branch).commit.sha
         else:
             worker_sha = sha
@@ -91,7 +97,6 @@ def land_commit(
     files: Iterable[Union[File, str]],
     *,
     target_app: Optional[str] = None,
-    dequeue_only=False,
 ):
     """
     :param sha: The hash of the commit we are building
@@ -102,18 +107,23 @@ def land_commit(
     :param target_app: App to rebuild, if not all
     :param dequeue_only: Only pop targets off the queue, do not build any new targets
     """
-    if dequeue_only:
-        targets = []
-    elif target_app:
+    if target_app:
         targets = [target_app]
     else:
         targets = determine_targets(
             repo, files if repo.full_name == base_repo.full_name else []
         )
     pr_number = pr.number if pr else 0
-    grouped_targets = enqueue_builds(targets, pr_number, pack(repo.clone_url, sha))
+    enqueue_builds(targets, pr_number, pack(repo.clone_url, sha))
+    dequeue_and_build(base_repo)
+
+
+def dequeue_and_build(base_repo: Repository):
+    grouped_targets = dequeue_builds()
     for packed_ref, targets in grouped_targets.items():
         repo_clone_url, sha = unpack(packed_ref)
+        repo_name = repo_name_from_packed_ref(packed_ref)
+        repo = get_github().get_repo(repo_name)
         # If the commit is made on the base repo, take the config from the current commit.
         # Otherwise, retrieve it from master
         clone_commit(
@@ -164,4 +174,4 @@ def land_commit(
     if grouped_targets:
         # because we ran a build, we need to clear the queue of anyone we blocked
         # we run this in a new worker to avoid timing out
-        clear_queue(repo=repo.full_name, noreply=True)
+        clear_queue(noreply=True)

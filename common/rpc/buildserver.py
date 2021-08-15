@@ -5,7 +5,7 @@ service = create_service(__name__)
 
 @requires_master_secret
 @service.route("/api/clear_queue")
-def clear_queue(*, repo: str):
+def clear_queue():
     ...
 
 

@@ -1,7 +1,7 @@
 import sys
 from datetime import timedelta
 from time import time
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
@@ -39,12 +39,7 @@ def enqueue_builds(
     targets: List[str],
     pr_number: int,
     packed_ref: str,
-) -> Dict[str, List[str]]:
-    """
-    Returns a map of packed_ref -> List[app_name] containing those apps that can now be built,
-    and enqueues the rest to be built when the blocking buildserver run terminates
-    """
-
+):
     with connect_db() as db:
         # Before anything, we need to clear any stalled builds
         db(
@@ -82,6 +77,8 @@ def enqueue_builds(
                     [target, pr_number, packed_ref],
                 )
 
+
+def dequeue_builds():
     # force db flush
     with connect_db() as db:
         # Then, we dequeue any target that is now ready to be built
