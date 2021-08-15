@@ -6,7 +6,7 @@ from common.jobs import job
 from common.rpc.buildserver import deploy_prod_app_sync
 
 AUTO_REBUILDS = {
-    # "website-base": timedelta(hours=1),
+    "website-base": timedelta(hours=1),
     "cs170-website": timedelta(hours=1),
 }
 
