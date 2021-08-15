@@ -87,9 +87,9 @@ def enqueue_builds(
         # Then, we dequeue any target that is now ready to be built
         can_build_list = []
         queued = db(
-            "SELECT app, packed_ref FROM builds WHERE status='queued'",
+            "SELECT app, packed_ref, pr_number FROM builds WHERE status='queued'",
         ).fetchall()
-        for app, packed_ref in queued:
+        for app, packed_ref, pr_number in queued:
             if app in TARGETS_BUILT_ON_WORKER:
                 # we can only build one target on the worker at a time, even if it will deploy to a different service
                 conflicts = db(
@@ -111,15 +111,17 @@ def enqueue_builds(
                     "UPDATE builds SET status='building', build_limit_time=%s WHERE app=%s AND pr_number=%s AND packed_ref=%s",
                     [time() + BUILD_TIME, app, pr_number, packed_ref],
                 )
-                can_build_list.append((app, packed_ref))
+                can_build_list.append((app, packed_ref, pr_number))
 
     # group output by packed_ref for convenience of caller
     can_build = {}
-    for app, packed_ref in can_build_list:
+    for app, packed_ref, pr_number in can_build_list:
         if packed_ref not in can_build:
             can_build[packed_ref] = []
-        can_build[packed_ref].append(app)
-    for packed_ref in set(packed_ref for app, packed_ref in queued):
+        can_build[packed_ref].append([app, pr_number])
+    for (packed_ref, pr_number) in set(
+        (packed_ref, pr_number) for app, packed_ref, pr_number in queued
+    ):
         update_status(packed_ref, pr_number)
     return can_build
 

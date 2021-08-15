@@ -122,8 +122,8 @@ def land_commit(
             if repo_clone_url == base_repo.clone_url
             else base_repo.get_branch(base_repo.default_branch).commit.sha,
         )
-        apps = [App(target) for target in targets]
-        for app in apps:
+        for app_name, pr_number in targets:
+            app = App(app_name)
             with tempfile.TemporaryFile("w+") as logs:
                 try:
                     with redirect_descriptor(stdout, logs), redirect_descriptor(
@@ -164,4 +164,4 @@ def land_commit(
     if grouped_targets:
         # because we ran a build, we need to clear the queue of anyone we blocked
         # we run this in a new worker to avoid timing out
-        clear_queue(repo=repo.full_name, pr_number=pr_number, noreply=True)
+        clear_queue(repo=repo.full_name, noreply=True)
