@@ -3,6 +3,7 @@ import traceback
 from sys import stderr, stdout
 from typing import Iterable, Optional, Union
 
+from github import Github
 from github.File import File
 from github.PullRequest import PullRequest
 from github.Repository import Repository
@@ -12,6 +13,7 @@ from build import build, clone_commit
 from common.db import connect_db
 from common.rpc.buildserver import clear_queue
 from common.rpc.buildserver_hosted_worker import build_worker_build
+from common.rpc.secrets import get_secret
 from common.shell_utils import redirect_descriptor
 from dependency_loader import load_dependencies
 from deploy import deploy_commit
@@ -51,8 +53,16 @@ def land_app_worker(
     repo: Repository,
 ):
     if app.name in TARGETS_BUILT_ON_WORKER:
+        if repo.full_name != app.config.get("repo", repo.full_name):
+            # the worker does not do dependency resolution, so we must
+            # give it the hash for the correct repo
+            g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
+            app_repo = g.get_repo(app.config["repo"])
+            worker_sha = app_repo.get_branch(app_repo.default_branch).commit.sha
+        else:
+            worker_sha = sha
         success, logs = build_worker_build(
-            sha=sha, pr_number=pr_number, timeout=20 * 60
+            sha=worker_sha, pr_number=pr_number, timeout=20 * 60
         )
         print(logs)
         if not success:
