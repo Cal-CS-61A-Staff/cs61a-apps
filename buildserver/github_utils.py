@@ -12,12 +12,19 @@ from env import GITHUB_BOT_USER
 from target_determinator import determine_targets
 
 
+def get_github():
+    return Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
+
+
+def repo_name_from_packed_ref(packed_ref):
+    repo_url, _ = unpack(packed_ref)
+    return urlparse(repo_url).path.split(".")[0][1:]  # This is awful ... but it works
+
+
 def update_status(packed_ref: str, pr_number: int):
-    g = Github(get_secret(secret_name="GITHUB_ACCESS_TOKEN"))
+    g = get_github()
     repo_url, sha = unpack(packed_ref)
-    repo_name = urlparse(repo_url).path.split(".")[0][
-        1:
-    ]  # This is awful ... but it works
+    repo_name = repo_name_from_packed_ref(packed_ref)
     repo = g.get_repo(repo_name)
 
     # First we will update the commit-specific status indicator
