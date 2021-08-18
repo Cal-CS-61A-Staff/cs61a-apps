@@ -17,10 +17,11 @@ from common.rpc.buildserver import (
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
 from conf import GITHUB_REPO
-from github_utils import BuildStatus, get_github, pack, set_pr_comment
+from github_utils import get_github, pack, set_pr_comment
 from rebuilder import create_rebuilder
 from scheduling import report_build_status
 from service_management import delete_unused_services
+from status_reporting import BuildStatus
 from target_determinator import determine_targets
 from worker import dequeue_and_build, land_commit
 

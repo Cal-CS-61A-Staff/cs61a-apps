@@ -16,10 +16,8 @@ from common.rpc.buildserver_hosted_worker import build_worker_build
 from common.shell_utils import redirect_descriptor
 from dependency_loader import load_dependencies
 from deploy import deploy_commit
-from external_build import run_highcpu_build
 from external_repo_utils import update_config
 from github_utils import (
-    BuildStatus,
     get_github,
     pack,
     repo_name_from_packed_ref,
@@ -32,6 +30,7 @@ from scheduling import (
     report_build_status,
 )
 from service_management import get_pr_subdomains, update_service_routes
+from status_reporting import BuildStatus
 from target_determinator import determine_targets, get_all_apps
 
 
