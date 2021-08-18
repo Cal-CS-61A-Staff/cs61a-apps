@@ -1,13 +1,12 @@
 import fnmatch
-from collections import defaultdict
 from typing import Dict, Iterable, Set, Union
 
 import yaml
 from github.File import File
 from github.Repository import Repository
 
-from buildserver.app_config import App
-from buildserver.github_utils import get_github
+from app_config import App
+from github_utils import get_github
 from conf import GITHUB_REPO
 
 
