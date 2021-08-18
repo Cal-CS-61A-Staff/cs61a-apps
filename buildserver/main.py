@@ -43,7 +43,6 @@ with connect_db() as db:
 )
 """
     )
-    )
     db(
         """CREATE TABLE IF NOT EXISTS mysql_users (
     app varchar(128),
