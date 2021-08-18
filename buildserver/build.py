@@ -1,4 +1,5 @@
 import os
+from os.path import join
 from shutil import copytree, rmtree
 from urllib.parse import urlparse
 
@@ -34,29 +35,39 @@ def clone_commit(remote: str, sha: str, *, in_place=False):
 
 def build(app: App):
     with tmp_directory():
-        os.chdir(app.name)
-
-        app_dir = app.name
-
-        os.chdir("..")
         working_dir = gen_working_dir(app)
-
-        copytree(app_dir, working_dir, dirs_exist_ok=True, symlinks=False)
-
         os.chdir(working_dir)
 
-        {
-            "oh_queue": run_oh_queue_build,
-            "create_react_app": run_create_react_app_build,
-            "webpack": run_webpack_build,
-            "61a_website": run_61a_website_build,
-            "hugo": run_hugo_build,
-            "sphinx": run_sphinx_build,
-            "jekyll": run_jekyll_build,
-            "none": run_noop_build,
-        }[app.config["build_type"]]()
+        if app.config["build_type"]:
+            {
+                "oh_queue": run_oh_queue_build,
+                "create_react_app": run_create_react_app_build,
+                "webpack": run_webpack_build,
+                "61a_website": run_61a_website_build,
+                "hugo": run_hugo_build,
+                "sphinx": run_sphinx_build,
+                "jekyll": run_jekyll_build,
+                "none": run_noop_build,
+            }[app.config["build_type"]]()
+        else:
+            # bt will place the built output here:
+            # // -> working_dir -> _destination -> target
+            destination_name = "__destination"
+            output_directory = join(working_dir, destination_name)
+            target = app.config["target"]
+            sh(
+                "bt",
+                target,
+                "--quiet",
+                "--profile",
+                *("--num-threads", 4),
+                *("--flag", output_directory),
+            )
 
-        os.chdir("..")
+            # We will move _destination/target into working_dir, then clear _destination
+            clean_all_except([destination_name])
+            copytree(join(destination_name, target), ".", dirs_exist_ok=True)
+            rmtree(destination_name)
 
 
 def run_oh_queue_build():

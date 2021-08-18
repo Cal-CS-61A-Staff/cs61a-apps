@@ -8,7 +8,7 @@ from github.PullRequest import PullRequest
 from common.db import connect_db
 from common.rpc.secrets import get_secret
 from common.url_for import url_for
-from env import GITHUB_BOT_USER
+from conf import GITHUB_BOT_USER
 from target_determinator import determine_targets
 
 
@@ -70,7 +70,7 @@ def update_status(packed_ref: str, pr_number: int):
 
     pr = repo.get_pull(pr_number)
     # Now we will update the PR comment, looking at builds for all packed_refs in the PR
-    apps = determine_targets(repo, pr.get_files())
+    apps = determine_targets(repo, sha, pr.get_files())
     success = []
     failure = []
     running = []

@@ -1,41 +1,56 @@
-import os
-from typing import Iterable, Optional, Set, Union
+import fnmatch
+from collections import defaultdict
+from typing import Dict, Iterable, Set, Union
 
+import yaml
 from github.File import File
 from github.Repository import Repository
 
-from common.db import connect_db
+from buildserver.app_config import App
+from buildserver.github_utils import get_github
 from conf import GITHUB_REPO
 
 
-def get_app(path: Optional[str]):
-    if path is None:
-        return None
-    path = os.path.normpath(path)
-    folders = path.split(os.sep)
-    if len(folders) <= 1:
-        # not in any app folder
-        return None
+def get_all_apps(repo: Repository, sha: str) -> Dict[str, App]:
+    base_repo = get_github().get_repo(GITHUB_REPO)
+    base_sha = (
+        sha
+        if repo.full_name == GITHUB_REPO
+        else base_repo.get_branch(base_repo.default_branch).commit.sha
+    )
+    return {
+        target: App(target, config)
+        for target, config in yaml.safe_load(
+            base_repo.get_contents("targets.yaml", base_sha).decoded_content
+        ).items()
+    }
 
-    return str(folders[0])
 
+def determine_targets(
+    repo: Repository, sha: str, files: Iterable[Union[File, str]]
+) -> Set[str]:
+    apps = get_all_apps(repo, sha)
 
-def determine_targets(repo: Repository, files: Iterable[Union[File, str]]) -> Set[str]:
-    modified_apps = []
+    # todo: target detection when we modify targets.yaml itself
+    modified_targets = []
+
     if repo.full_name == GITHUB_REPO:
+        modified_paths = []
         for file in files:
             if isinstance(file, str):
-                modified_apps.append(get_app(file))
+                modified_paths.append(file)
             else:
-                modified_apps.append(get_app(file.filename))
-                modified_apps.append(get_app(file.previous_filename))
+                modified_paths.append(file.filename)
+                modified_paths.append(file.previous_filename)
 
-    with connect_db() as db:
-        modified_apps.extend(
-            app
-            for [app] in db(
-                "SELECT app FROM apps WHERE repo=(%s)", [repo.full_name]
-            ).fetchall()
-        )
+        for app_name, app in apps.items():
+            if any(
+                fnmatch.filter(modified_paths, match) for match in app.config["match"]
+            ):
+                modified_targets.append(app_name)
 
-    return set([app for app in modified_apps if app is not None])
+    for app_name, app in apps.items():
+        if app.config["repo"] == repo.full_name:
+            modified_targets.append(app_name)
+
+    return set(modified_targets)
