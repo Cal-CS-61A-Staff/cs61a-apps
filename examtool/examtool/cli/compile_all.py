@@ -4,6 +4,9 @@ import pathlib
 from datetime import datetime
 from io import BytesIO
 
+from multiprocessing.pool import ThreadPool
+import threading
+from tqdm import tqdm
 from pikepdf import Pdf, Encryption
 import click
 import pytz
@@ -49,6 +52,18 @@ from examtool.cli.utils import (
     default=None,
     help="Generates exam regardless of if student is in roster with the set deadline.",
 )
+@click.option(
+    "--num-threads",
+    default=16,
+    type=int,
+    help="The number of simultaneous exams to process.",
+)
+@click.option(
+    "--same-folder",
+    default=False,
+    is_flag=True,
+    help="This flag will cause the compilation to all occur in the same folder.",
+)
 def compile_all(
     exam,
     out,
@@ -58,6 +73,8 @@ def compile_all(
     exam_type,
     semester,
     deadline,
+    num_threads,
+    same_folder,
 ):
     """
     Compile individualized PDFs for the specified exam.
@@ -88,9 +105,14 @@ def compile_all(
             else:
                 raise ValueError("Email does not exist in the roster!")
 
-    for email, deadline, no_watermark in roster:
+    def render_student_pdf(data):
+        (
+            email,
+            deadline,
+            no_watermark,
+        ) = data
         if not deadline:
-            continue
+            return
         exam_data = json.loads(exam_str)
         scramble(email, exam_data)
         if no_watermark:
@@ -100,6 +122,15 @@ def compile_all(
             pytz.timezone("America/Los_Angeles")
         )
         deadline_string = deadline_pst.strftime("%I:%M%p")
+
+        uid = threading.get_ident()
+
+        if same_folder:
+            out_name = f"out{uid}"
+            path = "temp"
+        else:
+            out_name = "out"
+            path = f"temp/{uid}"
 
         with render_latex(
             exam_data,
@@ -112,6 +143,9 @@ def compile_all(
                 "semester": semester,
             },
             do_twice=do_twice,
+            path=path,
+            out_name=out_name,
+            suppress_output=True,
         ) as pdf:
             pdf = Pdf.open(BytesIO(pdf))
             pdf.save(
@@ -121,6 +155,16 @@ def compile_all(
                 encryption=Encryption(owner=password, user=password),
             )
             pdf.close()
+
+    with ThreadPool(num_threads) as p:
+        list(
+            tqdm(
+                p.imap_unordered(render_student_pdf, roster),
+                total=len(roster),
+                desc="Exams Generated",
+                unit="Exam",
+            )
+        )
 
 
 if __name__ == "__main__":
