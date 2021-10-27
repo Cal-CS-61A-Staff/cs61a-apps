@@ -180,9 +180,15 @@ For short / long answer questions, you must provide exactly one input statement 
 The `type` can be `SHORT_ANSWER`, `SHORT_CODE_ANSWER`, `LONG_ANSWER`, or `LONG_CODE_ANSWER`. `CODE`
 means that the font will be monospaced and tab will work to indent text typed in a `LONG_CODE_ANSWER`.
 For short answer questions, the `content` can optionally be a Javascript regular expression that matches valid 
-inputs, though invalid inputs can still be saved by the user. For long answer questions, the `content`
-can optionally be an integer representing the number of lines provided in the input field before the user
-has to start scrolling. This also affects the height of the box in the generated PDF in a similar way.
+inputs, though invalid inputs can still be saved by the user.
+
+For long answer questions, the `content` can optionally be a number representing the number of lines provided in the input field before the user
+has to start scrolling. This also affects the height of the box in the generated PDF in a similar way. (Floating point values are no recommended, but are supported.)
+
+```
+# INPUT LONG_ANSWER 3
+# INPUT LONG_CODE_ANSWER 4
+```
 
 ## Solution and Note Syntax
 
