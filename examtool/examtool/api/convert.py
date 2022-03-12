@@ -204,9 +204,9 @@ def parse_input_lines(lines):
         elif directive == "SHORT_CODE_ANSWER":
             return "short_code_answer", rest.strip(), None
         try:
-            num_lines = int(rest or "10")
+            num_lines = float(rest or "10")
         except TypeError:
-            raise SyntaxError("Expected integer as option for {}".format(directive))
+            raise SyntaxError("Expected number as option for {}".format(directive))
         if directive == "LONG_ANSWER":
             return "long_answer", num_lines, None
         elif directive == "LONG_CODE_ANSWER":
