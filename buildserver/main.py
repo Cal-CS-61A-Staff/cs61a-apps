@@ -17,10 +17,11 @@ from common.rpc.buildserver import (
 from common.rpc.secrets import get_secret, only, validates_master_secret
 from common.url_for import url_for
 from conf import GITHUB_REPO
-from github_utils import BuildStatus, get_github, pack, set_pr_comment
+from github_utils import get_github, pack, set_pr_comment
 from rebuilder import create_rebuilder
 from scheduling import report_build_status
 from service_management import delete_unused_services
+from status_reporting import BuildStatus
 from target_determinator import determine_targets
 from worker import dequeue_and_build, land_commit
 
@@ -42,13 +43,6 @@ with connect_db() as db:
     is_web_service boolean
 )
 """
-    )
-    db(
-        """CREATE TABLE IF NOT EXISTS apps (
-    app varchar(128),
-    repo varchar(128),
-    autobuild boolean
-)"""
     )
     db(
         """CREATE TABLE IF NOT EXISTS mysql_users (
@@ -124,7 +118,8 @@ def handle_deploy_prod_app_sync(app, is_staging, target_app):
         repo,
         repo,
         None,
-        [f"{target_app}/main.py"],
+        [],
+        target_app=target_app,
     )
 
 
@@ -228,10 +223,10 @@ def webhook():
         pr = repo.get_pull(payload["pull_request"]["number"])
 
         if payload["action"] in ("opened", "synchronize", "reopened"):
-            if repo.full_name != GITHUB_REPO:
-                land_commit(pr.head.sha, repo, g.get_repo(GITHUB_REPO), pr, [])
-            else:
-                for target in determine_targets(repo, pr.get_files()):
+            if repo.full_name == GITHUB_REPO:
+                # todo: remove hardcoded website-base
+                land_commit(pr.head.sha, repo, repo, pr, [], target_app="website-base")
+                for target in determine_targets(repo, pr.head.sha, pr.get_files()):
                     report_build_status(
                         target,
                         pr.number,
@@ -241,6 +236,8 @@ def webhook():
                         None,
                         private=True,
                     )
+            else:
+                land_commit(pr.head.sha, repo, g.get_repo(GITHUB_REPO), pr, [])
 
         elif payload["action"] == "closed":
             set_pr_comment("PR closed, shutting down PR builds...", pr)

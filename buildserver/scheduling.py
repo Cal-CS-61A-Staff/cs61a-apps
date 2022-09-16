@@ -6,7 +6,7 @@ from typing import List, Optional
 from common.db import connect_db
 from common.rpc.auth import post_slack_message
 from common.rpc.paste import get_paste_url, paste_text
-from github_utils import BuildStatus, update_status
+from status_reporting import BuildStatus, update_status
 
 BUILD_TIME = timedelta(minutes=20).total_seconds()
 
