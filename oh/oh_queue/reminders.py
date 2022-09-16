@@ -6,7 +6,7 @@ import pytz
 from common.course_config import get_domain
 from common.rpc.mail import send_email
 from common.course_config import format_coursecode, get_course
-from oh_queue.models import AppointmentSignup
+from oh_queue.models import AppointmentSignup, ConfigEntry
 
 
 def send_appointment_reminder(signup: AppointmentSignup):
@@ -25,8 +25,15 @@ def send_appointment_reminder(signup: AppointmentSignup):
         f"It will be led by {appointment.helper.name}.\n" if appointment.helper else ""
     )
 
+    course_email = ConfigEntry.query.filter_by(
+        key="weekly_appointment_limit", 
+        course=get_course()).one_or_none().value
+    
+    if course_email is None:
+        course_email = "cs61a@berkeley.edu"
+
     send_email(
-        sender="OH Queue <cs61a@berkeley.edu>",
+        sender=f"OH Queue <{course_email}>",
         target=user.email,
         subject=f"{format_coursecode(get_course())} Appointment Scheduled",
         body=(
@@ -39,7 +46,7 @@ def send_appointment_reminder(signup: AppointmentSignup):
     To edit or cancel this appointment, go to https://{get_domain()}.
 
     Best,
-    The 61A Software Team
+    The {format_coursecode(get_course())} Software Team
     """.strip()
         ),
         attachments={"invite.ics": b64encode(str(c).encode("utf-8")).decode("ascii")},

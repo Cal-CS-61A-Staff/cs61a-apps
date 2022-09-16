@@ -471,6 +471,14 @@ def init_config():
             course=get_course(),
         )
     )
+    db.session.add(
+        ConfigEntry(
+            key="course_email",
+            value="cs61a@berkeley.edu",
+            public=True,
+            course=get_course(),
+        )
+    )
     db.session.commit()
 
 
@@ -1360,6 +1368,7 @@ def assign_appointment(data):
         attendance_status=old_attendance,
         course=get_course(),
     )
+
     db.session.add(signup)
     db.session.commit()
 
