@@ -129,14 +129,8 @@ export default function SectionAttendance({ section, session }: Props) {
                     <AttendanceRow
                       editable={session != null}
                       status={getStudentAttendanceStatus(student.email)}
-                      onClick={(status) => {
-                        if (session != null)
-                          setAttendance({
-                            session_id: session.id,
-                            students: student.email,
-                            status,
-                          });
-                      }}
+                      sessionId={session != null ? session.id: null}
+                      email={session != null ? student.email: null}
                     />
                   </td>
                 </tr>

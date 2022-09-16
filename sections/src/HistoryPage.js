@@ -64,25 +64,35 @@ export default function HistoryPage({ userID }: Props): React.Node {
               </tr>
             </thead>
             <tbody>
-              {user.attendanceHistory.map(({ section, session, status }, i) => (
-                <tr key={i} className="text-center">
-                  <td className="align-middle">
-                    <b>{moment.unix(session.startTime).format("MMMM D")}</b>
-                  </td>
-                  <td className="align-middle">
-                    {section != null && currentUser.isStaff ? (
-                      <Link to={`/section/${section.id}`}>
-                        {sectionTitle(section)}
-                      </Link>
-                    ) : (
-                      sectionTitle(section)
-                    )}
-                  </td>
-                  <td>
-                    <AttendanceRow editable={false} status={status} />
-                  </td>
-                </tr>
-              ))}
+              {user.attendanceHistory.map(({ section, session, status }, i) => {
+                return (
+                  <tr key={i} className="text-center">
+                    <td className="align-middle">
+                      <b>{moment.unix(session.startTime).format("MMMM D")}</b>
+                    </td>
+                    <td className="align-middle">
+                      {section != null && currentUser.isStaff ? (
+                        <Link to={`/section/${section.id}`}>
+                          {sectionTitle(section)}
+                        </Link>
+                      ) : (
+                        sectionTitle(section)
+                      )}
+                    </td>
+                    <td>
+                      <AttendanceRow
+                        editable={
+                          currentUser.isStaff &&
+                          section.staff.email === currentUser.email
+                        }
+                        status={status}
+                        sessionId={session.id}
+                        email={user.email}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </Table>
         </Col>
