@@ -1,8 +1,11 @@
 import os
+import sys
+import subprocess
 import re
 import subprocess
 from collections import defaultdict
 from contextlib import contextmanager
+from pathlib import Path
 
 from examtool.api.scramble import latex_escape
 from examtool.api.watermarks import create_watermark
@@ -114,8 +117,19 @@ def generate(exam, *, include_watermark):
 
 
 @contextmanager
-def render_latex(exam, subs=None, *, do_twice=False):
+def render_latex(
+    exam,
+    subs=None,
+    *,
+    do_twice=False,
+    path="temp",
+    out_name="out",
+    suppress_output=False,
+):
     include_watermark = exam.get("watermark") and "value" in exam["watermark"]
+    watermark_name = out_name + "_watermark"
+    watermark_svg = watermark_name + ".svg"
+    watermark_pdf = watermark_name + ".pdf"
 
     latex = generate(exam, include_watermark=include_watermark)
     latex = re.sub(
@@ -126,13 +140,13 @@ def render_latex(exam, subs=None, *, do_twice=False):
     if subs:
         for k, v in subs.items():
             latex = latex.replace(f"<{k.upper()}>", v)
-    if not os.path.exists("temp"):
-        os.mkdir("temp")
-    with open("temp/out.tex", "w+") as f:
+    latex = latex.replace("EXAMTOOL_WATERMARK_PDF_PATH", watermark_pdf)
+    Path(path).mkdir(parents=True, exist_ok=True)
+    with open(os.path.join(path, out_name + ".tex"), "w+") as f:
         f.write(latex)
 
     if include_watermark:
-        with open("temp/watermark.svg", "w+") as f:
+        with open(os.path.join(path, watermark_svg), "w+") as f:
             f.write(
                 create_watermark(
                     exam["watermark"]["value"],
@@ -140,19 +154,37 @@ def render_latex(exam, subs=None, *, do_twice=False):
                 )
             )
         subprocess.run(
-            "inkscape -D -z --file=temp/watermark.svg --export-pdf=temp/watermark.pdf",
-            shell=True,
-        ).check_returncode()
-
-    subprocess.run(
-        "cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex",
-        shell=True,
-    )
-    if do_twice:
-        subprocess.run(
-            "cd temp && pdflatex --shell-escape -interaction=nonstopmode out.tex",
-            shell=True,
+            [
+                "inkscape",
+                "-D",
+                "-z",
+                f"--file={watermark_svg}",
+                f"--export-pdf={watermark_pdf}",
+            ],
+            stdout=subprocess.DEVNULL if suppress_output else sys.stdout,
+            stderr=subprocess.DEVNULL if suppress_output else sys.stderr,
+            cwd=path,
         )
-    with open("temp/out.pdf", "rb") as f:
+
+    def compile():
+        subprocess.run(
+            [
+                "pdflatex",
+                "--shell-escape",
+                "-interaction=nonstopmode",
+                f"{out_name}.tex",
+            ],
+            stdout=subprocess.DEVNULL if suppress_output else sys.stdout,
+            stderr=subprocess.DEVNULL if suppress_output else sys.stderr,
+            cwd=path,
+        )
+
+    compile()
+    if do_twice:
+        compile()
+
+    out_path = os.path.join(path, out_name + ".pdf")
+
+    with open(out_path, "rb") as f:
+        # os.chdir(old)
         yield f.read()
-    # shutil.rmtree("temp")
